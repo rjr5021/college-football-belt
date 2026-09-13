@@ -10,6 +10,11 @@ site/
 # lets build_lineage.py and fetch_game_details.py fetch only the current +
 # previous season each run instead of CFBD's whole history every time. See
 # README.md's "Incremental fetching" section.
+#
+# ai_preview_cache/ is also DELIBERATELY NOT ignored, same idea -- it's the
+# last AI-generated upcoming-game preview, keyed to exactly which game it's
+# for, so generate_ai_preview.py only spends a real Claude API call when
+# the upcoming game actually changes instead of on every run.
 
 __pycache__/
 *.pyc

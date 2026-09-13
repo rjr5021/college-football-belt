@@ -299,6 +299,34 @@ which render the same way the "sourced" callouts do on the game pages.
 Each rule gets a numbered tag ("Rule 01", "Rule 02", …); the "Open items"
 section gets "Status" instead, since it isn't a rule.
 
+## Upcoming-game preview: fetch_matchup_preview.py + generate_ai_preview.py
+
+The homepage shows an "Up Next" chip for the current belt holder's next
+scheduled game (mined for free out of data `build_lineage.py` already
+fetches — CFBD returns the whole season including games it hasn't scored
+yet, previously thrown away). Clicking it goes to `site/preview.html`,
+which adds:
+
+- **Recent form** — each team's last 5 completed games, win/loss and
+  score. Also free — same already-fetched season data, just for both
+  teams instead of only the belt holder.
+- **All-time head-to-head** — the full series record and last several
+  meetings between the two teams, from CFBD's `/teams/matchup` endpoint
+  (`fetch_matchup_preview.py`, 1 API call, skipped entirely when there's
+  no upcoming game).
+- **An AI-written preview** (optional) — a short overview, 2-3 key
+  matchups, and a betting-angles paragraph, written by the Claude API
+  from the stats above (`generate_ai_preview.py`). Needs an
+  `ANTHROPIC_API_KEY` (see the deployment section below); without one,
+  this section just doesn't appear — everything else on the page still
+  does.
+
+The AI preview is deliberately cached to `ai_preview_cache/` (committed
+to git, same reasoning as `historical_data/`): regenerating it costs a
+real, if small, amount of money, and the pipeline can run more than once
+before the actual matchup changes. A fresh Claude call only happens when
+the two teams and date no longer match what's already cached.
+
 ## Weekly updates: update_all.py
 
 New script that chains the whole pipeline in the right order so you don't
@@ -313,11 +341,15 @@ python update_all.py
 It runs, in order: `build_lineage.py` and `fetch_game_details.py` (both
 incremental — see "CFBD's call budget" above, only the current + previous
 season gets refetched), `fetch_team_colors.py` (cheap regardless, one
-call), then `build_site.py` (no network calls, just regenerates every
-page). A normal run is ~15-30 CFBD calls total. If any stage fails, it stops right
-there instead of rebuilding the site from a half-updated data set — fix
-whatever broke and rerun the same command; every stage already knows how
-to resume from where it left off.
+call), `fetch_matchup_preview.py` (one call, for the upcoming game's
+head-to-head record — see "Upcoming-game preview" below), then
+`generate_ai_preview.py` (optional — a Claude API call, only when the
+upcoming game has changed since the last one) and finally `build_site.py`
+(no network calls, just regenerates every page). A normal run is ~15-30
+CFBD calls total. If any stage fails, it stops right there instead of
+rebuilding the site from a half-updated data set — fix whatever broke and
+rerun the same command; every stage already knows how to resume from
+where it left off.
 
 This makes "run one command" the whole weekly routine, but running that
 command is still on you (or something you schedule) — it's not
@@ -372,6 +404,17 @@ the workflow file already in the repo handles the rest.)
 Actions → New repository secret → name it `CFBD_API_KEY`, value is your
 real CollegeFootballData key. This is what lets the workflow fetch data
 without your key ever being visible in the repo itself.
+
+**3b. (Optional) Add an Anthropic key for the AI game preview.** Same
+place, another secret, name it `ANTHROPIC_API_KEY`, value is a key from
+[console.anthropic.com](https://console.anthropic.com/settings/keys).
+This powers the AI-written preview (key matchups, betting angles) on the
+upcoming-game page. Skip this entirely if you don't want it —
+`generate_ai_preview.py` detects the missing key and just skips itself;
+every other page on the site works fine without it. When it *is* set, the
+preview is only regenerated (spending a small amount of real API budget)
+when the belt holder's next game actually changes, not on every pipeline
+run — see `generate_ai_preview.py`'s docstring for how the cache works.
 
 **4. Trigger the first run.** Actions tab → "Update and deploy" → Run
 workflow. The very first run ever (no `historical_data/` baseline exists

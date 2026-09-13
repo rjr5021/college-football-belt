@@ -22,6 +22,10 @@ Outputs (into ./belt_data/, all regenerated fresh every run, none committed):
     belt_games.csv    every game the belt was at stake in, 1869-now
     reigns.csv        one row per reign, 1869-now
     lineage.json      structured dataset for the site to consume, 1869-now
+    next_game.json    the current holder's next scheduled game, mined for
+                      free out of games_raw.json (which already includes
+                      the season's unplayed games -- no extra API call);
+                      null if nothing upcoming is in the fetched window
 
 Incremental fetching and the CFBD call budget: CFBD's FREE tier is capped at
 1,000 calls/MONTH (not a short burst limit -- see
@@ -341,6 +345,62 @@ def normalize(raw, venue_tz=None):
     return out
 
 
+def find_next_game(raw, holder, venue_tz=None):
+    """The current holder's next scheduled game, straight from this run's
+    freshly-fetched season data -- CFBD returns the full season (including
+    games it hasn't scored yet), and normalize() above throws those away
+    since the chain walk only cares about settled results. This re-scans
+    the same `raw` list (no extra API call) for the holder's earliest
+    not-yet-played game, so the site can show what's coming next.
+
+    Returns None if nothing upcoming is in the fetched window -- e.g. the
+    next game's schedule slot hasn't been announced yet, or the season's
+    already over and next year's slate isn't out."""
+    venue_tz = venue_tz or {}
+    candidates = []
+    for g in raw:
+        home = pick(g, "home_team", "homeTeam")
+        away = pick(g, "away_team", "awayTeam")
+        if holder not in (home, away):
+            continue
+        hp = pick(g, "home_points", "homePoints")
+        ap = pick(g, "away_points", "awayPoints")
+        if hp is not None and ap is not None:
+            continue  # already played
+        raw_date = pick(g, "start_date", "startDate")
+        if not raw_date:
+            continue
+        venue_id = pick(g, "venue_id", "venueId")
+        date, _ = local_date(raw_date, venue_tz.get(venue_id))
+        if not date:
+            continue
+        candidates.append({
+            "date": date,
+            "raw_date": raw_date,
+            "season": pick(g, "season"),
+            "week": pick(g, "week"),
+            "season_type": pick(g, "season_type", "seasonType", default="regular"),
+            "home": home,
+            "away": away,
+            "neutral": bool(pick(g, "neutral_site", "neutralSite", default=False)),
+        })
+    if not candidates:
+        return None
+    candidates.sort(key=lambda c: (c["date"], c["raw_date"]))
+    nxt = candidates[0]
+    is_home = nxt["home"] == holder
+    return {
+        "team": holder,
+        "opponent": nxt["away"] if is_home else nxt["home"],
+        "is_home": is_home,
+        "neutral": nxt["neutral"],
+        "date": nxt["date"],
+        "season": nxt["season"],
+        "week": nxt["week"],
+        "season_type": nxt["season_type"],
+    }
+
+
 def walk(games, tie_rule="holder", start_holder=None, start_reign=None):
     """Walk the chain, in chronological order, over `games`.
 
@@ -613,6 +673,18 @@ def main():
 
     current = reigns[-1]
     teams = len({r["team"] for r in reigns})
+
+    next_game = find_next_game(raw, current["team"], venue_tz)
+    with open(os.path.join(OUT_DIR, "next_game.json"), "w") as f:
+        json.dump(next_game, f, indent=2)
+    if next_game:
+        side = "vs." if next_game["is_home"] else "at"
+        print(f"Next game: {current['team']} {side} {next_game['opponent']} "
+              f"on {next_game['date']}")
+    else:
+        print("No upcoming game found for the current holder in the fetched "
+              "window (schedule not out yet, or the season's over).")
+
     print(f"""
 Lineage built -> {OUT_DIR}/
   belt games      {len(belt_games):>6}   (cfb-belt.com reports ~1,636)

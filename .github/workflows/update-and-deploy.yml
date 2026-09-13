@@ -9,7 +9,22 @@ name: Update and deploy
 #   1. Settings -> Pages -> Source -> "GitHub Actions".
 #   2. Settings -> Secrets and variables -> Actions -> New repository
 #      secret -> name it CFBD_API_KEY, value is your CFBD key.
+#   3. OPTIONAL, for the AI-written upcoming-game preview -> same place ->
+#      New repository secret -> name it ANTHROPIC_API_KEY, value is a key
+#      from console.anthropic.com. Everything else on the site works fine
+#      without this one; skip it and generate_ai_preview.py just no-ops.
 # See README.md for the full walkthrough.
+#
+# CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst
+# limit), so this pipeline fetches only the current + previous season each
+# run (~10-20 calls) instead of the whole 1869-now history (~600+ calls) --
+# see README.md's "Incremental fetching" section. That means
+# historical_data/ (the small, git-committed baseline the scripts resume
+# from) can change as seasons age out of the "current + previous" window,
+# so this workflow commits that change back to the repo when it happens.
+# Same idea for ai_preview_cache/ -- it's committed too, so the AI preview
+# is only regenerated (spending real API budget) when the upcoming game
+# actually changes, not on every run.
 
 on:
   schedule:
@@ -21,7 +36,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write   # needed to commit historical_data/ updates back to main
   pages: write
   id-token: write
 
@@ -45,7 +60,23 @@ jobs:
       - name: Run the full update pipeline (fetch data + rebuild site)
         env:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python update_all.py
+
+      - name: Commit historical_data/ and ai_preview_cache/ if either changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add historical_data/
+          if [ -d ai_preview_cache ]; then
+            git add ai_preview_cache/
+          fi
+          if git diff --cached --quiet; then
+            echo "No change to historical_data/ or ai_preview_cache/ -- nothing to commit."
+          else
+            git commit -m "Advance historical baseline / AI preview cache [skip ci]"
+            git push
+          fi
 
       - name: Upload the built site as a Pages artifact
         uses: actions/upload-pages-artifact@v3

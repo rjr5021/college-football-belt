@@ -121,6 +121,14 @@ def pick(d, *names, default=None):
     return default
 
 
+def load_optional_json(name):
+    path = os.path.join(DATA_DIR, name)
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return json.load(f)
+
+
 def load_data():
     with open(os.path.join(DATA_DIR, "lineage.json")) as f:
         lineage = json.load(f)
@@ -128,7 +136,10 @@ def load_data():
         details = json.load(f)
     with open(os.path.join(DATA_DIR, "team_colors.json")) as f:
         colors = json.load(f)
-    return lineage, details, colors
+    next_game = load_optional_json("next_game.json")
+    matchup = load_optional_json("matchup_preview.json")
+    ai_preview = load_optional_json("ai_preview.json")
+    return lineage, details, colors, next_game, matchup, ai_preview
 
 
 def team_color(colors, name):
@@ -397,6 +408,28 @@ details.moreStats .statCategory{ margin-top:18px; }
   font-size:13px; color:var(--ink-soft); border-radius:0 4px 4px 0;
 }
 
+/* ---------- upcoming game preview page ---------- */
+.previewMeta{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:2px 0 30px; }
+.formGrid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:0 0 8px; }
+@media (max-width:700px){ .formGrid{ grid-template-columns:1fr; } }
+.formCol h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:0 0 10px; }
+.formList{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.formList li{ display:flex; align-items:center; gap:10px; padding:9px 11px; background:var(--paper-2); border-radius:6px; font-size:13px; }
+.formBadge{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:11px; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.formBadge.w{ background:#2f6b3f; color:#eafaea; }
+.formBadge.l{ background:#7a2e2e; color:#fbeaea; }
+.formBadge.t{ background:var(--ink-soft); color:var(--paper); }
+.formScore{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; }
+.formOpp{ color:var(--ink-soft); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.formDate{ margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap; }
+.emptyNote{ color:var(--ink-soft); font-size:13px; }
+.h2hHeadline{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; margin:0 0 16px; }
+.aiPreviewBody p{ max-width:70ch; font-size:15px; }
+.keyMatchups{ margin:14px 0 20px; padding-left:1.15em; max-width:68ch; }
+.keyMatchups li{ margin:7px 0; font-size:14.5px; }
+.keyMatchups li::marker{ color:var(--brass); }
+.bettingHead{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin:20px 0 6px; }
+
 footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-top:52px; font-size:12.5px; color:var(--ink-soft); }
 .footRow{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
 .footRow nav{ display:flex; gap:16px; font-family:"IBM Plex Mono",monospace; }
@@ -417,6 +450,15 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 @media (max-width:820px){ .hero{ grid-template-columns:1fr; } }
 .hero h1{ font-family:"Big Shoulders Display", sans-serif; font-weight:900; font-size:clamp(30px, 4vw, 42px); line-height:1.02; margin:0 0 14px; text-wrap:balance; }
 .hero p.lede{ font-size:17px; max-width:44ch; margin:0 0 18px; }
+
+.nextGame{ display:flex; align-items:center; gap:10px; width:fit-content; max-width:100%; margin:0 0 22px; padding:9px 16px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:20px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease; }
+.nextGame:hover{ border-color:var(--brass); box-shadow:0 2px 8px rgba(0,0,0,.08); }
+.nextGame:hover .nextGameText strong{ color:var(--brass-bright); }
+.nextGameTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-bright); font-weight:600; white-space:nowrap; padding-right:10px; border-right:1px solid var(--brass-line); }
+.nextGameText{ font-size:13.5px; color:var(--ink); }
+.nextGameText strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
+@media (max-width:500px){ .nextGame{ white-space:normal; } }
+
 .heroFacts{ display:flex; gap:26px; flex-wrap:wrap; }
 .heroFacts div{ display:flex; flex-direction:column; gap:2px; }
 .heroFacts .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; }
@@ -961,7 +1003,7 @@ def _reign_win_score(reign, change_index):
     return away_s, home_s
 
 
-def generate_homepage(lineage, colors, belt_games):
+def generate_homepage(lineage, colors, belt_games, next_game=None):
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
@@ -992,6 +1034,33 @@ def generate_homepage(lineage, colors, belt_games):
         lede = f"Holds the belt since {fmt_date(current['start_date'])}."
     if defenses:
         lede += f" {defenses} defense{'s' if defenses != 1 else ''} since."
+
+    # ---- up next: the current holder's next scheduled game, if CFBD's
+    # released that far ahead -- mined for free out of the same season
+    # fetch build_lineage.py already does, no extra API call ----
+    next_game_html = ""
+    if next_game and next_game.get("date"):
+        opponent = next_game["opponent"]
+        is_neutral = bool(next_game.get("neutral"))
+        loc_word = "vs." if (next_game.get("is_home") or is_neutral) else "at"
+        neutral_txt = " (neutral site)" if is_neutral else ""
+        when_txt = ""
+        try:
+            game_date = date.fromisoformat(next_game["date"])
+            days_until = (game_date - today).days
+            if days_until == 0:
+                when_txt = " &middot; Today"
+            elif days_until == 1:
+                when_txt = " &middot; Tomorrow"
+            elif days_until > 1:
+                when_txt = f" &middot; in {days_until} days"
+        except ValueError:
+            pass
+        next_game_html = f'''
+    <a class="nextGame" href="preview.html">
+      <span class="nextGameTag">Up Next</span>
+      <span class="nextGameText">{loc_word} <strong>{esc(opponent)}</strong>{neutral_txt} &middot; {fmt_date(next_game["date"])}{when_txt}</span>
+    </a>'''
 
     # ---- chain of custody: the last CHAIN_LEN reigns, oldest to newest ----
     chain_reigns = reigns[-CHAIN_LEN:]
@@ -1068,6 +1137,7 @@ def generate_homepage(lineage, colors, belt_games):
     <div>
       <h1>{esc(holder)} holds the belt.</h1>
       <p class="lede">{lede}</p>
+      {next_game_html}
       <div class="heroFacts">
         <div><span class="n tabular">{days_held:,}</span><span class="l">Days Held</span></div>
         <div><span class="n tabular">{defenses}</span><span class="l">Defenses</span></div>
@@ -1512,6 +1582,197 @@ def generate_all_games_page(lineage, colors, belt_games):
 '''
 
 
+# ------------------------------------------------------------ preview page
+
+def render_recent_form(team, games):
+    if not games:
+        return f'<p class="emptyNote">No recent completed games on record for {esc(team)}.</p>'
+    items = ""
+    for g in games:
+        cls = "t" if g.get("tied") else ("w" if g["won"] else "l")
+        letter = "T" if g.get("tied") else ("W" if g["won"] else "L")
+        loc = "vs" if g["home"] else "at"
+        date_txt = fmt_date(g["date"][:10]) if g.get("date") else ""
+        items += f'''
+        <li>
+          <span class="formBadge {cls}">{letter}</span>
+          <span class="formScore">{g["score_for"]}&ndash;{g["score_against"]}</span>
+          <span class="formOpp">{loc} {esc(g["opponent"])}</span>
+          <span class="formDate">{date_txt}</span>
+        </li>'''
+    return f'<ul class="formList">{items}\n      </ul>'
+
+
+def render_head_to_head(holder, opponent, h2h):
+    if not h2h:
+        return '<p class="emptyNote">No head-to-head data available.</p>'
+    t1w = h2h.get("team1_wins", 0) or 0
+    t2w = h2h.get("team2_wins", 0) or 0
+    ties = h2h.get("ties", 0) or 0
+    if t1w + t2w + ties == 0:
+        return (f'<p class="emptyNote">{esc(holder)} and {esc(opponent)} have '
+                f'no recorded meetings in CFBD&rsquo;s data.</p>')
+
+    tie_txt = f"&ndash;{ties}" if ties else ""
+    if t1w > t2w:
+        headline = f"{esc(holder)} leads the series {t1w}&ndash;{t2w}{tie_txt}"
+    elif t2w > t1w:
+        headline = f"{esc(opponent)} leads the series {t2w}&ndash;{t1w}{tie_txt}"
+    else:
+        headline = f"Series tied {t1w}&ndash;{t2w}{tie_txt}"
+    since = f" (since {h2h['start_year']})" if h2h.get("start_year") else ""
+
+    rows = ""
+    for m in (h2h.get("games") or [])[:8]:
+        season = m.get("season") or "&mdash;"
+        home_t, away_t = m.get("home_team") or "?", m.get("away_team") or "?"
+        hs, as_ = m.get("home_score"), m.get("away_score")
+        score_txt = f"{as_}&ndash;{hs}" if (hs is not None and as_ is not None) else "&mdash;"
+        loc_word = "vs." if m.get("neutral") else "at"
+        rows += f'''
+        <tr>
+          <td class="num">{season}</td>
+          <td class="teamCell">{esc(away_t)} {loc_word} {esc(home_t)}</td>
+          <td class="tabular">{score_txt}</td>
+        </tr>'''
+
+    table_html = ""
+    if rows:
+        table_html = f'''
+    <div class="tableScroll">
+      <table class="reignsTable">
+        <thead><tr><th>Season</th><th>Matchup</th><th style="text-align:right">Score</th></tr></thead>
+        <tbody>{rows}
+        </tbody>
+      </table>
+    </div>'''
+
+    return f'<p class="h2hHeadline">{headline}{since}</p>{table_html}'
+
+
+def generate_preview_page(next_game, matchup, ai_preview, colors):
+    nav = '''
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="ruleset.html">Ruleset</a>
+    </nav>'''
+    header = f'''<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>{nav}
+  </div>
+</header>'''
+    footer = f'''<footer class="wrap">
+  <div class="footRow">
+    <span>Recent form and head-to-head from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="ruleset.html">Ruleset</a>
+    </nav>
+  </div>
+</footer>'''
+
+    if not next_game:
+        return f'''<meta charset="UTF-8">
+<title>Up Next — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+
+{header}
+
+<main class="wrap">
+  <h1 class="pageTitle">No Upcoming Game Yet</h1>
+  <p class="lede">The current holder&rsquo;s next game hasn&rsquo;t shown up in CollegeFootballData&rsquo;s
+    records yet &mdash; check back soon.</p>
+</main>
+
+{footer}
+'''
+
+    holder = next_game["team"]
+    opponent = next_game["opponent"]
+    if next_game.get("neutral"):
+        side_word, side_full = "vs.", "faces (neutral site)"
+    elif next_game.get("is_home"):
+        side_word, side_full = "vs.", "hosts"
+    else:
+        side_word, side_full = "at", "travels to"
+
+    title = f"{esc(holder)} {side_word} {esc(opponent)}"
+
+    matchup = matchup or {}
+    recent = matchup.get("recent_form") or {}
+    holder_form_html = render_recent_form(holder, recent.get(holder, []))
+    opp_form_html = render_recent_form(opponent, recent.get(opponent, []))
+    h2h_html = render_head_to_head(holder, opponent, matchup.get("head_to_head"))
+
+    ai_html = ""
+    if ai_preview and (ai_preview.get("overview") or ai_preview.get("key_matchups") or ai_preview.get("betting_angles")):
+        overview = ai_preview.get("overview") or ""
+        key_matchups = ai_preview.get("key_matchups") or []
+        betting = ai_preview.get("betting_angles") or ""
+        matchups_html = "".join(f"<li>{esc(m)}</li>" for m in key_matchups)
+        betting_html = f'<p class="bettingHead">Betting Angles</p><p>{esc(betting)}</p>' if betting else ""
+        matchups_block = f'<ul class="keyMatchups">{matchups_html}</ul>' if matchups_html else ""
+        ai_html = f'''
+  <div class="sectionHead withTag">
+    <span class="tag">AI-Written</span>
+    <span class="rule"></span>
+    <h2>Game Preview</h2>
+  </div>
+  <div class="aiPreviewBody">
+    <p>{esc(overview)}</p>
+    {matchups_block}
+    {betting_html}
+  </div>
+  <p class="noteBox">Written by Claude from the stats on this page &mdash; not betting advice, for
+    analysis and entertainment only. If it stops being fun, the National Problem Gambling Helpline
+    is 1-800-522-4700.</p>'''
+
+    return f'''<meta charset="UTF-8">
+<title>{title} Preview — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+
+{header}
+
+<main class="wrap">
+  <h1 class="pageTitle">Up Next: {title}</h1>
+  <p class="previewMeta">{esc(holder)} {esc(side_full)} {esc(opponent)} &middot; {fmt_date(next_game["date"])} &middot; the belt is on the line</p>
+
+  <div class="sectionHead withTag">
+    <span class="tag">Recent Form</span>
+    <span class="rule"></span>
+    <h2>Last 5 Games</h2>
+  </div>
+  <div class="formGrid">
+    <div class="formCol">
+      <h3>{esc(holder)}</h3>
+      {holder_form_html}
+    </div>
+    <div class="formCol">
+      <h3>{esc(opponent)}</h3>
+      {opp_form_html}
+    </div>
+  </div>
+
+  <div class="sectionHead withTag">
+    <span class="tag">Head-to-Head</span>
+    <span class="rule"></span>
+    <h2>All-Time Series</h2>
+  </div>
+  {h2h_html}
+{ai_html}
+</main>
+
+{footer}
+'''
+
+
 # --------------------------------------------------------------- ruleset page
 
 RULESET_MD_PATH = "ruleset.md"
@@ -1663,7 +1924,7 @@ def generate_ruleset_page(md_text):
 # -------------------------------------------------------------------- main
 
 def main():
-    lineage, details, colors = load_data()
+    lineage, details, colors, next_game, matchup, ai_preview = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -1687,14 +1948,14 @@ def main():
         merged["player_stats"] = d.get("player_stats")
 
         prev_game = belt_games[i - 1] if i > 0 else None
-        next_game = belt_games[i + 1] if i < len(belt_games) - 1 else None
+        next_belt_game = belt_games[i + 1] if i < len(belt_games) - 1 else None
 
-        html_out = render_page(merged, colors, prev_game, next_game, len(belt_games))
+        html_out = render_page(merged, colors, prev_game, next_belt_game, len(belt_games))
         with open(os.path.join(games_dir, f"{gid}.html"), "w", encoding="utf-8") as f:
             f.write(html_out)
         written += 1
 
-    homepage_html = generate_homepage(lineage, colors, belt_games)
+    homepage_html = generate_homepage(lineage, colors, belt_games, next_game)
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 
@@ -1705,6 +1966,10 @@ def main():
     all_games_html = generate_all_games_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "all-games.html"), "w", encoding="utf-8") as f:
         f.write(all_games_html)
+
+    preview_html = generate_preview_page(next_game, matchup, ai_preview, colors)
+    with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
+        f.write(preview_html)
 
     if os.path.exists(RULESET_MD_PATH):
         with open(RULESET_MD_PATH, encoding="utf-8") as f:
@@ -1723,6 +1988,7 @@ def main():
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
+    print(f"Wrote preview page to {OUT_DIR}/preview.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
     if warnings:
