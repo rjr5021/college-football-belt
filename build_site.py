@@ -514,6 +514,8 @@ table.reignsTable td.num{ font-family:"IBM Plex Mono",monospace; color:var(--ink
 table.reignsTable td.teamCell{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:16px; white-space:nowrap; }
 table.reignsTable td.teamCell a{ text-decoration:none; }
 table.reignsTable td.teamCell a:hover{ text-decoration:underline; text-decoration-color:var(--brass); }
+table.reignsTable td.won a, table.reignsTable td.lost a{ text-decoration:none; border-bottom:1px dotted var(--ink-soft); }
+table.reignsTable td.won a:hover, table.reignsTable td.lost a:hover{ border-bottom-color:var(--brass); color:var(--brass-bright); }
 table.reignsTable td.dates, table.reignsTable td.won, table.reignsTable td.lost{ font-size:12.5px; color:var(--ink-soft); }
 table.reignsTable td.tabular{ text-align:right; font-family:"IBM Plex Mono",monospace; }
 table.reignsTable tr.current{ background: color-mix(in srgb, var(--brass) 10%, transparent); }
@@ -527,6 +529,17 @@ table.reignsTable tr.hiddenRow{ display:none; }
 .gameNav a:hover{ color:var(--ink); border-color:var(--brass); }
 .gameNav a.next{ text-align:right; }
 .gameNav a.disabled{ opacity:.35; pointer-events:none; }
+
+/* all-games log page */
+table.reignsTable td.matchup{ font-size:13.5px; }
+table.reignsTable td.matchup a{ text-decoration:none; color:inherit; }
+table.reignsTable td.matchup a:hover{ text-decoration:underline; text-decoration-color:var(--brass); }
+table.reignsTable td.result{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
+table.reignsTable td.result .win{ color:var(--brass-bright); font-weight:700; }
+table.reignsTable tr.titleChange{ background: color-mix(in srgb, var(--brass) 7%, transparent); }
+.viewToggle{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); margin:2px 0 0; }
+.viewToggle a{ color:var(--brass-bright); text-decoration:none; border-bottom:1px dotted var(--brass); }
+.viewToggle a:hover{ border-bottom-style:solid; }
 """.strip()
 
 # A short hash of the stylesheet's own content, appended to every
@@ -665,7 +678,7 @@ def render_team_stats(g):
 
 # --------------------------------------------------------------------- page
 
-def render_page(g, colors, prev_game=None, next_game=None):
+def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     home, away = g["home"], g["away"]
     home_score, away_score = (int(x) for x in g["score"].split("-"))
     home_primary, home_alt = team_color(colors, home)
@@ -736,10 +749,11 @@ def render_page(g, colors, prev_game=None, next_game=None):
     <a class="back" href="../index.html">&larr; The College Football Belt</a>
     <nav class="site" aria-label="Primary">
       <a href="../lineage.html">Full History</a>
+      <a href="../all-games.html">All Games</a>
       <a href="../ruleset.html">Ruleset</a>
     </nav>
   </div>
-  <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of 1,633</div>
+  <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
 </header>
 
 <main class="wrap">
@@ -772,6 +786,7 @@ def render_page(g, colors, prev_game=None, next_game=None):
     <nav aria-label="Footer">
       <a href="../index.html">Home</a>
       <a href="../lineage.html">Full History</a>
+      <a href="../all-games.html">All Games</a>
       <a href="../ruleset.html">Ruleset</a>
     </nav>
   </div>
@@ -892,6 +907,7 @@ def generate_homepage(lineage, colors, belt_games):
     <nav class="site" aria-label="Primary">
       <a href="#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="#numbers">By the Numbers</a>
     </nav>
@@ -987,6 +1003,7 @@ def generate_homepage(lineage, colors, belt_games):
     <nav aria-label="Footer">
       <a href="#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
       <a href="ruleset.html">Ruleset</a>
     </nav>
   </div>
@@ -1040,12 +1057,17 @@ def generate_lineage_page(lineage, colors, belt_games):
         gid = game_link_for(r)
 
         team_html = f'<a href="games/{gid}.html">{esc(team)}</a>' if gid else esc(team)
-        won_txt = f"def. {esc(r['won_from'])} {w}&ndash;{l}" if (r.get("won_from") and w is not None) else "Established the belt"
+        won_inner = f"def. {esc(r['won_from'])} {w}&ndash;{l}" if (r.get("won_from") and w is not None) else "Established the belt"
+        won_txt = f'<a href="games/{gid}.html">{won_inner}</a>' if gid else won_inner
+
+        next_reign = reigns[i] if i < len(reigns) else None
+        lost_gid = game_link_for(next_reign) if next_reign else None
         if is_current:
             lost_txt = '<span class="mono">— present —</span>'
             end_txt = "Present"
         elif r.get("lost_to"):
-            lost_txt = f"to {esc(r['lost_to'])}"
+            lost_inner = f"to {esc(r['lost_to'])}"
+            lost_txt = f'<a href="games/{lost_gid}.html">{lost_inner}</a>' if lost_gid else lost_inner
             end_txt = fmt_date(r["end_date"])
         else:
             lost_txt = "—"
@@ -1075,6 +1097,7 @@ def generate_lineage_page(lineage, colors, belt_games):
     </div>
     <nav class="site" aria-label="Primary">
       <a href="index.html">Home</a>
+      <a href="all-games.html">All Games</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
@@ -1116,6 +1139,8 @@ def generate_lineage_page(lineage, colors, belt_games):
     </table>
     <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
+  <p class="viewToggle">Want every individual game, defenses included &mdash;
+    not just who won each reign? <a href="all-games.html">See the full game log &rarr;</a></p>
 </main>
 
 <footer class="wrap">
@@ -1123,6 +1148,143 @@ def generate_lineage_page(lineage, colors, belt_games):
     <span>Every reign computed from the College Football Data API, oldest to newest, top to bottom.</span>
     <nav aria-label="Footer">
       <a href="index.html">Home</a>
+      <a href="all-games.html">All Games</a>
+      <a href="ruleset.html">Ruleset</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){{
+  var input = document.getElementById('teamSearch');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
+  var noResults = document.getElementById('noResults');
+  var noResultsTerm = document.getElementById('noResultsTerm');
+  input.addEventListener('input', function(){{
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function(r){{
+      var name = r.getAttribute('data-team') || '';
+      var match = !q || name.indexOf(q) !== -1;
+      r.classList.toggle('hiddenRow', !match);
+      if (match) shown++;
+    }});
+    noResultsTerm.textContent = input.value.trim();
+    noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
+  }});
+}})();
+</script>
+'''
+
+
+# -------------------------------------------------------------- all games page
+
+def generate_all_games_page(lineage, colors, belt_games):
+    """Every belt game, one row each -- title changes AND defenses, unlike
+    the Full History page above which only has one row per reign (the game
+    where it STARTED). Reuses the same reignsTable/searchBox/historyTop
+    CSS and search-filter JS as generate_lineage_page for a consistent look,
+    just with a different (game-shaped, not reign-shaped) column set."""
+    totals = lineage["totals"]
+    title_changes = sum(1 for g in belt_games if g["outcome"] == "changed")
+    defenses_total = len(belt_games) - title_changes
+
+    rows_html = ""
+    defense_no = 0
+    for g in belt_games:
+        home, away = g["home"], g["away"]
+        home_score, away_score = (int(x) for x in g["score"].split("-"))
+        outcome = g["outcome"]
+        is_last = g is belt_games[-1]
+
+        if outcome == "changed":
+            defense_no = 0
+            result_html = f'<span class="win">New champion: {esc(g["new_holder"])}</span>'
+        else:
+            defense_no += 1
+            tie_note = " (tie)" if outcome == "retained (tie)" else ""
+            result_html = f'Defended{tie_note} &middot; #{defense_no}'
+
+        loc_word = "vs." if g["neutral"] else "at"
+        matchup_text = f'{esc(away)} {loc_word} {esc(home)}'
+        matchup_html = f'<a href="games/{g["game_id"]}.html">{matchup_text}</a>'
+
+        cls_bits = []
+        if outcome == "changed":
+            cls_bits.append("titleChange")
+        if is_last:
+            cls_bits.append("current")
+        cls = " ".join(cls_bits)
+
+        rows_html += f'''
+        <tr class="{cls}" data-team="{esc(home.lower())} {esc(away.lower())}">
+          <td class="num">{g["game_number"]:,}</td>
+          <td class="dates">{fmt_date(g["date"])}</td>
+          <td class="matchup">{matchup_html}</td>
+          <td class="tabular">{away_score}&ndash;{home_score}</td>
+          <td class="result">{result_html}</td>
+        </tr>'''
+
+    return f'''<meta charset="UTF-8">
+<title>All Games — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="index.html#numbers">By the Numbers</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Every Belt Game</h1>
+  <p class="lede">Every game with the belt on the line since Rutgers beat Princeton on
+    November&nbsp;6, 1869 &mdash; {len(belt_games):,} of them: {title_changes:,} title changes
+    and {defenses_total:,} successful defenses, across {totals["distinct_teams"]} programs.
+    Type a team name to filter; tap any game to open its page.</p>
+
+  <div class="historyTop">
+    <div class="historyStats">
+      <div><span class="n tabular">{len(belt_games):,}</span><span class="l">Total Games</span></div>
+      <div><span class="n tabular">{title_changes:,}</span><span class="l">Title Changes</span></div>
+      <div><span class="n tabular">{defenses_total:,}</span><span class="l">Defenses</span></div>
+    </div>
+    <div class="searchBox">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+      <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Date</th><th>Matchup</th><th style="text-align:right">Score</th><th>Result</th>
+        </tr>
+      </thead>
+      <tbody>{rows_html}
+      </tbody>
+    </table>
+    <p class="noResults" id="noResults">No games match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
+  </div>
+  <p class="viewToggle">Looking for the reign-by-reign summary instead?
+    <a href="lineage.html">See the Full History page &rarr;</a></p>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every game computed from the College Football Data API, oldest to newest, top to bottom.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
       <a href="ruleset.html">Ruleset</a>
     </nav>
   </div>
@@ -1273,6 +1435,7 @@ def generate_ruleset_page(md_text):
       <a href="index.html">Home</a>
       <a href="index.html#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1291,6 +1454,7 @@ def generate_ruleset_page(md_text):
       <a href="index.html">Home</a>
       <a href="index.html#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
     </nav>
   </div>
 </footer>
@@ -1325,7 +1489,7 @@ def main():
         prev_game = belt_games[i - 1] if i > 0 else None
         next_game = belt_games[i + 1] if i < len(belt_games) - 1 else None
 
-        html_out = render_page(merged, colors, prev_game, next_game)
+        html_out = render_page(merged, colors, prev_game, next_game, len(belt_games))
         with open(os.path.join(games_dir, f"{gid}.html"), "w", encoding="utf-8") as f:
             f.write(html_out)
         written += 1
@@ -1337,6 +1501,10 @@ def main():
     lineage_html = generate_lineage_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "lineage.html"), "w", encoding="utf-8") as f:
         f.write(lineage_html)
+
+    all_games_html = generate_all_games_page(lineage, colors, belt_games)
+    with open(os.path.join(OUT_DIR, "all-games.html"), "w", encoding="utf-8") as f:
+        f.write(all_games_html)
 
     if os.path.exists(RULESET_MD_PATH):
         with open(RULESET_MD_PATH, encoding="utf-8") as f:
@@ -1354,6 +1522,7 @@ def main():
     print(f"Wrote shared stylesheet to {OUT_DIR}/styles.css")
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
+    print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
     if warnings:
