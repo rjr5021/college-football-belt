@@ -39,9 +39,16 @@ timezonefinder is what turns venue coordinates into an IANA zone name.
 Without it, every game falls back to the naive UTC date -- the script still
 runs, just with the same off-by-a-day risk as before this fix.
 
-NOTE: written without network access and NOT yet executed. The CFBD API has
-used both snake_case and camelCase field names across versions; this script
-accepts either, but expect to debug the first run.
+Rate limits: a full 1869-current pull is ~316 requests. 429s get a patient,
+capped-exponential backoff (up to 60s, 8 tries) distinct from the faster
+backoff used for 5xx/network errors, and progress is saved year-by-year to
+a resumable cache -- so a run that still exhausts retries and dies partway
+through doesn't lose the years it already fetched; just rerun the same
+command. (Discovered necessary running this on GitHub Actions runners,
+which hit CFBD's rate limit within the first ~20 years otherwise.)
+
+The CFBD API has used both snake_case and camelCase field names across
+versions; this script accepts either.
 """
 
 import argparse
@@ -68,8 +75,15 @@ def pick(d, *names, default=None):
     return default
 
 
-def _get_json(url, api_key, label, retries=4):
-    """Shared GET-with-retry used for both /games and /venues."""
+def _get_json(url, api_key, label, retries=8):
+    """Shared GET-with-retry used for both /games and /venues.
+
+    429s (rate limit) get a much more patient, longer backoff than a 5xx or
+    a network blip -- capped at 60s, over `retries` tries -- since CFBD's
+    rate limit needs real time to clear, not a couple of quick retries.
+    Discovered necessary running the full 1869-2026 pull on GitHub's
+    runners, which hit 429s within the first ~20 years otherwise.
+    """
     req = urllib.request.Request(url, headers={
         "Authorization": f"Bearer {api_key}",
         "Accept": "application/json",
@@ -81,7 +95,12 @@ def _get_json(url, api_key, label, retries=4):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return []
-            if e.code in (429, 500, 502, 503) and attempt < retries - 1:
+            if e.code == 429 and attempt < retries - 1:
+                wait = min(5 * (2 ** attempt), 60)
+                print(f"  429 on {label}, retrying in {wait}s", file=sys.stderr)
+                time.sleep(wait)
+                continue
+            if e.code in (500, 502, 503) and attempt < retries - 1:
                 wait = 2 ** attempt
                 print(f"  {e.code} on {label}, retrying in {wait}s", file=sys.stderr)
                 time.sleep(wait)
@@ -95,12 +114,12 @@ def _get_json(url, api_key, label, retries=4):
     return []
 
 
-def fetch_year(year, api_key, season_type, retries=4):
+def fetch_year(year, api_key, season_type, retries=8):
     url = f"{API_BASE}/games?year={year}&seasonType={season_type}"
     return _get_json(url, api_key, f"{year}/{season_type}", retries=retries)
 
 
-def fetch_venues(api_key, retries=4):
+def fetch_venues(api_key, retries=8):
     return _get_json(f"{API_BASE}/venues", api_key, "venues", retries=retries)
 
 
@@ -212,25 +231,56 @@ def local_date(iso_utc, venue_tz_name):
 
 
 def collect(start_year, end_year, api_key):
+    """Fetch every game, year by year, from `start_year` through `end_year`.
+
+    A full run is ~316 requests (158 years x 2 season types), which is
+    enough to trip CFBD's rate limit even with the patient backoff in
+    _get_json -- and on a bare GitHub Actions runner (no games_raw.json
+    ever persists between CI runs) that's a full refetch every single
+    time. So progress is saved incrementally, one year at a time and in a
+    `finally` block, to a resumable per-year cache: a crash or an
+    exhausted-retries 429 partway through no longer throws away every
+    year already fetched -- rerunning picks up right where it left off,
+    the same fix already applied to fetch_game_details.py.
+    """
     cache = os.path.join(OUT_DIR, "games_raw.json")
     if os.path.exists(cache):
         print(f"Using cached {cache} (delete it to refetch)")
         with open(cache) as f:
             return json.load(f)
 
-    all_games = []
-    for year in range(start_year, end_year + 1):
-        got = 0
-        for st in ("regular", "postseason"):
-            rows = fetch_year(year, api_key, st)
-            all_games.extend(rows)
-            got += len(rows)
-        print(f"  {year}: {got} games")
-        time.sleep(0.15)
+    progress_cache = os.path.join(OUT_DIR, "games_raw_progress.json")
+    progress = {}
+    if os.path.exists(progress_cache):
+        with open(progress_cache) as f:
+            progress = json.load(f)
+        print(f"Resuming {progress_cache}: {len(progress)} year(s) already fetched")
 
+    def save_progress():
+        with open(progress_cache, "w") as f:
+            json.dump(progress, f)
+
+    try:
+        for year in range(start_year, end_year + 1):
+            key = str(year)
+            if key in progress:
+                continue
+            got = []
+            for st in ("regular", "postseason"):
+                got.extend(fetch_year(year, api_key, st))
+            progress[key] = got
+            print(f"  {year}: {len(got)} games")
+            save_progress()
+            time.sleep(0.15)
+    finally:
+        save_progress()
+
+    all_games = [g for year in range(start_year, end_year + 1)
+                 for g in progress.get(str(year), [])]
     with open(cache, "w") as f:
         json.dump(all_games, f)
     print(f"Cached {len(all_games)} games to {cache}")
+    os.remove(progress_cache)  # superseded by the finished games_raw.json
     return all_games
 
 
