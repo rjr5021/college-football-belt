@@ -23,6 +23,7 @@ That's what makes this safe to run unattended across all 101 teams instead
 of eyeballing every color pair.
 """
 
+import hashlib
 import html
 import json
 import os
@@ -186,16 +187,46 @@ def team_chip(name):
     return (stripped[:4] or "?")
 
 
-def reign_duration_days(reign, today):
+def reign_dates(reign, today):
     start = date.fromisoformat(reign["start_date"])
     end = date.fromisoformat(reign["end_date"]) if reign.get("end_date") else today
+    return start, end
+
+
+def reign_duration_days(reign, today):
+    start, end = reign_dates(reign, today)
     return (end - start).days
 
 
-def fmt_duration(days):
-    if days >= 365:
-        return f"{days / 365.25:.1f} yrs"
-    return f"{days:,} day{'s' if days != 1 else ''}"
+def fmt_duration(start, end):
+    """Human-readable span between two dates: '<n> days' under a year,
+    else '<y> yrs, <d> days' (day part omitted if it lands on 0) -- using
+    the actual calendar years between the two dates (via the anniversary
+    of `start`), not a division by 365/365.25, so leap years don't drift
+    the day count."""
+    days = (end - start).days
+    if days < 365:
+        return f"{days:,} day{'s' if days != 1 else ''}"
+
+    years = end.year - start.year
+
+    def anniversary(y):
+        try:
+            return start.replace(year=start.year + y)
+        except ValueError:
+            # start was a Feb 29 with no such date `y` years later
+            return start.replace(year=start.year + y, month=2, day=28)
+
+    anniv = anniversary(years)
+    if anniv > end:
+        years -= 1
+        anniv = anniversary(years)
+
+    rem_days = (end - anniv).days
+    parts = [f"{years} yr{'s' if years != 1 else ''}"]
+    if rem_days:
+        parts.append(f"{rem_days} day{'s' if rem_days != 1 else ''}")
+    return ", ".join(parts)
 
 
 def build_change_game_index(belt_games):
@@ -498,6 +529,17 @@ table.reignsTable tr.hiddenRow{ display:none; }
 .gameNav a.disabled{ opacity:.35; pointer-events:none; }
 """.strip()
 
+# A short hash of the stylesheet's own content, appended to every
+# <link href="styles.css"> as a cache-busting query string (?v=<hash>).
+# Without this, a returning browser (or GitHub Pages' own CDN) can keep
+# serving an OLD cached copy of styles.css under the same URL after a
+# deploy changes it -- the HTML and JS update fine, but any new CSS rule
+# (e.g. the Full History search filter's `.hiddenRow{ display:none }`)
+# silently never applies, because the page never re-fetches the file it
+# lives in. The hash changes automatically whenever CSS content changes,
+# so every deploy gets a fresh URL and old cached copies are never reused.
+STYLES_VERSION = hashlib.sha256(STYLES_CSS.encode("utf-8")).hexdigest()[:10]
+
 
 def esc(s):
     return html.escape(str(s), quote=True)
@@ -676,7 +718,7 @@ def render_page(g, colors, prev_game=None, next_game=None):
 
     body = f'''<meta charset="UTF-8">
 <title>{title}</title>
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 <style>
   :root{{
     --home:{home_primary}; --home-ink:{home_ink}; --home-accent:{home_accent};
@@ -834,7 +876,7 @@ def generate_homepage(lineage, colors, belt_games):
 
     return f'''<meta charset="UTF-8">
 <title>The College Football Belt</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 <style>
   :root{{
     --holder:{primary}; --holder-alt:{accent}; --holder-ink:{ink};
@@ -975,7 +1017,7 @@ def generate_lineage_page(lineage, colors, belt_games):
     records_html = f'''
     <div class="record-card">
       <div class="l">Longest Reign</div>
-      <div class="v">{esc(longest_reign["team"])} &mdash; {fmt_duration(longest_days)}</div>
+      <div class="v">{esc(longest_reign["team"])} &mdash; {fmt_duration(*reign_dates(longest_reign, today))}</div>
       <div class="sub">{fmt_date(longest_reign["start_date"])} &ndash; {fmt_date(longest_reign["end_date"]) if longest_reign.get("end_date") else "present"}</div>
     </div>
     <div class="record-card">
@@ -1009,14 +1051,13 @@ def generate_lineage_page(lineage, colors, belt_games):
             lost_txt = "—"
             end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
 
-        days = reign_duration_days(r, today)
         cls = " current" if is_current else ""
         rows_html += f'''
         <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
           <td class="num">{i}</td>
           <td class="teamCell"><span class="reignChip" style="background:{p}"></span>{team_html}</td>
           <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
-          <td class="tabular">{fmt_duration(days)}</td>
+          <td class="tabular">{fmt_duration(*reign_dates(r, today))}</td>
           <td class="tabular">{r["defenses"]}</td>
           <td class="won">{won_txt}</td>
           <td class="lost">{lost_txt}</td>
@@ -1024,7 +1065,7 @@ def generate_lineage_page(lineage, colors, belt_games):
 
     return f'''<meta charset="UTF-8">
 <title>Full History — The College Football Belt</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 
 <header class="site wrap">
   <div class="headerRow">
@@ -1220,7 +1261,7 @@ def generate_ruleset_page(md_text):
 
     return f'''<meta charset="UTF-8">
 <title>Ruleset — The College Football Belt</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 
 <header class="site wrap">
   <div class="headerRow">
