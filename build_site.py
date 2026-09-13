@@ -28,6 +28,7 @@ import json
 import os
 import re
 import sys
+from collections import Counter
 from datetime import date
 
 OUT_DIR = "site"
@@ -183,6 +184,18 @@ def team_chip(name):
         return "".join(letters[:4])
     stripped = re.sub(r"[^A-Za-z]", "", base).upper()
     return (stripped[:4] or "?")
+
+
+def reign_duration_days(reign, today):
+    start = date.fromisoformat(reign["start_date"])
+    end = date.fromisoformat(reign["end_date"]) if reign.get("end_date") else today
+    return (end - start).days
+
+
+def fmt_duration(days):
+    if days >= 365:
+        return f"{days / 365.25:.1f} yrs"
+    return f"{days:,} day{'s' if days != 1 else ''}"
 
 
 def build_change_game_index(belt_games):
@@ -438,6 +451,51 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .ruleList{ margin:10px 0 0; padding-left:1.15em; max-width:68ch; }
 .ruleList li{ margin:7px 0; }
 .ruleList li::marker{ color:var(--brass); }
+
+/* ---------- full history page ---------- */
+.historyTop{ display:flex; flex-wrap:wrap; gap:16px 28px; align-items:flex-end; justify-content:space-between; margin:24px 0 8px; }
+.historyStats{ display:flex; gap:22px; flex-wrap:wrap; }
+.historyStats div{ display:flex; flex-direction:column; gap:2px; }
+.historyStats .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:22px; }
+.historyStats .l{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+
+.searchBox{ position:relative; }
+.searchBox input{
+  font-family:"IBM Plex Mono",monospace; font-size:13px; padding:9px 14px 9px 30px;
+  border:1px solid var(--hairline); border-radius:20px; background:var(--paper-2); color:var(--ink);
+  width:220px; max-width:60vw;
+}
+.searchBox input::placeholder{ color:var(--ink-soft); }
+.searchBox svg{ position:absolute; left:10px; top:50%; transform:translateY(-50%); opacity:.55; pointer-events:none; }
+
+.records{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0 34px; }
+@media (max-width:820px){ .records{ grid-template-columns:1fr; } }
+.record-card{ padding:14px 16px; background:var(--paper-2); border-radius:2px 8px 8px 2px; border-left:3px solid var(--brass); }
+.record-card .l{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:5px; }
+.record-card .v{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; }
+.record-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+.tableScroll{ overflow-x:auto; }
+table.reignsTable{ width:100%; border-collapse:collapse; font-size:14.5px; min-width:560px; }
+table.reignsTable th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:9px 10px; border-bottom:1px solid var(--brass-line); position:sticky; top:0; background:var(--paper); }
+table.reignsTable td{ padding:10px; border-bottom:1px solid var(--hairline); vertical-align:middle; }
+table.reignsTable td.num{ font-family:"IBM Plex Mono",monospace; color:var(--ink-soft); font-size:12.5px; }
+table.reignsTable td.teamCell{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:16px; white-space:nowrap; }
+table.reignsTable td.teamCell a{ text-decoration:none; }
+table.reignsTable td.teamCell a:hover{ text-decoration:underline; text-decoration-color:var(--brass); }
+table.reignsTable td.dates, table.reignsTable td.won, table.reignsTable td.lost{ font-size:12.5px; color:var(--ink-soft); }
+table.reignsTable td.tabular{ text-align:right; font-family:"IBM Plex Mono",monospace; }
+table.reignsTable tr.current{ background: color-mix(in srgb, var(--brass) 10%, transparent); }
+table.reignsTable tr.current td.teamCell{ color:var(--brass-bright); }
+table.reignsTable tr.hiddenRow{ display:none; }
+.reignChip{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:9px; vertical-align:middle; border:1px solid var(--hairline); }
+.noResults{ padding:34px 0; text-align:center; color:var(--ink-soft); font-style:italic; display:none; }
+
+.gameNav{ display:flex; gap:12px; margin:26px 0 0; font-family:"IBM Plex Mono",monospace; font-size:12px; }
+.gameNav a{ text-decoration:none; color:var(--ink-soft); border:1px solid var(--hairline); border-radius:20px; padding:7px 16px; flex:1; }
+.gameNav a:hover{ color:var(--ink); border-color:var(--brass); }
+.gameNav a.next{ text-align:right; }
+.gameNav a.disabled{ opacity:.35; pointer-events:none; }
 """.strip()
 
 
@@ -565,7 +623,7 @@ def render_team_stats(g):
 
 # --------------------------------------------------------------------- page
 
-def render_page(g, colors):
+def render_page(g, colors, prev_game=None, next_game=None):
     home, away = g["home"], g["away"]
     home_score, away_score = (int(x) for x in g["score"].split("-"))
     home_primary, home_alt = team_color(colors, home)
@@ -602,7 +660,22 @@ def render_page(g, colors):
 
     title = f"{esc(away)} at {esc(home)} — Belt Game {g['game_number']}"
 
-    body = f'''<title>{title}</title>
+    def nav_link(game, cls, arrow_first):
+        if game is None:
+            arrow = "&larr; " if arrow_first else " &rarr;"
+            label = "Start of the lineage" if arrow_first else "Present day"
+            text = f"{arrow}{esc(label)}" if arrow_first else f"{esc(label)}{arrow}"
+            return f'<a class="disabled {cls}">{text}</a>'
+        matchup = f"{esc(game['away'])} at {esc(game['home'])}"
+        arrow = "&larr; " if arrow_first else " &rarr;"
+        text = f"{arrow}{matchup}" if arrow_first else f"{matchup}{arrow}"
+        return f'<a class="{cls}" href="{game["game_id"]}.html">{text}</a>'
+
+    game_nav = (f'<div class="gameNav">{nav_link(prev_game, "prev", True)}'
+                f'{nav_link(next_game, "next", False)}</div>')
+
+    body = f'''<meta charset="UTF-8">
+<title>{title}</title>
 <link rel="stylesheet" href="../styles.css">
 <style>
   :root{{
@@ -617,7 +690,13 @@ def render_page(g, colors):
 </style>
 
 <header class="site wrap">
-  <a class="back" href="../index.html">&larr; The College Football Belt</a>
+  <div class="headerRow">
+    <a class="back" href="../index.html">&larr; The College Football Belt</a>
+    <nav class="site" aria-label="Primary">
+      <a href="../lineage.html">Full History</a>
+      <a href="../ruleset.html">Ruleset</a>
+    </nav>
+  </div>
   <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of 1,633</div>
 </header>
 
@@ -642,10 +721,18 @@ def render_page(g, colors):
   </div>
 {render_line_score(g)}
 {render_team_stats(g)}
+{game_nav}
 </main>
 
 <footer class="wrap">
-  Part of the lineage since 1869. Score{" and line score" if g.get("line_score") else ""} sourced from the College Football Data API.
+  <div class="footRow">
+    <span>Part of the lineage since 1869. Score{" and line score" if g.get("line_score") else ""} sourced from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="../index.html">Home</a>
+      <a href="../lineage.html">Full History</a>
+      <a href="../ruleset.html">Ruleset</a>
+    </nav>
+  </div>
 </footer>
 '''
     return body
@@ -745,7 +832,8 @@ def generate_homepage(lineage, colors, belt_games):
 
     monogram = esc(team_chip(holder))
 
-    return f'''<title>The College Football Belt</title>
+    return f'''<meta charset="UTF-8">
+<title>The College Football Belt</title>
 <link rel="stylesheet" href="styles.css">
 <style>
   :root{{
@@ -761,6 +849,7 @@ def generate_homepage(lineage, colors, belt_games):
     </div>
     <nav class="site" aria-label="Primary">
       <a href="#lineage">Lineage</a>
+      <a href="lineage.html">Full History</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="#numbers">By the Numbers</a>
     </nav>
@@ -807,6 +896,7 @@ def generate_homepage(lineage, colors, belt_games):
       {chain_lead}
       {links_html}
     </div>
+    <p class="rulesFoot"><a href="lineage.html">View the full history &mdash; all {len(reigns)} reigns &rarr;</a></p>
   </section>
 
   <section id="ruleset">
@@ -854,10 +944,169 @@ def generate_homepage(lineage, colors, belt_games):
     <span>Every belt game sourced from the College Football Data API. Colors shown are the current holder&rsquo;s &mdash; the plate above recolors itself with every change of hands.</span>
     <nav aria-label="Footer">
       <a href="#lineage">Lineage</a>
+      <a href="lineage.html">Full History</a>
       <a href="ruleset.html">Ruleset</a>
     </nav>
   </div>
 </footer>
+'''
+
+
+# ---------------------------------------------------------- full history page
+
+def generate_lineage_page(lineage, colors, belt_games):
+    reigns = lineage["reigns"]
+    totals = lineage["totals"]
+    current = reigns[-1]
+    change_index = build_change_game_index(belt_games)
+    today = date.today()
+
+    # ---- records: computed, not curated -- same ethos as the rest of the site
+    durations = [(r, reign_duration_days(r, today)) for r in reigns]
+    longest_reign, longest_days = max(durations, key=lambda p: p[1])
+    most_defended = max(reigns, key=lambda r: r["defenses"])
+    reign_counts = Counter(r["team"] for r in reigns)
+    most_reigns_team, most_reigns_n = reign_counts.most_common(1)[0]
+
+    def game_link_for(reign):
+        g = change_index.get((reign["start_date"], reign["team"]))
+        return g["game_id"] if g else None
+
+    records_html = f'''
+    <div class="record-card">
+      <div class="l">Longest Reign</div>
+      <div class="v">{esc(longest_reign["team"])} &mdash; {fmt_duration(longest_days)}</div>
+      <div class="sub">{fmt_date(longest_reign["start_date"])} &ndash; {fmt_date(longest_reign["end_date"]) if longest_reign.get("end_date") else "present"}</div>
+    </div>
+    <div class="record-card">
+      <div class="l">Most Defenses, One Reign</div>
+      <div class="v">{esc(most_defended["team"])} &mdash; {most_defended["defenses"]}</div>
+      <div class="sub">starting {fmt_date(most_defended["start_date"])}</div>
+    </div>
+    <div class="record-card">
+      <div class="l">Most Reigns, All-Time</div>
+      <div class="v">{esc(most_reigns_team)} &mdash; {most_reigns_n} separate reign{"s" if most_reigns_n != 1 else ""}</div>
+      <div class="sub">won the belt back {most_reigns_n - 1} time{"s" if most_reigns_n - 1 != 1 else ""} after losing it</div>
+    </div>'''
+
+    rows_html = ""
+    for i, r in enumerate(reigns, 1):
+        is_current = r is current
+        team = r["team"]
+        p, a = team_color(colors, team)
+        w, l = _reign_win_score(r, change_index)
+        gid = game_link_for(r)
+
+        team_html = f'<a href="games/{gid}.html">{esc(team)}</a>' if gid else esc(team)
+        won_txt = f"def. {esc(r['won_from'])} {w}&ndash;{l}" if (r.get("won_from") and w is not None) else "Established the belt"
+        if is_current:
+            lost_txt = '<span class="mono">— present —</span>'
+            end_txt = "Present"
+        elif r.get("lost_to"):
+            lost_txt = f"to {esc(r['lost_to'])}"
+            end_txt = fmt_date(r["end_date"])
+        else:
+            lost_txt = "—"
+            end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
+
+        days = reign_duration_days(r, today)
+        cls = " current" if is_current else ""
+        rows_html += f'''
+        <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
+          <td class="num">{i}</td>
+          <td class="teamCell"><span class="reignChip" style="background:{p}"></span>{team_html}</td>
+          <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
+          <td class="tabular">{fmt_duration(days)}</td>
+          <td class="tabular">{r["defenses"]}</td>
+          <td class="won">{won_txt}</td>
+          <td class="lost">{lost_txt}</td>
+        </tr>'''
+
+    return f'''<meta charset="UTF-8">
+<title>Full History — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css">
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="index.html#numbers">By the Numbers</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">The Full History</h1>
+  <p class="lede">Every reign since Rutgers beat Princeton on November&nbsp;6, 1869 &mdash;
+    {totals["reigns"]:,} of them, computed from {totals["belt_games"]:,} belt games across
+    {totals["distinct_teams"]} programs. Type a team name to filter; tap a team to jump to the
+    game that won it.</p>
+
+  <div class="historyTop">
+    <div class="historyStats">
+      <div><span class="n tabular">{totals["reigns"]:,}</span><span class="l">Reigns</span></div>
+      <div><span class="n tabular">{totals["belt_games"]:,}</span><span class="l">Belt Games</span></div>
+      <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
+    </div>
+    <div class="searchBox">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+      <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="records">{records_html}
+  </div>
+
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Team</th><th>Reign</th><th style="text-align:right">Length</th>
+          <th style="text-align:right">Def.</th><th>Won it</th><th>Lost it</th>
+        </tr>
+      </thead>
+      <tbody>{rows_html}
+      </tbody>
+    </table>
+    <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign computed from the College Football Data API, oldest to newest, top to bottom.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="ruleset.html">Ruleset</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){{
+  var input = document.getElementById('teamSearch');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
+  var noResults = document.getElementById('noResults');
+  var noResultsTerm = document.getElementById('noResultsTerm');
+  input.addEventListener('input', function(){{
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function(r){{
+      var name = r.getAttribute('data-team') || '';
+      var match = !q || name.indexOf(q) !== -1;
+      r.classList.toggle('hiddenRow', !match);
+      if (match) shown++;
+    }});
+    noResultsTerm.textContent = input.value.trim();
+    noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
+  }});
+}})();
+</script>
 '''
 
 
@@ -969,7 +1218,8 @@ def generate_ruleset_page(md_text):
     <div class="proseBlock">{body_html}</div>
   </section>'''
 
-    return f'''<title>Ruleset — The College Football Belt</title>
+    return f'''<meta charset="UTF-8">
+<title>Ruleset — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css">
 
 <header class="site wrap">
@@ -981,6 +1231,7 @@ def generate_ruleset_page(md_text):
     <nav class="site" aria-label="Primary">
       <a href="index.html">Home</a>
       <a href="index.html#lineage">Lineage</a>
+      <a href="lineage.html">Full History</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -998,6 +1249,7 @@ def generate_ruleset_page(md_text):
     <nav aria-label="Footer">
       <a href="index.html">Home</a>
       <a href="index.html#lineage">Lineage</a>
+      <a href="lineage.html">Full History</a>
     </nav>
   </div>
 </footer>
@@ -1014,12 +1266,12 @@ def main():
     games_dir = os.path.join(OUT_DIR, "games")
     os.makedirs(games_dir, exist_ok=True)
 
-    with open(os.path.join(OUT_DIR, "styles.css"), "w") as f:
+    with open(os.path.join(OUT_DIR, "styles.css"), "w", encoding="utf-8") as f:
         f.write(STYLES_CSS)
 
     warnings = []
     written = 0
-    for g in belt_games:
+    for i, g in enumerate(belt_games):
         gid = g["game_id"]
         d = details.get(str(gid))
         if d is None:
@@ -1029,20 +1281,27 @@ def main():
         merged["line_score"] = d.get("line_score")
         merged["team_stats"] = d.get("team_stats")
 
-        html_out = render_page(merged, colors)
-        with open(os.path.join(games_dir, f"{gid}.html"), "w") as f:
+        prev_game = belt_games[i - 1] if i > 0 else None
+        next_game = belt_games[i + 1] if i < len(belt_games) - 1 else None
+
+        html_out = render_page(merged, colors, prev_game, next_game)
+        with open(os.path.join(games_dir, f"{gid}.html"), "w", encoding="utf-8") as f:
             f.write(html_out)
         written += 1
 
     homepage_html = generate_homepage(lineage, colors, belt_games)
-    with open(os.path.join(OUT_DIR, "index.html"), "w") as f:
+    with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 
+    lineage_html = generate_lineage_page(lineage, colors, belt_games)
+    with open(os.path.join(OUT_DIR, "lineage.html"), "w", encoding="utf-8") as f:
+        f.write(lineage_html)
+
     if os.path.exists(RULESET_MD_PATH):
-        with open(RULESET_MD_PATH) as f:
+        with open(RULESET_MD_PATH, encoding="utf-8") as f:
             ruleset_md = f.read()
         ruleset_html = generate_ruleset_page(ruleset_md)
-        with open(os.path.join(OUT_DIR, "ruleset.html"), "w") as f:
+        with open(os.path.join(OUT_DIR, "ruleset.html"), "w", encoding="utf-8") as f:
             f.write(ruleset_html)
         wrote_ruleset = True
     else:
@@ -1053,6 +1312,7 @@ def main():
     print(f"Wrote {written} game pages to {games_dir}/")
     print(f"Wrote shared stylesheet to {OUT_DIR}/styles.css")
     print(f"Wrote homepage to {OUT_DIR}/index.html")
+    print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
     if warnings:
