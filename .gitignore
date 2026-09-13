@@ -1,0 +1,10 @@
+# Fetched data and the generated site are both rebuilt fresh by
+# update_all.py every run (locally or in CI) -- committing them would just
+# bloat the repo's history with a 90MB raw-games cache and constantly
+# regenerated JSON/HTML for no benefit. Nothing here is a source file.
+belt_data/
+site/
+
+__pycache__/
+*.pyc
+.DS_Store

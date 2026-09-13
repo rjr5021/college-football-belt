@@ -1,0 +1,6 @@
+# Only build_lineage.py needs third-party packages, for converting a game's
+# UTC kickoff time into the venue's local calendar date.
+# fetch_team_colors.py, fetch_game_details.py, build_site.py and
+# update_all.py all use only the Python standard library.
+tzdata
+timezonefinder

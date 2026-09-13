@@ -1,0 +1,344 @@
+# College Football Belt — project folder
+
+Status as of 2026-09-13, tracking the brief's build order:
+
+1. ✅ **Lineage built and verified.** `build_lineage.py` ran successfully;
+   `belt_data/lineage.json` matches the reference site (328 reigns, 101
+   teams, 1,633 belt games; Notre Dame holding since 2025-11-29, 2 defenses).
+2. ✅ **Ruleset locked and written up** — see `ruleset.md`. One item is still
+   open (see below).
+3. ✅ **Team colors done — all 101 teams have a usable color.** CFBD's team
+   database is more complete than expected; even early-era clubs like
+   Carlisle and the Olympic Club are in there. `belt_data/team_colors.json`
+   is complete, with one data-quality fix applied and the 4 remaining gaps
+   filled by hand (see below — 2 sourced, 2 flagged as placeholders).
+4. ✅ **Site build done — homepage, all 1,633 game pages, and the ruleset
+   page are all real and data-driven.** `build_site.py` generates the whole
+   thing from `belt_data/*.json` + `ruleset.md` in one run (below).
+5. ✅ **Weekly updates: one command.** `update_all.py` runs the whole
+   pipeline (lineage → team colors → box scores → site) in order. Still
+   manual — you (or a Windows scheduled task) have to actually run it —
+   but it's one command instead of four. See below.
+
+## Team colors: a data quirk, already fixed
+
+Your first `team_colors.json` had every team "matched", but 11 of them had
+the literal string `"#null"` as their color or alternate color instead of a
+real value — that's how CFBD represents "we don't actually have this" for
+some smaller/historic programs, rather than leaving the field out. Used
+as-is, that string would have rendered as an invalid CSS color. I fixed
+`fetch_team_colors.py` to normalize that placeholder to a real `null`, and
+cleaned your existing `team_colors.json` the same way (no rerun needed —
+already updated in this folder). If you rerun the script later it'll do
+this automatically, and its summary now separately flags anyone still
+missing a **primary** color (the one the color-shift feature actually
+needs) versus just an alternate.
+
+**The 4 teams with no CFBD color data are now filled in** (each entry also
+carries a new `color_note` field explaining where the color came from):
+
+- **Swarthmore** — `#a11833` / white. Sourced: Swarthmore's current official
+  Garnet/White colors, and matches "Garnet Tide," this team's own mascot in
+  the data. High confidence.
+- **Saint Mary's (CA)** — `#d80024` / `#06315b`. Sourced: the college's
+  current official red/blue. Moderate-high confidence — the school still
+  exists, though this football program doesn't.
+- **Carlisle** — `#8a6d00` / `#a32638`. **Unsourced placeholder** — no
+  citation for this program's actual colors turned up (checked Wikipedia
+  and the Carlisle Indian School Digital Resource Center). Treat as a guess
+  to replace, not a fact to publish.
+- **Olympic Club** — `#5b5b5b` / white. **Unsourced placeholder** — a
+  private athletic club, not a school; no color identity found. Neutral
+  gray as a stand-in.
+
+Two of these are real, cited colors; two are flagged placeholders that
+still need a genuine source (or a deliberate decision) before publishing.
+
+**7 more teams are missing only an alternate color** (Carnegie Mellon,
+Chicago, Geneva, Grove City, Muhlenberg, Washington & Jefferson, West
+Virginia Wesleyan) — lower priority, since the color-shift feature is
+described as keying off the current holder's primary color.
+
+## ruleset.md
+
+The full published ruleset, written from the decisions in the project
+brief plus what running the actual data confirmed (e.g., non-FBS opponents
+already flow through correctly because the CFBD pull isn't filtered to any
+one classification — confirmed against CFBD's own API docs, not just
+assumed). This is meant to go on the site close to as-is.
+
+One item is still open in it: cross-checking the 1869 origin point against
+the pre-2018 collegefootballbelt.com site via the Wayback Machine. I
+attempted this and the Internet Archive was reporting a full outage at the
+time (not a blocked request) — worth retrying later, but nothing in the
+current build depends on it.
+
+## Earlier history (build_lineage.py)
+
+`build_lineage.py` needed two fixes before its dates were fully correct —
+both already applied, no action needed:
+
+- CFBD gives kickoff times in UTC; a late West Coast game can fall on the
+  wrong side of midnight UTC if you just truncate the timestamp. The script
+  now converts to the game venue's local time first.
+- The venue's local time is derived from its latitude/longitude (via the
+  `timezonefinder` package) rather than CFBD's own `timezone` field on a
+  venue, which turns out to be null for most venues in practice.
+
+If you ever delete `belt_data/` and rerun from scratch, you'll need
+`pip install tzdata timezonefinder` again first (Windows Python doesn't
+ship the IANA timezone database these rely on, and `pip` itself may need to
+be invoked as `python -m pip install ...` if it's not on PATH — both were
+true on this machine).
+
+## Box scores and recaps for individual games
+
+You asked whether past belt games could show a box score and/or a summary.
+Short answer: yes, with a real limit worth knowing up front.
+
+CFBD's per-team stat lines (yards, turnovers, third-down efficiency, time
+of possession, etc.) and quarter-by-quarter scoring both only exist from
+roughly **2003 onward** — checked directly against `games_raw.json`
+already in this folder, not just assumed: 0% of games before 2001 have a
+line score, essentially 100% do from 2003 on. Applied to the actual belt
+history, that means **310 of the 1,633 belt games (19%)** — the 2003-2026
+stretch — can ever get a full box score. The other 81%, 1869-2002, will
+only ever have the final score, because that's genuinely all CFBD has for
+those eras. That's a fact about the data source, not something a rerun or
+a different endpoint fixes — worth stating on the site itself rather than
+quietly having some game pages richer than others with no explanation.
+
+A written recap is a separate question: CFBD has no prose summaries to
+pull, so that's either a short auto-generated blurb templated off the box
+score (works for any of the 310 games with stats), or genuinely
+hand-written recaps for a smaller, chosen set — a real editorial decision,
+not a data question.
+
+### Running fetch_game_details.py
+
+New script, same pattern as before:
+
+```powershell
+cd "$env:USERPROFILE\Documents\college-football-belt"
+$env:CFBD_API_KEY = "your-key-here"
+python fetch_game_details.py
+```
+
+It reads the line scores straight out of your existing `games_raw.json`
+(no extra API calls needed for those), and makes one new, much smaller API
+pull — just `/games/teams` for the ~23 seasons since 2003 that actually
+have belt games in them, not the full 1869-2026 span — to get full team
+box-score stats. Writes `belt_data/game_details.json`, one entry per belt
+game keyed by CFBD's game id, and prints exactly how many games ended up
+with a line score vs. a full box score, so you can confirm the ~19% figure
+above rather than take it on faith.
+
+**Fixed a rate-limit bug.** Your first run hit CFBD's `HTTP 429 Too Many
+Requests` after ~50-60 of the 310 calls, and the script's retry logic gave
+up too fast (topping out around 4 seconds of backoff) — worse, it only
+saved progress once, at the very end, so the crash threw away everything
+already fetched. Both are fixed now:
+
+- 429s get a much more patient, longer backoff (5s → 10s → 20s → 40s → 60s,
+  capped, over 8 tries — a couple minutes of patience instead of a few
+  seconds) before giving up.
+- `team_stats_raw.json` now saves incrementally, every 10 games, and always
+  saves whatever it has if the script crashes or you close the terminal.
+  Just rerun the same command — it picks up exactly where it left off,
+  skipping games it already fetched, instead of starting over.
+
+Just rerun the command above with the updated script; no need to delete
+anything first.
+
+The real Notre Dame–Stanford box score numbers are now wired into the game
+detail mockup (see chat) — no more placeholders there.
+
+## Turning the mockup into all 1,633 real pages: build_site.py
+
+New script, and the one that actually turns the single hand-built mockup
+into the real site: it reads `belt_data/lineage.json`,
+`belt_data/game_details.json`, and `belt_data/team_colors.json` and writes
+one real HTML page per belt game, plus a shared stylesheet so the CSS
+isn't repeated 1,633 times over.
+
+```powershell
+cd "$env:USERPROFILE\Documents\college-football-belt"
+python build_site.py
+```
+
+No API key, no network calls — everything it needs is already in
+`belt_data/` from the earlier scripts. Output goes to `site/`:
+
+- `site/styles.css` — the shared stylesheet (fonts, layout, every
+  component style), linked from every page instead of copy-pasted into
+  each one.
+- `site/games/<game_id>.html` — one page per belt game, 1,633 total. Each
+  page's headline, score, line score (when available), and full box score
+  (when available, 2003+ only) are all generated from the real data. When
+  a game has no line score or no team stats, that section just doesn't
+  render, rather than showing something fake.
+
+A couple of judgment calls worth knowing about since there's no way to
+hand-tune 1,633 pages individually:
+
+- **Team colors, picked for legibility automatically.** The homepage
+  mockup's color-shift idea only got hand-verified for one team pairing
+  (Notre Dame/Stanford). With 101 real teams — some pale gold, some pure
+  black, some with washed-out "alternate" colors — hand-picking text
+  colors for each one isn't realistic, so `build_site.py` computes them:
+  WCAG relative luminance/contrast ratio decides, per team per page,
+  whether white or black text sits on that team's color, and whether the
+  team's own accent color is legible enough to use for the score digits
+  (falling back to plain white/black when it isn't). I spot-checked this
+  algorithm against some deliberately hard cases — a bright gold primary
+  color (Southern Miss), a black-on-black pairing (Army), an unsourced
+  placeholder color (Carlisle) — before trusting it across all 101 teams.
+- **No venue info.** `lineage.json` doesn't carry a stadium name or city —
+  that would need a much bigger pull from CFBD's raw games data (~90MB) —
+  so pages show home/away and a "Neutral site" tag when relevant instead
+  of a venue line. Easy to add later if you want it.
+
+## The real homepage: also build_site.py
+
+`build_site.py` now writes `site/index.html` too — a real, data-driven
+homepage replacing the static `site-mockup.html`, built the same way as
+the game pages. Same command as above regenerates everything (games +
+homepage + stylesheet) in one run.
+
+What's real on it now: the current holder's plate (colors picked the same
+contrast-safe way as the game pages), days held and defenses (computed
+from today's date, so these drift correctly — rerun the script and they
+update), the "chain of custody" strip (the actual last 7 reigns, pulled
+live from `lineage.json`, each one linking to its real title-winning game
+page), and the by-the-numbers band (1,633 / 328 / 101, plus years since
+1869 computed from today's date rather than hand-typed).
+
+Two things worth knowing:
+
+- **Team abbreviations in the chain-of-custody chips are auto-generated,**
+  not real school abbreviations — there's no data source for those across
+  101 programs, so it's initials for multi-word names (Notre Dame → ND)
+  and first-four-letters otherwise (Stanford → STAN). Close to the real
+  thing in most cases, occasionally a little off (California → CALI
+  instead of Cal). Cosmetic only.
+- **No "next game" info on the plate** — the mockup had one, but there's
+  no schedule data in this project yet (only played games), so I left it
+  out rather than invent an opponent. Would need a small new fetch script
+  against CFBD's schedule for a future team's upcoming game.
+
+## The ruleset page: also build_site.py
+
+`build_site.py` now writes `site/ruleset.html` too, generated straight
+from `ruleset.md` — so that file stays the one place you ever edit the
+actual rules; rerun the script and the page picks up any change
+automatically instead of needing its prose copy-pasted a second place.
+It's a small purpose-built markdown reader (not a general parser), so it
+only understands this one file's shape: a title, `## ` section headings,
+plain paragraphs, `- ` bullet lists (including ones that wrap across
+lines), and whole-paragraph `*asides*` for the status/rationale notes,
+which render the same way the "sourced" callouts do on the game pages.
+Each rule gets a numbered tag ("Rule 01", "Rule 02", …); the "Open items"
+section gets "Status" instead, since it isn't a rule.
+
+## Weekly updates: update_all.py
+
+New script that chains the whole pipeline in the right order so you don't
+have to run four commands by hand every week:
+
+```powershell
+cd "$env:USERPROFILE\Documents\college-football-belt"
+$env:CFBD_API_KEY = "your-key-here"
+python update_all.py
+```
+
+It runs, in order: `build_lineage.py` (always a full refetch — it has to
+be, to catch newly played games; this is the slow step), then
+`fetch_team_colors.py` and `fetch_game_details.py` (both cheap on a
+rerun — they only fetch what's new), then `build_site.py` (no network
+calls, just regenerates every page). If any stage fails, it stops right
+there instead of rebuilding the site from a half-updated data set — fix
+whatever broke and rerun the same command; every stage already knows how
+to resume from where it left off.
+
+This makes "run one command" the whole weekly routine, but running that
+command is still on you (or something you schedule) — it's not
+automatic yet. If you want it fully hands-off, the standard way on
+Windows is a Task Scheduler entry that runs the command above on a
+schedule (e.g., weekly, or after Saturday's games finish). I didn't set
+that up myself — creating a scheduled task is a change to your machine's
+own settings, worth doing deliberately rather than as a side effect of a
+script — but it's a short, well-documented `schtasks` setup if you want
+to go that route later.
+
+## Deployment: GitHub Actions + GitHub Pages
+
+This solves weekly updates and hosting in one move, instead of two
+separate things. Rather than relying on your own computer being on for
+`update_all.py` to run, `.github/workflows/update-and-deploy.yml` runs
+the *exact same pipeline* on GitHub's own servers — on a schedule
+(Sundays at noon UTC, easy to change), whenever you push a change, or
+on demand from a button — and publishes the result straight to GitHub
+Pages. No server to rent, no separate host account, and it's free for a
+repo this size.
+
+I set up the workflow file and a `requirements.txt`/`.gitignore` for it,
+but I didn't create the GitHub repo, touch any account settings, or
+change your domain's DNS myself — those are yours to do deliberately.
+Here's the whole path, if you want to take it:
+
+**1. Get the project into a GitHub repo.** If you don't already have
+[git](https://git-scm.com/download/win) installed, grab it, then:
+
+```powershell
+cd "$env:USERPROFILE\Documents\college-football-belt"
+git init
+git add .
+git commit -m "College Football Belt: lineage, site build, weekly-update pipeline"
+git branch -M main
+```
+
+Create an empty repository on GitHub (github.com → New repository — don't
+initialize it with a README, so it stays empty for your push), then:
+
+```powershell
+git remote add origin https://github.com/<your-username>/<repo-name>.git
+git push -u origin main
+```
+
+**2. Turn on Pages.** In the new repo: Settings → Pages → under "Build
+and deployment", set Source to **GitHub Actions**. (Just the toggle —
+the workflow file already in the repo handles the rest.)
+
+**3. Add your API key as a secret.** Settings → Secrets and variables →
+Actions → New repository secret → name it `CFBD_API_KEY`, value is your
+real CollegeFootballData key. This is what lets the workflow fetch data
+without your key ever being visible in the repo itself.
+
+**4. Trigger the first run.** Actions tab → "Update and deploy" → Run
+workflow. It'll fetch everything from scratch (~10-20 minutes, mostly
+`build_lineage.py`'s full history pull) and publish the site. After
+that, it re-runs automatically every Sunday, or any time you push.
+
+**5. Point your domain at it.** Once the first deploy succeeds, GitHub
+gives you a working `https://<your-username>.github.io/<repo-name>/`
+URL immediately — worth checking before touching DNS at all. For the
+real domain: repo Settings → Pages → "Custom domain" → enter
+`collegefootballbelt.com` (this also writes a `CNAME` file into the repo
+for you). Then at your domain registrar, add the DNS records
+[GitHub's own docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
+specify for an apex domain — four `A` records pointing at GitHub Pages'
+IPs, plus a `CNAME` record for `www` if you want that to work too. Exact
+steps vary by registrar, so that page is the accurate source rather than
+me guessing your registrar's UI.
+
+One nice property already true of the generated site: every link in it
+(game pages, homepage, ruleset) is relative, not absolute — so it works
+identically whether it's served from a domain root or from a GitHub
+Pages project subpath. Nothing to adjust either way.
+
+If you'd rather not deal with GitHub at all, everything from the earlier
+conversation still holds too: `update_all.py` on your own machine (by
+hand or via Windows Task Scheduler) plus any static host — Netlify,
+Vercel, Cloudflare Pages — works exactly as well. GitHub Actions just
+happens to fold the "where does it run" question and the "where does it
+live" question into the same free answer.

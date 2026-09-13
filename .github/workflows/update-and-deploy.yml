@@ -1,0 +1,64 @@
+name: Update and deploy
+
+# Runs the whole pipeline (refetch data, rebuild the site) and publishes
+# the result to GitHub Pages -- on a schedule, on demand, and on every
+# push to main. Unlike running update_all.py on your own computer, this
+# runs on GitHub's own servers, so it doesn't need your machine to be on.
+#
+# One-time setup this workflow depends on:
+#   1. Settings -> Pages -> Source -> "GitHub Actions".
+#   2. Settings -> Secrets and variables -> Actions -> New repository
+#      secret -> name it CFBD_API_KEY, value is your CFBD key.
+# See README.md for the full walkthrough.
+
+on:
+  schedule:
+    # Sundays at 12:00 UTC (~7am ET / 4am PT) -- after essentially every
+    # week's games have finished. Adjust freely; cron is UTC.
+    - cron: '0 12 * * 0'
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the full update pipeline (fetch data + rebuild site)
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+        run: python update_all.py
+
+      - name: Upload the built site as a Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
