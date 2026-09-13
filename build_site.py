@@ -462,7 +462,9 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 @media (max-width:700px){ .chain{ grid-auto-flow:row; grid-auto-columns:unset; } }
 .chainLead{ display:flex; align-items:center; padding:0 14px 0 4px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
 @media (max-width:700px){ .chainLead{ padding:0 0 10px; } }
-.link{ position:relative; padding:16px 16px 14px; margin:0 4px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:6px; }
+.link{ position:relative; display:block; padding:16px 16px 14px; margin:0 4px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:6px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.link:hover{ border-color:var(--brass); box-shadow:0 2px 8px rgba(0,0,0,.08); transform:translateY(-1px); }
+.link:hover .team{ color:var(--brass-bright); }
 .link + .link::before{ content:""; position:absolute; left:-9px; top:50%; width:10px; height:2px; background:var(--brass-line); }
 @media (max-width:700px){ .link + .link::before{ display:none; } }
 .link .chip{ width:34px; height:34px; border-radius:50%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:12.5px; border:1.5px solid rgba(0,0,0,.15); }
@@ -516,6 +518,12 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 }
 .searchBox input::placeholder{ color:var(--ink-soft); }
 .searchBox svg{ position:absolute; left:10px; top:50%; transform:translateY(-50%); opacity:.55; pointer-events:none; }
+
+.controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.sortToggle{ display:flex; border:1px solid var(--hairline); border-radius:20px; overflow:hidden; background:var(--paper-2); }
+.sortToggle button{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; white-space:nowrap; }
+.sortToggle button.active{ background:var(--brass); color:var(--paper); font-weight:600; }
+.sortToggle button:not(.active):hover{ color:var(--ink); }
 
 .records{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0 34px; }
 @media (max-width:820px){ .records{ grid-template-columns:1fr; } }
@@ -967,7 +975,7 @@ def generate_homepage(lineage, colors, belt_games):
     since_date = date.fromisoformat(current["start_date"])
     days_held = (today - since_date).days
     defenses = current["defenses"]
-    reign_num = len(reigns)
+    team_reign_num = sum(1 for r in reigns if r["team"] == holder)
     years_span = today.year - 1869 + 1
 
     won_score, lost_score = _reign_win_score(current, change_index)
@@ -999,8 +1007,6 @@ def generate_homepage(lineage, colors, belt_games):
 
         win_game = change_index.get((r["start_date"], r["team"]))
         game_id = win_game["game_id"] if win_game else None
-        open_a = f'<a href="games/{game_id}.html" style="text-decoration:none;color:inherit">' if game_id else ""
-        close_a = "</a>" if game_id else ""
 
         if is_current:
             right_meta = f'<span class="tabular">{defenses} def.</span>'
@@ -1011,14 +1017,17 @@ def generate_homepage(lineage, colors, belt_games):
             now_badge = ""
             cls = ""
 
+        tag = "a" if game_id else "div"
+        href_attr = f' href="games/{game_id}.html"' if game_id else ""
+
         links_html += f'''
-      <div class="link{cls}">
+      <{tag} class="link{cls}"{href_attr}>
         {now_badge}
         <div class="chip" style="background:{p};color:{chip_accent}">{esc(team_chip(r["team"]))}</div>
-        <div class="team">{open_a}{esc(r["team"])}{close_a}</div>
+        <div class="team">{esc(r["team"])}</div>
         <div class="beat">{beat}</div>
         <div class="meta"><span>{esc(r["start_date"])}</span><span>{right_meta}</span></div>
-      </div>'''
+      </{tag}>'''
 
     chain_lead = ""
     if hidden_count > 0:
@@ -1076,7 +1085,7 @@ def generate_homepage(lineage, colors, belt_games):
         <div class="plateStats">
           <div><span class="n tabular">{days_held:,}</span><span class="l">Days</span></div>
           <div><span class="n tabular">{defenses}</span><span class="l">Defenses</span></div>
-          <div><span class="n tabular">{ordinal(reign_num)}</span><span class="l">All-Time Reign</span></div>
+          <div><span class="n tabular">{ordinal(team_reign_num)}</span><span class="l">{esc(holder)} Reign</span></div>
         </div>
       </div>
     </div>
@@ -1255,9 +1264,15 @@ def generate_lineage_page(lineage, colors, belt_games):
       <div><span class="n tabular">{totals["belt_games"]:,}</span><span class="l">Belt Games</span></div>
       <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
     </div>
-    <div class="searchBox">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-      <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+    <div class="controls">
+      <div class="sortToggle" role="group" aria-label="Sort order">
+        <button type="button" class="sortBtn active" data-order="asc">Oldest First</button>
+        <button type="button" class="sortBtn" data-order="desc">Newest First</button>
+      </div>
+      <div class="searchBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+      </div>
     </div>
   </div>
 
@@ -1283,7 +1298,7 @@ def generate_lineage_page(lineage, colors, belt_games):
 
 <footer class="wrap">
   <div class="footRow">
-    <span>Every reign computed from the College Football Data API, oldest to newest, top to bottom.</span>
+    <span>Every reign computed from the College Football Data API.</span>
     <nav aria-label="Footer">
       <a href="index.html">Home</a>
       <a href="all-games.html">All Games</a>
@@ -1295,6 +1310,7 @@ def generate_lineage_page(lineage, colors, belt_games):
 <script>
 (function(){{
   var input = document.getElementById('teamSearch');
+  var tbody = document.querySelector('table.reignsTable tbody');
   var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
   var noResults = document.getElementById('noResults');
   var noResultsTerm = document.getElementById('noResultsTerm');
@@ -1310,6 +1326,21 @@ def generate_lineage_page(lineage, colors, belt_games):
     noResultsTerm.textContent = input.value.trim();
     noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
   }});
+
+  var STORAGE_KEY = 'cfbBelt:lineageSortOrder';
+  var sortBtns = Array.prototype.slice.call(document.querySelectorAll('.sortToggle .sortBtn'));
+  function applyOrder(order){{
+    var ordered = order === 'desc' ? rows.slice().reverse() : rows.slice();
+    ordered.forEach(function(r){{ tbody.appendChild(r); }});
+    sortBtns.forEach(function(b){{ b.classList.toggle('active', b.getAttribute('data-order') === order); }});
+    try {{ localStorage.setItem(STORAGE_KEY, order); }} catch(e) {{}}
+  }}
+  sortBtns.forEach(function(b){{
+    b.addEventListener('click', function(){{ applyOrder(b.getAttribute('data-order')); }});
+  }});
+  var savedOrder = null;
+  try {{ savedOrder = localStorage.getItem(STORAGE_KEY); }} catch(e) {{}}
+  if (savedOrder === 'desc') applyOrder('desc');
 }})();
 </script>
 '''
@@ -1403,9 +1434,15 @@ def generate_all_games_page(lineage, colors, belt_games):
       <div><span class="n tabular">{title_changes:,}</span><span class="l">Title Changes</span></div>
       <div><span class="n tabular">{defenses_total:,}</span><span class="l">Defenses</span></div>
     </div>
-    <div class="searchBox">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-      <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+    <div class="controls">
+      <div class="sortToggle" role="group" aria-label="Sort order">
+        <button type="button" class="sortBtn active" data-order="asc">Oldest First</button>
+        <button type="button" class="sortBtn" data-order="desc">Newest First</button>
+      </div>
+      <div class="searchBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+      </div>
     </div>
   </div>
 
@@ -1427,7 +1464,7 @@ def generate_all_games_page(lineage, colors, belt_games):
 
 <footer class="wrap">
   <div class="footRow">
-    <span>Every game computed from the College Football Data API, oldest to newest, top to bottom.</span>
+    <span>Every game computed from the College Football Data API.</span>
     <nav aria-label="Footer">
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
@@ -1439,6 +1476,7 @@ def generate_all_games_page(lineage, colors, belt_games):
 <script>
 (function(){{
   var input = document.getElementById('teamSearch');
+  var tbody = document.querySelector('table.reignsTable tbody');
   var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
   var noResults = document.getElementById('noResults');
   var noResultsTerm = document.getElementById('noResultsTerm');
@@ -1454,6 +1492,21 @@ def generate_all_games_page(lineage, colors, belt_games):
     noResultsTerm.textContent = input.value.trim();
     noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
   }});
+
+  var STORAGE_KEY = 'cfbBelt:allGamesSortOrder';
+  var sortBtns = Array.prototype.slice.call(document.querySelectorAll('.sortToggle .sortBtn'));
+  function applyOrder(order){{
+    var ordered = order === 'desc' ? rows.slice().reverse() : rows.slice();
+    ordered.forEach(function(r){{ tbody.appendChild(r); }});
+    sortBtns.forEach(function(b){{ b.classList.toggle('active', b.getAttribute('data-order') === order); }});
+    try {{ localStorage.setItem(STORAGE_KEY, order); }} catch(e) {{}}
+  }}
+  sortBtns.forEach(function(b){{
+    b.addEventListener('click', function(){{ applyOrder(b.getAttribute('data-order')); }});
+  }});
+  var savedOrder = null;
+  try {{ savedOrder = localStorage.getItem(STORAGE_KEY); }} catch(e) {{}}
+  if (savedOrder === 'desc') applyOrder('desc');
 }})();
 </script>
 '''
