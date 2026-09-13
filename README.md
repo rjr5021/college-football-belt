@@ -15,10 +15,16 @@ Status as of 2026-09-13, tracking the brief's build order:
 4. ✅ **Site build done — homepage, all 1,633 game pages, and the ruleset
    page are all real and data-driven.** `build_site.py` generates the whole
    thing from `belt_data/*.json` + `ruleset.md` in one run (below).
-5. ✅ **Weekly updates: one command.** `update_all.py` runs the whole
-   pipeline (lineage → team colors → box scores → site) in order. Still
-   manual — you (or a Windows scheduled task) have to actually run it —
-   but it's one command instead of four. See below.
+5. ✅ **Weekly updates: one command, and now cheap.** `update_all.py` runs
+   the whole pipeline (lineage → team colors → box scores → site) in
+   order. Still manual to *run* — you (or a Windows scheduled task) have
+   to trigger it — but it's one command instead of four, and (see
+   "CFBD's call budget" below) a normal run is now ~15-30 CFBD calls, not
+   ~600+.
+6. 🔧 **Deployment: GitHub Actions + GitHub Pages, in progress.** The repo,
+   Pages, and secret are set up; the workflow is running the pipeline on
+   its own schedule/push/on-demand triggers — see "Deployment" below for
+   where things stand.
 
 ## Team colors: a data quirk, already fixed
 
@@ -91,6 +97,60 @@ ship the IANA timezone database these rely on, and `pip` itself may need to
 be invoked as `python -m pip install ...` if it's not on PATH — both were
 true on this machine).
 
+## CFBD's call budget: incremental fetching (`historical_data/`)
+
+This is the fix behind the first GitHub Actions runs failing — worth
+understanding since it shapes how `build_lineage.py` and
+`fetch_game_details.py` both work now.
+
+**The real cause wasn't a burst rate limit.** CFBD's free tier is capped
+at **1,000 calls/month** (see
+[collegefootballdata.com/api-tiers](https://collegefootballdata.com/api-tiers)),
+not a short per-minute window. A full 1869-now history pull is ~316 calls
+(158+ years × 2 season types), and pulling every 2003+ belt game's box
+score is ~310 more — so the original design (full refetch, every single
+run, because GitHub's runners never keep `belt_data/` between runs)
+burned through the monthly budget in a small handful of runs. More patient
+retry backoff — the first fix I tried — doesn't help when the real problem
+is "no calls left this month," not "too many calls this second."
+
+**The actual fix: stop refetching settled history.** 1869-2002-ish never
+changes — final scores are permanent — so there's no reason to ever
+refetch a season once it's fully concluded. Both scripts now keep a
+small, **git-committed** baseline in `historical_data/` (a few hundred KB,
+not the ~90MB of raw game data behind it) and, each run, freshly fetch
+only the **current + previous season**:
+
+- `historical_data/baseline.json` — the already-walked chain of custody
+  (closed reigns + their belt games) through the end of whatever seasons
+  are safely done. `build_lineage.py` resumes from this and only pulls
+  ~2 seasons fresh (~4-6 calls) instead of the whole history.
+- `historical_data/team_stats.json` — settled belt games' box scores.
+  `fetch_game_details.py` resumes from this and only pulls the current +
+  previous season's belt games' stats (~10-20 calls) instead of every
+  2003+ belt game.
+
+Both files update (and, once committed, the GitHub Actions workflow pushes
+that update back to the repo) automatically as a season ages out of the
+"current + previous" window — no manual maintenance. A normal run is now
+**~15-30 CFBD calls total**, comfortably inside the free tier even on a
+daily schedule.
+
+**`--full-refetch`** (on either script) ignores the baseline and redoes
+the whole thing from scratch — useful for a genuine full rebuild (a
+tie-rule change, a suspected data issue) or to bootstrap the baseline the
+first time. This repo's `historical_data/` is already seeded from your own
+verified local run, so a fresh clone never needs to do this.
+
+I verified the incremental math against your real, already-confirmed data
+before shipping it: split the real 1,633-belt-game history at a dozen
+different season cutoffs, fed the "live" tail back through the walk logic
+in resume mode, and confirmed it reproduces the exact same belt games and
+reigns as the original full computation, byte for byte, at every cutoff —
+plus a synthetic multi-season simulation (with ties) comparing a full
+bootstrap run against an incremental one two different ways. Both matched
+exactly.
+
 ## Box scores and recaps for individual games
 
 You asked whether past belt games could show a box score and/or a summary.
@@ -125,27 +185,26 @@ python fetch_game_details.py
 ```
 
 It reads the line scores straight out of your existing `games_raw.json`
-(no extra API calls needed for those), and makes one new, much smaller API
-pull — just `/games/teams` for the ~23 seasons since 2003 that actually
-have belt games in them, not the full 1869-2026 span — to get full team
-box-score stats. Writes `belt_data/game_details.json`, one entry per belt
+(no extra API calls needed for those). For full team box-score stats, it
+now fetches only the current + previous season's belt games each run (see
+"CFBD's call budget" above) — a handful of calls, not ~310 — resuming from
+the git-committed `historical_data/team_stats.json` for everything
+already settled. Writes `belt_data/game_details.json`, one entry per belt
 game keyed by CFBD's game id, and prints exactly how many games ended up
 with a line score vs. a full box score, so you can confirm the ~19% figure
 above rather than take it on faith.
 
-**Fixed a rate-limit bug.** Your first run hit CFBD's `HTTP 429 Too Many
-Requests` after ~50-60 of the 310 calls, and the script's retry logic gave
-up too fast (topping out around 4 seconds of backoff) — worse, it only
-saved progress once, at the very end, so the crash threw away everything
-already fetched. Both are fixed now:
-
-- 429s get a much more patient, longer backoff (5s → 10s → 20s → 40s → 60s,
-  capped, over 8 tries — a couple minutes of patience instead of a few
-  seconds) before giving up.
-- `team_stats_raw.json` now saves incrementally, every 10 games, and always
-  saves whatever it has if the script crashes or you close the terminal.
-  Just rerun the same command — it picks up exactly where it left off,
-  skipping games it already fetched, instead of starting over.
+**Fixed two bugs, in order.** Your first run hit CFBD's `HTTP 429 Too Many
+Requests` after ~50-60 calls; the script's retry logic gave up too fast
+(topping out around 4 seconds of backoff) and only saved progress once,
+at the very end, so the crash threw away everything already fetched. That
+got a patient backoff (5s → 10s → 20s → 40s → 60s, capped, over 8 tries)
+and per-game incremental saving. That fix alone wasn't enough once this
+ran in GitHub Actions, though: a fresh runner never has anything cached,
+so *every* CI run still refetched all ~310 games — CFBD's actual limit
+turned out to be a hard 1,000 calls/month, not a short burst, so repeated
+full refetches (across this script and build_lineage.py both) exhausted
+it outright. The real fix is the incremental design above.
 
 Just rerun the command above with the updated script; no need to delete
 anything first.
@@ -251,11 +310,11 @@ $env:CFBD_API_KEY = "your-key-here"
 python update_all.py
 ```
 
-It runs, in order: `build_lineage.py` (always a full refetch — it has to
-be, to catch newly played games; this is the slow step), then
-`fetch_team_colors.py` and `fetch_game_details.py` (both cheap on a
-rerun — they only fetch what's new), then `build_site.py` (no network
-calls, just regenerates every page). If any stage fails, it stops right
+It runs, in order: `build_lineage.py` and `fetch_game_details.py` (both
+incremental — see "CFBD's call budget" above, only the current + previous
+season gets refetched), `fetch_team_colors.py` (cheap regardless, one
+call), then `build_site.py` (no network calls, just regenerates every
+page). A normal run is ~15-30 CFBD calls total. If any stage fails, it stops right
 there instead of rebuilding the site from a half-updated data set — fix
 whatever broke and rerun the same command; every stage already knows how
 to resume from where it left off.
@@ -315,9 +374,20 @@ real CollegeFootballData key. This is what lets the workflow fetch data
 without your key ever being visible in the repo itself.
 
 **4. Trigger the first run.** Actions tab → "Update and deploy" → Run
-workflow. It'll fetch everything from scratch (~10-20 minutes, mostly
-`build_lineage.py`'s full history pull) and publish the site. After
-that, it re-runs automatically every Sunday, or any time you push.
+workflow. The very first run ever (no `historical_data/` baseline exists
+yet) does a full history pull — ~10-20 minutes, mostly `build_lineage.py`
+— and publishes the site. Every run after that is incremental (a couple
+minutes, ~15-30 CFBD calls) and re-runs automatically every Sunday, on
+push, or on demand. The workflow also has permission to commit
+`historical_data/` back to the repo when a season ages into the frozen
+baseline (rare — at most a few times a year), so the baseline stays
+current without you doing anything.
+
+*Status as of this writing:* the repo, Pages, and secret are all set up;
+the first two automatic runs failed on the old full-refetch design (a real
+429 rate-limit bug, then the deeper monthly-quota issue above) before this
+incremental fix shipped. The next run should succeed and publish for the
+first time — worth checking the Actions tab once it's gone through.
 
 **5. Point your domain at it.** Once the first deploy succeeds, GitHub
 gives you a working `https://<your-username>.github.io/<repo-name>/`

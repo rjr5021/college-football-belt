@@ -1,9 +1,15 @@
 # Fetched data and the generated site are both rebuilt fresh by
 # update_all.py every run (locally or in CI) -- committing them would just
-# bloat the repo's history with a 90MB raw-games cache and constantly
-# regenerated JSON/HTML for no benefit. Nothing here is a source file.
+# bloat the repo's history with constantly regenerated JSON/HTML for no
+# benefit. Nothing here is a source file.
 belt_data/
 site/
+
+# historical_data/ is DELIBERATELY NOT ignored -- it's the small, git-
+# committed baseline (settled reigns/belt games + settled box scores) that
+# lets build_lineage.py and fetch_game_details.py fetch only the current +
+# previous season each run instead of CFBD's whole history every time. See
+# README.md's "Incremental fetching" section.
 
 __pycache__/
 *.pyc

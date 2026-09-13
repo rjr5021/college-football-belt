@@ -6,13 +6,14 @@ site's game detail pages (quarter-by-quarter line score + full team stats).
 Usage:
     export CFBD_API_KEY=your_key_here      # same key as the other scripts
     python3 fetch_game_details.py                       # reads belt_data/lineage.json
+    python3 fetch_game_details.py --full-refetch         # ignore the
+                                                          # historical cache,
+                                                          # redo every season
 
-Output (into ./belt_data/):
-    team_stats_raw.json   raw /games/teams pulls, keyed by game_id (as a
-                          string) -> that game's row (or null). Saved
-                          incrementally every 10 games, so a crash or a
-                          rate-limit (HTTP 429) never loses progress -- just
-                          rerun the script and it picks up where it left off.
+Output (into ./belt_data/, regenerated fresh every run, not committed):
+    team_stats_raw.json   this run's LIVE-window /games/teams pulls (see
+                          "Incremental fetching" below), keyed by game_id
+                          (as a string) -> that game's row (or null).
     game_details.json     one entry per belt game, keyed by game_id (as a string):
         { "401754614": {
               "date": "2025-11-29", "season": 2025, "week": 14,
@@ -25,20 +26,23 @@ Output (into ./belt_data/):
           }, ... }
 
 IMPORTANT DATA LIMIT, not a bug: CFBD only has line scores and team box-score
-stats from roughly 2003 onward. Checked directly against this project's own
-belt_data/games_raw.json: 0 of the games before 2001 have a line score, vs.
-~100% from 2003 on. That means only about 19% of all 1,633 belt games (the
-ones from 2003 onward) can ever get a full box score here -- the other 81%
-(1869-2002) will only ever have the final score, because CFBD's own data
-doesn't go deeper than that for those eras. Surface this on the site rather
-than hide it (e.g. no "box score" link/section at all for older games,
-instead of an empty or broken one).
+stats from roughly 2003 onward. That means only about 19% of all belt games
+(the ones from 2003 onward) can ever get a full box score here -- the other
+81% (1869-2002) will only ever have the final score.
 
 Line scores are read straight out of belt_data/games_raw.json (already
 fetched by build_lineage.py) -- no extra API calls needed for those. Full
-team stats need a separate /games/teams pull -- one call per belt game
-that's 2003 or later (~310 calls, via CFBD's `id` filter), not a scan of
-whole seasons, so this should be a quick run even on a fresh key.
+team stats need a separate /games/teams pull -- one call per belt game.
+
+Incremental fetching: a belt game's box score, once played, never changes --
+so once a season is no longer "current or previous", there's no reason to
+ever re-pull its stats. This script keeps a small, git-committed historical
+cache (./historical_data/team_stats.json) of every settled season's stats,
+and each run only calls CFBD for belt games in the current + previous season
+(a handful of calls, not ~310) -- the same fix, and the same reason (CFBD's
+free tier is 1,000 calls/MONTH, not a short burst limit), as build_lineage.py.
+`--full-refetch` ignores the cache and redoes every 2003+ belt game, useful
+for a genuine from-scratch rebuild.
 """
 
 import argparse
@@ -50,7 +54,8 @@ import urllib.error
 import urllib.request
 
 API_BASE = "https://api.collegefootballdata.com"
-OUT_DIR = "belt_data"
+OUT_DIR = "belt_data"          # ephemeral, regenerated every run, gitignored
+HIST_DIR = "historical_data"   # small, git-committed cache lives here
 STATS_MIN_SEASON = 2003  # confirmed empirically -- see module docstring
 
 
@@ -153,9 +158,25 @@ def collect_team_stats(game_ids, api_key):
     return cache
 
 
+def load_historical_team_stats():
+    path = os.path.join(HIST_DIR, "team_stats.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        return json.load(f)
+
+
+def save_historical_team_stats(cache):
+    os.makedirs(HIST_DIR, exist_ok=True)
+    path = os.path.join(HIST_DIR, "team_stats.json")
+    with open(path, "w") as f:
+        json.dump(cache, f, indent=2, sort_keys=True)
+    print(f"Wrote {path} ({len(cache)} settled games' stats frozen)")
+
+
 def build_team_stats_index(raw_cache):
-    """game_id -> {"home": {...}, "away": {...}}. raw_cache is the dict from
-    collect_team_stats: str(game_id) -> row (or None)."""
+    """game_id -> {"home": {...}, "away": {...}}. raw_cache is a dict from
+    str(game_id) -> row (or None)."""
     index = {}
     for row in raw_cache.values():
         if row is None:
@@ -197,6 +218,9 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--lineage", default=os.path.join(OUT_DIR, "lineage.json"))
     p.add_argument("--games-raw", default=os.path.join(OUT_DIR, "games_raw.json"))
+    p.add_argument("--full-refetch", action="store_true",
+                   help="ignore historical_data/team_stats.json and redo "
+                        "every 2003+ belt game's box score from scratch")
     p.add_argument("--key", default=os.environ.get("CFBD_API_KEY"))
     args = p.parse_args()
 
@@ -208,7 +232,10 @@ def main():
         sys.exit(f"Can't find {args.lineage} -- run build_lineage.py first.")
     if not os.path.exists(args.games_raw):
         sys.exit(f"Can't find {args.games_raw} -- run build_lineage.py first "
-                 f"(it should have created this as a side effect).")
+                 f"(it should have created this as a side effect). Note: "
+                 f"games_raw.json now only covers build_lineage.py's own "
+                 f"live-window seasons -- that's expected and enough for "
+                 f"line scores, since only recent belt games need them fresh.")
 
     with open(args.lineage) as f:
         lineage = json.load(f)
@@ -219,13 +246,41 @@ def main():
         games_raw = json.load(f)
     line_scores = build_line_score_index(games_raw)
 
-    stats_game_ids = {g["game_id"] for g in belt_games if g["season"] >= STATS_MIN_SEASON}
-    print(f"{len(stats_game_ids)} belt game(s) from {STATS_MIN_SEASON} onward -- "
-          f"fetching team stats for those only (one call each)")
+    season_by_gid = {g["game_id"]: g["season"] for g in belt_games}
+    all_stats_ids = {gid for gid, season in season_by_gid.items()
+                      if season >= STATS_MIN_SEASON}
+    live_start_year = time.localtime().tm_year - 1
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    team_stats_raw = collect_team_stats(stats_game_ids, args.key)
-    team_stats = build_team_stats_index(team_stats_raw)
+
+    if args.full_refetch:
+        print(f"--full-refetch: fetching all {len(all_stats_ids)} belt game(s) "
+              f"from {STATS_MIN_SEASON} onward (one call each)")
+        combined_raw = collect_team_stats(all_stats_ids, args.key)
+    else:
+        historical_ids = {gid for gid in all_stats_ids
+                           if season_by_gid[gid] < live_start_year}
+        live_ids = all_stats_ids - historical_ids
+
+        historical_cache = load_historical_team_stats()  # keys are strings (from JSON)
+        missing_from_historical = {gid for gid in historical_ids
+                                     if str(gid) not in historical_cache}
+        to_fetch_now = missing_from_historical | live_ids
+        print(f"{len(historical_ids)} belt game(s) settled (season < "
+              f"{live_start_year}) -- {len(missing_from_historical)} not yet "
+              f"in the historical cache. {len(live_ids)} belt game(s) in the "
+              f"live window (season >= {live_start_year}) -- always refetched. "
+              f"Fetching {len(to_fetch_now)} of {len(all_stats_ids)} total this run.")
+
+        fetched = collect_team_stats(to_fetch_now, args.key)
+        combined_raw = dict(historical_cache)
+        combined_raw.update(fetched)
+
+        new_historical_cache = {str(gid): combined_raw.get(str(gid))
+                                  for gid in historical_ids}
+        save_historical_team_stats(new_historical_cache)
+
+    team_stats = build_team_stats_index(combined_raw)
 
     details = {}
     with_line = with_stats = 0

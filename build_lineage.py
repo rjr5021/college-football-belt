@@ -12,14 +12,45 @@ Usage:
     python3 build_lineage.py
 
     python3 build_lineage.py --tie-rule challenger   # holder loses belt on a tie
-    python3 build_lineage.py --start-year 1869 --end-year 2026
+    python3 build_lineage.py --full-refetch          # ignore the historical
+                                                      # baseline, redo 1869-now
 
-Outputs (into ./belt_data/):
-    games_raw.json    every game pulled, cached so reruns don't refetch
+Outputs (into ./belt_data/, all regenerated fresh every run, none committed):
+    games_raw.json    this run's freshly-fetched games (see "Incremental
+                      fetching" below -- NOT every game since 1869 anymore)
     venues_raw.json   every venue pulled, cached so reruns don't refetch
-    belt_games.csv    every game the belt was at stake in
-    reigns.csv        one row per reign
-    lineage.json      structured dataset for the site to consume
+    belt_games.csv    every game the belt was at stake in, 1869-now
+    reigns.csv        one row per reign, 1869-now
+    lineage.json      structured dataset for the site to consume, 1869-now
+
+Incremental fetching and the CFBD call budget: CFBD's FREE tier is capped at
+1,000 calls/MONTH (not a short burst limit -- see
+https://collegefootballdata.com/api-tiers) and a full 1869-now pull is
+~316 calls (158+ years x 2 season types). Refetching the entire history on
+every run -- which is what this script used to do, since GitHub Actions
+runners never keep belt_data/ between runs -- burns through that monthly
+budget in a small handful of runs and was the real cause of persistent
+"429 Too Many Requests" failures in CI (retrying more patiently doesn't
+help when the problem is "no calls left this month," not "too many calls
+this second").
+
+The fix: 1869-2002-ish never changes -- final scores are permanent -- so
+there's no reason to ever refetch a season once it's fully concluded and
+no more games will be added to it. This script now keeps a small,
+GIT-COMMITTED baseline (./historical_data/baseline.json: the already-walked
+chain of custody -- closed reigns + their belt games -- through the end of
+whatever seasons are safely "done") and, each run, freshly fetches ONLY the
+current and previous season (2 seasons x 2 season types = ~4 calls) to
+extend that baseline forward. A full run is now ~4-6 calls instead of ~316,
+comfortably inside the free tier even on a daily schedule. The baseline
+file updates (and, via the GitHub Actions workflow, commits back to the
+repo) automatically as seasons age out of the "current + previous" window
+-- no manual maintenance needed.
+
+`--full-refetch` (or no existing ./historical_data/baseline.json, e.g. a
+brand new checkout) falls back to the original full 1869-now pull, still
+useful for a genuine from-scratch rebuild (a tie-rule change, a suspected
+data issue, or bootstrapping the baseline for the first time).
 
 Dates: CFBD's start_date is UTC. A game's calendar date is taken from the
 LOCAL kickoff time at the venue, not a naive truncation of the UTC string --
@@ -39,13 +70,12 @@ timezonefinder is what turns venue coordinates into an IANA zone name.
 Without it, every game falls back to the naive UTC date -- the script still
 runs, just with the same off-by-a-day risk as before this fix.
 
-Rate limits: a full 1869-current pull is ~316 requests. 429s get a patient,
-capped-exponential backoff (up to 60s, 8 tries) distinct from the faster
-backoff used for 5xx/network errors, and progress is saved year-by-year to
-a resumable cache -- so a run that still exhausts retries and dies partway
-through doesn't lose the years it already fetched; just rerun the same
-command. (Discovered necessary running this on GitHub Actions runners,
-which hit CFBD's rate limit within the first ~20 years otherwise.)
+429s (which can still happen on a `--full-refetch` run, or just from bad
+luck) get a patient, capped-exponential backoff (up to 60s, 8 tries)
+distinct from the faster backoff used for 5xx/network errors, and
+`--full-refetch` progress is saved year-by-year to a resumable cache -- so
+a run that still exhausts retries and dies partway through doesn't lose
+the years it already fetched; just rerun the same command.
 
 The CFBD API has used both snake_case and camelCase field names across
 versions; this script accepts either.
@@ -64,7 +94,8 @@ from zoneinfo import ZoneInfo
 
 API_BASE = "https://api.collegefootballdata.com"
 FIRST_GAME_DATE = "1869-11-06"
-OUT_DIR = "belt_data"
+OUT_DIR = "belt_data"          # ephemeral, regenerated every run, gitignored
+HIST_DIR = "historical_data"   # small, git-committed baseline lives here
 
 
 def pick(d, *names, default=None):
@@ -81,8 +112,6 @@ def _get_json(url, api_key, label, retries=8):
     429s (rate limit) get a much more patient, longer backoff than a 5xx or
     a network blip -- capped at 60s, over `retries` tries -- since CFBD's
     rate limit needs real time to clear, not a couple of quick retries.
-    Discovered necessary running the full 1869-2026 pull on GitHub's
-    runners, which hit 429s within the first ~20 years otherwise.
     """
     req = urllib.request.Request(url, headers={
         "Authorization": f"Bearer {api_key}",
@@ -144,18 +173,15 @@ def collect_venues(api_key):
 
     CFBD's own "timezone" field on a venue is usually null, so this derives
     the zone from the venue's latitude/longitude via `timezonefinder` when
-    the field isn't populated.
+    the field isn't populated. Always fetched fresh (a single cheap call --
+    new stadiums do appear occasionally); not part of the call-budget
+    problem this script otherwise solves for.
     """
     cache = os.path.join(OUT_DIR, "venues_raw.json")
-    if os.path.exists(cache):
-        print(f"Using cached {cache} (delete it to refetch)")
-        with open(cache) as f:
-            raw = json.load(f)
-    else:
-        raw = fetch_venues(api_key)
-        with open(cache, "w") as f:
-            json.dump(raw, f)
-        print(f"Cached {len(raw)} venues to {cache}")
+    raw = fetch_venues(api_key)
+    with open(cache, "w") as f:
+        json.dump(raw, f)
+    print(f"Cached {len(raw)} venues to {cache}")
 
     tf = _get_tzfinder()
     tz_by_venue = {}
@@ -230,57 +256,45 @@ def local_date(iso_utc, venue_tz_name):
         return naive_fallback, True
 
 
-def collect(start_year, end_year, api_key):
-    """Fetch every game, year by year, from `start_year` through `end_year`.
-
-    A full run is ~316 requests (158 years x 2 season types), which is
-    enough to trip CFBD's rate limit even with the patient backoff in
-    _get_json -- and on a bare GitHub Actions runner (no games_raw.json
-    ever persists between CI runs) that's a full refetch every single
-    time. So progress is saved incrementally, one year at a time and in a
-    `finally` block, to a resumable per-year cache: a crash or an
-    exhausted-retries 429 partway through no longer throws away every
-    year already fetched -- rerunning picks up right where it left off,
-    the same fix already applied to fetch_game_details.py.
+def fetch_seasons(seasons, api_key):
+    """Fetch every game (any division) for each season year in `seasons`,
+    both season types. Progress is saved incrementally per (year, type) to
+    a resumable cache in case of a crash or exhausted retries -- cheap
+    insurance even though this is normally a tiny handful of seasons now.
     """
-    cache = os.path.join(OUT_DIR, "games_raw.json")
-    if os.path.exists(cache):
-        print(f"Using cached {cache} (delete it to refetch)")
-        with open(cache) as f:
-            return json.load(f)
-
     progress_cache = os.path.join(OUT_DIR, "games_raw_progress.json")
     progress = {}
     if os.path.exists(progress_cache):
         with open(progress_cache) as f:
             progress = json.load(f)
-        print(f"Resuming {progress_cache}: {len(progress)} year(s) already fetched")
+        print(f"Resuming {progress_cache}: {len(progress)} season/type "
+              f"combo(s) already fetched")
 
     def save_progress():
         with open(progress_cache, "w") as f:
             json.dump(progress, f)
 
     try:
-        for year in range(start_year, end_year + 1):
-            key = str(year)
-            if key in progress:
-                continue
-            got = []
+        for year in seasons:
             for st in ("regular", "postseason"):
-                got.extend(fetch_year(year, api_key, st))
-            progress[key] = got
-            print(f"  {year}: {len(got)} games")
-            save_progress()
-            time.sleep(0.15)
+                key = f"{year}/{st}"
+                if key in progress:
+                    continue
+                rows = fetch_year(year, api_key, st)
+                progress[key] = rows
+                print(f"  {year}/{st}: {len(rows)} games")
+                save_progress()
+                time.sleep(0.15)
     finally:
         save_progress()
 
-    all_games = [g for year in range(start_year, end_year + 1)
-                 for g in progress.get(str(year), [])]
+    all_games = [g for year in seasons for st in ("regular", "postseason")
+                 for g in progress.get(f"{year}/{st}", [])]
+    cache = os.path.join(OUT_DIR, "games_raw.json")
     with open(cache, "w") as f:
         json.dump(all_games, f)
-    print(f"Cached {len(all_games)} games to {cache}")
-    os.remove(progress_cache)  # superseded by the finished games_raw.json
+    print(f"Cached {len(all_games)} games (seasons {sorted(seasons)}) to {cache}")
+    os.remove(progress_cache)
     return all_games
 
 
@@ -327,25 +341,53 @@ def normalize(raw, venue_tz=None):
     return out
 
 
-def walk(games, tie_rule="holder"):
-    """Walk the chain. Returns (belt_games, reigns)."""
+def walk(games, tie_rule="holder", start_holder=None, start_reign=None):
+    """Walk the chain, in chronological order, over `games`.
+
+    By default (start_holder=None) this bootstraps from games[0] exactly
+    as the very first belt game (Rutgers-Princeton) always has: games[0]
+    itself establishes the initial holder and is NOT recorded as a belt
+    game, and every following game where the holder plays gets folded in.
+
+    Pass start_holder/start_reign to RESUME an existing chain instead --
+    `start_reign` should be the still-open reign dict (as returned by a
+    previous call to this function, whose last reign entry always has
+    end_date=None) and `games` should be ONLY the games that happen after
+    that reign's last known state (typically just the current + previous
+    season's freshly-fetched games). Every game in `games` is then folded
+    in starting from that state, with nothing treated as the bootstrap
+    game -- the caller is responsible for not re-passing any game already
+    reflected in `start_reign`/its prior belt games.
+
+    Returns (belt_games, reigns) covering only what this call folded in --
+    reigns' last entry is always the (possibly still-open) current reign.
+    The caller combines this with whatever came before (either nothing, in
+    the bootstrap case, or a baseline's historical belt_games/reigns, in
+    the resume case).
+    """
     games = [g for g in games if g["date"] >= FIRST_GAME_DATE]
-    if not games:
-        sys.exit("No games at or after the first-game date -- check the data pull.")
 
-    first = games[0]
-    if first["date"] != FIRST_GAME_DATE:
-        print(f"WARNING: first game is {first['date']}, expected {FIRST_GAME_DATE}",
-              file=sys.stderr)
+    if start_holder is None:
+        if not games:
+            sys.exit("No games at or after the first-game date -- check the data pull.")
+        first = games[0]
+        if first["date"] != FIRST_GAME_DATE:
+            print(f"WARNING: first game is {first['date']}, expected {FIRST_GAME_DATE}",
+                  file=sys.stderr)
+        holder = (first["home"] if first["home_points"] > first["away_points"]
+                  else first["away"])
+        reign = {"team": holder, "start_date": first["date"], "won_from": None,
+                 "won_score": f"{first['home_points']}-{first['away_points']}",
+                 "defenses": 0}
+        remaining = games[1:]
+    else:
+        holder = start_holder
+        reign = dict(start_reign)
+        remaining = games
 
-    holder = (first["home"] if first["home_points"] > first["away_points"]
-              else first["away"])
     belt_games, reigns = [], []
-    reign = {"team": holder, "start_date": first["date"], "won_from": None,
-             "won_score": f"{first['home_points']}-{first['away_points']}",
-             "defenses": 0}
 
-    for g in games[1:]:
+    for g in remaining:
         if holder not in (g["home"], g["away"]):
             continue
 
@@ -382,6 +424,74 @@ def walk(games, tie_rule="holder"):
     reign["lost_to"] = None
     reigns.append(reign)
     return belt_games, reigns
+
+
+def split_at_season(belt_games, reigns, live_start_year):
+    """Given a COMPLETE (belt_games, reigns) pair -- reigns' last entry
+    open (end_date None), every other reign closed -- split off everything
+    with season < live_start_year as a frozen, resumable baseline:
+
+        (historical_belt_games, historical_closed_reigns, open_reign)
+
+    `open_reign` is the reign state exactly as of the start of
+    `live_start_year` -- i.e. what walk(..., start_holder=.., start_reign=..)
+    needs to correctly resume and reproduce the exact same tail if fed the
+    same games again. This replays belt_games' own already-decided
+    outcome/new_holder fields (no tie_rule needed -- those decisions were
+    already made) rather than touching raw per-game data, so the frozen
+    baseline never needs anything but the small, already-computed
+    belt_games/reigns lists CFBD-side re-verification would still start
+    from the same recorded facts.
+    """
+    historical_belt_games = [bg for bg in belt_games if bg["season"] < live_start_year]
+
+    if not historical_belt_games:
+        # The live window starts at or before the very first belt game --
+        # the original bootstrap reign (Rutgers) IS the open reign.
+        first_reign = reigns[0]
+        open_reign = {"team": first_reign["team"], "start_date": first_reign["start_date"],
+                      "won_from": first_reign["won_from"], "won_score": first_reign["won_score"],
+                      "defenses": 0}
+        return [], [], open_reign
+
+    closed = []
+    first_reign = reigns[0]
+    reign = {"team": first_reign["team"], "start_date": first_reign["start_date"],
+             "won_from": first_reign["won_from"], "won_score": first_reign["won_score"],
+             "defenses": 0}
+    for bg in historical_belt_games:
+        if bg["outcome"] in ("changed", "lost (tie)"):
+            reign["end_date"] = bg["date"]
+            reign["lost_to"] = bg["new_holder"]
+            closed.append(reign)
+            reign = {"team": bg["new_holder"], "start_date": bg["date"],
+                     "won_from": bg["holder"], "won_score": bg["score"], "defenses": 0}
+        else:
+            reign["defenses"] += 1
+    return historical_belt_games, closed, reign
+
+
+def load_baseline():
+    path = os.path.join(HIST_DIR, "baseline.json")
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return json.load(f)
+
+
+def save_baseline(historical_belt_games, historical_reigns, open_reign, live_start_year):
+    os.makedirs(HIST_DIR, exist_ok=True)
+    path = os.path.join(HIST_DIR, "baseline.json")
+    with open(path, "w") as f:
+        json.dump({
+            "live_start_year": live_start_year,
+            "historical_belt_games": historical_belt_games,
+            "historical_reigns": historical_reigns,
+            "open_reign": open_reign,
+        }, f, indent=2)
+    print(f"Wrote {path} (historical through season {live_start_year - 1}, "
+          f"{len(historical_belt_games)} belt games / {len(historical_reigns)} "
+          f"closed reigns frozen)")
 
 
 def write_outputs(belt_games, reigns, tie_rule):
@@ -424,6 +534,10 @@ def main():
     p.add_argument("--end-year", type=int, default=time.localtime().tm_year)
     p.add_argument("--tie-rule", choices=["holder", "challenger"], default="holder",
                    help="who keeps the belt on a tie (default: holder retains)")
+    p.add_argument("--full-refetch", action="store_true",
+                   help="ignore historical_data/baseline.json and rebuild "
+                        "the whole 1869-now chain from scratch (~316 CFBD "
+                        "calls) instead of the normal incremental update")
     p.add_argument("--key", default=os.environ.get("CFBD_API_KEY"))
     args = p.parse_args()
 
@@ -436,13 +550,43 @@ def main():
     print("Fetching venue timezones from CFBD...")
     venue_tz = collect_venues(args.key)
 
-    print(f"Pulling {args.start_year}-{args.end_year} from CFBD...")
-    raw = collect(args.start_year, args.end_year, args.key)
-    games = normalize(raw, venue_tz)
-    print(f"{len(games)} completed games in chronological order")
+    baseline = None if args.full_refetch else load_baseline()
+    live_start_year = args.end_year - 1
 
-    belt_games, reigns = walk(games, args.tie_rule)
+    if baseline is None:
+        print(f"No historical baseline found -- doing a full "
+              f"{args.start_year}-{args.end_year} pull from CFBD "
+              f"(~{2 * (args.end_year - args.start_year + 1)} calls).")
+        raw = fetch_seasons(range(args.start_year, args.end_year + 1), args.key)
+        games = normalize(raw, venue_tz)
+        print(f"{len(games)} completed games in chronological order")
+        belt_games, reigns = walk(games, args.tie_rule)
+    else:
+        fetch_from = min(baseline["live_start_year"], live_start_year)
+        seasons = range(fetch_from, args.end_year + 1)
+        print(f"Historical baseline found (through season {fetch_from - 1}, "
+              f"{len(baseline['historical_belt_games'])} belt games already "
+              f"settled) -- fetching only seasons {list(seasons)} fresh "
+              f"(~{2 * len(list(seasons))} calls).")
+        raw = fetch_seasons(seasons, args.key)
+        games = normalize(raw, venue_tz)
+        print(f"{len(games)} completed games in the live window")
+        new_belt_games, tail_reigns = walk(
+            games, args.tie_rule,
+            start_holder=baseline["open_reign"]["team"],
+            start_reign=baseline["open_reign"],
+        )
+        belt_games = baseline["historical_belt_games"] + new_belt_games
+        reigns = baseline["historical_reigns"] + tail_reigns
+
     write_outputs(belt_games, reigns, args.tie_rule)
+
+    # Advance the baseline to today's live-window boundary. Most runs this
+    # reproduces the same split as before (no season has aged out since
+    # last time); once a year it absorbs one more season permanently.
+    hist_belt_games, hist_reigns, open_reign = split_at_season(
+        belt_games, reigns, live_start_year)
+    save_baseline(hist_belt_games, hist_reigns, open_reign, live_start_year)
 
     current = reigns[-1]
     teams = len({r["team"] for r in reigns})
