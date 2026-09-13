@@ -380,12 +380,30 @@ def walk(games, tie_rule="holder", start_holder=None, start_reign=None):
                  "won_score": f"{first['home_points']}-{first['away_points']}",
                  "defenses": 0}
         remaining = games[1:]
+        # The bootstrap game itself IS a real, playable belt game -- the one
+        # that put the belt up in the first place -- so it belongs in
+        # belt_games too (outcome "established", holder None since there was
+        # no defending champion yet), not just reflected in reigns[0]. This
+        # gives it a real game page like every other belt game instead of
+        # silently having none. split_at_season() knows to skip this outcome
+        # when replaying defenses (see its own comment) since reigns[0]
+        # above already reflects it.
+        bootstrap_belt_game = {
+            "date": first["date"], "season": first["season"], "week": first["week"],
+            "season_type": first["season_type"], "holder": None,
+            "opponent": (first["away"] if holder == first["home"] else first["home"]),
+            "home": first["home"], "away": first["away"],
+            "score": f"{first['home_points']}-{first['away_points']}",
+            "neutral": first["neutral"], "outcome": "established",
+            "new_holder": holder, "game_id": first["id"],
+        }
     else:
         holder = start_holder
         reign = dict(start_reign)
         remaining = games
+        bootstrap_belt_game = None
 
-    belt_games, reigns = [], []
+    belt_games, reigns = ([bootstrap_belt_game] if bootstrap_belt_game else []), []
 
     for g in remaining:
         if holder not in (g["home"], g["away"]):
@@ -460,6 +478,11 @@ def split_at_season(belt_games, reigns, live_start_year):
              "won_from": first_reign["won_from"], "won_score": first_reign["won_score"],
              "defenses": 0}
     for bg in historical_belt_games:
+        if bg["outcome"] == "established":
+            # The bootstrap game itself -- already fully reflected in
+            # first_reign/reign above (same team, start_date, won_score).
+            # Not a defense of that reign, so don't double-count it.
+            continue
         if bg["outcome"] in ("changed", "lost (tie)"):
             reign["end_date"] = bg["date"]
             reign["lost_to"] = bg["new_holder"]

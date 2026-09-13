@@ -236,7 +236,7 @@ def build_change_game_index(belt_games):
     winner-first, so it needs re-deriving from the actual game)."""
     index = {}
     for g in belt_games:
-        if g["outcome"] == "changed":
+        if g["outcome"] in ("changed", "established"):
             index[(g["date"], g["new_holder"])] = g
     return index
 
@@ -352,6 +352,24 @@ table.lineScore tr.winner td.teamCell{ color:var(--emph); }
 table.lineScore td.final{ font-weight:700; font-size:16px; }
 table.lineScore tbody tr:last-child td{ border-bottom:none; }
 .swatch{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid var(--hairline); }
+
+.statCategory{ margin:0 0 26px; }
+.statCategory:last-child{ margin-bottom:0; }
+.statCategory h3{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px; }
+table.playerStatsTable{ width:100%; border-collapse:collapse; font-size:13.5px; }
+table.playerStatsTable th{ text-align:right; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:7px 8px; border-bottom:1px solid var(--brass-line); }
+table.playerStatsTable th.teamCell{ text-align:left; }
+table.playerStatsTable td{ padding:8px; border-bottom:1px solid var(--hairline); text-align:right; }
+table.playerStatsTable td.teamCell{ text-align:left; font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; white-space:nowrap; }
+table.playerStatsTable td.teamCell .playerTeam{ font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:10.5px; color:var(--ink-soft); margin-left:6px; text-transform:uppercase; letter-spacing:.04em; }
+table.playerStatsTable tbody tr:last-child td{ border-bottom:none; }
+details.moreStats{ margin-top:8px; }
+details.moreStats summary{ cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:var(--brass-bright); padding:8px 0; list-style:none; }
+details.moreStats summary::-webkit-details-marker{ display:none; }
+details.moreStats summary::before{ content:"+ "; }
+details.moreStats[open] summary::before{ content:"\\2212 "; }
+details.moreStats summary:hover{ text-decoration:underline; }
+details.moreStats .statCategory{ margin-top:18px; }
 
 /* box score */
 .sampleTag{
@@ -516,6 +534,8 @@ table.reignsTable td.teamCell a{ text-decoration:none; }
 table.reignsTable td.teamCell a:hover{ text-decoration:underline; text-decoration-color:var(--brass); }
 table.reignsTable td.won a, table.reignsTable td.lost a{ text-decoration:none; border-bottom:1px dotted var(--ink-soft); }
 table.reignsTable td.won a:hover, table.reignsTable td.lost a:hover{ border-bottom-color:var(--brass); color:var(--brass-bright); }
+table.reignsTable td.tabular a{ text-decoration:none; color:inherit; border-bottom:1px dotted var(--ink-soft); }
+table.reignsTable td.tabular a:hover{ border-bottom-color:var(--brass); color:var(--brass-bright); }
 table.reignsTable td.dates, table.reignsTable td.won, table.reignsTable td.lost{ font-size:12.5px; color:var(--ink-soft); }
 table.reignsTable td.tabular{ text-align:right; font-family:"IBM Plex Mono",monospace; }
 table.reignsTable tr.current{ background: color-mix(in srgb, var(--brass) 10%, transparent); }
@@ -568,6 +588,21 @@ def build_headline(g):
     neutral = g["neutral"]
     new_holder_side = "home" if new_holder == home else "away"
     other_team = away if new_holder_side == "home" else home
+
+    if outcome == "established":
+        belt_tag = "Belt established"
+        ns_score = home_score if new_holder_side == "home" else away_score
+        other_score = away_score if new_holder_side == "home" else home_score
+        if neutral:
+            loc = f"at a neutral site over {esc(other_team)}"
+        elif new_holder_side == "home":
+            loc = f"at home over {esc(other_team)}"
+        else:
+            loc = f"on the road at {esc(other_team)}"
+        headline = (f'{esc(new_holder)} <span class="win">establishes the belt</span>, '
+                    f'{ns_score}–{other_score}, {loc} &mdash; the first game to '
+                    f'ever have it on the line.')
+        return headline, belt_tag
 
     if outcome == "retained (tie)":
         belt_tag = "Belt retained (tie)"
@@ -676,6 +711,104 @@ def render_team_stats(g):
   </section>'''
 
 
+# --------------------------------------------------------------- player stats
+
+# Skill-position categories shown by default (lower-cased CFBD category names);
+# everything else CFBD returns (defense, kicking, punting, returns, etc.)
+# is folded into a collapsible "view more" section instead.
+SKILL_STAT_CATEGORIES = ["passing", "rushing", "receiving"]
+
+CATEGORY_LABELS = {
+    "passing": "Passing",
+    "rushing": "Rushing",
+    "receiving": "Receiving",
+    "defensive": "Defense",
+    "fumbles": "Fumbles",
+    "interceptions": "Interceptions",
+    "kicking": "Kicking",
+    "punting": "Punting",
+    "kickreturns": "Kick Returns",
+    "puntreturns": "Punt Returns",
+}
+
+
+def category_label(name):
+    return CATEGORY_LABELS.get(name.lower(), name.replace("_", " ").title())
+
+
+def render_stat_table(cat_name, cat_data, home_team):
+    columns = cat_data.get("columns", [])
+    rows = cat_data.get("rows", [])
+    if not columns or not rows:
+        return ""
+
+    rows_sorted = sorted(rows, key=lambda r: 0 if r.get("team") == home_team else 1)
+
+    head_cells = "".join(f"<th>{esc(c)}</th>" for c in columns)
+    body_rows = ""
+    for r in rows_sorted:
+        stats = r.get("stats", {})
+        cells = ""
+        for c in columns:
+            val = stats.get(c)
+            cells += f'<td class="tabular">{"—" if val is None else esc(str(val))}</td>'
+        body_rows += (f'<tr><td class="teamCell">{esc(r.get("player", ""))}'
+                       f'<span class="playerTeam">{esc(r.get("team", ""))}</span></td>{cells}</tr>')
+
+    return f'''
+    <div class="statCategory">
+      <h3>{esc(category_label(cat_name))}</h3>
+      <table class="playerStatsTable">
+        <thead><tr><th class="teamCell">Player</th>{head_cells}</tr></thead>
+        <tbody>{body_rows}</tbody>
+      </table>
+    </div>'''
+
+
+def render_player_stats(g):
+    ps = g.get("player_stats")
+    if not ps:
+        return ""
+    home = g["home"]
+
+    skill_keys = [k for k in ps if k.lower() in SKILL_STAT_CATEGORIES]
+    skill_keys.sort(key=lambda k: SKILL_STAT_CATEGORIES.index(k.lower()))
+    other_keys = [k for k in ps if k.lower() not in SKILL_STAT_CATEGORIES]
+
+    skill_html = "".join(render_stat_table(k, ps[k], home) for k in skill_keys)
+    more_html = "".join(render_stat_table(k, ps[k], home) for k in other_keys)
+
+    if not skill_html and not more_html:
+        return ""
+
+    more_block = ""
+    if more_html:
+        n = len(other_keys)
+        label = f"Show more stats ({n} more categor{'y' if n == 1 else 'ies'})"
+        more_block = f'''
+    <details class="moreStats">
+      <summary>{esc(label)}</summary>
+      {more_html}
+    </details>'''
+
+    if not skill_html:
+        skill_html = ('<p class="noteBox">No passing, rushing, or receiving stats recorded '
+                       'for this game — see below for what CFBD does have.</p>')
+
+    return f'''
+  <section>
+    <div class="sectionHead withTag">
+      <span class="tag">Box Score</span>
+      <span class="rule"></span>
+      <h2>Player stats</h2>
+      <span class="sourceTag">CFBD player stats</span>
+    </div>
+    {skill_html}
+    {more_block}
+    <p class="noteBox">Full player stats from CFBD’s <span class="mono">/games/players</span> data. This section only appears for belt games from 2003 onward — CFBD doesn’t have player-level stats that far back.</p>
+  </section>'''
+
+
 # --------------------------------------------------------------------- page
 
 def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
@@ -705,7 +838,11 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
         tie. The other side is 'New Holder' only if they actually took the
         belt this game (outcome == changed); otherwise they challenged and
         didn't take it, so they're just the 'Challenger' (true for both a
-        loss and a tie, since a tie means the holder keeps the belt)."""
+        loss and a tie, since a tie means the holder keeps the belt).
+        The very first belt game has no defending holder at all (holder is
+        None) -- there was no belt yet for anyone to defend."""
+        if g["holder"] is None:
+            return "First Champion" if g["new_holder"] == team else "First Opponent"
         if g["holder"] == team:
             return "Defending Holder"
         return "New Holder" if g["new_holder"] == team else "Challenger"
@@ -777,6 +914,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
   </div>
 {render_line_score(g)}
 {render_team_stats(g)}
+{render_player_stats(g)}
 {game_nav}
 </main>
 
@@ -938,7 +1076,7 @@ def generate_homepage(lineage, colors, belt_games):
         <div class="plateStats">
           <div><span class="n tabular">{days_held:,}</span><span class="l">Days</span></div>
           <div><span class="n tabular">{defenses}</span><span class="l">Defenses</span></div>
-          <div><span class="n tabular">{ordinal(reign_num)}</span><span class="l">Reign</span></div>
+          <div><span class="n tabular">{ordinal(reign_num)}</span><span class="l">All-Time Reign</span></div>
         </div>
       </div>
     </div>
@@ -1186,7 +1324,12 @@ def generate_all_games_page(lineage, colors, belt_games):
     CSS and search-filter JS as generate_lineage_page for a consistent look,
     just with a different (game-shaped, not reign-shaped) column set."""
     totals = lineage["totals"]
-    title_changes = sum(1 for g in belt_games if g["outcome"] == "changed")
+    # "established" (the very first belt game, which put the title up in the
+    # first place) is folded into title_changes for this stat band -- it's
+    # not a "defense" of anything, and folding it in keeps title_changes +
+    # defenses_total == len(belt_games) exactly, and title_changes == the
+    # total reign count on the Full History page (328, not 327).
+    title_changes = sum(1 for g in belt_games if g["outcome"] in ("changed", "established"))
     defenses_total = len(belt_games) - title_changes
 
     rows_html = ""
@@ -1197,7 +1340,10 @@ def generate_all_games_page(lineage, colors, belt_games):
         outcome = g["outcome"]
         is_last = g is belt_games[-1]
 
-        if outcome == "changed":
+        if outcome == "established":
+            defense_no = 0
+            result_html = f'<span class="win">Belt established: {esc(g["new_holder"])}</span>'
+        elif outcome == "changed":
             defense_no = 0
             result_html = f'<span class="win">New champion: {esc(g["new_holder"])}</span>'
         else:
@@ -1210,7 +1356,7 @@ def generate_all_games_page(lineage, colors, belt_games):
         matchup_html = f'<a href="games/{g["game_id"]}.html">{matchup_text}</a>'
 
         cls_bits = []
-        if outcome == "changed":
+        if outcome in ("changed", "established"):
             cls_bits.append("titleChange")
         if is_last:
             cls_bits.append("current")
@@ -1221,7 +1367,7 @@ def generate_all_games_page(lineage, colors, belt_games):
           <td class="num">{g["game_number"]:,}</td>
           <td class="dates">{fmt_date(g["date"])}</td>
           <td class="matchup">{matchup_html}</td>
-          <td class="tabular">{away_score}&ndash;{home_score}</td>
+          <td class="tabular"><a href="games/{g["game_id"]}.html">{away_score}&ndash;{home_score}</a></td>
           <td class="result">{result_html}</td>
         </tr>'''
 
@@ -1485,6 +1631,7 @@ def main():
         merged = dict(g)
         merged["line_score"] = d.get("line_score")
         merged["team_stats"] = d.get("team_stats")
+        merged["player_stats"] = d.get("player_stats")
 
         prev_game = belt_games[i - 1] if i > 0 else None
         next_game = belt_games[i + 1] if i < len(belt_games) - 1 else None

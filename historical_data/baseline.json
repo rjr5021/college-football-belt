@@ -2,6 +2,21 @@
   "live_start_year": 2025,
   "historical_belt_games": [
     {
+      "date": "1869-11-06",
+      "season": 1869,
+      "week": 1,
+      "season_type": "regular",
+      "holder": null,
+      "opponent": "Princeton",
+      "home": "Rutgers",
+      "away": "Princeton",
+      "score": "6-4",
+      "neutral": false,
+      "outcome": "established",
+      "new_holder": "Rutgers",
+      "game_id": 1
+    },
+    {
       "date": "1869-11-13",
       "season": 1869,
       "week": 2,
