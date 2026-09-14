@@ -18,8 +18,12 @@ name: Update and deploy
 #
 # CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst
 # limit), so this pipeline fetches only the current + previous season each
-# run (~10-20 calls) instead of the whole 1869-now history (~600+ calls) --
-# see README.md's "Incremental fetching" section. That means
+# run (~15-30 calls) instead of the whole 1869-now history (~600+ calls) --
+# see README.md's "Incremental fetching" section. With 4 scheduled runs a
+# week (see below) instead of 1, that's roughly 250-500 calls/month during
+# the season just from the schedule -- comfortably under the cap, but
+# worth knowing if you ever add more scheduled check-ins or run things
+# manually a lot in the same month. That means
 # historical_data/ (the small, git-committed baseline the scripts resume
 # from) can change as seasons age out of the "current + previous" window,
 # so this workflow commits that change back to the repo when it happens.
@@ -33,9 +37,36 @@ name: Update and deploy
 
 on:
   schedule:
-    # Sundays at 12:00 UTC (~7am ET / 4am PT) -- after essentially every
-    # week's games have finished. Adjust freely; cron is UTC.
-    - cron: '0 12 * * 0'
+    # Four check-ins per week instead of one, aimed at catching the belt
+    # holder's own game (the only one that can actually change hands)
+    # shortly after it ends, plus one overnight catch-all. GitHub Actions
+    # cron is fixed-clock-time UTC only -- it can't dynamically compute
+    # "4 hours after whenever this week's game kicks off," since that
+    # time moves around week to week. These four approximate it instead,
+    # spaced ~4 hours after the three standard college football kickoff
+    # windows (noon / 3:30pm / primetime ET), so whichever slot the
+    # holder's game lands in, one of these lands close to 4 hours after
+    # its actual kickoff:
+    #   - Sat 4:00pm ET  -- ~4h after a ~noon ET kickoff
+    - cron: '0 21 * * 6'
+    #   - Sat 7:30pm ET  -- ~4h after a ~3:30pm ET kickoff
+    - cron: '30 0 * * 0'
+    #   - Sat 11:30pm ET -- ~4h after a ~7:30pm ET primetime kickoff
+    - cron: '30 4 * * 0'
+    #   - Sun 1:00am ET  -- final overnight catch-all
+    - cron: '0 6 * * 0'
+    # All four are written for EST (UTC-5, winter clock) since that's
+    # what was asked for -- during EDT (UTC-4, roughly late Aug into
+    # early Nov), each of these actually lands ONE HOUR EARLIER on the
+    # clock (e.g. the "1:00am ET" one fires at what's actually 12:00am
+    # EDT). GitHub Actions cron has no timezone/DST awareness at all, so
+    # there's no fixed UTC time that stays correct year-round -- this is
+    # a real limitation, not a bug, and the gap is only ever an hour.
+    # A Thursday/Friday game (occasional, mostly early season and
+    # championship week) won't get its own near-real-time check -- it
+    # just gets picked up at the next one of these four, same as any
+    # in-progress week always has been. Use "Run workflow" below for an
+    # on-demand check any time none of this fits.
   workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
   push:
     branches: [main]
