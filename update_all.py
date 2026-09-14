@@ -3,7 +3,7 @@
 Run the full weekly-update pipeline in order: refetch the lineage, refresh
 team colors, refresh game box scores, build the next-game preview (stats,
 forecast, and an AI prediction), generate AI recaps of settled games,
-rebuild the site, then render the share image. One command instead of ten.
+rebuild the site, then render the share image. One command instead of a dozen.
 
 Usage:
     export CFBD_API_KEY=your_key_here        # required -- every CFBD step needs it
@@ -12,6 +12,8 @@ Usage:
     export X_API_KEY_SECRET=your_x_secret    # optional, same as above
     export X_ACCESS_TOKEN=your_x_token       # optional, same as above
     export X_ACCESS_TOKEN_SECRET=your_x_ts   # optional, same as above
+    export IG_ACCESS_TOKEN=your_ig_token     # optional -- same, but for Instagram
+    export IG_BUSINESS_ACCOUNT_ID=your_ig_id # optional, same as above
     python3 update_all.py
 
 Each stage is just the existing script, run as a subprocess with the same
@@ -98,6 +100,16 @@ this is safe to point at an existing belt_data/ folder:
                                  X_POST_PREVIEW) and only once per game.
                                  Also syncs the account's bio to always name
                                  the current holder, whenever it changes.
+ 12. post_to_instagram.py   -- OPTIONAL, same idea again: skips itself
+                                 cleanly unless IG_ACCESS_TOKEN and
+                                 IG_BUSINESS_ACCOUNT_ID are BOTH set. Mirrors
+                                 post_to_x.py's result/preview posts and
+                                 wording (reuses its helper functions
+                                 directly), tracked separately in
+                                 social_cache/ig_last_posted.json since
+                                 Instagram's Graph API needs its own
+                                 two-step image-post flow instead of a
+                                 plain create_tweet() call.
 
 follow_batch.py is deliberately NOT a stage here -- it runs on its own much
 more frequent schedule (every ~2 hours, see follow-accounts.yml) to slowly
@@ -139,6 +151,7 @@ STAGES = [
     ("build_site.py", "Rebuilding the site", None),
     ("generate_share_image.py", "Rendering the share image, favicon, and team posters", None),
     ("post_to_x.py", "Posting results/preview to X (optional)", None),
+    ("post_to_instagram.py", "Posting results/preview to Instagram (optional)", None),
 ]
 
 

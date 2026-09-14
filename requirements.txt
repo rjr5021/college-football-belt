@@ -18,3 +18,11 @@ Pillow
 # cleanly if the X_* env vars aren't set -- but the import has to succeed
 # either way, so this stays a normal (non-optional) requirement.
 tweepy
+
+# post_to_instagram.py needs this for the Instagram Graph API's plain
+# HTTPS POST calls (no official Meta Python SDK for this). tweepy already
+# pulls requests in transitively, but it's listed explicitly here since
+# post_to_instagram.py depends on it directly. Same OPTIONAL-at-runtime
+# pattern as tweepy above -- no-ops cleanly without the IG_* env vars, but
+# the import must still succeed.
+requests

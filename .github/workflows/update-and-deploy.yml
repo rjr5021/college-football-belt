@@ -21,6 +21,11 @@ name: Update and deploy
 #      X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET, from the app's Keys & Tokens
 #      page at developer.x.com. Skip any of the four and post_to_x.py just
 #      no-ops -- nothing else on the site depends on it.
+#   5. OPTIONAL, same idea but for Instagram (@CollegeFBBelt) -> same
+#      place -> two more repository secrets: IG_ACCESS_TOKEN,
+#      IG_BUSINESS_ACCOUNT_ID, from the app's Instagram API setup page at
+#      developers.facebook.com ("Generate access tokens" step). Skip
+#      either one and post_to_instagram.py just no-ops the same way.
 # See README.md for the full walkthrough.
 #
 # CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst
@@ -41,9 +46,10 @@ name: Update and deploy
 # in particular would silently re-spend a full historical backfill's
 # worth of Claude calls every single week, so all three caches are
 # committed back the same way. social_cache/ is committed for the same
-# reason again -- it's how post_to_x.py remembers which belt change it
-# already posted about, so skipping this step would repost the same
-# change on every single scheduled run instead of just once.
+# reason again -- it's how post_to_x.py and post_to_instagram.py each
+# remember which belt change they already posted about, so skipping this
+# step would repost the same change on every single scheduled run instead
+# of just once.
 
 on:
   schedule:
@@ -115,8 +121,12 @@ jobs:
           X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_BUSINESS_ACCOUNT_ID: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           # True only on the Friday 6pm ET cron line above -- that's the
-          # one and only run meant to post the upcoming-game preview to X.
+          # one and only run meant to post the upcoming-game preview, on
+          # both X and Instagram (post_to_instagram.py reads this same
+          # flag, not a separate one -- see its docstring).
           # github.event.schedule tells us which cron line fired this run
           # (unset for workflow_dispatch/push, so those never post one).
           X_POST_PREVIEW: ${{ github.event.schedule == '0 23 * * 5' }}
