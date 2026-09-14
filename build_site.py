@@ -76,13 +76,16 @@ PAPER_DARK = "#161009"
 
 
 def head_extras(rel=""):
-    """Favicon links (+ the analytics snippet, when GOATCOUNTER_CODE is
-    set) shared by every page template. `rel` is the relative path prefix
-    back to the site root -- "" for root-level pages, "../" for pages one
-    directory down (games/, teams/)."""
+    """Favicon links, the PWA manifest/service-worker wiring, the theme-toggle
+    script, and (when GOATCOUNTER_CODE is set) the analytics snippet --
+    shared by every page template. `rel` is the relative path prefix back to
+    the site root -- "" for root-level pages, "../" for pages one directory
+    down (games/, teams/)."""
     bits = [
         f'<link rel="icon" type="image/png" href="{rel}favicon.png">',
         f'<link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">',
+        f'<link rel="manifest" href="{rel}manifest.json">',
+        '<meta name="theme-color" content="#8a6a34">',
         f'<link rel="alternate" type="application/rss+xml" '
         f'title="The College Football Belt — Belt Changes" href="{rel}feed.xml">',
     ]
@@ -93,6 +96,54 @@ def head_extras(rel=""):
             f'<script data-goatcounter="https://{GOATCOUNTER_CODE}.goatcounter.com/count" '
             f'async src="//gc.zgo.at/count.js"></script>'
         )
+    # Theme toggle -- reads/writes localStorage("cfbBelt:theme") so a
+    # visitor's explicit light/dark choice overrides the OS-level
+    # prefers-color-scheme default the CSS otherwise follows. The
+    # data-theme attribute is set synchronously here (before <header>
+    # renders) so there's no flash of the wrong theme; the icon/label on
+    # the .themeToggle button itself (added to every primary nav by a
+    # scripted patch) is synced once the DOM is parsed, since the button
+    # doesn't exist yet at this point in the document.
+    bits.append('''<script>
+(function(){
+  var KEY = 'cfbBelt:theme';
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) {}
+  if (stored === 'light' || stored === 'dark') {
+    document.documentElement.setAttribute('data-theme', stored);
+  }
+  function iconFor(t){ return t === 'light' ? '\\u2600\\uFE0F' : (t === 'dark' ? '\\uD83C\\uDF19' : '\\u25D1'); }
+  function labelFor(t){ return t === 'light' ? 'Light' : (t === 'dark' ? 'Dark' : 'Auto'); }
+  function sync(){
+    var t = stored || 'auto';
+    var icons = document.querySelectorAll('.themeToggle-icon');
+    for (var i = 0; i < icons.length; i++) icons[i].textContent = iconFor(t);
+    var btns = document.querySelectorAll('.themeToggle');
+    for (var j = 0; j < btns.length; j++) btns[j].setAttribute('aria-label', 'Theme: ' + labelFor(t) + ' \\u2014 tap to change');
+  }
+  document.addEventListener('DOMContentLoaded', sync);
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('.themeToggle');
+    if (!btn) return;
+    var order = ['auto', 'light', 'dark'];
+    var cur = stored || 'auto';
+    var next = order[(order.indexOf(cur) + 1) % order.length];
+    stored = next;
+    try {
+      if (next === 'auto') localStorage.removeItem(KEY);
+      else localStorage.setItem(KEY, next);
+    } catch (e) {}
+    if (next === 'light' || next === 'dark') document.documentElement.setAttribute('data-theme', next);
+    else document.documentElement.removeAttribute('data-theme');
+    sync();
+  });
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('__SW_PATH__').catch(function(){});
+    });
+  }
+})();
+</script>'''.replace('__SW_PATH__', f'{rel}sw.js'))
     return "\n".join(bits)
 
 
@@ -705,6 +756,9 @@ footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-to
 nav.site{ display:flex; gap:22px; font-family:"IBM Plex Mono", monospace; font-size:13px; letter-spacing:.03em; }
 nav.site a{ text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; color:var(--ink-soft); }
 nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
+.themeToggle{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; margin:0 0 2px; flex:none; border:1px solid var(--hairline); border-radius:50%; background:var(--paper-2); color:var(--ink-soft); font-size:13px; line-height:1; cursor:pointer; transition:border-color .15s ease, color .15s ease; }
+.themeToggle:hover{ border-color:var(--brass); color:var(--ink); }
+.themeToggle-icon{ display:block; }
 .tagline{ font-style:italic; color:var(--ink-soft); max-width:46ch; font-size:15px; margin:10px 0 16px; }
 
 .hero{ display:grid; grid-template-columns: 1.05fr .95fr; gap:34px; align-items:center; padding-block: 34px 30px; }
@@ -841,6 +895,26 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .recordSub{ grid-column:2 / 4; font-size:12px; color:var(--ink-soft); }
 .currentTag{ font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
 
+/* ---------- stories (hub + article) ---------- */
+.storyGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:18px; margin:28px 0 8px; }
+.storyCard{ display:flex; flex-direction:column; gap:8px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:20px 22px; text-decoration:none; color:inherit; transition:border-color .15s ease, transform .15s ease; }
+.storyCard:hover{ border-color:var(--brass); transform:translateY(-1px); }
+.storyCard h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:0; text-wrap:balance; }
+.storyCard p{ font-size:13.5px; color:var(--ink-soft); margin:0; }
+.storyCardLink{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--brass-text); margin-top:auto; }
+.storyArticle{ max-width:680px; }
+.storyKicker{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; margin:0 0 6px; }
+.storyChapter{ margin:30px 0; padding-top:22px; border-top:1px solid var(--hairline); }
+.storyChapter:first-of-type{ margin-top:26px; }
+.storyChapter h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; margin:0 0 10px; text-wrap:balance; }
+.storyChapter p{ font-size:15.5px; line-height:1.6; }
+.storyRank{ font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; color:var(--ink-soft); margin-right:8px; }
+.storyStat{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:18px 22px; margin:22px 0; font-size:14px; color:var(--ink-soft); }
+.storyStatN{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:44px; color:var(--brass); line-height:1; }
+.storyList{ margin:10px 0 0; padding-left:20px; font-size:14.5px; line-height:1.8; }
+.storyList a{ color:inherit; }
+.storyBackLink{ margin-top:34px; font-size:13.5px; }
+
 /* ---------- team page ---------- */
 .teamPageHead{ display:flex; align-items:center; gap:12px; border-bottom:3px solid; padding-bottom:10px; margin-top:22px; }
 .posterLink{ display:inline-block; margin-left:6px; font-size:12.5px; color:var(--brass-text); text-decoration:none; border-bottom:1px dotted var(--brass); white-space:nowrap; }
@@ -958,6 +1032,57 @@ table.reignsTable tr.titleChange{ background: color-mix(in srgb, var(--brass) 7%
 # lives in. The hash changes automatically whenever CSS content changes,
 # so every deploy gets a fresh URL and old cached copies are never reused.
 STYLES_VERSION = hashlib.sha256(STYLES_CSS.encode("utf-8")).hexdigest()[:10]
+
+
+def minify_css(css):
+    """A small, deliberately conservative CSS minifier: strips /* ... */
+    comments and collapses/removes whitespace, but never touches anything
+    inside a quoted string ("Big Shoulders Display", content:"+ ", the
+    @import url('...') itself) -- font names and content-property strings
+    that depend on their exact spacing stay byte-for-byte intact. This
+    isn't a full CSS parser; it only removes whitespace immediately next
+    to `{ } ; ,` and drops a now-redundant trailing `;` before `}` -- safe
+    with this stylesheet's syntax (no unquoted url(), no comments inside
+    strings) without needing a real tokenizer. Lighthouse's unminified-css
+    audit is what this exists to satisfy."""
+    out = []
+    i, n = 0, len(css)
+    in_string = None
+    pending_space = False
+    while i < n:
+        c = css[i]
+        if in_string:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                i += 1
+                out.append(css[i])
+            elif c == in_string:
+                in_string = None
+            i += 1
+            continue
+        if c in ('"', "'"):
+            if pending_space and out and out[-1] not in "{;,":
+                out.append(" ")
+            pending_space = False
+            in_string = c
+            out.append(c)
+            i += 1
+            continue
+        if c == "/" and i + 1 < n and css[i + 1] == "*":
+            j = css.find("*/", i + 2)
+            i = (j + 2) if j != -1 else n
+            continue
+        if c in " \t\r\n":
+            pending_space = True
+            i += 1
+            continue
+        if pending_space:
+            if out and not (out[-1] in "{;," or c in "{};,"):
+                out.append(" ")
+            pending_space = False
+        out.append(c)
+        i += 1
+    return "".join(out).replace(";}", "}").strip() + "\n"
 
 
 def esc(s):
@@ -1391,7 +1516,9 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../map.html">Map</a>
       <a href="../compare.html">Compare</a>
       <a href="../trivia.html">Trivia</a>
+      <a href="../stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
   <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
 </header>
@@ -1563,7 +1690,9 @@ def generate_on_this_day_page(belt_games):
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -1803,7 +1932,9 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="#numbers">By the Numbers</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
   <p class="tagline">The title that has passed hand to hand, on the field, since Rutgers beat Princeton 6&ndash;4 on November&nbsp;6, 1869. No committee, no poll &mdash; you have to take it from whoever&rsquo;s holding it.</p>
 </header>
@@ -2023,7 +2154,9 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2205,7 +2338,9 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2420,7 +2555,9 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
-    </nav>'''
+      <a href="stories.html">Stories</a>
+    </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
     header = f'''<header class="site wrap">
   <div class="headerRow">
     <div class="brandBlock">
@@ -2729,7 +2866,9 @@ def generate_ruleset_page(md_text):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2893,7 +3032,9 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2922,6 +3063,291 @@ def generate_records_page(lineage, colors, belt_games):
     </nav>
   </div>
 </footer>
+'''
+
+
+# --------------------------------------------------------------------- stories
+
+def _story_nav_footer(active_href=None):
+    """Shared header/footer chrome for the stories hub + article pages --
+    same shell as records.html/compare.html, just factored out since three
+    pages need it here instead of one."""
+    nav = '''
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+    </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
+    header = f'''<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>{nav}
+  </div>
+</header>'''
+    footer = '''<footer class="wrap">
+  <div class="footRow">
+    <span>Every fact on this page is computed from the belt lineage, recalculated fresh every run.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="records.html">Records</a>
+      <a href="stories.html">Stories</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+    </nav>
+  </div>
+</footer>'''
+    return header, footer
+
+
+def _reign_start_line(r, change_index):
+    """One clause describing how a reign began, real data only -- no
+    hardcoded team names or records, since which reign is longest/most
+    defended can shift as the lineage grows."""
+    if r.get("won_from"):
+        won_score, lost_score = _reign_win_score(r, change_index)
+        win_game = change_index.get((r["start_date"], r["team"]))
+        if win_game and won_score is not None:
+            return (f'took the belt from <a href="teams/{team_slug(r["won_from"])}.html">{esc(r["won_from"])}</a>, '
+                    f'<a href="games/{win_game["game_id"]}.html">{won_score}&ndash;{lost_score}</a>, '
+                    f'on {fmt_date(r["start_date"])}')
+    return f'established the belt outright on {fmt_date(r["start_date"])}'
+
+
+def generate_story_longest_reigns(lineage, belt_games):
+    """A data-driven deep dive on the ten longest reigns in belt history,
+    by days held -- one narrated chapter per reign, every date/score/
+    opponent pulled live from the lineage so nothing here can go stale."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    change_index = build_change_game_index(belt_games)
+    loss_index = build_loss_game_index(belt_games)
+
+    longest = sorted(reigns, key=lambda r: reign_duration_days(r, today), reverse=True)[:10]
+    top = longest[0]
+    top_start, top_end = reign_dates(top, today)
+
+    chapters = []
+    for i, r in enumerate(longest, 1):
+        start, end = reign_dates(r, today)
+        duration = fmt_duration(start, end)
+        is_current = r is reigns[-1]
+        team_link = f'<a href="teams/{team_slug(r["team"])}.html">{esc(r["team"])}</a>'
+        defenses = r.get("defenses", 0)
+        defense_word = f'{defenses} time{"s" if defenses != 1 else ""}'
+        start_clause = _reign_start_line(r, change_index)
+
+        if is_current:
+            close = (f'{team_link} still holds the belt today &mdash; {duration} and counting, with '
+                     f'{defenses} defense{"s" if defenses != 1 else ""} logged so far and no end in sight yet.')
+        else:
+            loss_game = loss_index.get((r["end_date"], r["team"])) if r.get("lost_to") else None
+            if loss_game:
+                h, a = (int(x) for x in loss_game["score"].split("-"))
+                their_score, our_score = (h, a) if loss_game["home"] == r["lost_to"] else (a, h)
+                close = (f'The run ended on {fmt_date(r["end_date"])}, when '
+                         f'<a href="teams/{team_slug(r["lost_to"])}.html">{esc(r["lost_to"])}</a> won it '
+                         f'<a href="games/{loss_game["game_id"]}.html">{their_score}&ndash;{our_score}</a>, '
+                         f'closing out {defense_word} on the line.')
+            else:
+                close = f'The reign ended on {fmt_date(r["end_date"])}.'
+
+        chapters.append(f'''
+  <article class="storyChapter">
+    <h2><span class="storyRank">No. {i}</span> {esc(r["team"])} &mdash; {duration}</h2>
+    <p>{team_link} {start_clause}. {close}</p>
+  </article>''')
+
+    lede = (f'Every belt reign since 1869, ranked by how long the holder kept it. The longest of '
+            f'them all belongs to <a href="teams/{team_slug(top["team"])}.html">{esc(top["team"])}</a>, '
+            f'who held on for {fmt_duration(top_start, top_end)} straight'
+            f'{" and counting" if top is reigns[-1] else ""}. Here are the ten longest runs the belt has ever seen.')
+
+    header, footer = _story_nav_footer()
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>The Longest Reigns in Belt History — The College Football Belt</title>
+<meta name="description" content="A data-driven look at the ten longest reigns in College Football Belt history, ranked by days held.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+{header}
+
+<main class="wrap storyArticle">
+  <p class="storyKicker">Stories</p>
+  <h1 class="pageTitle">The Longest Reigns in Belt History</h1>
+  <p class="lede">{lede}</p>
+  {"".join(chapters)}
+  <p class="storyBackLink"><a href="stories.html">&larr; Back to Stories</a></p>
+</main>
+
+{footer}
+'''
+
+
+def generate_story_most_defended(lineage, belt_games):
+    """A deep dive on the single most-defended reign in belt history --
+    whichever program that actually is, computed fresh, never hardcoded.
+    Cites the opening game, a spread of real defenses along the way, and
+    however the reign actually ended (or that it's still ongoing)."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    change_index = build_change_game_index(belt_games)
+    loss_index = build_loss_game_index(belt_games)
+
+    top = max(reigns, key=lambda r: r.get("defenses", 0))
+    defenses = top.get("defenses", 0)
+    is_current = top is reigns[-1]
+    start, end = reign_dates(top, today)
+    duration = fmt_duration(start, end)
+    team = top["team"]
+    team_link = f'<a href="teams/{team_slug(team)}.html">{esc(team)}</a>'
+
+    # Every belt game `team` defended during this specific reign, in order.
+    reign_defenses = sorted(
+        (g for g in belt_games
+         if g["holder"] == team and g["new_holder"] == team
+         and g["date"] >= top["start_date"]
+         and (not top.get("end_date") or g["date"] <= top["end_date"])),
+        key=lambda g: g["date"])
+
+    def defense_line(g):
+        h, a = (int(x) for x in g["score"].split("-"))
+        our_score, their_score = (h, a) if g["home"] == team else (a, h)
+        return (f'<a href="games/{g["game_id"]}.html">beat {esc(g["opponent"])} '
+                f'{our_score}&ndash;{their_score} on {fmt_date(g["date"])}</a>')
+
+    sample_html = ""
+    if reign_defenses:
+        picks = [reign_defenses[0]]
+        if len(reign_defenses) > 2:
+            picks.append(reign_defenses[len(reign_defenses) // 2])
+        if len(reign_defenses) > 1:
+            picks.append(reign_defenses[-1])
+        items = "".join(f'<li>{defense_line(g)}</li>' for g in picks)
+        sample_html = f'<ul class="storyList">{items}</ul>'
+
+    start_clause = _reign_start_line(top, change_index)
+
+    if is_current:
+        close = (f'That defense count is still climbing &mdash; {team_link} has now held the belt for '
+                 f'{duration} with no successful challenge yet.')
+    else:
+        loss_game = loss_index.get((top["end_date"], team)) if top.get("lost_to") else None
+        if loss_game:
+            h, a = (int(x) for x in loss_game["score"].split("-"))
+            their_score, our_score = (h, a) if loss_game["home"] == top["lost_to"] else (a, h)
+            close = (f'The streak finally snapped on {fmt_date(top["end_date"])}, when '
+                     f'<a href="teams/{team_slug(top["lost_to"])}.html">{esc(top["lost_to"])}</a> won it '
+                     f'<a href="games/{loss_game["game_id"]}.html">{their_score}&ndash;{our_score}</a>, after '
+                     f'{defenses} defense{"s" if defenses != 1 else ""} across {duration}.')
+        else:
+            close = f'The reign ended on {fmt_date(top["end_date"])}, after {defenses} defenses.'
+
+    header, footer = _story_nav_footer()
+    title = f'How {esc(team)} Defended the Belt {defenses} Times'
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>{title} — The College Football Belt</title>
+<meta name="description" content="The most-defended reign in College Football Belt history: {esc(team)} held the belt through {defenses} defenses.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+{header}
+
+<main class="wrap storyArticle">
+  <p class="storyKicker">Stories</p>
+  <h1 class="pageTitle">{title}</h1>
+  <p class="lede">No program has defended the belt more times without losing it than {team_link}, whose
+    reign starting {fmt_date(top["start_date"])} is the most-defended single run in the belt&rsquo;s
+    {today.year - 1869}-year history.</p>
+
+  <p class="storyStat"><span class="storyStatN">{defenses}</span> defenses in a row{"" if is_current else f', over {duration}'}</p>
+
+  <article class="storyChapter">
+    <h2>How it started</h2>
+    <p>{team_link} {start_clause}.</p>
+  </article>
+
+  <article class="storyChapter">
+    <h2>Along the way</h2>
+    <p>A sample of the {defenses} defense{"s" if defenses != 1 else ""} {team_link} racked up before anyone
+      could take it back:</p>
+    {sample_html}
+  </article>
+
+  <article class="storyChapter">
+    <h2>{"Still going" if is_current else "How it ended"}</h2>
+    <p>{close}</p>
+  </article>
+
+  <p class="storyBackLink"><a href="stories.html">&larr; Back to Stories</a></p>
+</main>
+
+{footer}
+'''
+
+
+STORIES = [
+    ("story-longest-reigns.html", "The Longest Reigns in Belt History",
+     "The ten longest-held reigns in belt history, ranked and narrated."),
+    ("story-most-defended.html", "How {team} Defended the Belt {n} Times",
+     "The single most-defended reign the belt has ever seen, chapter by chapter."),
+]
+
+
+def generate_stories_hub(lineage, belt_games):
+    """The Stories index -- a small, growing collection of data-driven
+    long-form pieces (as opposed to the reference tables everywhere else
+    on the site). STORIES above is deliberately hand-listed rather than
+    auto-discovered, so a future new story just needs one line added here
+    and one generate_story_* function; the {team}/{n} placeholders in its
+    title are filled in from the live top-defended reign so the card text
+    never goes stale even if a future reign overtakes it."""
+    reigns = lineage["reigns"]
+    top_defended = max(reigns, key=lambda r: r.get("defenses", 0))
+
+    cards = []
+    for href, title_tpl, desc in STORIES:
+        title = title_tpl.format(team=esc(top_defended["team"]), n=top_defended.get("defenses", 0))
+        cards.append(f'''
+    <a class="storyCard" href="{href}">
+      <h2>{title}</h2>
+      <p>{esc(desc)}</p>
+      <span class="storyCardLink">Read the story &rarr;</span>
+    </a>''')
+
+    header, footer = _story_nav_footer()
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Stories — The College Football Belt</title>
+<meta name="description" content="Long-form, data-driven stories from the College Football Belt's lineage.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+{header}
+
+<main class="wrap">
+  <h1 class="pageTitle">Stories</h1>
+  <p class="lede">The reference tables tell you what happened. These dig into a few of the more
+    interesting stretches of belt history in more depth &mdash; still computed from the same data,
+    not hand-written trivia that can drift out of date.</p>
+
+  <div class="storyGrid">{"".join(cards)}
+  </div>
+</main>
+
+{footer}
 '''
 
 
@@ -3039,7 +3465,9 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../map.html">Map</a>
       <a href="../compare.html">Compare</a>
       <a href="../trivia.html">Trivia</a>
+      <a href="../stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3282,7 +3710,9 @@ def generate_map_page(lineage, colors):
       <a href="ruleset.html">Ruleset</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3464,7 +3894,9 @@ def generate_embed_page(lineage, colors):
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3579,7 +4011,9 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3818,7 +4252,9 @@ def generate_trivia_page(pool):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3989,7 +4425,9 @@ def generate_api_docs_page():
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
     </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -4071,7 +4509,9 @@ def generate_404_page():
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
-    </nav>'''
+      <a href="stories.html">Stories</a>
+    </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
@@ -4105,6 +4545,109 @@ def generate_404_page():
     </nav>
   </div>
 </footer>
+'''
+
+
+# ------------------------------------------------------------------- PWA
+
+def generate_manifest_json():
+    """Web app manifest -- lets a mobile (or desktop) visitor "Add to Home
+    Screen"/"Install" the site as a standalone app. Icons are the same
+    belt-buckle glyph generate_share_image.py already draws for the
+    favicon, just rendered bigger (see generate_favicon())."""
+    return {
+        "name": "The College Football Belt",
+        "short_name": "CFB Belt",
+        "description": "The lineal college football championship, tracked on the field since 1869.",
+        "start_url": "/?utm_source=pwa",
+        "id": "/",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": PAPER_LIGHT,
+        "theme_color": "#8a6a34",
+        "icons": [
+            {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"},
+        ],
+    }
+
+
+def generate_service_worker():
+    """A small network-first service worker: an online visitor always gets
+    a fresh fetch (belt data changes, so nobody should ever be served a
+    stale cached page while a network is available); a successful
+    same-origin GET response is cached afterward so a visitor who goes
+    offline -- or loses signal mid-read -- can still reopen pages they've
+    already visited. offline.html is the fallback for a page that was
+    never cached. Cache name is tied to STYLES_VERSION so an actual
+    deploy (any CSS change) clears out the old cache; an unrelated data
+    rebuild that doesn't touch styles.css keeps it."""
+    return f'''const CACHE_NAME = "cfb-belt-{STYLES_VERSION}";
+const OFFLINE_URL = "/offline.html";
+
+self.addEventListener("install", (event) => {{
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_URL)));
+  self.skipWaiting();
+}});
+
+self.addEventListener("activate", (event) => {{
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+}});
+
+self.addEventListener("fetch", (event) => {{
+  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {{
+        if (response && response.status === 200) {{
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }}
+        return response;
+      }})
+      .catch(() =>
+        caches.match(event.request).then((cached) => {{
+          if (cached) return cached;
+          if (event.request.mode === "navigate") return caches.match(OFFLINE_URL);
+          return Response.error();
+        }})
+      )
+  );
+}});
+'''
+
+
+def generate_offline_page():
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Offline — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">You&rsquo;re Offline</h1>
+  <p class="lede">This page hasn&rsquo;t been saved for offline viewing yet &mdash; reconnect and
+    try again, or open a page you&rsquo;ve already visited on this device; those stay
+    available without a connection.</p>
+</main>
 '''
 
 
@@ -4163,8 +4706,9 @@ def main():
     games_dir = os.path.join(OUT_DIR, "games")
     os.makedirs(games_dir, exist_ok=True)
 
+    minified_css = minify_css(STYLES_CSS)
     with open(os.path.join(OUT_DIR, "styles.css"), "w", encoding="utf-8") as f:
-        f.write(STYLES_CSS)
+        f.write(minified_css)
 
     with open(os.path.join(OUT_DIR, "CNAME"), "w", encoding="utf-8") as f:
         f.write(CUSTOM_DOMAIN + "\n")
@@ -4211,6 +4755,15 @@ def main():
     records_html = generate_records_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "records.html"), "w", encoding="utf-8") as f:
         f.write(records_html)
+
+    with open(os.path.join(OUT_DIR, "story-longest-reigns.html"), "w", encoding="utf-8") as f:
+        f.write(generate_story_longest_reigns(lineage, belt_games))
+
+    with open(os.path.join(OUT_DIR, "story-most-defended.html"), "w", encoding="utf-8") as f:
+        f.write(generate_story_most_defended(lineage, belt_games))
+
+    with open(os.path.join(OUT_DIR, "stories.html"), "w", encoding="utf-8") as f:
+        f.write(generate_stories_hub(lineage, belt_games))
 
     on_this_day_html = generate_on_this_day_page(belt_games)
     with open(os.path.join(OUT_DIR, "on-this-day.html"), "w", encoding="utf-8") as f:
@@ -4269,7 +4822,9 @@ def main():
     sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
                      f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html",
                      f"{SITE_URL}/on-this-day.html", f"{SITE_URL}/embed.html",
-                     f"{SITE_URL}/compare.html", f"{SITE_URL}/trivia.html", f"{SITE_URL}/api.html"]
+                     f"{SITE_URL}/compare.html", f"{SITE_URL}/trivia.html", f"{SITE_URL}/api.html",
+                     f"{SITE_URL}/stories.html", f"{SITE_URL}/story-longest-reigns.html",
+                     f"{SITE_URL}/story-most-defended.html"]
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -4289,14 +4844,26 @@ def main():
     with open(os.path.join(OUT_DIR, "feed.xml"), "w", encoding="utf-8") as f:
         f.write(generate_feed(belt_games, recaps))
 
+    with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(generate_manifest_json(), f, ensure_ascii=False, indent=2)
+
+    with open(os.path.join(OUT_DIR, "sw.js"), "w", encoding="utf-8") as f:
+        f.write(generate_service_worker())
+
+    with open(os.path.join(OUT_DIR, "offline.html"), "w", encoding="utf-8") as f:
+        f.write(generate_offline_page())
+
     print(f"Wrote {written} game pages to {games_dir}/")
-    print(f"Wrote shared stylesheet to {OUT_DIR}/styles.css")
+    saved_pct = round(100 * (1 - len(minified_css) / len(STYLES_CSS)), 1) if STYLES_CSS else 0
+    print(f"Wrote shared stylesheet to {OUT_DIR}/styles.css "
+          f"(minified {len(STYLES_CSS):,} -> {len(minified_css):,} bytes, {saved_pct}% smaller)")
     print(f"Wrote {OUT_DIR}/CNAME ({CUSTOM_DOMAIN})")
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
     print(f"Wrote records page to {OUT_DIR}/records.html")
+    print(f"Wrote stories.html and 2 story articles to {OUT_DIR}/")
     print(f"Wrote On This Day page to {OUT_DIR}/on-this-day.html")
     print(f"Wrote {teams_written} team pages to {teams_dir}/")
     if wrote_map:
@@ -4308,6 +4875,7 @@ def main():
     print(f"Wrote api.html and {API_DIR}/current.json, reigns.json, games.json to {OUT_DIR}/")
     print(f"Wrote sitemap.xml ({len(sitemap_urls)} URLs), robots.txt, 404.html, and feed.xml "
           f"({min(len([g for g in belt_games if g.get('outcome') == 'changed']), 30)} item(s)) to {OUT_DIR}/")
+    print(f"Wrote manifest.json, sw.js, and offline.html to {OUT_DIR}/ (PWA/offline support)")
     if warnings:
         print(f"\n{len(warnings)} warning(s):")
         for w in warnings[:20]:

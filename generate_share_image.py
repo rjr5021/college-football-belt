@@ -432,14 +432,21 @@ def generate_team_posters(lineage, colors):
 
 def generate_favicon(primary, accent, ink):
     """Writes site/favicon.png (32x32, referenced as the tab icon on every
-    page) and site/apple-touch-icon.png (180x180, for iOS home-screen
-    bookmarks) -- same belt-buckle glyph, two sizes."""
+    page), site/apple-touch-icon.png (180x180, for iOS home-screen
+    bookmarks), and site/icon-192.png / icon-512.png (for manifest.json /
+    "Add to Home Screen" on Android and desktop) -- same belt-buckle glyph,
+    four sizes."""
     favicon = draw_belt_icon(32, primary, accent, ink)
     favicon.save(os.path.join(OUT_DIR, "favicon.png"), "PNG")
     touch_icon = draw_belt_icon(180, primary, accent, ink)
     touch_icon.save(os.path.join(OUT_DIR, "apple-touch-icon.png"), "PNG")
-    print(f"Wrote {OUT_DIR}/favicon.png (32x32) and "
-          f"{OUT_DIR}/apple-touch-icon.png (180x180)")
+    icon_192 = draw_belt_icon(192, primary, accent, ink)
+    icon_192.save(os.path.join(OUT_DIR, "icon-192.png"), "PNG")
+    icon_512 = draw_belt_icon(512, primary, accent, ink)
+    icon_512.save(os.path.join(OUT_DIR, "icon-512.png"), "PNG")
+    print(f"Wrote {OUT_DIR}/favicon.png (32x32), "
+          f"{OUT_DIR}/apple-touch-icon.png (180x180), and "
+          f"{OUT_DIR}/icon-192.png / icon-512.png (PWA manifest icons)")
 
 
 def main():
