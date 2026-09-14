@@ -56,7 +56,7 @@ SITE_URL = f"https://{CUSTOM_DOMAIN}"
 # To turn it on: sign up free at goatcounter.com, pick a site code (that's
 # the "goatcounter.com" subdomain you're assigned, e.g. "my-code" for
 # my-code.goatcounter.com), then set it here and rerun the pipeline.
-GOATCOUNTER_CODE = ""
+GOATCOUNTER_CODE = "collegefootballbelt"
 
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
