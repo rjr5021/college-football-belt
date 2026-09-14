@@ -21,10 +21,15 @@ Status as of 2026-09-13, tracking the brief's build order:
    to trigger it — but it's one command instead of four, and (see
    "CFBD's call budget" below) a normal run is now ~15-30 CFBD calls, not
    ~600+.
-6. 🔧 **Deployment: GitHub Actions + GitHub Pages, in progress.** The repo,
-   Pages, and secret are set up; the workflow is running the pipeline on
-   its own schedule/push/on-demand triggers — see "Deployment" below for
-   where things stand.
+6. ✅ **Deployment: GitHub Actions + GitHub Pages, live.** The repo, Pages,
+   and secrets are set up and the workflow has run successfully end to
+   end, including the AI-written upcoming-game preview.
+7. ✅ **Past the original brief: AI game recaps, a Records page, an "On
+   This Day" widget, per-team pages, a map of everywhere the belt has
+   lived, and an auto-generated social share image.** All computed from
+   data already on hand except the recaps (one Claude call per historical
+   game, a well-under-$10 one-time backfill — see "Game recaps" below) and
+   the map (real state outlines, no new API cost — see "The map" below).
 
 ## Team colors: a data quirk, already fixed
 
@@ -304,8 +309,13 @@ section gets "Status" instead, since it isn't a rule.
 The homepage shows an "Up Next" chip for the current belt holder's next
 scheduled game (mined for free out of data `build_lineage.py` already
 fetches — CFBD returns the whole season including games it hasn't scored
-yet, previously thrown away). Clicking it goes to `site/preview.html`,
-which adds:
+yet, previously thrown away). Right below it, a "Belt Watch" strip shows
+the *next two games after that* the same way — `build_lineage.py`'s
+`find_upcoming_games()` just takes the same free schedule scan a bit
+further (up to 3 games instead of 1), writing `belt_data/upcoming_games.json`
+alongside the existing `next_game.json`. Zero extra API calls either way.
+
+Clicking the "Up Next" chip goes to `site/preview.html`, which adds:
 
 - **Recent form** — each team's last 5 completed games, win/loss and
   score. Also free — same already-fetched season data, just for both
@@ -317,15 +327,122 @@ which adds:
 - **An AI-written preview** (optional) — a short overview, 2-3 key
   matchups, and a betting-angles paragraph, written by the Claude API
   from the stats above (`generate_ai_preview.py`). Needs an
-  `ANTHROPIC_API_KEY` (see the deployment section below); without one,
-  this section just doesn't appear — everything else on the page still
-  does.
+  `ANTHROPIC_API_KEY` (see the deployment section below; this same key
+  also powers the game recaps described next); without one, this section
+  just doesn't appear — everything else on the page still does.
 
 The AI preview is deliberately cached to `ai_preview_cache/` (committed
 to git, same reasoning as `historical_data/`): regenerating it costs a
 real, if small, amount of money, and the pipeline can run more than once
 before the actual matchup changes. A fresh Claude call only happens when
 the two teams and date no longer match what's already cached.
+
+## Game recaps: fetch_game_plays.py + generate_recaps.py
+
+This answers the open question left in "Box scores and recaps for
+individual games" above — every belt game since 2003 now gets a real,
+specific AI-written recap instead of a generic templated blurb, because it
+has real play-by-play to write from, not just box-score totals.
+
+`fetch_game_plays.py` is a new incremental fetcher, same committed-cache
+pattern as `fetch_game_details.py`, against CFBD's `/plays` endpoint (one
+quirk worth knowing: unlike the box-score endpoints, `/plays` doesn't take
+a game id directly — it's queried by season + week + team, one call per
+belt game, same cost as the other per-game fetches). It doesn't keep every
+play, only the ones that actually matter for a recap: any scoring play,
+any turnover, or any play that gained at least 20 yards. That keeps both
+the committed cache (`historical_data/game_plays.json`) and the AI prompt
+a reasonable size. These also render directly on each game's own page now,
+as a sourced "Key Plays" table — no AI involved, just CFBD's own
+play-by-play, the same way the box score above it is sourced.
+
+`generate_recaps.py` writes the actual prose: 3-5 sentences plus 2-4 named
+"key moments," referencing specific plays from the list above rather than
+just the final score, for every belt game that has a box score on file.
+Same optional/cached design as `generate_ai_preview.py` — no
+`ANTHROPIC_API_KEY` means no recaps, just the sourced data everyone
+already had; a committed `recap_cache/recaps.json` means each game is only
+ever generated once, no matter how many times the pipeline reruns.
+
+**The one-time cost.** The first time this runs with a key set, it
+backfills every eligible historical belt game at once — as of this
+writing, that's **297 belt games since 2003, 284 of which have a full box
+score** and are eligible (a few 2003+ games are missing stats in CFBD's
+own data — a coverage gap, not a bug here). At `claude-haiku-4-5`'s
+pricing (\$1/MTok in, \$5/MTok out) and roughly 500-900 tokens per game
+including the notable-plays list, that backfill runs **well under \$10,
+one time** — after that, it's one new recap a week at most, a fraction of
+a cent each, same as the upcoming-game preview. `update_all.py` paces
+these calls (a short delay between each) and saves the cache every 10
+games, so a rate limit or an interrupted run never loses progress already
+made — just rerun the same command and it picks up where it left off.
+
+## Records, On This Day, and team pages: all just build_site.py
+
+Three more pages, all computed straight from data already sitting in
+`belt_data/lineage.json` — no new fetch script, no new API calls, nothing
+that can go stale independently of the lineage itself:
+
+- **`site/records.html`** — four top-5 boards (Longest Reigns, Most Reigns,
+  Most Defended, Biggest Blowouts), each a plain sort over the existing
+  reign/game data. Ties aren't broken, same "no editorial judgment"
+  approach as everything else here.
+- **The homepage's "On This Day" widget** — every belt game (any year)
+  that happened on today's month/day, with a tag for whether it was a
+  title change. Recalculates every run, so it's always today's real date,
+  not a build-time snapshot.
+- **`site/teams/<slug>.html`** — one page per program that's ever held the
+  belt (currently 101), every reign it ever had, how each one started and
+  (if over) ended, linked from that team's name wherever it appears
+  site-wide. A team that's only ever challenged and lost doesn't get a
+  page — it has no reigns to list.
+
+## The map: fetch_team_colors.py (state) + build_site.py + historical_data/us_state_shapes.json
+
+`site/map.html` shades every US state by how many belt reigns have
+started there, with a legend listing which team(s) and how many times.
+Getting this right (real state outlines, not a guessed tile-grid) took two
+things:
+
+1. **Each team's home state**, added to `team_colors.json` by
+   `fetch_team_colors.py` — free, since CFBD's `/teams` endpoint already
+   returns a `location.state` field in the same call that fetches colors,
+   nothing extra to request.
+2. **Real state boundary shapes.** These come from `historical_data/us_state_shapes.json`,
+   a committed, static (never refetched) file — see the note in
+   `.gitignore` for why it lives there instead of being treated as a
+   growing cache like the rest of `historical_data/`. It was extracted
+   once from the `bokeh_sampledata` package's US Census-derived state
+   outlines and isn't a runtime dependency at all — `build_site.py` just
+   reads the plain JSON and projects it (a standard Albers Equal-Area
+   Conic, the same projection/parameters behind EPSG:5070, implemented
+   directly in `build_site.py` with nothing but the standard library's
+   `math` module) into an inline SVG `<path>` per state. No image library,
+   no headless browser, no network call at build time — Alaska and Hawaii
+   are left out entirely rather than inset, since no belt-holding program
+   has ever been based in either.
+
+## The share image: generate_share_image.py
+
+`site/share.png` is the image link previews show when someone shares
+`collegefootballbelt.com` — a 1200×630 image (the standard Open Graph /
+Twitter Card size) with the current holder's name over a gradient of
+their own team colors, plus how long they've held the belt. Rendered with
+[Pillow](https://pypi.org/project/pillow/) (a plain image-drawing library,
+the one new dependency this adds to `requirements.txt`) straight from
+`belt_data/lineage.json` + `team_colors.json` — no network call, no
+headless browser, and it regenerates every run so it's always current.
+`build_site.py`'s homepage template points `og:image` / `twitter:image` at
+it with an absolute URL (social platforms fetch these server-side, so a
+relative path wouldn't resolve); other pages don't get their own share
+image yet, just the homepage.
+
+Font handling is deliberately defensive: it looks for DejaVu/Liberation
+TrueType fonts at their usual Linux paths (present on GitHub Actions'
+`ubuntu-latest` runner and in most dev environments) and falls back to
+Pillow's own built-in font if none are found, so a missing font file can
+never fail the build — worst case, a plainer-looking image still gets
+made.
 
 ## Weekly updates: update_all.py
 
@@ -338,18 +455,23 @@ $env:CFBD_API_KEY = "your-key-here"
 python update_all.py
 ```
 
-It runs, in order: `build_lineage.py` and `fetch_game_details.py` (both
-incremental — see "CFBD's call budget" above, only the current + previous
-season gets refetched), `fetch_team_colors.py` (cheap regardless, one
-call), `fetch_matchup_preview.py` (one call, for the upcoming game's
-head-to-head record — see "Upcoming-game preview" below), then
-`generate_ai_preview.py` (optional — a Claude API call, only when the
-upcoming game has changed since the last one) and finally `build_site.py`
-(no network calls, just regenerates every page). A normal run is ~15-30
-CFBD calls total. If any stage fails, it stops right there instead of
-rebuilding the site from a half-updated data set — fix whatever broke and
-rerun the same command; every stage already knows how to resume from
-where it left off.
+It runs, in order: `build_lineage.py`, `fetch_game_details.py`, and
+`fetch_game_plays.py` (all three incremental — see "CFBD's call budget"
+above, only the current + previous season gets refetched once the
+historical backfill is done), `fetch_team_colors.py` (cheap regardless,
+one call, also picks up each team's home state for the map),
+`fetch_matchup_preview.py` (one call, for the upcoming game's head-to-head
+record — see "Upcoming-game preview" above), then `generate_ai_preview.py`
+and `generate_recaps.py` (both optional — Claude API calls, only for
+whatever isn't already cached), then `build_site.py` (no network calls,
+regenerates every page including the records/On This Day/team/map pages),
+and finally `generate_share_image.py` (no network call either, just
+renders `site/share.png` from whatever `build_site.py` just used). A
+normal week-to-week run is ~15-30 CFBD calls total; the very first run
+after adding the recap feature is a one-time exception (see "Game recaps"
+above). If any stage fails, it stops right there instead of rebuilding the
+site from a half-updated data set — fix whatever broke and rerun the same
+command; every stage already knows how to resume from where it left off.
 
 This makes "run one command" the whole weekly routine, but running that
 command is still on you (or something you schedule) — it's not
@@ -405,16 +527,18 @@ Actions → New repository secret → name it `CFBD_API_KEY`, value is your
 real CollegeFootballData key. This is what lets the workflow fetch data
 without your key ever being visible in the repo itself.
 
-**3b. (Optional) Add an Anthropic key for the AI game preview.** Same
-place, another secret, name it `ANTHROPIC_API_KEY`, value is a key from
+**3b. (Optional) Add an Anthropic key for the AI writing.** Same place,
+another secret, name it `ANTHROPIC_API_KEY`, value is a key from
 [console.anthropic.com](https://console.anthropic.com/settings/keys).
-This powers the AI-written preview (key matchups, betting angles) on the
-upcoming-game page. Skip this entirely if you don't want it —
-`generate_ai_preview.py` detects the missing key and just skips itself;
-every other page on the site works fine without it. When it *is* set, the
-preview is only regenerated (spending a small amount of real API budget)
-when the belt holder's next game actually changes, not on every pipeline
-run — see `generate_ai_preview.py`'s docstring for how the cache works.
+This powers both the AI-written preview (key matchups, betting angles) on
+the upcoming-game page and the AI-written recap on every settled belt
+game's own page. Skip this entirely if you don't want it —
+`generate_ai_preview.py` and `generate_recaps.py` both detect the missing
+key and just skip themselves; every other page on the site works fine
+without it. When it *is* set: the preview is only regenerated when the
+belt holder's next game actually changes, and each recap is only ever
+generated once (see "Game recaps" above for the one-time backfill cost the
+very first run) — see each script's docstring for how its cache works.
 
 **4. Trigger the first run.** Actions tab → "Update and deploy" → Run
 workflow. The very first run ever (no `historical_data/` baseline exists

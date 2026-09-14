@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Fetch team colors/branding for every team that has held the College Football
-Belt, keyed for the site's color-shift feature.
+Belt, keyed for the site's color-shift feature. Also captures each team's
+home state, which build_site.py uses for the "everywhere the belt has
+lived" map -- free, since it's already part of the same /teams response.
 
 Usage:
     export CFBD_API_KEY=your_key_here      # same key as build_lineage.py
@@ -15,7 +17,8 @@ Output (into ./belt_data/):
               "matched": true/false,
               "color": "#...", "alternate_color": "#...",
               "logo": "https://...", "mascot": "...",
-              "classification": "fbs" / "fcs" / ... or null
+              "classification": "fbs" / "fcs" / ... or null,
+              "state": "IN" / ... or null (two-letter state code)
           }, ... }
 
 Run this AFTER build_lineage.py has produced belt_data/lineage.json.
@@ -125,8 +128,9 @@ def resolve(name, by_school):
     t = by_school.get(name)
     if t is None:
         return {"matched": False, "color": None, "alternate_color": None,
-                "logo": None, "mascot": None, "classification": None}
+                "logo": None, "mascot": None, "classification": None, "state": None}
     logos = pick(t, "logos", default=[]) or []
+    location = pick(t, "location", default={}) or {}
     return {
         "matched": True,
         "color": clean_color(pick(t, "color")),
@@ -134,6 +138,11 @@ def resolve(name, by_school):
         "logo": logos[0] if logos else None,
         "mascot": pick(t, "mascot"),
         "classification": pick(t, "classification"),
+        # Two-letter state code (or None for the handful of unmatched historic
+        # programs above) -- feeds the "everywhere the belt has lived" map in
+        # build_site.py. Free: CFBD's /teams already returns this in the same
+        # call, no extra API cost.
+        "state": pick(location, "state"),
     }
 
 

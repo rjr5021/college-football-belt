@@ -1,6 +1,12 @@
-# Only build_lineage.py needs third-party packages, for converting a game's
-# UTC kickoff time into the venue's local calendar date.
-# fetch_team_colors.py, fetch_game_details.py, build_site.py and
-# update_all.py all use only the Python standard library.
+# build_lineage.py needs these for converting a game's UTC kickoff time
+# into the venue's local calendar date.
 tzdata
 timezonefinder
+
+# generate_share_image.py needs this to render site/share.png (the social
+# share image) -- a plain image-drawing library, no browser/Chrome
+# involved. Everything else (fetch_team_colors.py, fetch_game_details.py,
+# fetch_game_plays.py, build_site.py, update_all.py) uses only the Python
+# standard library plus historical_data/us_state_shapes.json, which is
+# static committed data, not a package.
+Pillow

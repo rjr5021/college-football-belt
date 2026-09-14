@@ -6,15 +6,27 @@ belt_data/
 site/
 
 # historical_data/ is DELIBERATELY NOT ignored -- it's the small, git-
-# committed baseline (settled reigns/belt games + settled box scores) that
-# lets build_lineage.py and fetch_game_details.py fetch only the current +
-# previous season each run instead of CFBD's whole history every time. See
-# README.md's "Incremental fetching" section.
+# committed baseline (settled reigns/belt games + settled box scores +
+# settled play-by-play) that lets build_lineage.py, fetch_game_details.py,
+# and fetch_game_plays.py fetch only the current + previous season each run
+# instead of CFBD's whole history every time. See README.md's "Incremental
+# fetching" section.
 #
 # ai_preview_cache/ is also DELIBERATELY NOT ignored, same idea -- it's the
 # last AI-generated upcoming-game preview, keyed to exactly which game it's
 # for, so generate_ai_preview.py only spends a real Claude API call when
 # the upcoming game actually changes instead of on every run.
+#
+# recap_cache/ is also DELIBERATELY NOT ignored -- one AI-written recap per
+# settled belt game since 2003, keyed by game id, so generate_recaps.py
+# never re-spends a Claude API call on a game it's already recapped.
+#
+# historical_data/us_state_shapes.json is a different kind of file in the
+# same folder: it's not a fetch cache at all, it's permanent static
+# reference data (US state boundary outlines, extracted once from the
+# public-domain-derived bokeh_sampledata package -- see README.md's "Map"
+# section) that build_site.py reads every run to draw the belt-history map.
+# It never grows or gets refetched, so there's nothing to regenerate here.
 
 __pycache__/
 *.pyc

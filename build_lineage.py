@@ -26,6 +26,8 @@ Outputs (into ./belt_data/, all regenerated fresh every run, none committed):
                       free out of games_raw.json (which already includes
                       the season's unplayed games -- no extra API call);
                       null if nothing upcoming is in the fetched window
+    upcoming_games.json  same idea, up to the next 3 games ("Belt Watch"
+                      on the homepage) -- [] if nothing's upcoming
 
 Incremental fetching and the CFBD call budget: CFBD's FREE tier is capped at
 1,000 calls/MONTH (not a short burst limit -- see
@@ -345,17 +347,20 @@ def normalize(raw, venue_tz=None):
     return out
 
 
-def find_next_game(raw, holder, venue_tz=None):
-    """The current holder's next scheduled game, straight from this run's
-    freshly-fetched season data -- CFBD returns the full season (including
-    games it hasn't scored yet), and normalize() above throws those away
-    since the chain walk only cares about settled results. This re-scans
-    the same `raw` list (no extra API call) for the holder's earliest
-    not-yet-played game, so the site can show what's coming next.
+def find_upcoming_games(raw, holder, count=3, venue_tz=None):
+    """The current holder's next `count` scheduled games, straight from
+    this run's freshly-fetched season data -- CFBD returns the full season
+    (including games it hasn't scored yet), and normalize() above throws
+    those away since the chain walk only cares about settled results. This
+    re-scans the same `raw` list (no extra API call) for the holder's
+    earliest not-yet-played games, so the site can show what's coming next
+    -- "Belt Watch" wants a short lookahead, not just the very next game.
 
-    Returns None if nothing upcoming is in the fetched window -- e.g. the
+    Returns [] if nothing upcoming is in the fetched window -- e.g. the
     next game's schedule slot hasn't been announced yet, or the season's
-    already over and next year's slate isn't out."""
+    already over and next year's slate isn't out. Order is chronological
+    (soonest first); a season's schedule rarely has more than `count` games
+    left to give anyway, but this never returns more than that."""
     venue_tz = venue_tz or {}
     candidates = []
     for g in raw:
@@ -384,21 +389,31 @@ def find_next_game(raw, holder, venue_tz=None):
             "away": away,
             "neutral": bool(pick(g, "neutral_site", "neutralSite", default=False)),
         })
-    if not candidates:
-        return None
     candidates.sort(key=lambda c: (c["date"], c["raw_date"]))
-    nxt = candidates[0]
-    is_home = nxt["home"] == holder
-    return {
-        "team": holder,
-        "opponent": nxt["away"] if is_home else nxt["home"],
-        "is_home": is_home,
-        "neutral": nxt["neutral"],
-        "date": nxt["date"],
-        "season": nxt["season"],
-        "week": nxt["week"],
-        "season_type": nxt["season_type"],
-    }
+
+    upcoming = []
+    for nxt in candidates[:count]:
+        is_home = nxt["home"] == holder
+        upcoming.append({
+            "team": holder,
+            "opponent": nxt["away"] if is_home else nxt["home"],
+            "is_home": is_home,
+            "neutral": nxt["neutral"],
+            "date": nxt["date"],
+            "season": nxt["season"],
+            "week": nxt["week"],
+            "season_type": nxt["season_type"],
+        })
+    return upcoming
+
+
+def find_next_game(raw, holder, venue_tz=None):
+    """The current holder's single next scheduled game, or None -- kept as
+    its own function since fetch_matchup_preview.py and
+    generate_ai_preview.py only ever care about the immediate next game,
+    not the short lookahead find_upcoming_games gives "Belt Watch"."""
+    upcoming = find_upcoming_games(raw, holder, count=1, venue_tz=venue_tz)
+    return upcoming[0] if upcoming else None
 
 
 def walk(games, tie_rule="holder", start_holder=None, start_reign=None):
@@ -674,13 +689,17 @@ def main():
     current = reigns[-1]
     teams = len({r["team"] for r in reigns})
 
-    next_game = find_next_game(raw, current["team"], venue_tz)
+    upcoming_games = find_upcoming_games(raw, current["team"], count=3, venue_tz=venue_tz)
+    next_game = upcoming_games[0] if upcoming_games else None
     with open(os.path.join(OUT_DIR, "next_game.json"), "w") as f:
         json.dump(next_game, f, indent=2)
+    with open(os.path.join(OUT_DIR, "upcoming_games.json"), "w") as f:
+        json.dump(upcoming_games, f, indent=2)
     if next_game:
         side = "vs." if next_game["is_home"] else "at"
         print(f"Next game: {current['team']} {side} {next_game['opponent']} "
-              f"on {next_game['date']}")
+              f"on {next_game['date']} ({len(upcoming_games)} game(s) in the "
+              f"Belt Watch lookahead)")
     else:
         print("No upcoming game found for the current holder in the fetched "
               "window (schedule not out yet, or the season's over).")

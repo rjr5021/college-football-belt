@@ -26,6 +26,7 @@ of eyeballing every color pair.
 import hashlib
 import html
 import json
+import math
 import os
 import re
 import sys
@@ -34,6 +35,11 @@ from datetime import date
 
 OUT_DIR = "site"
 DATA_DIR = "belt_data"
+
+# Used only for absolute URLs that have to be absolute to work at all --
+# Open Graph / Twitter Card meta tags, which social platforms fetch
+# server-side and won't resolve relative to anything.
+SITE_URL = "https://rjr5021.github.io/college-football-belt"
 
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
@@ -137,9 +143,13 @@ def load_data():
     with open(os.path.join(DATA_DIR, "team_colors.json")) as f:
         colors = json.load(f)
     next_game = load_optional_json("next_game.json")
+    upcoming_games = load_optional_json("upcoming_games.json") or []
     matchup = load_optional_json("matchup_preview.json")
     ai_preview = load_optional_json("ai_preview.json")
-    return lineage, details, colors, next_game, matchup, ai_preview
+    recaps = load_optional_json("recaps.json") or {}
+    game_plays = load_optional_json("game_plays.json") or {}
+    return (lineage, details, colors, next_game, upcoming_games, matchup,
+            ai_preview, recaps, game_plays)
 
 
 def team_color(colors, name):
@@ -149,12 +159,18 @@ def team_color(colors, name):
     return primary, alt
 
 
+MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July",
+               "August", "September", "October", "November", "December"]
+
+
 def fmt_date(iso):
     # avoid a libc/locale dependency -- do it by hand
-    months = ["January", "February", "March", "April", "May", "June", "July",
-              "August", "September", "October", "November", "December"]
     y, m, d = (int(x) for x in iso.split("-"))
-    return f"{months[m-1]} {d}, {y}"
+    return f"{MONTH_NAMES[m-1]} {d}, {y}"
+
+
+def fmt_month_day(d):
+    return f"{MONTH_NAMES[d.month-1]} {d.day}"
 
 
 def ordinal_ot_label(period_index):
@@ -196,6 +212,14 @@ def team_chip(name):
         return "".join(letters[:4])
     stripped = re.sub(r"[^A-Za-z]", "", base).upper()
     return (stripped[:4] or "?")
+
+
+def team_slug(name):
+    """URL-safe filename stem for a team's own page, e.g. 'Notre Dame' ->
+    'notre-dame', "Texas A&M" -> 'texas-a-m'. Deterministic and shared by
+    every team-page link across the site, so it only has to be right once."""
+    s = re.sub(r"[^A-Za-z0-9]+", "-", name.strip().lower()).strip("-")
+    return s or "team"
 
 
 def reign_dates(reign, today):
@@ -252,6 +276,18 @@ def build_change_game_index(belt_games):
     return index
 
 
+def build_loss_game_index(belt_games):
+    """(end_date, team) -> the belt_game where `team` lost the belt, the
+    mirror image of build_change_game_index (which indexes by the WINNING
+    side of a title change) -- used on a team's own page to show how each
+    of its reigns ended."""
+    index = {}
+    for g in belt_games:
+        if g["outcome"] == "changed":
+            index[(g["date"], g["holder"])] = g
+    return index
+
+
 STAT_ROWS = [
     ("Total yards", "totalYards", None),
     ("Rushing yards", "rushingYards", None),
@@ -274,6 +310,62 @@ def fmt_stat(raw, kind):
     return raw
 
 
+def render_recap(g):
+    recap = g.get("recap")
+    if not recap or not (recap.get("recap") or recap.get("key_moments")):
+        return ""
+    body = recap.get("recap") or ""
+    moments = recap.get("key_moments") or []
+    moments_html = "".join(f"<li>{esc(m)}</li>" for m in moments)
+    moments_block = f'<ul class="keyMatchups">{moments_html}</ul>' if moments_html else ""
+
+    return f'''
+  <section>
+    <div class="sectionHead withTag">
+      <span class="tag">AI-Written</span>
+      <span class="rule"></span>
+      <h2>Recap</h2>
+    </div>
+    <div class="aiPreviewBody"><p>{esc(body)}</p></div>
+    {moments_block}
+    <p class="noteBox">Written by Claude from the box score and play-by-play on this page &mdash; a plain-English recap of the numbers below, not a substitute for them.</p>
+  </section>'''
+
+
+def render_key_plays(g):
+    plays = g.get("key_plays")
+    if not plays:
+        return ""
+    rows = ""
+    for p in plays:
+        when = f"Q{p.get('period')} {p.get('clock')}" if p.get("period") else (p.get("clock") or "—")
+        yards = p.get("yards_gained")
+        yard_txt = f"{yards:+,} yd" if isinstance(yards, int) else "—"
+        text = p.get("play_text") or p.get("play_type") or "—"
+        cls = " scoring" if p.get("scoring") else ""
+        rows += (f'<tr class="keyPlayRow{cls}"><td class="tabular">{esc(when)}</td>'
+                 f'<td>{esc(p.get("offense") or "—")}</td>'
+                 f'<td class="tabular">{esc(yard_txt)}</td>'
+                 f'<td>{esc(text)}</td></tr>')
+
+    return f'''
+  <section>
+    <div class="sectionHead withTag">
+      <span class="tag">Play By Play</span>
+      <span class="rule"></span>
+      <h2>Key plays</h2>
+      <span class="sourceTag">CFBD play-by-play</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="keyPlaysTable">
+        <thead><tr><th>When</th><th>Team</th><th>Yards</th><th>Play</th></tr></thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>
+    <p class="noteBox">Scoring plays, turnovers, and gains of 20+ yards, pulled from CFBD’s play-by-play. This section only appears for belt games with play-by-play on file (2003 onward).</p>
+  </section>'''
+
+
 # ------------------------------------------------------------------- styles
 
 STYLES_CSS = """
@@ -286,6 +378,7 @@ STYLES_CSS = """
   --hairline: rgba(33,26,18,.14);
   --shadow: 0 18px 40px -22px rgba(24,17,12,.55);
   --good:#3f6b3f; --good-bg: rgba(63,107,63,.12);
+  --map-1: rgba(138,106,52,.28); --map-2: rgba(138,106,52,.55); --map-3: rgba(138,106,52,.88);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -295,6 +388,7 @@ STYLES_CSS = """
     --hairline: rgba(236,227,209,.14);
     --shadow: 0 18px 44px -20px rgba(0,0,0,.6);
     --good:#7fbf7f; --good-bg: rgba(127,191,127,.14);
+    --map-1: rgba(207,159,82,.28); --map-2: rgba(207,159,82,.55); --map-3: rgba(207,159,82,.88);
   }
 }
 :root[data-theme="dark"]{
@@ -304,6 +398,7 @@ STYLES_CSS = """
   --hairline: rgba(236,227,209,.14);
   --shadow: 0 18px 44px -20px rgba(0,0,0,.6);
   --good:#7fbf7f; --good-bg: rgba(127,191,127,.14);
+  --map-1: rgba(207,159,82,.28); --map-2: rgba(207,159,82,.55); --map-3: rgba(207,159,82,.88);
 }
 
 *{box-sizing:border-box}
@@ -374,6 +469,14 @@ table.playerStatsTable td{ padding:8px; border-bottom:1px solid var(--hairline);
 table.playerStatsTable td.teamCell{ text-align:left; font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; white-space:nowrap; }
 table.playerStatsTable td.teamCell .playerTeam{ font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:10.5px; color:var(--ink-soft); margin-left:6px; text-transform:uppercase; letter-spacing:.04em; }
 table.playerStatsTable tbody tr:last-child td{ border-bottom:none; }
+table.keyPlaysTable{ width:100%; border-collapse:collapse; font-size:13.5px; }
+table.keyPlaysTable th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:7px 8px; border-bottom:1px solid var(--brass-line); }
+table.keyPlaysTable td{ padding:9px 8px; border-bottom:1px solid var(--hairline); vertical-align:top; }
+table.keyPlaysTable td:first-child{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); white-space:nowrap; }
+table.keyPlaysTable td:nth-child(2){ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14px; white-space:nowrap; }
+table.keyPlaysTable td:nth-child(3){ font-family:"IBM Plex Mono",monospace; font-size:12.5px; white-space:nowrap; }
+table.keyPlaysTable tbody tr:last-child td{ border-bottom:none; }
+table.keyPlaysTable tr.scoring td:nth-child(2){ color:var(--brass-bright); }
 details.moreStats{ margin-top:8px; }
 details.moreStats summary{ cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:var(--brass-bright); padding:8px 0; list-style:none; }
 details.moreStats summary::-webkit-details-marker{ display:none; }
@@ -459,6 +562,11 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .nextGameText strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
 @media (max-width:500px){ .nextGame{ white-space:normal; } }
 
+.beltWatch{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 22px; font-size:12.5px; }
+.beltWatchLabel{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
+.watchChip{ color:var(--ink-soft); white-space:nowrap; }
+.watchChip strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:13.5px; color:var(--ink); }
+
 .heroFacts{ display:flex; gap:26px; flex-wrap:wrap; }
 .heroFacts div{ display:flex; flex-direction:column; gap:2px; }
 .heroFacts .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; }
@@ -488,6 +596,8 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 }
 .plate .eyebrow2{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color: color-mix(in srgb, var(--holder-ink) 78%, transparent); }
 .plate .holderName{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size: clamp(32px, 6vw, 44px); line-height:.95; margin:6px 0 4px; text-wrap:balance; }
+.plate .holderName a{ color:inherit; text-decoration:none; }
+.plate .holderName a:hover{ text-decoration:underline; text-decoration-color:currentColor; }
 .plate .sub{ font-size:13.5px; color: color-mix(in srgb, var(--holder-ink) 82%, transparent); margin-bottom:18px; }
 .plateStats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1px solid color-mix(in srgb, var(--holder-alt) 45%, transparent); padding-top:14px; }
 .plateStats div{ display:flex; flex-direction:column; gap:2px; }
@@ -527,6 +637,17 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .rulesFoot{ margin-top:16px; font-size:13.5px; }
 .rulesFoot a{ text-decoration:none; border-bottom:1px solid var(--brass); color:var(--ink); font-weight:600; }
 
+/* ---------- homepage: on this day ---------- */
+.otdList{ display:flex; flex-direction:column; margin-top:6px; }
+.otdRow{ display:flex; align-items:center; gap:16px; padding:12px 4px; border-bottom:1px solid var(--hairline); text-decoration:none; color:inherit; }
+.otdList a.otdRow:hover .otdMatchup{ text-decoration:underline; text-decoration-color:var(--brass); }
+.otdRow:last-child{ border-bottom:none; }
+.otdYear{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:16px; color:var(--brass-bright); width:44px; flex:none; }
+.otdMatchup{ flex:1; font-size:14.5px; }
+.otdTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
+.otdTag.changed{ color:var(--brass-bright); }
+@media (max-width:560px){ .otdRow{ flex-wrap:wrap; } .otdTag{ order:3; width:100%; padding-left:60px; } }
+
 /* ---------- homepage: stats band ---------- */
 .band{ background:#18110c; color:#ecdfc4; margin-block:52px 0; padding-block:34px; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .band{ background:#0c0805; } }
@@ -544,6 +665,48 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .ruleList{ margin:10px 0 0; padding-left:1.15em; max-width:68ch; }
 .ruleList li{ margin:7px 0; }
 .ruleList li::marker{ color:var(--brass); }
+
+/* ---------- records page ---------- */
+.recordsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:28px 0 8px; }
+@media (max-width:760px){ .recordsGrid{ grid-template-columns:1fr; } }
+.recordCard{ background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:20px 22px 8px; }
+.recordCard h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:0 0 2px; }
+.recordCardSub{ font-size:12.5px; color:var(--ink-soft); margin:0 0 14px; }
+.recordList{ display:flex; flex-direction:column; }
+.recordRow{ display:grid; grid-template-columns:20px 1fr auto; align-items:baseline; column-gap:10px; row-gap:2px; padding:10px 0; border-bottom:1px solid var(--hairline); text-decoration:none; color:inherit; }
+.recordRow:last-child{ border-bottom:none; }
+a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:var(--brass); }
+.recordRank{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); }
+.recordMain{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:15px; display:flex; align-items:center; }
+.recordValue{ font-size:14px; font-weight:600; color:var(--brass-bright); }
+.recordSub{ grid-column:2 / 4; font-size:12px; color:var(--ink-soft); }
+.currentTag{ font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-bright); }
+
+/* ---------- team page ---------- */
+.teamPageHead{ display:flex; align-items:center; gap:12px; border-bottom:3px solid; padding-bottom:10px; margin-top:22px; }
+.teamReignList{ display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+.teamReignCard{ padding:14px 18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; }
+.teamReignHead{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.teamReignDates{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:16px; }
+.teamReignDuration{ font-size:13px; color:var(--brass-bright); font-weight:600; }
+.teamReignMeta{ display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; font-size:13px; color:var(--ink-soft); }
+.teamReignMeta a{ color:inherit; text-decoration:underline; text-decoration-color:var(--brass); }
+
+/* ---------- map page ---------- */
+.mapWrap{ margin:22px 0 6px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:14px; }
+.mapSvg{ width:100%; height:auto; display:block; }
+.mapState{ fill:var(--paper); stroke:var(--hairline); stroke-width:1; }
+.mapState--1{ fill:var(--map-1); stroke:var(--brass-line); }
+.mapState--2{ fill:var(--map-2); stroke:var(--brass-line); }
+.mapState--3{ fill:var(--map-3); stroke:var(--brass-line); }
+.mapState:hover{ stroke:var(--brass-bright); stroke-width:2; }
+.mapLegend{ display:flex; flex-direction:column; margin:18px 0 8px; }
+.mapLegendRow{ display:grid; grid-template-columns:110px auto 1fr; column-gap:14px; row-gap:2px; padding:9px 0; border-bottom:1px solid var(--hairline); font-size:13px; align-items:baseline; }
+.mapLegendRow:last-child{ border-bottom:none; }
+.mapLegendState{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
+.mapLegendCount{ color:var(--brass-bright); font-weight:600; font-size:12.5px; white-space:nowrap; }
+.mapLegendTeams{ color:var(--ink-soft); grid-column:1 / 4; }
+@media (min-width:640px){ .mapLegendTeams{ grid-column:3; } }
 
 /* ---------- full history page ---------- */
 .historyTop{ display:flex; flex-wrap:wrap; gap:16px 28px; align-items:flex-end; justify-content:space-between; margin:24px 0 8px; }
@@ -937,7 +1100,9 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     <nav class="site" aria-label="Primary">
       <a href="../lineage.html">Full History</a>
       <a href="../all-games.html">All Games</a>
+      <a href="../records.html">Records</a>
       <a href="../ruleset.html">Ruleset</a>
+      <a href="../map.html">Map</a>
     </nav>
   </div>
   <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
@@ -962,8 +1127,10 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <span class="pts tabular">{away_score}</span>
     </div>
   </div>
+{render_recap(g)}
 {render_line_score(g)}
 {render_team_stats(g)}
+{render_key_plays(g)}
 {render_player_stats(g)}
 {game_nav}
 </main>
@@ -975,7 +1142,9 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../index.html">Home</a>
       <a href="../lineage.html">Full History</a>
       <a href="../all-games.html">All Games</a>
+      <a href="../records.html">Records</a>
       <a href="../ruleset.html">Ruleset</a>
+      <a href="../map.html">Map</a>
     </nav>
   </div>
 </footer>
@@ -1003,7 +1172,50 @@ def _reign_win_score(reign, change_index):
     return away_s, home_s
 
 
-def generate_homepage(lineage, colors, belt_games, next_game=None):
+def render_on_this_day(belt_games, today):
+    """Belt games that happened on this exact month+day in a past year --
+    free, computed entirely from data already on hand. Most years won't
+    have one (the season only runs Aug-Jan); when none match, the section
+    just doesn't render, same as every other optional widget on this site."""
+    matches = [g for g in belt_games
+               if date.fromisoformat(g["date"]).month == today.month
+               and date.fromisoformat(g["date"]).day == today.day
+               and date.fromisoformat(g["date"]) != today]
+    if not matches:
+        return ""
+    matches.sort(key=lambda g: g["date"], reverse=True)
+
+    rows = ""
+    for g in matches[:3]:
+        year = g["date"][:4]
+        h, a = (int(x) for x in g["score"].split("-"))
+        if g["outcome"] in ("changed", "established"):
+            tag = f'<span class="otdTag changed">Belt changed hands</span>'
+        else:
+            tag = f'<span class="otdTag">Title defended</span>'
+        loc_word = "vs." if g["neutral"] else "at"
+        rows += f'''
+      <a class="otdRow" href="games/{g["game_id"]}.html">
+        <span class="otdYear tabular">{year}</span>
+        <span class="otdMatchup">{esc(g["away"])} {loc_word} {esc(g["home"])} <span class="tabular">{a}&ndash;{h}</span></span>
+        {tag}
+      </a>'''
+
+    plural = "s" if len(matches) != 1 else ""
+    return f'''
+  <section>
+    <div class="sectionHead">
+      <span class="tag">{esc(fmt_month_day(today))}</span>
+      <span class="rule"></span>
+      <h2>On this day in belt history</h2>
+    </div>
+    <p class="lede">{len(matches)} belt game{plural} on this date since 1869.</p>
+    <div class="otdList">{rows}
+    </div>
+  </section>'''
+
+
+def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None):
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
@@ -1062,6 +1274,23 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
       <span class="nextGameText">{loc_word} <strong>{esc(opponent)}</strong>{neutral_txt} &middot; {fmt_date(next_game["date"])}{when_txt}</span>
     </a>'''
 
+    # ---- belt watch: a short lookahead past the very next game, same free
+    # schedule data -- only rendered when there's actually more than one
+    # upcoming game on file ----
+    belt_watch_html = ""
+    later_games = (upcoming_games or [])[1:3]
+    if later_games:
+        chips = ""
+        for g in later_games:
+            loc = "vs." if (g.get("is_home") or g.get("neutral")) else "at"
+            chips += (f'<span class="watchChip">{loc} <strong>{esc(g["opponent"])}</strong> '
+                      f'&middot; {fmt_date(g["date"])}</span>')
+        belt_watch_html = f'''
+    <div class="beltWatch">
+      <span class="beltWatchLabel">Belt Watch</span>
+      {chips}
+    </div>'''
+
     # ---- chain of custody: the last CHAIN_LEN reigns, oldest to newest ----
     chain_reigns = reigns[-CHAIN_LEN:]
     hidden_count = len(reigns) - len(chain_reigns)
@@ -1105,8 +1334,19 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
 
     monogram = esc(team_chip(holder))
 
+    share_desc = esc(f"{lede} {years_span} years, {totals.get('reigns', '')} reigns.".strip())
     return f'''<meta charset="UTF-8">
 <title>The College Football Belt</title>
+<meta name="description" content="{share_desc}">
+<meta property="og:title" content="The College Football Belt">
+<meta property="og:description" content="{share_desc}">
+<meta property="og:image" content="{SITE_URL}/share.png">
+<meta property="og:url" content="{SITE_URL}/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The College Football Belt">
+<meta name="twitter:description" content="{share_desc}">
+<meta name="twitter:image" content="{SITE_URL}/share.png">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 <style>
   :root{{
@@ -1124,7 +1364,9 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
       <a href="#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
       <a href="#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1138,6 +1380,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
       <h1>{esc(holder)} holds the belt.</h1>
       <p class="lede">{lede}</p>
       {next_game_html}
+      {belt_watch_html}
       <div class="heroFacts">
         <div><span class="n tabular">{days_held:,}</span><span class="l">Days Held</span></div>
         <div><span class="n tabular">{defenses}</span><span class="l">Defenses</span></div>
@@ -1150,7 +1393,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
         <div class="rim"></div>
         <div class="monogram">{monogram}</div>
         <div class="eyebrow2">Current Holder</div>
-        <div class="holderName">{esc(holder)}</div>
+        <div class="holderName"><a href="teams/{team_slug(holder)}.html">{esc(holder)}</a></div>
         <div class="sub">{sub_line}</div>
         <div class="plateStats">
           <div><span class="n tabular">{days_held:,}</span><span class="l">Days</span></div>
@@ -1173,7 +1416,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
     </div>
     <p class="rulesFoot"><a href="lineage.html">View the full history &mdash; all {len(reigns)} reigns &rarr;</a></p>
   </section>
-
+{render_on_this_day(belt_games, today)}
   <section id="ruleset">
     <div class="sectionHead">
       <span class="tag">The Ruleset</span>
@@ -1221,7 +1464,9 @@ def generate_homepage(lineage, colors, belt_games, next_game=None):
       <a href="#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
     </nav>
   </div>
 </footer>
@@ -1315,7 +1560,9 @@ def generate_lineage_page(lineage, colors, belt_games):
     <nav class="site" aria-label="Primary">
       <a href="index.html">Home</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1372,7 +1619,9 @@ def generate_lineage_page(lineage, colors, belt_games):
     <nav aria-label="Footer">
       <a href="index.html">Home</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
     </nav>
   </div>
 </footer>
@@ -1485,7 +1734,9 @@ def generate_all_games_page(lineage, colors, belt_games):
     <nav class="site" aria-label="Primary">
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1538,7 +1789,9 @@ def generate_all_games_page(lineage, colors, belt_games):
     <nav aria-label="Footer">
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
     </nav>
   </div>
 </footer>
@@ -1656,7 +1909,9 @@ def generate_preview_page(next_game, matchup, ai_preview, colors):
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
     </nav>'''
     header = f'''<header class="site wrap">
   <div class="headerRow">
@@ -1673,7 +1928,9 @@ def generate_preview_page(next_game, matchup, ai_preview, colors):
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
     </nav>
   </div>
 </footer>'''
@@ -1896,6 +2153,8 @@ def generate_ruleset_page(md_text):
       <a href="index.html#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="map.html">Map</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1915,6 +2174,482 @@ def generate_ruleset_page(md_text):
       <a href="index.html#lineage">Lineage</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+# --------------------------------------------------------------- records page
+
+def _record_row(rank, swatch_color, main_html, value_html, sub_html, href=None):
+    dot = f'<span class="swatch" style="background:{swatch_color}"></span>' if swatch_color else ""
+    body = f'<span class="recordMain">{dot}{main_html}</span><span class="recordValue tabular">{value_html}</span>'
+    if sub_html:
+        body += f'<span class="recordSub">{sub_html}</span>'
+    tag = "a" if href else "div"
+    href_attr = f' href="{href}"' if href else ""
+    return f'<{tag} class="recordRow"{href_attr}><span class="recordRank">{rank}</span>{body}</{tag}>'
+
+
+def generate_records_page(lineage, colors, belt_games):
+    """Four record boards, all computed straight from data already on hand
+    -- no new API calls, no AI. Ties aren't broken (a team a few days short
+    of another's reign length still shows up if it's genuinely top-5)."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    change_index = build_change_game_index(belt_games)
+
+    def start_game_href(r):
+        g = change_index.get((r["start_date"], r["team"]))
+        return f'games/{g["game_id"]}.html' if g else None
+
+    def team_swatch(name):
+        primary, _ = team_color(colors, name)
+        return primary
+
+    # ---- longest reigns, by days held (current reign counts through today) ----
+    longest = sorted(reigns, key=lambda r: reign_duration_days(r, today), reverse=True)[:5]
+    longest_rows = ""
+    for i, r in enumerate(longest, 1):
+        start, end = reign_dates(r, today)
+        is_current = r is reigns[-1]
+        sub = f'{fmt_date(r["start_date"])} &ndash; {"present" if is_current else fmt_date(r["end_date"])}'
+        if is_current:
+            sub += ' <span class="currentTag">current</span>'
+        longest_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
+                                     fmt_duration(start, end), sub, start_game_href(r))
+
+    # ---- most reigns held by one program ----
+    reign_counts = {}
+    for r in reigns:
+        reign_counts[r["team"]] = reign_counts.get(r["team"], 0) + 1
+    most_reigns = sorted(reign_counts.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    most_reigns_rows = ""
+    for i, (team, n) in enumerate(most_reigns, 1):
+        most_reigns_rows += _record_row(i, team_swatch(team), esc(team),
+                                         f'{n}&times;', "reigns held",
+                                         f'teams/{team_slug(team)}.html')
+
+    # ---- most defenses in a single reign ----
+    most_defended = sorted(reigns, key=lambda r: r.get("defenses", 0), reverse=True)[:5]
+    most_defended_rows = ""
+    for i, r in enumerate(most_defended, 1):
+        is_current = r is reigns[-1]
+        sub = fmt_date(r["start_date"])
+        if is_current:
+            sub += ' <span class="currentTag">current</span>'
+        most_defended_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
+                                           f'{r.get("defenses", 0)}', sub, start_game_href(r))
+
+    # ---- biggest blowouts in any belt game ----
+    def margin(g):
+        h, a = (int(x) for x in g["score"].split("-"))
+        return abs(h - a)
+    blowouts = sorted(belt_games, key=margin, reverse=True)[:5]
+    blowout_rows = ""
+    for i, g in enumerate(blowouts, 1):
+        h, a = (int(x) for x in g["score"].split("-"))
+        winner = g["home"] if h > a else g["away"]
+        loser = g["away"] if h > a else g["home"]
+        win_score, lose_score = max(h, a), min(h, a)
+        blowout_rows += _record_row(i, team_swatch(winner), f'{esc(winner)} over {esc(loser)}',
+                                     f'+{margin(g)}', f'{win_score}&ndash;{lose_score} &middot; {fmt_date(g["date"])}',
+                                     f'games/{g["game_id"]}.html')
+
+    cards = [
+        ("Longest Reigns", "By days holding the belt", longest_rows),
+        ("Most Reigns", "By program, across all 158 years", most_reigns_rows),
+        ("Most Defended", "Consecutive defenses in a single reign", most_defended_rows),
+        ("Biggest Blowouts", "Largest margin of victory in any belt game", blowout_rows),
+    ]
+    cards_html = "".join(f'''
+    <section class="recordCard">
+      <h2>{esc(title)}</h2>
+      <p class="recordCardSub">{esc(sub)}</p>
+      <div class="recordList">{rows}</div>
+    </section>''' for title, sub, rows in cards)
+
+    return f'''<meta charset="UTF-8">
+<title>Records — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Records</h1>
+  <p class="lede">Superlatives computed straight from the lineage &mdash; no editorial
+    judgment, same as everything else on this site. Ties aren&rsquo;t broken; a
+    program just short of the cutoff simply isn&rsquo;t shown.</p>
+
+  <div class="recordsGrid">{cards_html}
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Computed from the full belt lineage &mdash; recalculated fresh every run.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+# ------------------------------------------------------------------ team pages
+
+def _team_reign_row(r, today, change_index, loss_index, is_current):
+    start, end = reign_dates(r, today)
+    dates = f'{fmt_date(r["start_date"])} &ndash; {"present" if is_current else fmt_date(r["end_date"])}'
+    duration = fmt_duration(start, end)
+    defenses = r.get("defenses", 0)
+
+    won_score, lost_score = _reign_win_score(r, change_index)
+    won_from = r.get("won_from")
+    if won_from and won_score is not None:
+        win_game = change_index.get((r["start_date"], r["team"]))
+        won_line = (f'Won from <a href="../games/{win_game["game_id"]}.html">'
+                    f'{esc(won_from)}, {won_score}&ndash;{lost_score}</a>')
+    else:
+        won_line = "Established the belt"
+
+    lost_line = ""
+    if not is_current and r.get("lost_to"):
+        loss_game = loss_index.get((r["end_date"], r["team"]))
+        if loss_game:
+            h, a = (int(x) for x in loss_game["score"].split("-"))
+            my_score, their_score = (h, a) if loss_game["home"] == r["team"] else (a, h)
+            lost_line = (f'Lost to <a href="../games/{loss_game["game_id"]}.html">'
+                         f'{esc(r["lost_to"])}, {their_score}&ndash;{my_score}</a>')
+
+    current_badge = ' <span class="currentTag">current</span>' if is_current else ""
+    return f'''
+    <div class="teamReignCard">
+      <div class="teamReignHead">
+        <span class="teamReignDates">{dates}{current_badge}</span>
+        <span class="teamReignDuration tabular">{duration}</span>
+      </div>
+      <div class="teamReignMeta">
+        <span>{won_line}</span>
+        {f'<span>{lost_line}</span>' if lost_line else ''}
+        <span>{defenses} defense{"s" if defenses != 1 else ""}</span>
+      </div>
+    </div>'''
+
+
+def generate_team_pages(lineage, colors, belt_games, teams_dir):
+    """One page per program that has ever held the belt -- every reign it
+    ever had, newest first, how each one started and (if it's over) ended.
+    Every team that's ever HELD the belt gets a page here; a team that's
+    only ever challenged and lost doesn't have reigns to show, so it
+    doesn't get a page -- same "no editorial judgment" computed approach
+    as the rest of the site."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    change_index = build_change_game_index(belt_games)
+    loss_index = build_loss_game_index(belt_games)
+    current_reign = reigns[-1]
+
+    by_team = {}
+    for r in reigns:
+        by_team.setdefault(r["team"], []).append(r)
+
+    os.makedirs(teams_dir, exist_ok=True)
+    written = 0
+    for team, team_reigns in by_team.items():
+        team_reigns_sorted = sorted(team_reigns, key=lambda r: r["start_date"])
+        total_days = sum(reign_duration_days(r, today) for r in team_reigns_sorted)
+        total_defenses = sum(r.get("defenses", 0) for r in team_reigns_sorted)
+        is_holder_now = team_reigns_sorted[-1] is current_reign
+
+        primary, alt = team_color(colors, team)
+        ink, accent = panel_colors(primary, alt)
+
+        rows_html = "".join(
+            _team_reign_row(r, today, change_index, loss_index, r is current_reign)
+            for r in reversed(team_reigns_sorted))
+
+        n = len(team_reigns_sorted)
+        holder_line = (f'{esc(team)} currently holds the belt.' if is_holder_now else
+                        f'{esc(team)} last held the belt {fmt_date(team_reigns_sorted[-1]["end_date"])}.')
+
+        page = f'''<meta charset="UTF-8">
+<title>{esc(team)} — The College Football Belt</title>
+<link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
+<style>
+  :root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}
+</style>
+
+<header class="site wrap">
+  <div class="headerRow">
+    <a class="back" href="../index.html">&larr; The College Football Belt</a>
+    <nav class="site" aria-label="Primary">
+      <a href="../lineage.html">Full History</a>
+      <a href="../all-games.html">All Games</a>
+      <a href="../records.html">Records</a>
+      <a href="../ruleset.html">Ruleset</a>
+      <a href="../map.html">Map</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="teamPageHead" style="border-color:{primary}">
+    <span class="swatch" style="background:{primary};width:14px;height:14px;"></span>
+    <h1 class="pageTitle" style="margin:0">{esc(team)}</h1>
+  </div>
+  <p class="lede">{holder_line} {n} reign{"s" if n != 1 else ""} in belt history,
+    {total_days:,} total day{"s" if total_days != 1 else ""} held,
+    {total_defenses} total defense{"s" if total_defenses != 1 else ""}.</p>
+
+  <div class="teamReignList">{rows_html}
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="../index.html">Home</a>
+      <a href="../lineage.html">Full History</a>
+      <a href="../records.html">Records</a>
+    </nav>
+  </div>
+</footer>
+'''
+        with open(os.path.join(teams_dir, f"{team_slug(team)}.html"), "w", encoding="utf-8") as f:
+            f.write(page)
+        written += 1
+
+    return written
+
+
+# --------------------------------------------------------------- belt map
+
+HISTORICAL_DIR = "historical_data"
+STATE_SHAPES_PATH = os.path.join(HISTORICAL_DIR, "us_state_shapes.json")
+
+# Standard USGS Albers Equal-Area Conic parameters for the contiguous US --
+# the same standard parallels/origin behind EPSG:5070 -- applied on a unit
+# sphere. That's plenty accurate for a small decorative map; it's not meant
+# for real measurement. Alaska and Hawaii are skipped rather than inset,
+# since no belt-holding program has ever been based in either.
+_ALBERS_PHI1 = math.radians(29.5)
+_ALBERS_PHI2 = math.radians(45.5)
+_ALBERS_PHI0 = math.radians(23.0)
+_ALBERS_LON0 = math.radians(-96.0)
+_ALBERS_N = (math.sin(_ALBERS_PHI1) + math.sin(_ALBERS_PHI2)) / 2
+_ALBERS_C = math.cos(_ALBERS_PHI1) ** 2 + 2 * _ALBERS_N * math.sin(_ALBERS_PHI1)
+_ALBERS_RHO0 = math.sqrt(_ALBERS_C - 2 * _ALBERS_N * math.sin(_ALBERS_PHI0)) / _ALBERS_N
+
+
+def albers_project(lon, lat):
+    phi = math.radians(lat)
+    lam = math.radians(lon)
+    theta = _ALBERS_N * (lam - _ALBERS_LON0)
+    rho = math.sqrt(_ALBERS_C - 2 * _ALBERS_N * math.sin(phi)) / _ALBERS_N
+    return rho * math.sin(theta), _ALBERS_RHO0 - rho * math.cos(theta)
+
+
+def load_state_shapes():
+    if not os.path.exists(STATE_SHAPES_PATH):
+        return None
+    with open(STATE_SHAPES_PATH) as f:
+        return json.load(f)
+
+
+def _state_rings(entry):
+    """Split a state's flat lons/lats (NaN-separated for exclaves like Long
+    Island) into a list of point-lists."""
+    rings, ring = [], []
+    for lon, lat in zip(entry["lons"], entry["lats"]):
+        if lon is None or lat is None or lon != lon or lat != lat:  # NaN check, no numpy needed
+            if ring:
+                rings.append(ring)
+                ring = []
+            continue
+        ring.append((lon, lat))
+    if ring:
+        rings.append(ring)
+    return rings
+
+
+def build_state_paths(shapes):
+    """Project every state's ring(s) through Albers, then scale/flip the
+    whole set into one shared SVG coordinate space. Returns
+    ({abbr: {"name":..., "d": "<path d>"}}, (viewbox_w, viewbox_h))."""
+    projected = {}
+    all_x, all_y = [], []
+    for abbr, entry in shapes.items():
+        rings = []
+        for ring in _state_rings(entry):
+            proj_ring = [albers_project(lon, lat) for lon, lat in ring]
+            rings.append(proj_ring)
+            all_x.extend(x for x, _ in proj_ring)
+            all_y.extend(y for _, y in proj_ring)
+        projected[abbr] = rings
+
+    min_x, max_x = min(all_x), max(all_x)
+    min_y, max_y = min(all_y), max(all_y)
+    pad = 0.02 * max(max_x - min_x, max_y - min_y)
+    min_x, max_x = min_x - pad, max_x + pad
+    min_y, max_y = min_y - pad, max_y + pad
+
+    width, height = 1000.0, 620.0
+    scale = min(width / (max_x - min_x), height / (max_y - min_y))
+    off_x = (width - (max_x - min_x) * scale) / 2
+    off_y = (height - (max_y - min_y) * scale) / 2
+
+    def to_svg(x, y):
+        sx = (x - min_x) * scale + off_x
+        sy = height - ((y - min_y) * scale + off_y)  # SVG y grows downward
+        return sx, sy
+
+    out = {}
+    for abbr, rings in projected.items():
+        parts = []
+        for ring in rings:
+            pts = [to_svg(x, y) for x, y in ring]
+            parts.append("M " + " L ".join(f"{px:.1f},{py:.1f}" for px, py in pts) + " Z")
+        out[abbr] = {"name": shapes[abbr]["name"], "d": " ".join(parts)}
+    return out, (width, height)
+
+
+def build_state_belt_history(lineage, colors):
+    """Every reign, joined against team_colors.json's "state" field, into a
+    per-state tally: how many reigns started there, and which team(s)."""
+    by_state = {}
+    for r in lineage["reigns"]:
+        team = r["team"]
+        state = (colors.get(team) or {}).get("state")
+        if not state:
+            continue
+        entry = by_state.setdefault(state, {"reigns": 0, "teams": {}})
+        entry["reigns"] += 1
+        year = int(r["start_date"][:4])
+        t = entry["teams"].setdefault(team, {"count": 0, "first": year, "last": year})
+        t["count"] += 1
+        t["first"] = min(t["first"], year)
+        t["last"] = max(t["last"], year)
+    return by_state
+
+
+def _team_bits(teams):
+    return ", ".join(
+        f'{esc(name)} ({t["count"]}&times;)' if t["count"] > 1 else esc(name)
+        for name, t in sorted(teams.items(), key=lambda kv: -kv[1]["count"]))
+
+
+def generate_map_page(lineage, colors):
+    """A US map shaded by how many belt reigns have started in each state
+    -- every figure computed straight from lineage.json + team_colors.json,
+    no new API calls. Returns None (and build_site.py skips writing the
+    page) if historical_data/us_state_shapes.json isn't present."""
+    shapes = load_state_shapes()
+    if not shapes:
+        return None
+    paths, (vb_w, vb_h) = build_state_paths(shapes)
+    by_state = build_state_belt_history(lineage, colors)
+    max_reigns = max((v["reigns"] for v in by_state.values()), default=0)
+
+    def tint_class(n):
+        if n == 0 or max_reigns == 0:
+            return ""
+        frac = n / max_reigns
+        if frac > 0.66 or max_reigns <= 1:
+            return " mapState--3"
+        if frac > 0.33:
+            return " mapState--2"
+        return " mapState--1"
+
+    path_svg = []
+    for abbr in sorted(paths):
+        info = paths[abbr]
+        st = by_state.get(abbr)
+        n = st["reigns"] if st else 0
+        title = esc(info["name"])
+        if st:
+            title += f": {_team_bits(st['teams'])}"
+        path_svg.append(f'<path class="mapState{tint_class(n)}" d="{info["d"]}"><title>{title}</title></path>')
+
+    legend_rows = ""
+    for abbr, st in sorted(by_state.items(), key=lambda kv: -kv[1]["reigns"]):
+        state_name = paths.get(abbr, {}).get("name", abbr)
+        n = st["reigns"]
+        legend_rows += f'''
+    <div class="mapLegendRow">
+      <span class="mapLegendState">{esc(state_name)}</span>
+      <span class="mapLegendCount tabular">{n} reign{"s" if n != 1 else ""}</span>
+      <span class="mapLegendTeams">{_team_bits(st["teams"])}</span>
+    </div>'''
+
+    n_states = len(by_state)
+
+    return f'''<meta charset="UTF-8">
+<title>Map — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Everywhere the Belt Has Lived</h1>
+  <p class="lede">{n_states} state{"s" if n_states != 1 else ""} ha{"ve" if n_states != 1 else "s"} produced
+    a College Football Belt holder since 1869. Shading shows how many separate reigns
+    started there &mdash; darker means more; hover a state (or check the list below) for who.</p>
+
+  <div class="mapWrap">
+    <svg class="mapSvg" viewBox="0 0 {vb_w:.0f} {vb_h:.0f}" role="img" aria-label="Map of US states that have held the College Football Belt">{"".join(path_svg)}
+    </svg>
+  </div>
+
+  <div class="mapLegend">{legend_rows}
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign's state comes from the belt-holding team's CFBD-listed home state.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
     </nav>
   </div>
 </footer>
@@ -1924,7 +2659,8 @@ def generate_ruleset_page(md_text):
 # -------------------------------------------------------------------- main
 
 def main():
-    lineage, details, colors, next_game, matchup, ai_preview = load_data()
+    (lineage, details, colors, next_game, upcoming_games, matchup,
+     ai_preview, recaps, game_plays) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -1946,6 +2682,8 @@ def main():
         merged["line_score"] = d.get("line_score")
         merged["team_stats"] = d.get("team_stats")
         merged["player_stats"] = d.get("player_stats")
+        merged["recap"] = recaps.get(str(gid))
+        merged["key_plays"] = game_plays.get(str(gid))
 
         prev_game = belt_games[i - 1] if i > 0 else None
         next_belt_game = belt_games[i + 1] if i < len(belt_games) - 1 else None
@@ -1955,7 +2693,7 @@ def main():
             f.write(html_out)
         written += 1
 
-    homepage_html = generate_homepage(lineage, colors, belt_games, next_game)
+    homepage_html = generate_homepage(lineage, colors, belt_games, next_game, upcoming_games)
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 
@@ -1970,6 +2708,21 @@ def main():
     preview_html = generate_preview_page(next_game, matchup, ai_preview, colors)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
+
+    records_html = generate_records_page(lineage, colors, belt_games)
+    with open(os.path.join(OUT_DIR, "records.html"), "w", encoding="utf-8") as f:
+        f.write(records_html)
+
+    teams_dir = os.path.join(OUT_DIR, "teams")
+    teams_written = generate_team_pages(lineage, colors, belt_games, teams_dir)
+
+    map_html = generate_map_page(lineage, colors)
+    wrote_map = map_html is not None
+    if wrote_map:
+        with open(os.path.join(OUT_DIR, "map.html"), "w", encoding="utf-8") as f:
+            f.write(map_html)
+    else:
+        warnings.append(f"{STATE_SHAPES_PATH} not found -- skipped map.html")
 
     if os.path.exists(RULESET_MD_PATH):
         with open(RULESET_MD_PATH, encoding="utf-8") as f:
@@ -1989,6 +2742,10 @@ def main():
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
+    print(f"Wrote records page to {OUT_DIR}/records.html")
+    print(f"Wrote {teams_written} team pages to {teams_dir}/")
+    if wrote_map:
+        print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
     if warnings:
