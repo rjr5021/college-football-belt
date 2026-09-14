@@ -71,6 +71,25 @@ GOATCOUNTER_CODE = "collegefootballbelt"
 # here. Submit sitemap.xml from the same dashboard afterward.
 GOOGLE_SITE_VERIFICATION = ""
 
+# Optional Google AdSense monetization. Empty by default -- every page omits
+# the ad-loader script and ads.txt is skipped entirely, same no-op-when-unset
+# pattern as GOATCOUNTER_CODE/GOOGLE_SITE_VERIFICATION above. To turn it on:
+# 1. Apply for a free AdSense account at adsense.google.com using the site's
+#    Google account -- Google reviews the site (checks for original content,
+#    a privacy policy, and enough traffic/history) before approving it, which
+#    can take anywhere from a day to a few weeks. This step has to happen in
+#    Google's own dashboard; there's no build-time equivalent.
+# 2. Once approved, AdSense gives you a publisher ID shaped like
+#    "pub-XXXXXXXXXXXXXXXX". Set it here (with the "pub-" prefix) and rerun
+#    the pipeline -- that both adds the ad-loader script to every page's
+#    <head> AND writes site/ads.txt (required by Google to confirm this site
+#    is authorized to show ads for that publisher; without it, ads silently
+#    stay disabled even with a valid ID and script).
+# 3. Ad placement itself (which pages, how many, where on the page) is
+#    configured from the AdSense dashboard under Auto ads -- not here --
+#    once the script above is live on the site.
+ADSENSE_PUBLISHER_ID = ""
+
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
 
@@ -95,6 +114,14 @@ def head_extras(rel=""):
         bits.append(
             f'<script data-goatcounter="https://{GOATCOUNTER_CODE}.goatcounter.com/count" '
             f'async src="//gc.zgo.at/count.js"></script>'
+        )
+    if ADSENSE_PUBLISHER_ID:
+        bits.append(
+            f'<meta name="google-adsense-account" content="ca-{esc(ADSENSE_PUBLISHER_ID)}">'
+        )
+        bits.append(
+            f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
+            f'?client=ca-{esc(ADSENSE_PUBLISHER_ID)}" crossorigin="anonymous"></script>'
         )
     # Theme toggle -- reads/writes localStorage("cfbBelt:theme") so a
     # visitor's explicit light/dark choice overrides the OS-level
@@ -1585,6 +1612,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../embed.html">Embed</a>
       <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="../privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -1744,6 +1772,7 @@ def generate_on_this_day_page(belt_games):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -2068,6 +2097,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -2233,6 +2263,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -2413,6 +2444,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -2595,6 +2627,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>'''
@@ -2907,6 +2940,7 @@ def generate_ruleset_page(md_text):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -3094,6 +3128,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -3135,6 +3170,7 @@ def _story_nav_footer(active_href=None):
       <a href="records.html">Records</a>
       <a href="stories.html">Stories</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>'''
@@ -3531,6 +3567,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../embed.html">Embed</a>
       <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="../privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -3855,6 +3892,7 @@ def generate_map_page(lineage, colors):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -3963,6 +4001,165 @@ def generate_embed_page(lineage, colors):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="compare.html">Compare</a>
+      <a href="api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_privacy_page():
+    """A plain-language privacy policy -- required by Google before it will
+    approve an AdSense application (and generally good practice regardless).
+    Written to reflect the site's actual, current data practices rather
+    than a boilerplate template: no accounts/logins exist anywhere on the
+    site, so there's no user data collection to describe beyond page-view
+    analytics; the Advertising section is the only part that changes
+    behavior based on ADSENSE_PUBLISHER_ID, so it always describes reality
+    at build time instead of a forward-looking promise."""
+    if ADSENSE_PUBLISHER_ID:
+        ads_section = '''<p>This site displays advertising served by Google AdSense. Google and its advertising
+      partners may use cookies, device identifiers, or similar technologies to show ads based on your
+      visits to this and other websites, and to measure ad performance. This site does not control
+      how those third parties use that information.</p>
+    <p>You can see and adjust how Google personalizes ads to you at
+      <a href="https://adssettings.google.com/" rel="noopener">adssettings.google.com</a>, and read
+      Google's own explanation of how it uses data from sites that use its services at
+      <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">policies.google.com/technologies/partner-sites</a>.
+      If you are in the EU/EEA or UK, you may be shown a consent prompt controlling ad
+      personalization before ads appear.</p>'''
+    else:
+        ads_section = '''<p>This site does not currently display third-party advertising. If that changes, this
+      section will be updated to disclose exactly what's shown and what data it involves.</p>'''
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Privacy Policy — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
+    </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Privacy Policy</h1>
+  <p class="lede">This site is a hobby project with no accounts, no logins, and nothing to sign up
+    for &mdash; there isn&rsquo;t much data to collect in the first place. Here&rsquo;s exactly
+    what happens anyway.</p>
+
+  <section>
+    <div class="sectionHead">
+      <span class="tag">01</span>
+      <span class="rule"></span>
+      <h2>Information We Collect</h2>
+    </div>
+    <div class="proseBlock">
+      <p>Browsing this site doesn&rsquo;t require creating an account or submitting any personal
+        information. The only place you can voluntarily send us anything is the Contact link in
+        the footer, which opens your own email client &mdash; whatever you choose to write there
+        is between you and us, sent directly to hello@collegefootballbelt.com.</p>
+      <p>This site is hosted on GitHub Pages, which (like any web host) automatically logs basic
+        technical request data &mdash; IP address, browser type, page requested &mdash; for
+        security and operational purposes. That logging is handled entirely by GitHub, not by
+        this site; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub&rsquo;s own privacy statement</a> for details.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sectionHead">
+      <span class="tag">02</span>
+      <span class="rule"></span>
+      <h2>Analytics</h2>
+    </div>
+    <div class="proseBlock">
+      <p>Page-view counts are collected using <a href="https://www.goatcounter.com/" rel="noopener">GoatCounter</a>,
+        a privacy-focused analytics tool that does not use cookies and does not track individuals
+        across sites. It records aggregate numbers &mdash; which pages get visited, roughly how
+        often &mdash; and nothing that identifies you personally.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sectionHead">
+      <span class="tag">03</span>
+      <span class="rule"></span>
+      <h2>Advertising</h2>
+    </div>
+    <div class="proseBlock">
+      {ads_section}
+    </div>
+  </section>
+
+  <section>
+    <div class="sectionHead">
+      <span class="tag">04</span>
+      <span class="rule"></span>
+      <h2>Third-Party Links &amp; Data</h2>
+    </div>
+    <div class="proseBlock">
+      <p>Game data, scores, and statistics shown across this site are sourced from the
+        <a href="https://collegefootballdata.com/" rel="noopener">College Football Data API</a>.
+        Links to other sites (news sources, social media, the API provider) are provided for
+        convenience; once you leave this site, that site&rsquo;s own privacy policy applies.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sectionHead">
+      <span class="tag">05</span>
+      <span class="rule"></span>
+      <h2>Changes to This Policy</h2>
+    </div>
+    <div class="proseBlock">
+      <p>This page may be updated from time to time as the site changes &mdash; for example, if
+        advertising or new features are added. Since the site has no accounts or email list tied
+        to it, changes are simply reflected here; there&rsquo;s no separate notice to send.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sectionHead">
+      <span class="tag">06</span>
+      <span class="rule"></span>
+      <h2>Contact</h2>
+    </div>
+    <div class="proseBlock">
+      <p>Questions about this policy or how the site works can go to
+        <a href="mailto:hello@collegefootballbelt.com">hello@collegefootballbelt.com</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>The College Football Belt &mdash; lineal championship, since 1869.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
@@ -4154,6 +4351,7 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -4399,6 +4597,7 @@ def generate_trivia_page(pool):
       <a href="records.html">Records</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -4505,6 +4704,7 @@ def generate_api_docs_page():
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -4531,6 +4731,18 @@ def generate_sitemap(urls):
 
 def generate_robots_txt():
     return f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n"
+
+
+def generate_ads_txt(publisher_id):
+    """The IAB-standard authorized-sellers file AdSense requires at the
+    domain root -- without it, ads stay disabled even with a valid publisher
+    ID and loader script live on every page. Uses the bare "pub-XXXX" form
+    (NOT the "ca-pub-XXXX" form the <script> tag/meta tag use). "DIRECT"
+    means this site deals directly with Google (not through a reseller);
+    the trailing ID is Google's own fixed certification authority ID for
+    AdSense, the same for every publisher. Only written when
+    ADSENSE_PUBLISHER_ID is set."""
+    return f"google.com, {publisher_id}, DIRECT, f08c47fec0942fa0\n"
 
 
 def generate_404_page():
@@ -4576,6 +4788,7 @@ def generate_404_page():
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
     </nav>
   </div>
 </footer>
@@ -4834,6 +5047,14 @@ def main():
     with open(os.path.join(OUT_DIR, "embed.html"), "w", encoding="utf-8") as f:
         f.write(embed_html)
 
+    privacy_html = generate_privacy_page()
+    with open(os.path.join(OUT_DIR, "privacy.html"), "w", encoding="utf-8") as f:
+        f.write(privacy_html)
+
+    if ADSENSE_PUBLISHER_ID:
+        with open(os.path.join(OUT_DIR, "ads.txt"), "w", encoding="utf-8") as f:
+            f.write(generate_ads_txt(ADSENSE_PUBLISHER_ID))
+
     compare_html = generate_compare_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "compare.html"), "w", encoding="utf-8") as f:
         f.write(compare_html)
@@ -4858,7 +5079,7 @@ def main():
                      f"{SITE_URL}/on-this-day.html", f"{SITE_URL}/embed.html",
                      f"{SITE_URL}/compare.html", f"{SITE_URL}/trivia.html", f"{SITE_URL}/api.html",
                      f"{SITE_URL}/stories.html", f"{SITE_URL}/story-longest-reigns.html",
-                     f"{SITE_URL}/story-most-defended.html"]
+                     f"{SITE_URL}/story-most-defended.html", f"{SITE_URL}/privacy.html"]
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -4904,7 +5125,9 @@ def main():
         print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
-    print(f"Wrote badge.svg, embed.html, and compare.html to {OUT_DIR}/")
+    print(f"Wrote badge.svg, embed.html, privacy.html, and compare.html to {OUT_DIR}/")
+    if ADSENSE_PUBLISHER_ID:
+        print(f"Wrote ads.txt to {OUT_DIR}/ (AdSense publisher {ADSENSE_PUBLISHER_ID})")
     print(f"Wrote trivia.html ({len(trivia_pool)} question(s) in the pool) to {OUT_DIR}/")
     print(f"Wrote api.html and {API_DIR}/current.json, reigns.json, games.json to {OUT_DIR}/")
     print(f"Wrote sitemap.xml ({len(sitemap_urls)} URLs), robots.txt, 404.html, and feed.xml "
