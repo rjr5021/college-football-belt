@@ -31,18 +31,54 @@ import os
 import re
 import sys
 from collections import Counter
-from datetime import date
+from datetime import date, datetime, timezone
+from email.utils import format_datetime
 
 OUT_DIR = "site"
 DATA_DIR = "belt_data"
 
-# Used only for absolute URLs that have to be absolute to work at all --
-# Open Graph / Twitter Card meta tags, which social platforms fetch
-# server-side and won't resolve relative to anything.
-SITE_URL = "https://rjr5021.github.io/college-football-belt"
+# The custom domain, once DNS + GitHub Pages are both pointed at it (see
+# README.md's "Custom domain" section). Two things depend on this:
+#   1. site/CNAME -- GitHub Pages reads this file from the published output
+#      to know which custom domain to serve. Since site/ is wiped and
+#      rebuilt from scratch every run, this HAS to be written by the build
+#      itself, or the custom domain setting would silently get dropped the
+#      next time the pipeline runs (a real GitHub Pages gotcha, not a
+#      guess -- it says so in their own docs).
+#   2. SITE_URL below, for the absolute URLs that Open Graph / Twitter Card
+#      meta tags need (see generate_homepage()).
+CUSTOM_DOMAIN = "collegefootballbelt.com"
+SITE_URL = f"https://{CUSTOM_DOMAIN}"
+
+# Optional, free, privacy-friendly page-view analytics (https://www.goatcounter.com/).
+# Empty by default -- every page just omits the tracking snippet, same
+# no-op-when-unset pattern as ANTHROPIC_API_KEY for the AI preview/recaps.
+# To turn it on: sign up free at goatcounter.com, pick a site code (that's
+# the "goatcounter.com" subdomain you're assigned, e.g. "my-code" for
+# my-code.goatcounter.com), then set it here and rerun the pipeline.
+GOATCOUNTER_CODE = ""
 
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
+
+
+def head_extras(rel=""):
+    """Favicon links (+ the analytics snippet, when GOATCOUNTER_CODE is
+    set) shared by every page template. `rel` is the relative path prefix
+    back to the site root -- "" for root-level pages, "../" for pages one
+    directory down (games/, teams/)."""
+    bits = [
+        f'<link rel="icon" type="image/png" href="{rel}favicon.png">',
+        f'<link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">',
+        f'<link rel="alternate" type="application/rss+xml" '
+        f'title="The College Football Belt — Belt Changes" href="{rel}feed.xml">',
+    ]
+    if GOATCOUNTER_CODE:
+        bits.append(
+            f'<script data-goatcounter="https://{GOATCOUNTER_CODE}.goatcounter.com/count" '
+            f'async src="//gc.zgo.at/count.js"></script>'
+        )
+    return "\n".join(bits)
 
 
 # ---------------------------------------------------------------- color math
@@ -146,10 +182,11 @@ def load_data():
     upcoming_games = load_optional_json("upcoming_games.json") or []
     matchup = load_optional_json("matchup_preview.json")
     ai_preview = load_optional_json("ai_preview.json")
+    weather = load_optional_json("weather.json")
     recaps = load_optional_json("recaps.json") or {}
     game_plays = load_optional_json("game_plays.json") or {}
     return (lineage, details, colors, next_game, upcoming_games, matchup,
-            ai_preview, recaps, game_plays)
+            ai_preview, weather, recaps, game_plays)
 
 
 def team_color(colors, name):
@@ -526,12 +563,22 @@ details.moreStats .statCategory{ margin-top:18px; }
 .formOpp{ color:var(--ink-soft); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .formDate{ margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap; }
 .emptyNote{ color:var(--ink-soft); font-size:13px; }
+.weatherCard{
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px;
+  padding:14px 18px; margin:4px 0 6px; border:1px solid var(--hairline);
+  border-radius:6px; background:var(--paper-2);
+}
+.weatherTemp{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; }
+.weatherCond{ font-size:14.5px; color:var(--ink); }
+.weatherSub{ font-size:13px; color:var(--ink-soft); flex-basis:100%; }
 .h2hHeadline{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; margin:0 0 16px; }
 .aiPreviewBody p{ max-width:70ch; font-size:15px; }
 .keyMatchups{ margin:14px 0 20px; padding-left:1.15em; max-width:68ch; }
 .keyMatchups li{ margin:7px 0; font-size:14.5px; }
 .keyMatchups li::marker{ color:var(--brass); }
 .bettingHead{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin:20px 0 6px; }
+.predictionCall{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:23px; margin:0 0 10px; color:var(--brass); }
+.predictionBody{ margin-top:4px; }
 
 footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-top:52px; font-size:12.5px; color:var(--ink-soft); }
 .footRow{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
@@ -1082,6 +1129,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     body = f'''<meta charset="UTF-8">
 <title>{title}</title>
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
+{head_extras('../')}
 <style>
   :root{{
     --home:{home_primary}; --home-ink:{home_ink}; --home-accent:{home_accent};
@@ -1348,6 +1396,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
 <meta name="twitter:description" content="{share_desc}">
 <meta name="twitter:image" content="{SITE_URL}/share.png">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 <style>
   :root{{
     --holder:{primary}; --holder-alt:{accent}; --holder-ink:{ink};
@@ -1550,6 +1599,7 @@ def generate_lineage_page(lineage, colors, belt_games):
     return f'''<meta charset="UTF-8">
 <title>Full History — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 <header class="site wrap">
   <div class="headerRow">
@@ -1724,6 +1774,7 @@ def generate_all_games_page(lineage, colors, belt_games):
     return f'''<meta charset="UTF-8">
 <title>All Games — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 <header class="site wrap">
   <div class="headerRow">
@@ -1903,7 +1954,43 @@ def render_head_to_head(holder, opponent, h2h):
     return f'<p class="h2hHeadline">{headline}{since}</p>{table_html}'
 
 
-def generate_preview_page(next_game, matchup, ai_preview, colors):
+def render_weather(weather):
+    """A small kickoff-forecast card -- gracefully renders nothing when
+    fetch_weather.py had no venue coordinates, the game's too far out for
+    Open-Meteo's forecast window, or the fetch itself failed."""
+    if not weather or weather.get("temp_f") is None:
+        return ""
+    temp = round(weather["temp_f"])
+    feels = weather.get("feels_like_f")
+    feels_bit = f" (feels {round(feels)}&deg;)" if feels is not None and round(feels) != temp else ""
+    condition = weather.get("condition") or ""
+    wind = weather.get("wind_mph")
+    precip = weather.get("precip_chance")
+    where = weather.get("venue_name")
+    where_bit = f" at {esc(where)}" if where else ""
+
+    bits = []
+    if wind is not None:
+        bits.append(f"Wind {round(wind)} mph")
+    if precip is not None:
+        bits.append(f"{round(precip)}% chance of precipitation")
+    sub = " &middot; ".join(bits)
+
+    return f'''
+  <div class="sectionHead withTag">
+    <span class="tag">Forecast</span>
+    <span class="rule"></span>
+    <h2>Kickoff Weather</h2>
+  </div>
+  <div class="weatherCard">
+    <span class="weatherTemp tabular">{temp}&deg;F{feels_bit}</span>
+    <span class="weatherCond">{esc(condition)}{where_bit}</span>
+    {f'<span class="weatherSub">{sub}</span>' if sub else ''}
+  </div>
+  <p class="emptyNote">Forecast as of {weather.get("fetched", "recently")} &mdash; weather this far out can change; treat it as a rough guide, not a promise.</p>'''
+
+
+def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
     nav = '''
     <nav class="site" aria-label="Primary">
       <a href="index.html">Home</a>
@@ -1939,6 +2026,7 @@ def generate_preview_page(next_game, matchup, ai_preview, colors):
         return f'''<meta charset="UTF-8">
 <title>Up Next — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 {header}
 
@@ -1968,15 +2056,23 @@ def generate_preview_page(next_game, matchup, ai_preview, colors):
     opp_form_html = render_recent_form(opponent, recent.get(opponent, []))
     h2h_html = render_head_to_head(holder, opponent, matchup.get("head_to_head"))
 
+    ai_preview = ai_preview or {}
+    overview = ai_preview.get("overview") or ""
+    key_matchups = ai_preview.get("key_matchups") or []
+    betting = ai_preview.get("betting_angles") or ""
+    predicted_winner = ai_preview.get("predicted_winner") or ""
+    predicted_score = ai_preview.get("predicted_score") or ""
+    prediction_writeup = ai_preview.get("prediction_writeup") or ""
+
     ai_html = ""
-    if ai_preview and (ai_preview.get("overview") or ai_preview.get("key_matchups") or ai_preview.get("betting_angles")):
-        overview = ai_preview.get("overview") or ""
-        key_matchups = ai_preview.get("key_matchups") or []
-        betting = ai_preview.get("betting_angles") or ""
+    if overview or key_matchups or betting or predicted_winner or prediction_writeup:
         matchups_html = "".join(f"<li>{esc(m)}</li>" for m in key_matchups)
         betting_html = f'<p class="bettingHead">Betting Angles</p><p>{esc(betting)}</p>' if betting else ""
         matchups_block = f'<ul class="keyMatchups">{matchups_html}</ul>' if matchups_html else ""
-        ai_html = f'''
+
+        preview_block = ""
+        if overview or matchups_block or betting_html:
+            preview_block = f'''
   <div class="sectionHead withTag">
     <span class="tag">AI-Written</span>
     <span class="rule"></span>
@@ -1986,21 +2082,45 @@ def generate_preview_page(next_game, matchup, ai_preview, colors):
     <p>{esc(overview)}</p>
     {matchups_block}
     {betting_html}
+  </div>'''
+
+        prediction_block = ""
+        if predicted_winner or prediction_writeup:
+            if predicted_score:
+                call_line = f'<span class="tabular">{esc(predicted_score)}</span>'
+            elif predicted_winner:
+                call_line = f'{esc(predicted_winner)} to win'
+            else:
+                call_line = "No clear pick"
+            prediction_block = f'''
+  <div class="sectionHead withTag">
+    <span class="tag">AI-Written</span>
+    <span class="rule"></span>
+    <h2>Prediction</h2>
   </div>
-  <p class="noteBox">Written by Claude from the stats on this page &mdash; not betting advice, for
-    analysis and entertainment only. If it stops being fun, the National Problem Gambling Helpline
-    is 1-800-522-4700.</p>'''
+  <div class="aiPreviewBody predictionBody">
+    <p class="predictionCall">{call_line}</p>
+    <p>{esc(prediction_writeup)}</p>
+  </div>'''
+
+        ai_html = f'''{preview_block}{prediction_block}
+  <p class="noteBox">Written by Claude from the stats (and forecast, when available) on this page
+    &mdash; a for-fun editorial call, not betting advice or a guarantee. If it stops being fun, the
+    National Problem Gambling Helpline is 1-800-522-4700.</p>'''
+
+    weather_html = render_weather(weather)
 
     return f'''<meta charset="UTF-8">
 <title>{title} Preview — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 {header}
 
 <main class="wrap">
   <h1 class="pageTitle">Up Next: {title}</h1>
   <p class="previewMeta">{esc(holder)} {esc(side_full)} {esc(opponent)} &middot; {fmt_date(next_game["date"])} &middot; the belt is on the line</p>
-
+{weather_html}
   <div class="sectionHead withTag">
     <span class="tag">Recent Form</span>
     <span class="rule"></span>
@@ -2141,6 +2261,7 @@ def generate_ruleset_page(md_text):
     return f'''<meta charset="UTF-8">
 <title>Ruleset — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 <header class="site wrap">
   <div class="headerRow">
@@ -2275,6 +2396,7 @@ def generate_records_page(lineage, colors, belt_games):
     return f'''<meta charset="UTF-8">
 <title>Records — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 <header class="site wrap">
   <div class="headerRow">
@@ -2397,6 +2519,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
         page = f'''<meta charset="UTF-8">
 <title>{esc(team)} — The College Football Belt</title>
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
+{head_extras('../')}
 <style>
   :root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}
 </style>
@@ -2442,7 +2565,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
             f.write(page)
         written += 1
 
-    return written
+    return written, [team_slug(t) for t in by_team]
 
 
 # --------------------------------------------------------------- belt map
@@ -2609,6 +2732,7 @@ def generate_map_page(lineage, colors):
     return f'''<meta charset="UTF-8">
 <title>Map — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
 
 <header class="site wrap">
   <div class="headerRow">
@@ -2658,9 +2782,115 @@ def generate_map_page(lineage, colors):
 
 # -------------------------------------------------------------------- main
 
+# --------------------------------------------------- sitemap / robots / feed / 404
+
+def generate_sitemap(urls):
+    """A plain sitemap.xml -- every URL, one <lastmod> for all of them
+    (today's build date; nothing here tracks true per-page last-changed
+    dates, and search engines treat a same-day sitemap-wide date as fine).
+    """
+    today = date.today().isoformat()
+    parts = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        parts.append(f"  <url><loc>{esc(u)}</loc><lastmod>{today}</lastmod></url>")
+    parts.append("</urlset>")
+    return "\n".join(parts) + "\n"
+
+
+def generate_robots_txt():
+    return f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n"
+
+
+def generate_404_page():
+    nav = '''
+    <nav class="site" aria-label="Primary">
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+    </nav>'''
+    return f'''<meta charset="UTF-8">
+<title>Page Not Found — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <a class="back" href="index.html">&larr; The College Football Belt</a>{nav}
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">404 &mdash; Fumbled</h1>
+  <p class="lede">Whatever you were looking for isn&rsquo;t here &mdash; might&rsquo;ve moved,
+    might never have existed. Either way, no need to punt.</p>
+  <p><a href="index.html">&larr; Back to the current belt holder</a></p>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>The College Football Belt &mdash; lineal championship, since 1869.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_feed(belt_games, recaps):
+    """RSS 2.0 feed of belt CHANGES only (not every defense) -- newest
+    first, so an RSS reader or RSS-to-email service can notify someone the
+    moment the belt actually changes hands without them checking the site.
+    Capped at the most recent 30 changes; a reader only ever cares about
+    what's new anyway, and 327-some entries would be a wall for no benefit.
+    """
+    changes = [g for g in belt_games if g.get("outcome") == "changed"]
+    changes.sort(key=lambda g: g["date"], reverse=True)
+
+    items = []
+    for g in changes[:30]:
+        try:
+            dt = datetime.strptime(g["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        recap = recaps.get(str(g["game_id"])) or {}
+        # holder is always set here -- the very first ("established") game
+        # has no defending holder and outcome "established", not "changed",
+        # so it's never in `changes` above.
+        home_score, away_score = (int(x) for x in g["score"].split("-"))
+        winner_score, loser_score = ((home_score, away_score) if g["new_holder"] == g["home"]
+                                      else (away_score, home_score))
+        desc = recap.get("recap") or f'{g["new_holder"]} def. {g["holder"]} {winner_score}–{loser_score}.'
+        link = f'{SITE_URL}/games/{g["game_id"]}.html'
+        items.append(f'''
+    <item>
+      <title>{esc(g["new_holder"])} takes the belt from {esc(g["holder"])}</title>
+      <link>{link}</link>
+      <guid isPermaLink="true">{link}</guid>
+      <pubDate>{format_datetime(dt)}</pubDate>
+      <description>{esc(desc)}</description>
+    </item>''')
+
+    return f'''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>The College Football Belt</title>
+    <link>{SITE_URL}/</link>
+    <description>Every time the lineal College Football Belt changes hands, on the field.</description>
+    <language>en-us</language>{''.join(items)}
+  </channel>
+</rss>
+'''
+
+
 def main():
     (lineage, details, colors, next_game, upcoming_games, matchup,
-     ai_preview, recaps, game_plays) = load_data()
+     ai_preview, weather, recaps, game_plays) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -2669,6 +2899,9 @@ def main():
 
     with open(os.path.join(OUT_DIR, "styles.css"), "w", encoding="utf-8") as f:
         f.write(STYLES_CSS)
+
+    with open(os.path.join(OUT_DIR, "CNAME"), "w", encoding="utf-8") as f:
+        f.write(CUSTOM_DOMAIN + "\n")
 
     warnings = []
     written = 0
@@ -2705,7 +2938,7 @@ def main():
     with open(os.path.join(OUT_DIR, "all-games.html"), "w", encoding="utf-8") as f:
         f.write(all_games_html)
 
-    preview_html = generate_preview_page(next_game, matchup, ai_preview, colors)
+    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
 
@@ -2714,7 +2947,7 @@ def main():
         f.write(records_html)
 
     teams_dir = os.path.join(OUT_DIR, "teams")
-    teams_written = generate_team_pages(lineage, colors, belt_games, teams_dir)
+    teams_written, team_slugs = generate_team_pages(lineage, colors, belt_games, teams_dir)
 
     map_html = generate_map_page(lineage, colors)
     wrote_map = map_html is not None
@@ -2736,8 +2969,30 @@ def main():
         warnings.append(f"{RULESET_MD_PATH} not found -- skipped ruleset.html "
                          f"(run this from the project folder, where that file lives)")
 
+    sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
+                     f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html"]
+    if wrote_ruleset:
+        sitemap_urls.append(f"{SITE_URL}/ruleset.html")
+    if wrote_map:
+        sitemap_urls.append(f"{SITE_URL}/map.html")
+    sitemap_urls += [f"{SITE_URL}/teams/{slug}.html" for slug in team_slugs]
+    sitemap_urls += [f"{SITE_URL}/games/{g['game_id']}.html" for g in belt_games]
+
+    with open(os.path.join(OUT_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
+        f.write(generate_sitemap(sitemap_urls))
+
+    with open(os.path.join(OUT_DIR, "robots.txt"), "w", encoding="utf-8") as f:
+        f.write(generate_robots_txt())
+
+    with open(os.path.join(OUT_DIR, "404.html"), "w", encoding="utf-8") as f:
+        f.write(generate_404_page())
+
+    with open(os.path.join(OUT_DIR, "feed.xml"), "w", encoding="utf-8") as f:
+        f.write(generate_feed(belt_games, recaps))
+
     print(f"Wrote {written} game pages to {games_dir}/")
     print(f"Wrote shared stylesheet to {OUT_DIR}/styles.css")
+    print(f"Wrote {OUT_DIR}/CNAME ({CUSTOM_DOMAIN})")
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
@@ -2748,6 +3003,8 @@ def main():
         print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
+    print(f"Wrote sitemap.xml ({len(sitemap_urls)} URLs), robots.txt, 404.html, and feed.xml "
+          f"({min(len([g for g in belt_games if g.get('outcome') == 'changed']), 30)} item(s)) to {OUT_DIR}/")
     if warnings:
         print(f"\n{len(warnings)} warning(s):")
         for w in warnings[:20]:

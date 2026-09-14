@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Write a short AI-generated preview (overview, key matchups, betting angles)
-for the belt holder's next scheduled game, using the Claude API.
+Write a short AI-generated preview (overview, key matchups, betting angles,
+and a predicted winner with a short write-up) for the belt holder's next
+scheduled game, using the Claude API. When belt_data/weather.json has a
+forecast for kickoff (fetch_weather.py, run earlier in the pipeline), it's
+folded into the prompt too, so the prediction can account for wind/rain/cold
+when it's relevant instead of ignoring conditions on the ground.
 
 Why a committed cache: the update pipeline can run more than once before
 the next game actually changes (a manual re-run, an unrelated commit, the
@@ -61,7 +65,24 @@ def form_line(team, games):
     return f"{team} last {len(games)}: " + "; ".join(bits)
 
 
-def build_prompt(next_game, matchup):
+def weather_line(weather):
+    if not weather or weather.get("temp_f") is None:
+        return None
+    bits = [f"{round(weather['temp_f'])}°F"]
+    if weather.get("feels_like_f") is not None:
+        bits.append(f"feels like {round(weather['feels_like_f'])}°F")
+    if weather.get("condition"):
+        bits.append(weather["condition"].lower())
+    if weather.get("wind_mph") is not None:
+        bits.append(f"wind {round(weather['wind_mph'])} mph")
+    if weather.get("precip_chance") is not None:
+        bits.append(f"{round(weather['precip_chance'])}% chance of precipitation")
+    where = weather.get("venue_name")
+    loc_bit = f" at {where}" if where else ""
+    return f"Kickoff forecast{loc_bit}: " + ", ".join(bits) + "."
+
+
+def build_prompt(next_game, matchup, weather=None):
     holder = next_game["team"]
     opponent = next_game["opponent"]
     if next_game.get("neutral"):
@@ -94,6 +115,9 @@ def build_prompt(next_game, matchup):
     else:
         h2h_line = f"{holder} and {opponent} have no recorded meetings in CFBD's data."
 
+    w_line = weather_line(weather)
+    weather_block = f"\n{w_line}" if w_line else ""
+
     return f'''You are writing a short preview for "The College Football Belt," a site that tracks a lineal championship belt that has passed hand to hand on the field since 1869 -- whoever last beat the holder holds the belt, no committee or poll involved. The belt itself is on the line in this game.
 
 Upcoming game: {holder} (current belt holder) {side} {opponent}, on {next_game['date']}.
@@ -101,12 +125,15 @@ Upcoming game: {holder} (current belt holder) {side} {opponent}, on {next_game['
 Stats:
 {holder_form}
 {opp_form}
-{h2h_line}
+{h2h_line}{weather_block}
 
 Write a JSON object with exactly these keys and nothing else:
   "overview": 2-3 sentences on the game and what's at stake for the belt. Plain prose, no markdown.
   "key_matchups": a list of 2-3 short strings, each a specific on-field matchup or storyline worth watching.
   "betting_angles": 2-3 sentences discussing betting-relevant trends (e.g. what recent form or the head-to-head history suggests). Frame this as analysis of the numbers, not a recommendation -- do not tell the reader what to bet or claim a pick is likely to hit.
+  "predicted_winner": the team name you'd pick to win -- exactly "{holder}" or "{opponent}", nothing else.
+  "predicted_score": your predicted final score as "{holder} X, {opponent} Y" (numbers you actually believe, not a hedge like "close game").
+  "prediction_writeup": 3-5 sentences explaining the pick -- ground it in the recent form, head-to-head history, and (when given above) the weather at kickoff if it plausibly affects the game (e.g. heavy wind/rain favoring a run-heavy or lower-scoring game). Plain prose, no markdown. This is an editorial call for fun, not betting advice -- don't phrase it as a recommendation to wager.
 
 Output ONLY the JSON object, no other text, no markdown code fence.'''
 
@@ -155,11 +182,15 @@ def parse_preview(text):
             "overview": (data.get("overview") or "").strip(),
             "key_matchups": [str(x).strip() for x in (data.get("key_matchups") or []) if str(x).strip()],
             "betting_angles": (data.get("betting_angles") or "").strip(),
+            "predicted_winner": (data.get("predicted_winner") or "").strip(),
+            "predicted_score": (data.get("predicted_score") or "").strip(),
+            "prediction_writeup": (data.get("prediction_writeup") or "").strip(),
         }
     except (json.JSONDecodeError, AttributeError):
         # Model didn't return clean JSON -- fall back to showing it as
         # plain prose rather than losing the generation entirely.
-        return {"overview": t, "key_matchups": [], "betting_angles": ""}
+        return {"overview": t, "key_matchups": [], "betting_angles": "",
+                "predicted_winner": "", "predicted_score": "", "prediction_writeup": ""}
 
 
 def main():
@@ -176,10 +207,16 @@ def main():
 
     key = cache_key(next_game)
     cached = load_json(CACHE_PATH)
-    if cached and cached.get("key") == key and cached.get("preview"):
+    cached_preview = (cached or {}).get("preview") or {}
+    # "prediction_writeup" not being a key at all (not just empty) means
+    # this cache entry predates the prediction feature -- regenerate once
+    # even though the matchup itself hasn't changed, so existing upcoming
+    # games pick up a prediction instead of waiting for the next matchup.
+    cache_is_current = "prediction_writeup" in cached_preview
+    if cached and cached.get("key") == key and cached_preview and cache_is_current:
         print(f"Cached AI preview already covers {key} -- reusing it (no API call).")
         with open(ai_preview_path, "w") as f:
-            json.dump(cached["preview"], f, indent=2)
+            json.dump(cached_preview, f, indent=2)
         return
 
     if not api_key:
@@ -192,7 +229,8 @@ def main():
         return
 
     matchup = load_json(os.path.join(OUT_DIR, "matchup_preview.json"))
-    prompt = build_prompt(next_game, matchup)
+    weather = load_json(os.path.join(OUT_DIR, "weather.json"))
+    prompt = build_prompt(next_game, matchup, weather)
 
     print(f"Generating a fresh AI preview for {key} (1 Claude API call, model {MODEL})...")
     try:

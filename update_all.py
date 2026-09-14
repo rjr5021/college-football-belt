@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 Run the full weekly-update pipeline in order: refetch the lineage, refresh
-team colors, refresh game box scores, build the next-game preview, generate
-AI recaps of settled games, rebuild the site, then render the share image.
-One command instead of nine.
+team colors, refresh game box scores, build the next-game preview (stats,
+forecast, and an AI prediction), generate AI recaps of settled games,
+rebuild the site, then render the share image. One command instead of ten.
 
 Usage:
     export CFBD_API_KEY=your_key_here        # required -- every CFBD step needs it
@@ -37,13 +37,25 @@ this is safe to point at an existing belt_data/ folder:
                                  form for both teams is mined for free out
                                  of games_raw.json from step 1. No-ops (no
                                  call) if there's no upcoming game.
-  6. generate_ai_preview.py  -- writes a short AI preview of the upcoming
-                                 game via the Claude API. OPTIONAL: skips
-                                 itself cleanly if ANTHROPIC_API_KEY isn't
-                                 set, or reuses its committed cache if nothing
-                                 about the upcoming game has changed since
-                                 the last real generation.
-  7. generate_recaps.py      -- writes an AI recap (highlighting the plays
+  6. fetch_weather.py        -- kickoff-hour forecast (temp, wind, precip,
+                                 sky condition) for the upcoming game, from
+                                 Open-Meteo -- free, no key, no signup. Venue
+                                 lat/lon comes for free out of step 1's own
+                                 /venues call. No-ops if there's no upcoming
+                                 game, no venue coordinates, or the game's
+                                 more than ~15 days out (outside Open-Meteo's
+                                 free forecast window).
+  7. generate_ai_preview.py  -- writes a short AI preview of the upcoming
+                                 game (overview, key matchups, betting
+                                 angles) plus a predicted winner/score and a
+                                 write-up, via the Claude API -- folding in
+                                 the forecast from step 6 when there is one.
+                                 OPTIONAL: skips itself cleanly if
+                                 ANTHROPIC_API_KEY isn't set, or reuses its
+                                 committed cache if nothing about the
+                                 upcoming game has changed since the last
+                                 real generation.
+  8. generate_recaps.py      -- writes an AI recap (highlighting the plays
                                  and drives that mattered) for every SETTLED
                                  belt game since 2003 that has a box score.
                                  OPTIONAL, same as generate_ai_preview.py --
@@ -54,9 +66,9 @@ this is safe to point at an existing belt_data/ folder:
                                  every historical belt game at once (~280+
                                  Claude calls) -- see README.md's "AI recaps"
                                  section for the one-time cost estimate.
-  8. build_site.py           -- no network calls; regenerates every page
+  9. build_site.py           -- no network calls; regenerates every page
                                  from whatever's now in belt_data/.
-  9. generate_share_image.py -- no network call, no API key; renders
+ 10. generate_share_image.py -- no network call, no API key; renders
                                  site/share.png (the Open Graph / Twitter
                                  Card image for the homepage) for whoever
                                  currently holds the belt, straight from
@@ -71,12 +83,13 @@ invocation (not exposed here) for a genuine from-scratch rebuild when you
 actually need one.
 
 Stops immediately if a CFBD stage fails (nonzero exit code), rather than
-building a site from a half-updated data set. generate_ai_preview.py and
-generate_recaps.py are the exception -- both are designed to never hand
-back a failure for anything short of a real bug, since the AI writing is a
-nice-to-have, not something the rest of the site depends on. Safe to just
-rerun the same command after fixing whatever failed -- every stage already
-knows how to resume/skip what it's already done.
+building a site from a half-updated data set. generate_ai_preview.py,
+generate_recaps.py, and fetch_weather.py are the exception -- all three are
+designed to never hand back a failure for anything short of a real bug,
+since AI writing and the forecast are both nice-to-haves, not something the
+rest of the site depends on. Safe to just rerun the same command after
+fixing whatever failed -- every stage already knows how to resume/skip
+what it's already done.
 """
 
 import os
@@ -90,7 +103,8 @@ STAGES = [
     ("fetch_game_details.py", "Refreshing box scores for belt games", "CFBD_API_KEY"),
     ("fetch_game_plays.py", "Refreshing play-by-play for belt games", "CFBD_API_KEY"),
     ("fetch_matchup_preview.py", "Building the next-game matchup stats", "CFBD_API_KEY"),
-    ("generate_ai_preview.py", "Writing the AI game preview (optional)", None),
+    ("fetch_weather.py", "Fetching the kickoff forecast", None),
+    ("generate_ai_preview.py", "Writing the AI game preview + prediction (optional)", None),
     ("generate_recaps.py", "Writing AI recaps of settled games (optional)", None),
     ("build_site.py", "Rebuilding the site", None),
     ("generate_share_image.py", "Rendering the social share image", None),

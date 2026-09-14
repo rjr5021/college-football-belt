@@ -175,7 +175,11 @@ def _get_tzfinder():
 
 
 def collect_venues(api_key):
-    """Map venue id -> IANA timezone name, e.g. 3713 -> 'America/New_York'.
+    """Map venue id -> IANA timezone name, e.g. 3713 -> 'America/New_York',
+    and a second map venue id -> {name, city, state, lat, lon} for whatever
+    coordinates CFBD has (used by fetch_weather.py for the upcoming game's
+    forecast -- no extra API call, same venues response this already pulls
+    for timezones).
 
     CFBD's own "timezone" field on a venue is usually null, so this derives
     the zone from the venue's latitude/longitude via `timezonefinder` when
@@ -191,22 +195,36 @@ def collect_venues(api_key):
 
     tf = _get_tzfinder()
     tz_by_venue = {}
+    venue_info = {}
     from_field = from_coords = unresolved = 0
     for v in raw:
         vid = pick(v, "id")
         if vid is None:
             continue
+        lat = pick(v, "latitude", "lat")
+        lng = pick(v, "longitude", "lng", "lon")
+        try:
+            lat_f = float(lat) if lat is not None else None
+            lng_f = float(lng) if lng is not None else None
+        except (TypeError, ValueError):
+            lat_f = lng_f = None
+        venue_info[vid] = {
+            "name": pick(v, "name"),
+            "city": pick(v, "city"),
+            "state": pick(v, "state"),
+            "lat": lat_f,
+            "lon": lng_f,
+        }
+
         tz = pick(v, "timezone", "time_zone")
         if tz:
             tz_by_venue[vid] = tz
             from_field += 1
             continue
-        lat = pick(v, "latitude", "lat")
-        lng = pick(v, "longitude", "lng", "lon")
         found = None
-        if tf is not None and lat is not None and lng is not None:
+        if tf is not None and lat_f is not None and lng_f is not None:
             try:
-                found = tf.timezone_at(lat=float(lat), lng=float(lng))
+                found = tf.timezone_at(lat=lat_f, lng=lng_f)
             except Exception:
                 found = None
         if found:
@@ -222,7 +240,7 @@ def collect_venues(api_key):
         print("  Install 'timezonefinder' (pip install timezonefinder) to "
               "derive timezones from venue coordinates -- most venues only "
               "have coordinates, not an explicit timezone.")
-    return tz_by_venue
+    return tz_by_venue, venue_info
 
 
 _ZONE_CACHE = {}
@@ -347,7 +365,7 @@ def normalize(raw, venue_tz=None):
     return out
 
 
-def find_upcoming_games(raw, holder, count=3, venue_tz=None):
+def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
     """The current holder's next `count` scheduled games, straight from
     this run's freshly-fetched season data -- CFBD returns the full season
     (including games it hasn't scored yet), and normalize() above throws
@@ -362,6 +380,7 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None):
     (soonest first); a season's schedule rarely has more than `count` games
     left to give anyway, but this never returns more than that."""
     venue_tz = venue_tz or {}
+    venue_info = venue_info or {}
     candidates = []
     for g in raw:
         home = pick(g, "home_team", "homeTeam")
@@ -388,31 +407,39 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None):
             "home": home,
             "away": away,
             "neutral": bool(pick(g, "neutral_site", "neutralSite", default=False)),
+            "venue_id": venue_id,
         })
     candidates.sort(key=lambda c: (c["date"], c["raw_date"]))
 
     upcoming = []
     for nxt in candidates[:count]:
         is_home = nxt["home"] == holder
+        v = venue_info.get(nxt["venue_id"]) or {}
         upcoming.append({
             "team": holder,
             "opponent": nxt["away"] if is_home else nxt["home"],
             "is_home": is_home,
             "neutral": nxt["neutral"],
             "date": nxt["date"],
+            "raw_date": nxt["raw_date"],   # UTC kickoff, e.g. 2026-09-19T19:30:00.000Z -- for fetch_weather.py
             "season": nxt["season"],
             "week": nxt["week"],
             "season_type": nxt["season_type"],
+            "venue_name": v.get("name"),
+            "venue_city": v.get("city"),
+            "venue_state": v.get("state"),
+            "venue_lat": v.get("lat"),
+            "venue_lon": v.get("lon"),
         })
     return upcoming
 
 
-def find_next_game(raw, holder, venue_tz=None):
+def find_next_game(raw, holder, venue_tz=None, venue_info=None):
     """The current holder's single next scheduled game, or None -- kept as
     its own function since fetch_matchup_preview.py and
     generate_ai_preview.py only ever care about the immediate next game,
     not the short lookahead find_upcoming_games gives "Belt Watch"."""
-    upcoming = find_upcoming_games(raw, holder, count=1, venue_tz=venue_tz)
+    upcoming = find_upcoming_games(raw, holder, count=1, venue_tz=venue_tz, venue_info=venue_info)
     return upcoming[0] if upcoming else None
 
 
@@ -646,7 +673,7 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
 
     print("Fetching venue timezones from CFBD...")
-    venue_tz = collect_venues(args.key)
+    venue_tz, venue_info = collect_venues(args.key)
 
     baseline = None if args.full_refetch else load_baseline()
     live_start_year = args.end_year - 1
@@ -689,7 +716,7 @@ def main():
     current = reigns[-1]
     teams = len({r["team"] for r in reigns})
 
-    upcoming_games = find_upcoming_games(raw, current["team"], count=3, venue_tz=venue_tz)
+    upcoming_games = find_upcoming_games(raw, current["team"], count=3, venue_tz=venue_tz, venue_info=venue_info)
     next_game = upcoming_games[0] if upcoming_games else None
     with open(os.path.join(OUT_DIR, "next_game.json"), "w") as f:
         json.dump(next_game, f, indent=2)

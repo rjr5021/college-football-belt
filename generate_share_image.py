@@ -2,10 +2,13 @@
 """
 Render a static 1200x630 social-share image (Open Graph / Twitter Card
 size) for whoever currently holds the College Football Belt -- team color
-background, the holder's name, and how long they've held it.
+background, the holder's name, and how long they've held it. Also renders
+the site's favicon (site/favicon.png + apple-touch-icon.png) in the same
+team colors -- a small belt-buckle glyph, not a photo, so it stays legible
+down to 16x16.
 
 Usage:
-    python3 generate_share_image.py          # reads belt_data/, writes site/share.png
+    python3 generate_share_image.py          # reads belt_data/, writes site/share.png + favicons
 
 No API key, no network call, no headless browser -- just belt_data/lineage.json
 + belt_data/team_colors.json (both already on disk after build_lineage.py and
@@ -157,6 +160,40 @@ def draw_tracked_text(draw, xy, text, font, fill, tracking=0):
         x += w + tracking
 
 
+def draw_belt_icon(size, primary, accent, ink):
+    """A tiny belt-and-buckle glyph: solid background in the holder's
+    primary color, a horizontal "strap" band in the accent color, and an
+    outlined "buckle" rectangle in the middle -- legible even at 16x16."""
+    from PIL import Image, ImageDraw
+    img = Image.new("RGB", (size, size), hex_to_rgb(primary))
+    draw = ImageDraw.Draw(img)
+
+    strap_h = round(size * 0.34)
+    strap_y0 = (size - strap_h) // 2
+    strap_y1 = strap_y0 + strap_h
+    draw.rectangle([0, strap_y0, size, strap_y1], fill=hex_to_rgb(accent))
+
+    buckle_w = round(size * 0.30)
+    buckle_h = strap_h + round(size * 0.10)
+    bx0 = (size - buckle_w) // 2
+    by0 = (size - buckle_h) // 2
+    draw.rectangle([bx0, by0, bx0 + buckle_w, by0 + buckle_h],
+                    outline=hex_to_rgb(ink), width=max(2, round(size * 0.035)))
+    return img
+
+
+def generate_favicon(primary, accent, ink):
+    """Writes site/favicon.png (32x32, referenced as the tab icon on every
+    page) and site/apple-touch-icon.png (180x180, for iOS home-screen
+    bookmarks) -- same belt-buckle glyph, two sizes."""
+    favicon = draw_belt_icon(32, primary, accent, ink)
+    favicon.save(os.path.join(OUT_DIR, "favicon.png"), "PNG")
+    touch_icon = draw_belt_icon(180, primary, accent, ink)
+    touch_icon.save(os.path.join(OUT_DIR, "apple-touch-icon.png"), "PNG")
+    print(f"Wrote {OUT_DIR}/favicon.png (32x32) and "
+          f"{OUT_DIR}/apple-touch-icon.png (180x180)")
+
+
 def main():
     from PIL import Image, ImageDraw
 
@@ -222,6 +259,8 @@ def main():
 
     img.save(OUT_PATH, "PNG")
     print(f"Wrote {OUT_PATH} ({W}x{H}) for {holder}")
+
+    generate_favicon(primary, accent, ink)
 
 
 if __name__ == "__main__":
