@@ -1240,6 +1240,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../records.html">Records</a>
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -1390,6 +1391,7 @@ def generate_on_this_day_page(belt_games):
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -1689,6 +1691,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -1845,6 +1848,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -2016,6 +2020,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -2191,6 +2196,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>'''
@@ -2488,6 +2494,7 @@ def generate_ruleset_page(md_text):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -2648,6 +2655,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="all-games.html">All Games</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -2775,6 +2783,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../index.html">Home</a>
       <a href="../lineage.html">Full History</a>
       <a href="../records.html">Records</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -2992,6 +3001,7 @@ def generate_map_page(lineage, colors):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
@@ -3054,6 +3064,7 @@ def generate_404_page():
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>
