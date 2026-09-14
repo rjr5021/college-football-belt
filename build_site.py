@@ -31,8 +31,9 @@ import os
 import re
 import sys
 from collections import Counter
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from email.utils import format_datetime
+from urllib.parse import quote, urlencode
 
 OUT_DIR = "site"
 DATA_DIR = "belt_data"
@@ -606,6 +607,58 @@ details.moreStats .statCategory{ margin-top:18px; }
 .predictionCall{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:23px; margin:0 0 10px; color:var(--brass); }
 .predictionBody{ margin-top:4px; }
 
+/* ---------- add to calendar ---------- */
+.calendarLinks{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 26px; }
+.calBtn{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.02em;
+  padding:9px 14px; border:1px solid var(--hairline); border-radius:6px;
+  background:var(--paper-2); color:var(--ink); text-decoration:none; white-space:nowrap;
+}
+.calBtn:hover{ border-color:var(--brass); color:var(--brass-bright); }
+
+/* ---------- email alerts (homepage) ---------- */
+.feedUrlBox{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; padding:14px 18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; }
+.feedUrlText{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; word-break:break-all; color:var(--ink-soft); }
+
+/* ---------- compare tool ---------- */
+.compareForm{ display:flex; align-items:center; gap:14px; margin:18px 0 30px; flex-wrap:wrap; }
+.compareForm select{
+  font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:17px;
+  padding:10px 14px; border:1px solid var(--hairline); border-radius:6px;
+  background:var(--paper-2); color:var(--ink); min-width:200px; max-width:100%;
+}
+.compareVs{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
+.compareStats{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:0 0 30px; }
+@media (max-width:700px){ .compareStats{ grid-template-columns:1fr; } }
+.compareStatCard{ padding:18px 20px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; }
+.compareStatCard h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+.compareStatRow{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--hairline); font-size:13.5px; }
+.compareStatRow:last-child{ border-bottom:none; }
+.compareStatRow .val{ font-family:"IBM Plex Mono",monospace; font-weight:600; }
+.compareGamesHead{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:36px 0 4px; }
+.compareRecord{ font-size:13.5px; color:var(--ink-soft); margin:0 0 16px; }
+.compareGameRow{ display:flex; align-items:center; gap:14px; padding:11px 4px; border-bottom:1px solid var(--hairline); text-decoration:none; color:inherit; font-size:13.5px; }
+.compareGameRow:last-child{ border-bottom:none; }
+.compareGameRow:hover .compareMatchup{ text-decoration:underline; text-decoration-color:var(--brass); }
+.compareGameDate{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; width:88px; flex:none; }
+.compareMatchup{ flex:1; min-width:0; }
+.compareScore{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; }
+.compareEmpty{ color:var(--ink-soft); font-size:13.5px; padding:16px 0; }
+
+/* ---------- embed page ---------- */
+.embedPreview{ display:flex; align-items:center; gap:14px; margin:20px 0 28px; padding:18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; flex-wrap:wrap; }
+.embedLabel{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:24px 0 8px; }
+.embedCode{ width:100%; box-sizing:border-box; font-family:"IBM Plex Mono",monospace; font-size:12.5px; padding:12px 14px; border:1px solid var(--hairline); border-radius:6px; background:var(--paper-2); color:var(--ink); resize:vertical; }
+
+/* ---------- map journey scrubber ---------- */
+.journeyBar{ display:flex; align-items:center; gap:10px; margin:16px 0 4px; flex-wrap:wrap; }
+.journeyBtn{ font-family:"IBM Plex Mono",monospace; font-size:12px; border:1px solid var(--hairline); background:var(--paper-2); color:var(--ink); border-radius:6px; padding:7px 13px; cursor:pointer; }
+.journeyBtn:hover{ border-color:var(--brass); }
+.journeySlider{ flex:1; min-width:140px; accent-color:var(--brass); }
+.journeyLabel{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); min-width:220px; }
+.mapWrap.journeyMode .mapState:not(.mapState--active){ opacity:.25; }
+.mapState--active{ fill:var(--brass-bright) !important; stroke:var(--ink) !important; stroke-width:2 !important; }
+
 footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-top:52px; font-size:12.5px; color:var(--ink-soft); }
 .footRow{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
 .footRow nav{ display:flex; gap:16px; font-family:"IBM Plex Mono",monospace; }
@@ -877,6 +930,115 @@ STYLES_VERSION = hashlib.sha256(STYLES_CSS.encode("utf-8")).hexdigest()[:10]
 
 def esc(s):
     return html.escape(str(s), quote=True)
+
+
+def json_ld(data):
+    """A <script type="application/ld+json"> block for one schema.org
+    object -- ensure_ascii=False keeps team names/accents readable in view-
+    source instead of \\uXXXX escapes; safe inside HTML since JSON has no
+    </script>-closing sequence risk here (no user-authored strings contain
+    raw "<" this site doesn't already esc() elsewhere)."""
+    return f'<script type="application/ld+json">{json.dumps(data, ensure_ascii=False)}</script>'
+
+
+def game_json_ld(g, home, away, home_score, away_score):
+    """SportsEvent structured data for one belt game -- lets search engines
+    understand the page as a specific sporting event instead of just prose.
+    No eventStatus claim (schema.org's EventStatusType has no "completed"
+    value, only scheduled/postponed/etc., so asserting one here would be
+    inventing a fact), no venue (not tracked for historical games -- only
+    the upcoming game has one, see fetch_weather.py)."""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        "name": f"{away} at {home}",
+        "startDate": g["date"],
+        "sport": "American Football",
+        "homeTeam": {"@type": "SportsTeam", "name": home},
+        "awayTeam": {"@type": "SportsTeam", "name": away},
+        "description": (f"{home} {home_score}, {away} {away_score} \u2014 Belt Game "
+                         f"{g['game_number']} of the lineal College Football Belt, since 1869."),
+        "url": f"{SITE_URL}/games/{g['game_id']}.html",
+    }
+    return json_ld(data)
+
+
+def team_json_ld(team):
+    data = {
+        "@context": "https://schema.org",
+        "@type": "SportsTeam",
+        "name": team,
+        "sport": "American Football",
+        "url": f"{SITE_URL}/teams/{team_slug(team)}.html",
+    }
+    return json_ld(data)
+
+
+def ics_escape(text):
+    """RFC 5545 TEXT escaping for one field of a .ics VEVENT."""
+    return (text.replace("\\", "\\\\").replace(",", "\\,")
+                .replace(";", "\\;").replace("\n", "\\n"))
+
+
+def build_calendar_links(next_game):
+    """'Add to Calendar' row for the preview page -- a Google Calendar link
+    plus a downloadable .ics (Apple Calendar/Outlook/everything else),
+    built entirely server-side from next_game's UTC kickoff (raw_date) and
+    venue fields already captured by build_lineage.py's find_next_game() --
+    no JS, no extra API call. Returns "" when there's no usable kickoff
+    timestamp (raw_date missing/unparseable)."""
+    raw = next_game.get("raw_date")
+    if not raw:
+        return ""
+    try:
+        start = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return ""
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    end = start + timedelta(hours=3, minutes=30)  # typical broadcast window
+
+    def fmt(dt):
+        return dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+    holder, opponent = next_game["team"], next_game["opponent"]
+    if next_game.get("neutral"):
+        title = f"{holder} vs. {opponent} \u2014 belt on the line"
+    elif next_game.get("is_home"):
+        title = f"{opponent} at {holder} \u2014 belt on the line"
+    else:
+        title = f"{holder} at {opponent} \u2014 belt on the line"
+
+    loc_bits = [b for b in (next_game.get("venue_name"), next_game.get("venue_city"),
+                             next_game.get("venue_state")) if b]
+    location = ", ".join(loc_bits)
+    details = (f"The College Football Belt is on the line: {holder} defends against "
+               f"{opponent}. Full preview: {SITE_URL}/preview.html")
+
+    gcal_url = "https://www.google.com/calendar/render?" + urlencode({
+        "action": "TEMPLATE", "text": title, "dates": f"{fmt(start)}/{fmt(end)}",
+        "details": details, "location": location,
+    })
+
+    ics_lines = [
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//College Football Belt//collegefootballbelt.com//EN",
+        "BEGIN:VEVENT",
+        f"UID:{fmt(start)}-{team_slug(holder)}-{team_slug(opponent)}@collegefootballbelt.com",
+        f"DTSTAMP:{fmt(datetime.now(timezone.utc))}",
+        f"DTSTART:{fmt(start)}", f"DTEND:{fmt(end)}",
+        f"SUMMARY:{ics_escape(title)}",
+        f"DESCRIPTION:{ics_escape(details)}",
+    ]
+    if location:
+        ics_lines.append(f"LOCATION:{ics_escape(location)}")
+    ics_lines += ["END:VEVENT", "END:VCALENDAR"]
+    ics_data_uri = "data:text/calendar;charset=utf8," + quote("\r\n".join(ics_lines))
+
+    return f'''
+  <div class="calendarLinks">
+    <a class="calBtn" href="{esc(gcal_url)}" target="_blank" rel="noopener">+ Google Calendar</a>
+    <a class="calBtn" href="{ics_data_uri}" download="belt-game-{team_slug(holder)}-vs-{team_slug(opponent)}.ics">&darr; Download .ics (Apple / Outlook)</a>
+  </div>'''
 
 
 # ---------------------------------------------------------------- headline
@@ -1171,6 +1333,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 <title>{title}</title>
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
+{game_json_ld(g, home, away, home_score, away_score)}
 <style>
   :root{{
     --home:{home_primary}; --home-ink:{home_ink}; --home-accent:{home_accent};
@@ -1192,6 +1355,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../records.html">Records</a>
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
+      <a href="../compare.html">Compare</a>
     </nav>
   </div>
   <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
@@ -1240,6 +1404,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../records.html">Records</a>
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
+      <a href="../embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1358,6 +1523,7 @@ def generate_on_this_day_page(belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
     </nav>
   </div>
 </header>
@@ -1391,6 +1557,7 @@ def generate_on_this_day_page(belt_games):
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1591,6 +1758,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
       <a href="#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1679,6 +1847,22 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
     </div>
   </section>
 
+  <section id="alerts">
+    <div class="sectionHead">
+      <span class="tag">Stay Posted</span>
+      <span class="rule"></span>
+      <h2>Get belt changes by email</h2>
+    </div>
+    <p class="lede">Every time the belt changes hands it hits the feed below the moment the
+      site rebuilds. Paste that link into a free reader like
+      <a href="https://blogtrottr.com/" target="_blank" rel="noopener">Blogtrottr</a> and it&rsquo;ll
+      email you when it happens &mdash; nothing to sign up for here, no account needed on this end.</p>
+    <div class="feedUrlBox">
+      <code class="feedUrlText">{SITE_URL}/feed.xml</code>
+      <a class="calBtn" href="feed.xml">View Feed</a>
+    </div>
+  </section>
+
 </main>
 
 <footer class="wrap">
@@ -1691,6 +1875,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1789,6 +1974,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1848,6 +2034,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1965,6 +2152,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -2020,6 +2208,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2177,6 +2366,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
     </nav>'''
     header = f'''<header class="site wrap">
   <div class="headerRow">
@@ -2196,6 +2386,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2288,6 +2479,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
     National Problem Gambling Helpline is 1-800-522-4700.</p>'''
 
     weather_html = render_weather(weather)
+    calendar_html = build_calendar_links(next_game)
 
     return f'''<meta charset="UTF-8">
 <title>{title} Preview — The College Football Belt</title>
@@ -2317,6 +2509,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
     }} catch (e) {{}}
   }})();
   </script>
+{calendar_html}
 {weather_html}
   <div class="sectionHead withTag">
     <span class="tag">Recent Form</span>
@@ -2473,6 +2666,7 @@ def generate_ruleset_page(md_text):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -2494,6 +2688,7 @@ def generate_ruleset_page(md_text):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2632,6 +2827,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="all-games.html">All Games</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
     </nav>
   </div>
 </header>
@@ -2655,6 +2851,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="all-games.html">All Games</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2743,6 +2940,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
 <title>{esc(team)} — The College Football Belt</title>
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
+{team_json_ld(team)}
 <style>
   :root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}
 </style>
@@ -2756,6 +2954,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../records.html">Records</a>
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
+      <a href="../compare.html">Compare</a>
     </nav>
   </div>
 </header>
@@ -2783,6 +2982,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../index.html">Home</a>
       <a href="../lineage.html">Full History</a>
       <a href="../records.html">Records</a>
+      <a href="../embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2911,6 +3111,24 @@ def _team_bits(teams):
         for name, t in sorted(teams.items(), key=lambda kv: -kv[1]["count"]))
 
 
+def build_belt_journey(lineage, colors):
+    """Every reign that has a resolvable state, in chronological order, as
+    {abbr, team, start, end, ongoing} -- the same state field
+    build_state_belt_history tallies, just kept as a sequence instead of a
+    running total. Feeds the map page's animated scrubber."""
+    today_iso = date.today().isoformat()
+    timeline = []
+    for r in lineage["reigns"]:
+        abbr = (colors.get(r["team"]) or {}).get("state")
+        if not abbr:
+            continue
+        timeline.append({
+            "abbr": abbr, "team": r["team"], "start": r["start_date"],
+            "end": r.get("end_date") or today_iso, "ongoing": r.get("end_date") is None,
+        })
+    return timeline
+
+
 def generate_map_page(lineage, colors):
     """A US map shaded by how many belt reigns have started in each state
     -- every figure computed straight from lineage.json + team_colors.json,
@@ -2922,6 +3140,7 @@ def generate_map_page(lineage, colors):
     paths, (vb_w, vb_h) = build_state_paths(shapes)
     by_state = build_state_belt_history(lineage, colors)
     max_reigns = max((v["reigns"] for v in by_state.values()), default=0)
+    journey = build_belt_journey(lineage, colors)
 
     def tint_class(n):
         if n == 0 or max_reigns == 0:
@@ -2941,7 +3160,8 @@ def generate_map_page(lineage, colors):
         title = esc(info["name"])
         if st:
             title += f": {_team_bits(st['teams'])}"
-        path_svg.append(f'<path class="mapState{tint_class(n)}" d="{info["d"]}"><title>{title}</title></path>')
+        path_svg.append(f'<path class="mapState{tint_class(n)}" data-abbr="{abbr}" '
+                         f'd="{info["d"]}"><title>{title}</title></path>')
 
     legend_rows = ""
     for abbr, st in sorted(by_state.items(), key=lambda kv: -kv[1]["reigns"]):
@@ -2973,6 +3193,7 @@ def generate_map_page(lineage, colors):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="compare.html">Compare</a>
     </nav>
   </div>
 </header>
@@ -2983,10 +3204,88 @@ def generate_map_page(lineage, colors):
     a College Football Belt holder since 1869. Shading shows how many separate reigns
     started there &mdash; darker means more; hover a state (or check the list below) for who.</p>
 
-  <div class="mapWrap">
+  <div class="mapWrap" id="mapWrap">
     <svg class="mapSvg" viewBox="0 0 {vb_w:.0f} {vb_h:.0f}" role="img" aria-label="Map of US states that have held the College Football Belt">{"".join(path_svg)}
     </svg>
   </div>
+
+  <div class="journeyBar">
+    <button class="journeyBtn" id="journeyPrev" type="button" aria-label="Previous reign">&larr;</button>
+    <button class="journeyBtn" id="journeyPlay" type="button">&#9654; Play the Belt&rsquo;s Journey</button>
+    <button class="journeyBtn" id="journeyNext" type="button" aria-label="Next reign">&rarr;</button>
+    <input class="journeySlider" id="journeySlider" type="range" min="0" value="0" aria-label="Reign in belt history">
+    <span class="journeyLabel" id="journeyLabel"></span>
+  </div>
+  <script type="application/json" id="beltJourneyData">{json.dumps(journey, ensure_ascii=False)}</script>
+  <script>
+  (function(){{
+    var dataEl = document.getElementById('beltJourneyData');
+    if (!dataEl) return;
+    var timeline;
+    try {{ timeline = JSON.parse(dataEl.textContent); }} catch (e) {{ return; }}
+    if (!timeline.length) return;
+
+    var mapWrap = document.getElementById('mapWrap');
+    var slider = document.getElementById('journeySlider');
+    var label = document.getElementById('journeyLabel');
+    var playBtn = document.getElementById('journeyPlay');
+    var prevBtn = document.getElementById('journeyPrev');
+    var nextBtn = document.getElementById('journeyNext');
+    var pathsByAbbr = {{}};
+    Array.prototype.slice.call(document.querySelectorAll('.mapSvg path[data-abbr]')).forEach(function(p){{
+      var a = p.getAttribute('data-abbr');
+      (pathsByAbbr[a] = pathsByAbbr[a] || []).push(p);
+    }});
+
+    slider.max = String(timeline.length - 1);
+    var timer = null;
+    var active = false;
+
+    function fmtDate(iso) {{
+      var d = new Date(iso + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString(undefined, {{ year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }});
+    }}
+
+    function render(idx) {{
+      var r = timeline[idx];
+      if (!active) {{
+        active = true;
+        mapWrap.classList.add('journeyMode');
+      }}
+      Array.prototype.slice.call(mapWrap.querySelectorAll('.mapState--active')).forEach(function(p){{
+        p.classList.remove('mapState--active');
+      }});
+      (pathsByAbbr[r.abbr] || []).forEach(function(p){{ p.classList.add('mapState--active'); }});
+      var range = r.ongoing ? (fmtDate(r.start) + ' — present') : (fmtDate(r.start) + ' – ' + fmtDate(r.end));
+      label.textContent = r.team + ' · ' + range;
+      slider.value = String(idx);
+    }}
+
+    function stop() {{
+      if (timer) {{ clearInterval(timer); timer = null; }}
+      playBtn.innerHTML = '&#9654; Play the Belt&rsquo;s Journey';
+    }}
+
+    function step(delta) {{
+      var next = Math.min(timeline.length - 1, Math.max(0, parseInt(slider.value, 10) + delta));
+      render(next);
+      if (next === timeline.length - 1 || next === 0) stop();
+    }}
+
+    slider.addEventListener('input', function(){{ stop(); render(parseInt(slider.value, 10)); }});
+    prevBtn.addEventListener('click', function(){{ stop(); step(-1); }});
+    nextBtn.addEventListener('click', function(){{ stop(); step(1); }});
+    playBtn.addEventListener('click', function(){{
+      if (timer) {{ stop(); return; }}
+      if (parseInt(slider.value, 10) >= timeline.length - 1) render(0);
+      playBtn.innerHTML = '&#10074;&#10074; Pause';
+      timer = setInterval(function(){{ step(1); }}, 650);
+    }});
+
+    label.textContent = timeline.length + ' reigns · drag the slider or press play';
+  }})();
+  </script>
 
   <div class="mapLegend">{legend_rows}
   </div>
@@ -3001,6 +3300,294 @@ def generate_map_page(lineage, colors):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
+      <a href="embed.html">Embed</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+# --------------------------------------------------------- badge / embed / compare
+
+def generate_badge_svg(lineage, colors):
+    """A tiny embeddable SVG badge naming the current belt holder --
+    regenerated fresh on every pipeline run, so a fan site's plain <img>
+    tag always shows who holds the belt right now with zero work (and zero
+    API calls) on their end. Shields.io-style two-tone pill."""
+    holder = lineage["reigns"][-1]["team"]
+    primary, alt = team_color(colors, holder)
+    ink, accent = panel_colors(primary, alt)
+    label, value = "COLLEGE FOOTBALL BELT", holder.upper()
+    label_w = 148
+    value_w = max(84, 20 + len(value) * 7)
+    total_w = label_w + value_w
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{total_w}" height="24" \
+role="img" aria-label="College Football Belt: {esc(holder)}">
+  <linearGradient id="sheen" x2="0" y2="100%">
+    <stop offset="0" stop-color="#fff" stop-opacity=".09"/>
+    <stop offset="1" stop-opacity=".09"/>
+  </linearGradient>
+  <clipPath id="round"><rect width="{total_w}" height="24" rx="4" fill="#fff"/></clipPath>
+  <g clip-path="url(#round)">
+    <rect width="{label_w}" height="24" fill="#211a12"/>
+    <rect x="{label_w}" width="{value_w}" height="24" fill="{primary}"/>
+    <rect width="{total_w}" height="24" fill="url(#sheen)"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
+    <text x="{label_w / 2:.0f}" y="16" fill="#e7e2d5">{esc(label)}</text>
+    <text x="{label_w + value_w / 2:.0f}" y="16" fill="{ink}" font-weight="bold">{esc(value)}</text>
+  </g>
+</svg>'''
+
+
+def generate_embed_page(lineage, colors):
+    """A page for other sites to grab a copy-pasteable 'current belt
+    holder' badge -- plain HTML and Markdown snippets in read-only text
+    boxes (select-all-and-copy; no clipboard JS/permissions needed). Free
+    backlinks/exposure for the site at essentially no build cost, since
+    it's just serving badge.svg, which build_site.py already regenerates
+    every run."""
+    holder = lineage["reigns"][-1]["team"]
+    html_snippet = (f'<a href="{SITE_URL}/"><img src="{SITE_URL}/badge.svg" '
+                     f'alt="College Football Belt: current holder"></a>')
+    md_snippet = f'[![College Football Belt]({SITE_URL}/badge.svg)]({SITE_URL}/)'
+
+    return f'''<meta charset="UTF-8">
+<title>Embed — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Embed the Belt</h1>
+  <p class="lede">Run a fan site, blog, or forum signature? Drop this badge in and it&rsquo;ll always
+    show who currently holds the belt &mdash; it&rsquo;s a live image, regenerated every time the
+    site updates, so there&rsquo;s nothing to keep in sync yourself.</p>
+
+  <div class="embedPreview">
+    <img src="badge.svg" alt="College Football Belt: {esc(holder)}" width="232" height="24">
+  </div>
+
+  <p class="embedLabel">HTML</p>
+  <textarea class="embedCode" rows="2" readonly onclick="this.select()">{esc(html_snippet)}</textarea>
+
+  <p class="embedLabel">Markdown</p>
+  <textarea class="embedCode" rows="2" readonly onclick="this.select()">{esc(md_snippet)}</textarea>
+
+  <p class="embedLabel">Direct badge URL</p>
+  <textarea class="embedCode" rows="1" readonly onclick="this.select()">{SITE_URL}/badge.svg</textarea>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>The badge is a plain SVG, rebuilt from live data on every deploy &mdash; no tracking, no script tag required.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="compare.html">Compare</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_compare_page(lineage, colors, belt_games):
+    """Pick any two teams that have ever held the belt and see their combined
+    belt-era stats plus every belt game the two have played against each
+    other -- entirely client-side against one embedded JSON blob (same
+    order of magnitude as what all-games.html already renders server-side
+    as HTML rows), so no new data file or API call. Scoped deliberately to
+    BELT games specifically, not a true all-time series (CFBD's full
+    non-belt head-to-head is only ever fetched for the one upcoming
+    opponent, by fetch_matchup_preview.py -- not for arbitrary pairs)."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    current_holder = reigns[-1]["team"]
+
+    by_team = {}
+    for r in reigns:
+        by_team.setdefault(r["team"], []).append(r)
+
+    team_stats = {}
+    for team, team_reigns in by_team.items():
+        team_stats[team] = {
+            "reigns": len(team_reigns),
+            "days": sum(reign_duration_days(r, today) for r in team_reigns),
+            "defenses": sum(r.get("defenses", 0) for r in team_reigns),
+            "slug": team_slug(team),
+        }
+
+    games_payload = []
+    for g in belt_games:
+        home, away = g["home"], g["away"]
+        try:
+            hs, aws = (int(x) for x in g["score"].split("-"))
+        except (KeyError, ValueError):
+            continue
+        games_payload.append({
+            "id": g["game_id"], "date": g["date"], "home": home, "away": away,
+            "hs": hs, "as": aws,
+        })
+
+    teams_sorted = sorted(by_team.keys())
+    default_b = None
+    if len(reigns) >= 2:
+        prev_team = reigns[-2]["team"]
+        if prev_team != current_holder:
+            default_b = prev_team
+    if default_b is None:
+        default_b = next((t for t in teams_sorted if t != current_holder), current_holder)
+
+    payload = json.dumps({
+        "teams": teams_sorted, "stats": team_stats, "games": games_payload,
+    }, ensure_ascii=False)
+
+    options_html = "".join(f'<option value="{esc(t)}">{esc(t)}</option>' for t in teams_sorted)
+
+    return f'''<meta charset="UTF-8">
+<title>Compare Teams — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Compare Two Belt Holders</h1>
+  <p class="lede">Pick any two programs that have ever held the belt &mdash; see their combined
+    reign stats and every belt game the two have played against each other. This is BELT
+    games specifically, not a full all-time series.</p>
+
+  <div class="compareForm">
+    <select id="compareA" aria-label="First team">{options_html}</select>
+    <span class="compareVs">vs.</span>
+    <select id="compareB" aria-label="Second team">{options_html}</select>
+  </div>
+
+  <div class="compareStats" id="compareStats"></div>
+  <div class="compareGamesHead" id="compareGamesHead"></div>
+  <p class="compareRecord" id="compareRecord"></p>
+  <div id="compareGames"></div>
+
+  <script type="application/json" id="compareData">{payload}</script>
+  <script>
+  (function(){{
+    var dataEl = document.getElementById('compareData');
+    var data = JSON.parse(dataEl.textContent);
+    var selA = document.getElementById('compareA');
+    var selB = document.getElementById('compareB');
+    var statsEl = document.getElementById('compareStats');
+    var headEl = document.getElementById('compareGamesHead');
+    var recordEl = document.getElementById('compareRecord');
+    var gamesEl = document.getElementById('compareGames');
+
+    function slugUrl(team) {{
+      var s = (data.stats[team] || {{}}).slug;
+      return s ? 'teams/' + s + '.html' : '#';
+    }}
+
+    function statCard(team) {{
+      var s = data.stats[team] || {{ reigns: 0, days: 0, defenses: 0 }};
+      return '<div class="compareStatCard"><h3><a href="' + slugUrl(team) + '">' + team + '</a></h3>' +
+        '<div class="compareStatRow"><span>Reigns</span><span class="val">' + s.reigns + '</span></div>' +
+        '<div class="compareStatRow"><span>Total Days Held</span><span class="val">' + s.days.toLocaleString() + '</span></div>' +
+        '<div class="compareStatRow"><span>Total Defenses</span><span class="val">' + s.defenses + '</span></div></div>';
+    }}
+
+    function fmtDate(iso) {{
+      var d = new Date(iso + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString(undefined, {{ year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }});
+    }}
+
+    function render() {{
+      var a = selA.value, b = selB.value;
+      statsEl.innerHTML = statCard(a) + statCard(b);
+      if (a === b) {{
+        headEl.textContent = '';
+        recordEl.textContent = 'Pick two different teams to see the belt games between them.';
+        gamesEl.innerHTML = '';
+        return;
+      }}
+      var matches = data.games.filter(function(g){{
+        return (g.home === a && g.away === b) || (g.home === b && g.away === a);
+      }}).sort(function(x, y){{ return x.date < y.date ? -1 : 1; }});
+
+      headEl.textContent = 'Belt Games: ' + a + ' vs. ' + b;
+      if (!matches.length) {{
+        recordEl.textContent = 'These two have never met with the belt on the line.';
+        gamesEl.innerHTML = '';
+        return;
+      }}
+      var winsA = 0, winsB = 0, ties = 0;
+      var rows = matches.map(function(g){{
+        var homeIsA = g.home === a;
+        var winner = g.hs === g.as ? null : (g.hs > g.as ? g.home : g.away);
+        if (winner === a) winsA++; else if (winner === b) winsB++; else ties++;
+        return '<a class="compareGameRow" href="games/' + g.id + '.html">' +
+          '<span class="compareGameDate mono">' + fmtDate(g.date) + '</span>' +
+          '<span class="compareMatchup">' + g.away + ' at ' + g.home + '</span>' +
+          '<span class="compareScore">' + g.hs + '–' + g.as + '</span></a>';
+      }});
+      var recordTxt = a + ' ' + winsA + ', ' + b + ' ' + winsB;
+      if (ties) recordTxt += ', ' + ties + ' tie' + (ties !== 1 ? 's' : '');
+      recordEl.textContent = matches.length + ' belt game' + (matches.length !== 1 ? 's' : '') + ' — ' + recordTxt;
+      gamesEl.innerHTML = rows.join('');
+    }}
+
+    selA.value = {json.dumps(current_holder)};
+    selB.value = {json.dumps(default_b)};
+    selA.addEventListener('change', render);
+    selB.addEventListener('change', render);
+    render();
+  }})();
+  </script>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Belt-game results only &mdash; computed straight from belt_data/lineage.json, no extra API call.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3038,6 +3625,7 @@ def generate_404_page():
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
     </nav>'''
     return f'''<meta charset="UTF-8">
 <title>Page Not Found — The College Football Belt</title>
@@ -3064,6 +3652,7 @@ def generate_404_page():
       <a href="index.html">Home</a>
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
+      <a href="embed.html">Embed</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3202,9 +3791,22 @@ def main():
         warnings.append(f"{RULESET_MD_PATH} not found -- skipped ruleset.html "
                          f"(run this from the project folder, where that file lives)")
 
+    badge_svg = generate_badge_svg(lineage, colors)
+    with open(os.path.join(OUT_DIR, "badge.svg"), "w", encoding="utf-8") as f:
+        f.write(badge_svg)
+
+    embed_html = generate_embed_page(lineage, colors)
+    with open(os.path.join(OUT_DIR, "embed.html"), "w", encoding="utf-8") as f:
+        f.write(embed_html)
+
+    compare_html = generate_compare_page(lineage, colors, belt_games)
+    with open(os.path.join(OUT_DIR, "compare.html"), "w", encoding="utf-8") as f:
+        f.write(compare_html)
+
     sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
                      f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html",
-                     f"{SITE_URL}/on-this-day.html"]
+                     f"{SITE_URL}/on-this-day.html", f"{SITE_URL}/embed.html",
+                     f"{SITE_URL}/compare.html"]
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -3238,6 +3840,7 @@ def main():
         print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
+    print(f"Wrote badge.svg, embed.html, and compare.html to {OUT_DIR}/")
     print(f"Wrote sitemap.xml ({len(sitemap_urls)} URLs), robots.txt, 404.html, and feed.xml "
           f"({min(len([g for g in belt_games if g.get('outcome') == 'changed']), 30)} item(s)) to {OUT_DIR}/")
     if warnings:
