@@ -88,7 +88,7 @@ GOOGLE_SITE_VERIFICATION = ""
 # 3. Ad placement itself (which pages, how many, where on the page) is
 #    configured from the AdSense dashboard under Auto ads -- not here --
 #    once the script above is live on the site.
-ADSENSE_PUBLISHER_ID = ""
+ADSENSE_PUBLISHER_ID = "pub-4807241949046212"
 
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
