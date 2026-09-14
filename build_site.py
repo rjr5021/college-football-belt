@@ -28,6 +28,7 @@ import html
 import json
 import math
 import os
+import random
 import re
 import sys
 from collections import Counter
@@ -59,6 +60,17 @@ SITE_URL = f"https://{CUSTOM_DOMAIN}"
 # my-code.goatcounter.com), then set it here and rerun the pipeline.
 GOATCOUNTER_CODE = "collegefootballbelt"
 
+# Optional Google Search Console ownership check. Empty by default -- every
+# page just omits the meta tag, same no-op-when-unset pattern as
+# GOATCOUNTER_CODE above. To turn it on: create a property for
+# collegefootballbelt.com at search.google.com/search-console, choose the
+# "HTML tag" verification method (not the DNS or file-upload ones), copy
+# just the content="..." value out of the <meta> tag it gives you, set it
+# here, rerun the pipeline, then click Verify on Search Console's end once
+# the new build is deployed -- that last click has to happen there, not
+# here. Submit sitemap.xml from the same dashboard afterward.
+GOOGLE_SITE_VERIFICATION = ""
+
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
 
@@ -74,6 +86,8 @@ def head_extras(rel=""):
         f'<link rel="alternate" type="application/rss+xml" '
         f'title="The College Football Belt — Belt Changes" href="{rel}feed.xml">',
     ]
+    if GOOGLE_SITE_VERIFICATION:
+        bits.append(f'<meta name="google-site-verification" content="{esc(GOOGLE_SITE_VERIFICATION)}">')
     if GOATCOUNTER_CODE:
         bits.append(
             f'<script data-goatcounter="https://{GOATCOUNTER_CODE}.goatcounter.com/count" '
@@ -433,7 +447,7 @@ STYLES_CSS = """
 :root{
   --paper:#e7e2d5; --paper-2:#dcd5c3;
   --ink:#211a12; --ink-soft:#5b5140;
-  --brass:#8a6a34; --brass-bright:#a97f38; --brass-line: rgba(138,106,52,.32);
+  --brass:#8a6a34; --brass-bright:#a97f38; --brass-text:#725626; --brass-line: rgba(138,106,52,.32);
   --hairline: rgba(33,26,18,.14);
   --shadow: 0 18px 40px -22px rgba(24,17,12,.55);
   --good:#3f6b3f; --good-bg: rgba(63,107,63,.12);
@@ -443,7 +457,7 @@ STYLES_CSS = """
   :root:not([data-theme="light"]){
     --paper:#161009; --paper-2:#1f170e;
     --ink:#ece3d1; --ink-soft:#b6a98d;
-    --brass:#cf9f52; --brass-bright:#e0b46a; --brass-line: rgba(207,159,82,.32);
+    --brass:#cf9f52; --brass-bright:#e0b46a; --brass-text:#e0b46a; --brass-line: rgba(207,159,82,.32);
     --hairline: rgba(236,227,209,.14);
     --shadow: 0 18px 44px -20px rgba(0,0,0,.6);
     --good:#7fbf7f; --good-bg: rgba(127,191,127,.14);
@@ -453,7 +467,7 @@ STYLES_CSS = """
 :root[data-theme="dark"]{
   --paper:#161009; --paper-2:#1f170e;
   --ink:#ece3d1; --ink-soft:#b6a98d;
-  --brass:#cf9f52; --brass-bright:#e0b46a; --brass-line: rgba(207,159,82,.32);
+  --brass:#cf9f52; --brass-bright:#e0b46a; --brass-text:#e0b46a; --brass-line: rgba(207,159,82,.32);
   --hairline: rgba(236,227,209,.14);
   --shadow: 0 18px 44px -20px rgba(0,0,0,.6);
   --good:#7fbf7f; --good-bg: rgba(127,191,127,.14);
@@ -476,10 +490,10 @@ header.site{ padding-block:20px 14px; border-bottom:1px solid var(--hairline); }
 .back:hover{ color:var(--ink) }
 .crumbTitle{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:20px; margin-top:8px; }
 
-.gameMeta{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin: 22px 0 6px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-bright); }
+.gameMeta{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin: 22px 0 6px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
 .gameMeta .dot{ width:4px; height:4px; border-radius:50%; background:var(--ink-soft); }
 .beltTag{ background: var(--good-bg); color:var(--good); padding:3px 9px; border-radius:3px; font-weight:600; }
-.neutralTag{ background: color-mix(in srgb, var(--brass) 18%, transparent); color:var(--brass-bright); padding:3px 9px; border-radius:3px; font-weight:600; }
+.neutralTag{ background: color-mix(in srgb, var(--brass) 18%, transparent); color:var(--brass-text); padding:3px 9px; border-radius:3px; font-weight:600; }
 
 h1.matchup{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(28px,4.6vw,42px); line-height:1.02; margin:6px 0 26px; }
 h1.matchup .win{ color:var(--emph); }
@@ -506,7 +520,7 @@ h1.matchup .win{ color:var(--emph); }
 
 /* section pattern */
 .sectionHead{ display:flex; align-items:baseline; gap:14px; margin:44px 0 16px; }
-.sectionHead .tag{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-bright); white-space:nowrap; }
+.sectionHead .tag{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); white-space:nowrap; }
 .sectionHead .rule{ height:1px; flex:1; background:var(--brass-line); }
 .sectionHead h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(20px,3vw,25px); margin:0; white-space:nowrap; }
 .sectionHead.withTag{ flex-wrap:wrap; row-gap:8px; }
@@ -538,9 +552,9 @@ table.keyPlaysTable td:first-child{ font-family:"IBM Plex Mono",monospace; font-
 table.keyPlaysTable td:nth-child(2){ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14px; white-space:nowrap; }
 table.keyPlaysTable td:nth-child(3){ font-family:"IBM Plex Mono",monospace; font-size:12.5px; white-space:nowrap; }
 table.keyPlaysTable tbody tr:last-child td{ border-bottom:none; }
-table.keyPlaysTable tr.scoring td:nth-child(2){ color:var(--brass-bright); }
+table.keyPlaysTable tr.scoring td:nth-child(2){ color:var(--brass-text); }
 details.moreStats{ margin-top:8px; }
-details.moreStats summary{ cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:var(--brass-bright); padding:8px 0; list-style:none; }
+details.moreStats summary{ cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:var(--brass-text); padding:8px 0; list-style:none; }
 details.moreStats summary::-webkit-details-marker{ display:none; }
 details.moreStats summary::before{ content:"+ "; }
 details.moreStats[open] summary::before{ content:"\\2212 "; }
@@ -550,7 +564,7 @@ details.moreStats .statCategory{ margin-top:18px; }
 /* box score */
 .sampleTag{
   font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-  background: color-mix(in srgb, var(--brass) 18%, transparent); color:var(--brass-bright);
+  background: color-mix(in srgb, var(--brass) 18%, transparent); color:var(--brass-text);
   padding:3px 8px; border-radius:3px; border:1px dashed var(--brass-line);
 }
 .sourceTag{
@@ -602,9 +616,9 @@ details.moreStats .statCategory{ margin-top:18px; }
 .aiPreviewBody p{ max-width:70ch; font-size:15px; }
 .keyMatchups{ margin:14px 0 20px; padding-left:1.15em; max-width:68ch; }
 .keyMatchups li{ margin:7px 0; font-size:14.5px; }
-.keyMatchups li::marker{ color:var(--brass); }
+.keyMatchups li::marker{ color:var(--brass-text); }
 .bettingHead{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin:20px 0 6px; }
-.predictionCall{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:23px; margin:0 0 10px; color:var(--brass); }
+.predictionCall{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:23px; margin:0 0 10px; color:var(--brass-text); }
 .predictionBody{ margin-top:4px; }
 
 /* ---------- add to calendar ---------- */
@@ -659,6 +673,24 @@ details.moreStats .statCategory{ margin-top:18px; }
 .mapWrap.journeyMode .mapState:not(.mapState--active){ opacity:.25; }
 .mapState--active{ fill:var(--brass-bright) !important; stroke:var(--ink) !important; stroke-width:2 !important; }
 
+/* ---------- trivia ---------- */
+.triviaProgress{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px; }
+.triviaQ{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(22px,3.4vw,28px); margin:0 0 22px; text-wrap:balance; max-width:640px; }
+.triviaChoices{ display:flex; flex-direction:column; gap:10px; max-width:560px; }
+.triviaChoice{
+  text-align:left; font-family:"Spectral",Georgia,serif; font-size:15.5px; padding:13px 16px;
+  border:1px solid var(--hairline); border-radius:8px; background:var(--paper-2); color:var(--ink); cursor:pointer;
+}
+.triviaChoice:hover:not(:disabled){ border-color:var(--brass); }
+.triviaChoice:disabled{ cursor:default; }
+.triviaChoice--right{ border-color:var(--good); background:var(--good-bg); font-weight:600; }
+.triviaChoice--wrong{ border-color:#7a2e2e; background:rgba(122,46,46,.14); }
+.triviaFeedback{ margin-top:16px; font-size:14px; font-weight:600; min-height:1.2em; }
+.triviaFeedback--right{ color:var(--good); }
+.triviaFeedback--wrong{ color:var(--ink-soft); }
+.triviaResults{ max-width:560px; }
+.triviaScore{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:56px; color:var(--brass-text); margin-bottom:6px; }
+
 footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-top:52px; font-size:12.5px; color:var(--ink-soft); }
 .footRow{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
 .footRow nav{ display:flex; gap:16px; font-family:"IBM Plex Mono",monospace; }
@@ -668,7 +700,7 @@ footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-to
 /* ---------- homepage: header/hero ---------- */
 .headerRow{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px 28px; }
 .brandBlock{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-.eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-bright); font-weight:600; }
+.eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; }
 .wordmark{ font-family:"Big Shoulders Display", sans-serif; font-weight:800; font-size:clamp(28px, 4.4vw, 44px); letter-spacing:.01em; line-height:.95; margin:2px 0 0; text-wrap:balance; }
 nav.site{ display:flex; gap:22px; font-family:"IBM Plex Mono", monospace; font-size:13px; letter-spacing:.03em; }
 nav.site a{ text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; color:var(--ink-soft); }
@@ -683,7 +715,7 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .nextGame{ display:flex; align-items:center; gap:10px; width:fit-content; max-width:100%; margin:0 0 22px; padding:9px 16px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:20px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease; }
 .nextGame:hover{ border-color:var(--brass); box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .nextGame:hover .nextGameText strong{ color:var(--brass-bright); }
-.nextGameTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-bright); font-weight:600; white-space:nowrap; padding-right:10px; border-right:1px solid var(--brass-line); }
+.nextGameTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); font-weight:600; white-space:nowrap; padding-right:10px; border-right:1px solid var(--brass-line); }
 .nextGameText{ font-size:13.5px; color:var(--ink); }
 .nextGameText strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
 @media (max-width:500px){ .nextGame{ white-space:normal; } }
@@ -750,7 +782,7 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .link .beat{ font-size:12px; color:var(--ink-soft); margin:5px 0 7px; }
 .link .meta{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); display:flex; justify-content:space-between; }
 .link.current{ border-color: var(--brass); box-shadow: inset 0 0 0 1px var(--brass-line); }
-.link.current .now{ position:absolute; top:12px; right:12px; font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-bright); display:flex; align-items:center; gap:5px; }
+.link.current .now{ position:absolute; top:12px; right:12px; font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); display:flex; align-items:center; gap:5px; }
 .link.current .now::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--brass-bright); box-shadow:0 0 0 3px color-mix(in srgb, var(--brass-bright) 25%, transparent); }
 
 /* ---------- homepage: ruleset teaser ---------- */
@@ -768,10 +800,10 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .otdRow{ display:flex; align-items:center; gap:16px; padding:12px 4px; border-bottom:1px solid var(--hairline); text-decoration:none; color:inherit; }
 .otdList a.otdRow:hover .otdMatchup{ text-decoration:underline; text-decoration-color:var(--brass); }
 .otdRow:last-child{ border-bottom:none; }
-.otdYear{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:16px; color:var(--brass-bright); width:44px; flex:none; }
+.otdYear{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:16px; color:var(--brass-text); width:44px; flex:none; }
 .otdMatchup{ flex:1; font-size:14.5px; }
 .otdTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
-.otdTag.changed{ color:var(--brass-bright); }
+.otdTag.changed{ color:var(--brass-text); }
 .otdRow.hiddenRow{ display:none; }
 @media (max-width:560px){ .otdRow{ flex-wrap:wrap; } .otdTag{ order:3; width:100%; padding-left:60px; } }
 
@@ -791,7 +823,7 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .proseBlock p{ margin:0 0 14px; }
 .ruleList{ margin:10px 0 0; padding-left:1.15em; max-width:68ch; }
 .ruleList li{ margin:7px 0; }
-.ruleList li::marker{ color:var(--brass); }
+.ruleList li::marker{ color:var(--brass-text); }
 
 /* ---------- records page ---------- */
 .recordsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:28px 0 8px; }
@@ -805,19 +837,19 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:var(--brass); }
 .recordRank{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); }
 .recordMain{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:15px; display:flex; align-items:center; }
-.recordValue{ font-size:14px; font-weight:600; color:var(--brass-bright); }
+.recordValue{ font-size:14px; font-weight:600; color:var(--brass-text); }
 .recordSub{ grid-column:2 / 4; font-size:12px; color:var(--ink-soft); }
-.currentTag{ font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-bright); }
+.currentTag{ font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
 
 /* ---------- team page ---------- */
 .teamPageHead{ display:flex; align-items:center; gap:12px; border-bottom:3px solid; padding-bottom:10px; margin-top:22px; }
-.posterLink{ display:inline-block; margin-left:6px; font-size:12.5px; color:var(--brass-bright); text-decoration:none; border-bottom:1px dotted var(--brass); white-space:nowrap; }
+.posterLink{ display:inline-block; margin-left:6px; font-size:12.5px; color:var(--brass-text); text-decoration:none; border-bottom:1px dotted var(--brass); white-space:nowrap; }
 .posterLink:hover{ border-bottom-style:solid; }
 .teamReignList{ display:flex; flex-direction:column; gap:10px; margin-top:20px; }
 .teamReignCard{ padding:14px 18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; }
 .teamReignHead{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
 .teamReignDates{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:16px; }
-.teamReignDuration{ font-size:13px; color:var(--brass-bright); font-weight:600; }
+.teamReignDuration{ font-size:13px; color:var(--brass-text); font-weight:600; }
 .teamReignMeta{ display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; font-size:13px; color:var(--ink-soft); }
 .teamReignMeta a{ color:inherit; text-decoration:underline; text-decoration-color:var(--brass); }
 
@@ -833,7 +865,7 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .mapLegendRow{ display:grid; grid-template-columns:110px auto 1fr; column-gap:14px; row-gap:2px; padding:9px 0; border-bottom:1px solid var(--hairline); font-size:13px; align-items:baseline; }
 .mapLegendRow:last-child{ border-bottom:none; }
 .mapLegendState{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
-.mapLegendCount{ color:var(--brass-bright); font-weight:600; font-size:12.5px; white-space:nowrap; }
+.mapLegendCount{ color:var(--brass-text); font-weight:600; font-size:12.5px; white-space:nowrap; }
 .mapLegendTeams{ color:var(--ink-soft); grid-column:1 / 4; }
 @media (min-width:640px){ .mapLegendTeams{ grid-column:3; } }
 
@@ -893,7 +925,7 @@ table.reignsTable td.tabular a:hover{ border-bottom-color:var(--brass); color:va
 table.reignsTable td.dates, table.reignsTable td.won, table.reignsTable td.lost{ font-size:12.5px; color:var(--ink-soft); }
 table.reignsTable td.tabular{ text-align:right; font-family:"IBM Plex Mono",monospace; }
 table.reignsTable tr.current{ background: color-mix(in srgb, var(--brass) 10%, transparent); }
-table.reignsTable tr.current td.teamCell{ color:var(--brass-bright); }
+table.reignsTable tr.current td.teamCell{ color:var(--brass-text); }
 table.reignsTable tr.hiddenRow{ display:none; }
 .reignChip{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:9px; vertical-align:middle; border:1px solid var(--hairline); }
 .noResults{ padding:34px 0; text-align:center; color:var(--ink-soft); font-style:italic; display:none; }
@@ -909,10 +941,10 @@ table.reignsTable td.matchup{ font-size:13.5px; }
 table.reignsTable td.matchup a{ text-decoration:none; color:inherit; }
 table.reignsTable td.matchup a:hover{ text-decoration:underline; text-decoration-color:var(--brass); }
 table.reignsTable td.result{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
-table.reignsTable td.result .win{ color:var(--brass-bright); font-weight:700; }
+table.reignsTable td.result .win{ color:var(--brass-text); font-weight:700; }
 table.reignsTable tr.titleChange{ background: color-mix(in srgb, var(--brass) 7%, transparent); }
 .viewToggle{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); margin:2px 0 0; }
-.viewToggle a{ color:var(--brass-bright); text-decoration:none; border-bottom:1px dotted var(--brass); }
+.viewToggle a{ color:var(--brass-text); text-decoration:none; border-bottom:1px dotted var(--brass); }
 .viewToggle a:hover{ border-bottom-style:solid; }
 """.strip()
 
@@ -1329,7 +1361,9 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     game_nav = (f'<div class="gameNav">{nav_link(prev_game, "prev", True)}'
                 f'{nav_link(next_game, "next", False)}</div>')
 
-    body = f'''<meta charset="UTF-8">
+    body = f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>{title}</title>
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
@@ -1356,6 +1390,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
       <a href="../compare.html">Compare</a>
+      <a href="../trivia.html">Trivia</a>
     </nav>
   </div>
   <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
@@ -1405,6 +1440,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
       <a href="../embed.html">Embed</a>
+      <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1505,7 +1541,9 @@ def generate_on_this_day_page(belt_games):
     month_options = "".join(f'<option value="{i}">{name}</option>' for i, name in enumerate(MONTH_NAMES, 1))
     day_options = "".join(f'<option value="{d}">{d}</option>' for d in range(1, 32))
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>On This Day — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -1524,6 +1562,7 @@ def generate_on_this_day_page(belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
     </nav>
   </div>
 </header>
@@ -1558,6 +1597,7 @@ def generate_on_this_day_page(belt_games):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1725,7 +1765,9 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
     monogram = esc(team_chip(holder))
 
     share_desc = esc(f"{lede} {years_span} years, {totals.get('reigns', '')} reigns.".strip())
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>The College Football Belt</title>
 <meta name="description" content="{share_desc}">
 <meta property="og:title" content="The College Football Belt">
@@ -1759,6 +1801,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
       <a href="#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -1876,6 +1919,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -1957,7 +2001,9 @@ def generate_lineage_page(lineage, colors, belt_games):
           <td class="lost">{lost_txt}</td>
         </tr>'''
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Full History — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -1975,6 +2021,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -2035,6 +2082,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2135,7 +2183,9 @@ def generate_all_games_page(lineage, colors, belt_games):
           <td class="result">{result_html}</td>
         </tr>'''
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>All Games — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -2153,6 +2203,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -2209,6 +2260,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2367,6 +2419,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
     </nav>'''
     header = f'''<header class="site wrap">
   <div class="headerRow">
@@ -2387,13 +2440,16 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
 </footer>'''
 
     if not next_game:
-        return f'''<meta charset="UTF-8">
+        return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Up Next — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -2481,7 +2537,9 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
     weather_html = render_weather(weather)
     calendar_html = build_calendar_links(next_game)
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>{title} Preview — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -2648,7 +2706,9 @@ def generate_ruleset_page(md_text):
     <div class="proseBlock">{body_html}</div>
   </section>'''
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Ruleset — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -2667,6 +2727,7 @@ def generate_ruleset_page(md_text):
       <a href="records.html">Records</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
     </nav>
   </div>
@@ -2689,6 +2750,7 @@ def generate_ruleset_page(md_text):
       <a href="records.html">Records</a>
       <a href="map.html">Map</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2810,7 +2872,9 @@ def generate_records_page(lineage, colors, belt_games):
       <div class="recordList">{rows}</div>
     </section>''' for title, sub, rows in cards)
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Records — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -2828,6 +2892,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
     </nav>
   </div>
 </header>
@@ -2852,6 +2917,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -2936,8 +3002,25 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
         holder_line = (f'{esc(team)} currently holds the belt.' if is_holder_now else
                         f'{esc(team)} last held the belt {fmt_date(team_reigns_sorted[-1]["end_date"])}.')
 
-        page = f'''<meta charset="UTF-8">
+        team_share_desc = esc(f"{n} reign{'s' if n != 1 else ''}, {total_days:,} total days held, "
+                               f"{total_defenses} total defense{'s' if total_defenses != 1 else ''}.")
+        team_share_img = f"{SITE_URL}/team-share/{team_slug(team)}.png"
+        team_page_url = f"{SITE_URL}/teams/{team_slug(team)}.html"
+
+        page = f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>{esc(team)} — The College Football Belt</title>
+<meta name="description" content="{team_share_desc}">
+<meta property="og:title" content="{esc(team)} — The College Football Belt">
+<meta property="og:description" content="{team_share_desc}">
+<meta property="og:image" content="{team_share_img}">
+<meta property="og:url" content="{team_page_url}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{esc(team)} — The College Football Belt">
+<meta name="twitter:description" content="{team_share_desc}">
+<meta name="twitter:image" content="{team_share_img}">
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
 {team_json_ld(team)}
@@ -2955,6 +3038,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../ruleset.html">Ruleset</a>
       <a href="../map.html">Map</a>
       <a href="../compare.html">Compare</a>
+      <a href="../trivia.html">Trivia</a>
     </nav>
   </div>
 </header>
@@ -2983,6 +3067,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../lineage.html">Full History</a>
       <a href="../records.html">Records</a>
       <a href="../embed.html">Embed</a>
+      <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3176,7 +3261,9 @@ def generate_map_page(lineage, colors):
 
     n_states = len(by_state)
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Map — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -3194,6 +3281,7 @@ def generate_map_page(lineage, colors):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
     </nav>
   </div>
 </header>
@@ -3301,6 +3389,7 @@ def generate_map_page(lineage, colors):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3353,7 +3442,9 @@ def generate_embed_page(lineage, colors):
                      f'alt="College Football Belt: current holder"></a>')
     md_snippet = f'[![College Football Belt]({SITE_URL}/badge.svg)]({SITE_URL}/)'
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Embed — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -3372,6 +3463,7 @@ def generate_embed_page(lineage, colors):
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
     </nav>
   </div>
 </header>
@@ -3405,6 +3497,7 @@ def generate_embed_page(lineage, colors):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="compare.html">Compare</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3465,7 +3558,9 @@ def generate_compare_page(lineage, colors, belt_games):
 
     options_html = "".join(f'<option value="{esc(t)}">{esc(t)}</option>' for t in teams_sorted)
 
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Compare Teams — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -3483,6 +3578,7 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
+      <a href="trivia.html">Trivia</a>
     </nav>
   </div>
 </header>
@@ -3588,6 +3684,354 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="all-games.html">All Games</a>
       <a href="records.html">Records</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+# --------------------------------------------------------------- trivia game
+
+QUIZ_LEN = 10
+
+
+def _trivia_never_held_candidates(lineage, belt_games):
+    """Teams that have PLAYED a belt game but never actually held the belt
+    -- computed, not curated: any team appearing on either side of a belt
+    game that's never in reigns' own team set."""
+    holder_teams = {r["team"] for r in lineage["reigns"]}
+    challengers = set()
+    for g in belt_games:
+        for side in (g.get("home"), g.get("away")):
+            if side and side not in holder_teams:
+                challengers.add(side)
+    return sorted(challengers)
+
+
+def build_trivia_pool(lineage, belt_games, rng):
+    """A pool of multiple-choice questions, generated straight from
+    lineage.json + belt_games -- there's no hand-written trivia file to
+    keep in sync as new games happen. Called with an UNSEEDED rng, so the
+    exact pool (and which subset of it a visitor gets) naturally reshuffles
+    on the site's own weekly rebuild cadence instead of ever going stale."""
+    today = date.today()
+    reigns = lineage["reigns"]
+    questions = []
+
+    # ---- longest single reign, among 4 real teams' best reigns ----
+    best_by_team = {}
+    for r in reigns:
+        d = reign_duration_days(r, today)
+        if r["team"] not in best_by_team or d > best_by_team[r["team"]]:
+            best_by_team[r["team"]] = d
+    ranked = sorted(best_by_team.items(), key=lambda kv: -kv[1])
+    if len(ranked) >= 4:
+        for _ in range(6):
+            lo = rng.randint(0, max(0, len(ranked) - 4))
+            window = ranked[lo:lo + max(4, min(24, len(ranked) - lo))]
+            if len(window) < 4:
+                continue
+            chosen = rng.sample(window, 4)
+            chosen.sort(key=lambda kv: -kv[1])
+            correct = chosen[0][0]
+            options = [c[0] for c in chosen]
+            rng.shuffle(options)
+            questions.append({
+                "q": "Which of these teams had the single longest belt reign in history?",
+                "choices": options, "answer": options.index(correct),
+            })
+
+    # ---- who they took the belt from ----
+    changes = [g for g in belt_games if g.get("outcome") == "changed" and g.get("holder")]
+    all_holders_at_change = list({g["holder"] for g in changes})
+    for g in rng.sample(changes, min(8, len(changes))):
+        distractors = [h for h in all_holders_at_change if h != g["holder"]]
+        if len(distractors) < 3:
+            continue
+        options = [g["holder"]] + rng.sample(distractors, 3)
+        rng.shuffle(options)
+        questions.append({
+            "q": f'On {fmt_date(g["date"])}, {esc(g["new_holder"])} took the belt from&hellip;?',
+            "choices": options, "answer": options.index(g["holder"]),
+        })
+
+    # ---- total defenses, a real number against 3 other real teams' totals ----
+    totals_by_team = {}
+    for r in reigns:
+        totals_by_team[r["team"]] = totals_by_team.get(r["team"], 0) + r.get("defenses", 0)
+    teams_with_totals = list(totals_by_team.items())
+    if len(teams_with_totals) >= 4:
+        for _ in range(6):
+            team, correct_total = rng.choice(teams_with_totals)
+            distractor_pool = list({v for t, v in teams_with_totals if t != team and v != correct_total})
+            if len(distractor_pool) < 3:
+                continue
+            options = [str(correct_total)] + [str(v) for v in rng.sample(distractor_pool, 3)]
+            if len(set(options)) < 4:
+                continue
+            rng.shuffle(options)
+            questions.append({
+                "q": f"How many total defenses does {esc(team)} have across all its belt reigns?",
+                "choices": options, "answer": options.index(str(correct_total)),
+            })
+
+    # ---- which of these four never held the belt ----
+    never_held = _trivia_never_held_candidates(lineage, belt_games)
+    holder_names = list({r["team"] for r in reigns})
+    if never_held and len(holder_names) >= 3:
+        for _ in range(5):
+            impostor = rng.choice(never_held)
+            options = rng.sample(holder_names, 3) + [impostor]
+            rng.shuffle(options)
+            questions.append({
+                "q": "Three of these four teams have held the College Football Belt at some point. "
+                     "Which one never has?",
+                "choices": options, "answer": options.index(impostor),
+            })
+
+    rng.shuffle(questions)
+    return questions
+
+
+def generate_trivia_page(pool):
+    payload = json.dumps(pool, ensure_ascii=False)
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Belt Trivia — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Belt Trivia</h1>
+  <p class="lede">{QUIZ_LEN} questions pulled straight from 150+ years of real belt history &mdash;
+    every question and every wrong answer is an actual fact from the lineage, not hand-written.
+    The pool rotates with every site update, so it&rsquo;s never quite the same quiz twice.</p>
+
+  <div id="triviaRoot"></div>
+
+  <script type="application/json" id="triviaData">{payload}</script>
+  <script>
+  (function(){{
+    var pool = JSON.parse(document.getElementById('triviaData').textContent);
+    var QUIZ_LEN = {QUIZ_LEN};
+    var root = document.getElementById('triviaRoot');
+
+    function shuffle(arr) {{
+      for (var i = arr.length - 1; i > 0; i--) {{
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }}
+      return arr;
+    }}
+
+    var quiz = [], idx = 0, score = 0;
+
+    function newQuiz() {{
+      quiz = shuffle(pool.slice()).slice(0, Math.min(QUIZ_LEN, pool.length));
+      idx = 0; score = 0;
+    }}
+
+    function renderQuestion() {{
+      var q = quiz[idx];
+      var answered = false;
+      var choicesHtml = q.choices.map(function(c, i){{
+        return '<button class="triviaChoice" data-i="' + i + '">' + c + '</button>';
+      }}).join('');
+      root.innerHTML =
+        '<div class="triviaProgress">Question ' + (idx + 1) + ' of ' + quiz.length + ' &middot; Score: ' + score + '</div>' +
+        '<div class="triviaQ">' + q.q + '</div>' +
+        '<div class="triviaChoices">' + choicesHtml + '</div>' +
+        '<div class="triviaFeedback" id="triviaFeedback"></div>';
+      Array.prototype.slice.call(root.querySelectorAll('.triviaChoice')).forEach(function(btn){{
+        btn.addEventListener('click', function(){{
+          if (answered) return;
+          answered = true;
+          var i = parseInt(btn.getAttribute('data-i'), 10);
+          var correct = i === q.answer;
+          if (correct) score++;
+          Array.prototype.slice.call(root.querySelectorAll('.triviaChoice')).forEach(function(b, bi){{
+            b.disabled = true;
+            if (bi === q.answer) b.classList.add('triviaChoice--right');
+            else if (bi === i) b.classList.add('triviaChoice--wrong');
+          }});
+          var fb = document.getElementById('triviaFeedback');
+          fb.textContent = correct ? 'Correct!' : ('Not quite \\u2014 it was "' + q.choices[q.answer] + '".');
+          fb.className = 'triviaFeedback ' + (correct ? 'triviaFeedback--right' : 'triviaFeedback--wrong');
+          var nextBtn = document.createElement('button');
+          nextBtn.className = 'calBtn';
+          nextBtn.style.marginTop = '16px';
+          nextBtn.textContent = (idx === quiz.length - 1) ? 'See Results' : 'Next Question';
+          nextBtn.addEventListener('click', function(){{
+            idx++;
+            if (idx >= quiz.length) renderResults(); else renderQuestion();
+          }});
+          root.appendChild(nextBtn);
+        }});
+      }});
+    }}
+
+    function renderResults() {{
+      var pct = quiz.length ? Math.round((score / quiz.length) * 100) : 0;
+      var msg;
+      if (pct === 100) msg = 'Perfect score \\u2014 you know this belt cold.';
+      else if (pct >= 70) msg = 'Strong showing.';
+      else if (pct >= 40) msg = 'Not bad \\u2014 the lineage has some deep cuts.';
+      else msg = '150+ years runs deep. Give it another go.';
+      var shareText = 'I scored ' + score + '/' + quiz.length +
+        ' on College Football Belt trivia \\u2014 collegefootballbelt.com/trivia.html';
+      root.innerHTML =
+        '<div class="triviaResults">' +
+        '<div class="triviaScore tabular">' + score + ' / ' + quiz.length + '</div>' +
+        '<p>' + msg + '</p>' +
+        '<textarea class="embedCode" rows="2" readonly onclick="this.select()">' + shareText + '</textarea>' +
+        '<button class="calBtn" id="triviaReplay" style="margin-top:14px">Play Again</button>' +
+        '</div>';
+      document.getElementById('triviaReplay').addEventListener('click', function(){{
+        newQuiz(); renderQuestion();
+      }});
+    }}
+
+    newQuiz();
+    if (quiz.length) {{ renderQuestion(); }}
+    else {{ root.innerHTML = '<p class="emptyNote">Not enough belt history yet for a quiz \\u2014 check back soon.</p>'; }}
+  }})();
+  </script>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every question computed from belt_data/lineage.json &mdash; nothing here is hand-written.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+# ------------------------------------------------------------------ public API
+
+API_DIR = "api"
+
+
+def generate_api_files(lineage, belt_games, next_game):
+    """Three plain JSON files -- current.json (live snapshot), reigns.json,
+    and games.json -- straight dumps of data build_site.py already has in
+    memory, no extra computation. For developers/fans who want to build
+    their own bot, widget, or stat page off the same data this site uses."""
+    current = lineage["reigns"][-1]
+    today = date.today()
+    team_reign_num = sum(1 for r in lineage["reigns"] if r["team"] == current["team"])
+
+    current_payload = {
+        "holder": current["team"],
+        "since": current["start_date"],
+        "days_held": reign_duration_days(current, today),
+        "defenses": current.get("defenses", 0),
+        "team_reign_number": team_reign_num,
+        "next_game": next_game,
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "site": SITE_URL,
+    }
+    return {
+        "current.json": current_payload,
+        "reigns.json": {"reigns": lineage["reigns"], "generated_at": current_payload["generated_at"]},
+        "games.json": {"belt_games": belt_games, "generated_at": current_payload["generated_at"]},
+    }
+
+
+def generate_api_docs_page():
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>API — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Data API</h1>
+  <p class="lede">Three plain, unauthenticated JSON files, regenerated on every site update &mdash;
+    the same data this site itself is built from. Free to build on; a link back to
+    collegefootballbelt.com is appreciated but not required.</p>
+
+  <p class="embedLabel">GET {SITE_URL}/api/current.json</p>
+  <p class="lede" style="margin-top:0">The current holder, since when, days held, defenses,
+    that team&rsquo;s own reign number, and the next scheduled belt game (or <code class="mono">null</code>).</p>
+  <textarea class="embedCode" rows="3" readonly onclick="this.select()">{{
+  "holder": "Notre Dame", "since": "2025-11-29", "days_held": 660,
+  "defenses": 2, "team_reign_number": 9, "next_game": {{ ... }} | null,
+  "generated_at": "2026-01-01T00:00:00Z", "site": "{SITE_URL}"
+}}</textarea>
+
+  <p class="embedLabel">GET {SITE_URL}/api/reigns.json</p>
+  <p class="lede" style="margin-top:0">Every reign in belt history: team, start/end dates,
+    who it was won from, the score, and defenses. Same shape as
+    <code class="mono">belt_data/lineage.json</code>&rsquo;s own <code class="mono">reigns</code> array.</p>
+
+  <p class="embedLabel">GET {SITE_URL}/api/games.json</p>
+  <p class="lede" style="margin-top:0">Every belt game ever played: date, teams, score, and outcome.
+    Same shape as <code class="mono">belt_data/lineage.json</code>&rsquo;s own
+    <code class="mono">belt_games</code> array.</p>
+
+  <p class="noteBox">GitHub Pages doesn&rsquo;t reliably send CORS headers on a custom domain, so a
+    plain client-side <code class="mono">fetch()</code> from another site may get blocked by the
+    browser. These work fine server-side (curl, a script, a bot) or from the same origin; a
+    browser-based cross-origin widget may need a small proxy on your end.</p>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Sourced from the College Football Data API; this site&rsquo;s own derived data is free to reuse.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3626,8 +4070,11 @@ def generate_404_page():
       <a href="ruleset.html">Ruleset</a>
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
     </nav>'''
-    return f'''<meta charset="UTF-8">
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
 <title>Page Not Found — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
@@ -3653,6 +4100,7 @@ def generate_404_page():
       <a href="lineage.html">Full History</a>
       <a href="all-games.html">All Games</a>
       <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
     </nav>
   </div>
@@ -3803,10 +4251,25 @@ def main():
     with open(os.path.join(OUT_DIR, "compare.html"), "w", encoding="utf-8") as f:
         f.write(compare_html)
 
+    trivia_pool = build_trivia_pool(lineage, belt_games, random.Random())
+    trivia_html = generate_trivia_page(trivia_pool)
+    with open(os.path.join(OUT_DIR, "trivia.html"), "w", encoding="utf-8") as f:
+        f.write(trivia_html)
+
+    api_dir = os.path.join(OUT_DIR, API_DIR)
+    os.makedirs(api_dir, exist_ok=True)
+    for name, payload in generate_api_files(lineage, belt_games, next_game).items():
+        with open(os.path.join(api_dir, name), "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False)
+
+    api_docs_html = generate_api_docs_page()
+    with open(os.path.join(OUT_DIR, "api.html"), "w", encoding="utf-8") as f:
+        f.write(api_docs_html)
+
     sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
                      f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html",
                      f"{SITE_URL}/on-this-day.html", f"{SITE_URL}/embed.html",
-                     f"{SITE_URL}/compare.html"]
+                     f"{SITE_URL}/compare.html", f"{SITE_URL}/trivia.html", f"{SITE_URL}/api.html"]
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -3841,6 +4304,8 @@ def main():
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
     print(f"Wrote badge.svg, embed.html, and compare.html to {OUT_DIR}/")
+    print(f"Wrote trivia.html ({len(trivia_pool)} question(s) in the pool) to {OUT_DIR}/")
+    print(f"Wrote api.html and {API_DIR}/current.json, reigns.json, games.json to {OUT_DIR}/")
     print(f"Wrote sitemap.xml ({len(sitemap_urls)} URLs), robots.txt, 404.html, and feed.xml "
           f"({min(len([g for g in belt_games if g.get('outcome') == 'changed']), 30)} item(s)) to {OUT_DIR}/")
     if warnings:

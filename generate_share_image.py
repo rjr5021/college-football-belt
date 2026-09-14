@@ -205,6 +205,85 @@ def vertical_gradient(w, h, top_hex, bottom_hex):
     return grad.resize((w, h))
 
 
+TEAM_SHARE_DIR = "team-share"
+
+
+def generate_team_share_image(team, team_reigns, primary, alt, out_path):
+    """A 1200x630 Open Graph / Twitter Card image for one team's OWN page --
+    same landscape size and layout language as the homepage's share.png,
+    just in that team's own colors with that team's own all-time stats
+    instead of the current holder's. Every program that's ever held the
+    belt gets one, at site/team-share/<slug>.png, so a link to a team page
+    doesn't fall back to sharing the current holder's image (or nothing)."""
+    from PIL import ImageDraw
+    import datetime as _dt
+
+    today = _dt.date.today()
+    ink, accent, dark_stop = panel_colors(primary, alt)
+
+    img = vertical_gradient(W, H, primary, dark_stop)
+    draw = ImageDraw.Draw(img)
+
+    eyebrow_font = _font(_MONO_CANDIDATES, 22)
+    wordmark_font = _font(_DISPLAY_CANDIDATES, 34)
+    stat_font = _font(_BODY_CANDIDATES, 28)
+    url_font = _font(_MONO_CANDIDATES, 22)
+
+    draw_tracked_text(draw, (PAD, PAD), "EST. 1869 · LINEAL CHAMPIONSHIP",
+                       eyebrow_font, ink, tracking=2)
+    draw.text((PAD, PAD + 38), "THE COLLEGE FOOTBALL BELT", font=wordmark_font, fill=ink)
+
+    team_font = fit_font(draw, team, _DISPLAY_CANDIDATES, W - 2 * PAD,
+                          start_size=132, min_size=56)
+    team_y = H // 2 - 40
+    draw.text((PAD, team_y), team, font=team_font, fill=accent)
+
+    sorted_reigns = sorted(team_reigns, key=lambda r: r["start_date"])
+    total_days, total_defenses = 0, 0
+    for r in sorted_reigns:
+        start = _dt.date.fromisoformat(r["start_date"])
+        end = _dt.date.fromisoformat(r["end_date"]) if r.get("end_date") else today
+        total_days += (end - start).days
+        total_defenses += r.get("defenses", 0)
+    n = len(sorted_reigns)
+    is_current = sorted_reigns[-1].get("end_date") is None
+
+    stat_bbox = draw.textbbox((0, 0), "Xg", font=team_font)
+    stat_y = team_y + (stat_bbox[3] - stat_bbox[1]) + 30
+
+    stat_line = (f"{n} reign{'s' if n != 1 else ''} · {total_days:,} total days held · "
+                 f"{total_defenses} total defense{'s' if total_defenses != 1 else ''}")
+    if is_current:
+        stat_line = "Current champion · " + stat_line
+    draw.text((PAD, stat_y), stat_line, font=stat_font, fill=ink)
+
+    url_text = "collegefootballbelt.com"
+    url_bbox = draw.textbbox((0, 0), url_text, font=url_font)
+    url_w = url_bbox[2] - url_bbox[0]
+    draw.text((W - PAD - url_w, H - PAD - 22), url_text, font=url_font, fill=ink)
+
+    img.save(out_path, "PNG")
+
+
+def generate_team_share_images(lineage, colors):
+    """One share.png-equivalent per program that's ever held the belt.
+    Zero new data -- same lineage.json + team_colors.json already loaded
+    for the homepage share image and the posters."""
+    out_dir = os.path.join(OUT_DIR, TEAM_SHARE_DIR)
+    os.makedirs(out_dir, exist_ok=True)
+
+    by_team = {}
+    for r in lineage["reigns"]:
+        by_team.setdefault(r["team"], []).append(r)
+
+    for team, reigns in by_team.items():
+        primary, alt = team_color(colors, team)
+        out_path = os.path.join(out_dir, f"{_team_slug(team)}.png")
+        generate_team_share_image(team, reigns, primary, alt, out_path)
+
+    print(f"Wrote {len(by_team)} team share image(s) to {out_dir}/")
+
+
 POSTER_W = 1200
 POSTER_MIN_H = 560  # floor for a 1-reign team so the poster isn't mostly blank
 POSTER_MAX_ROWS = 9  # more than this and the poster just notes "+N earlier reigns"
@@ -421,6 +500,7 @@ def main():
 
     generate_favicon(primary, accent, ink)
     generate_team_posters(lineage, colors)
+    generate_team_share_images(lineage, colors)
 
 
 if __name__ == "__main__":
