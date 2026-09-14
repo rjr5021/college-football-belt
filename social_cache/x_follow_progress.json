@@ -1,0 +1,9 @@
+{
+  "followed": [],
+  "failed": {
+    "AthlonSports": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "JasonKirkSBN": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "HeismanPundit": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "MrCFB": "lookup failed: 401 Unauthorized\nUnauthorized"
+  }
+}
