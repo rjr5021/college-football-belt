@@ -1,6 +1,6 @@
 # College Football Belt — project folder
 
-Status as of 2026-09-13, tracking the brief's build order:
+Status as of 2026-09-14, tracking the brief's build order:
 
 1. ✅ **Lineage built and verified.** `build_lineage.py` ran successfully;
    `belt_data/lineage.json` matches the reference site (328 reigns, 101
@@ -41,6 +41,12 @@ Status as of 2026-09-13, tracking the brief's build order:
    + AI-predicted winner on the upcoming-game preview page. See "SEO,
    analytics, and the RSS feed" and "Weather + prediction for the upcoming
    game" below.
+10. ✅ **A second expansion pass: three more Records boards, a full "On
+    This Day" page, team logos, kickoff time in your own timezone, and a
+    downloadable poster for every team's belt history.** Again, all
+    computed from data already on hand — no new fetches, no new API calls.
+    See "Records, On This Day, and team pages" and "The share image"
+    below.
 
 ## Team colors: a data quirk, already fixed
 
@@ -394,19 +400,42 @@ Three more pages, all computed straight from data already sitting in
 `belt_data/lineage.json` — no new fetch script, no new API calls, nothing
 that can go stale independently of the lineage itself:
 
-- **`site/records.html`** — four top-5 boards (Longest Reigns, Most Reigns,
-  Most Defended, Biggest Blowouts), each a plain sort over the existing
-  reign/game data. Ties aren't broken, same "no editorial judgment"
-  approach as everything else here.
-- **The homepage's "On This Day" widget** — every belt game (any year)
-  that happened on today's month/day, with a tag for whether it was a
-  title change. Recalculates every run, so it's always today's real date,
-  not a build-time snapshot.
+- **`site/records.html`** — seven top-5 boards: the original four (Longest
+  Reigns, Most Reigns, Most Defended, Biggest Blowouts) plus three "closest
+  calls" boards — Narrowest Defenses (the closest the holder's ever come to
+  losing it and didn't, ties included), Narrowest Upsets (the belt
+  changing hands by the smallest possible margin), and Biggest Upsets (the
+  belt changing hands in the most lopsided rout). Each is a plain sort over
+  the existing reign/game data. Ties aren't broken, same "no editorial
+  judgment" approach as everything else here.
+- **The homepage's "On This Day" widget**, plus its own standalone
+  **`site/on-this-day.html`** page linked from it — every belt game, any
+  year, that happened on a given month/day, with a tag for whether it was a
+  title change. The full page adds a month/day picker (so you can browse
+  any date in belt history, not just today) and a "Jump to today" button;
+  filtering is entirely client-side against the *visitor's* local date —
+  same one-page-many-rows-toggled-by-a-CSS-class pattern as the Full
+  History/All Games search boxes, just filtering by date instead of text.
 - **`site/teams/<slug>.html`** — one page per program that's ever held the
   belt (currently 101), every reign it ever had, how each one started and
   (if over) ended, linked from that team's name wherever it appears
   site-wide. A team that's only ever challenged and lost doesn't get a
-  page — it has no reigns to list.
+  page — it has no reigns to list. Each team page also links a downloadable
+  belt-history poster (see below).
+
+Team logos (from the same CFBD `/teams` call `fetch_team_colors.py` already
+makes for colors — `logos[0]`, zero extra cost) now render next to team
+names on game-page scoreboards, team-page headers, and the preview page's
+recent-form columns, via a shared `team_logo()` / `logo_img()` helper in
+`build_site.py`. Logos load straight from CFBD's CDN with
+`onerror="this.remove()"`, so a team with no logo on file just shows its
+name with no broken-image icon.
+
+On the preview page, the upcoming game's kickoff time is also converted to
+the *visitor's* own local timezone client-side (`Intl.DateTimeFormat`, no
+geolocation, no server-side lookup) and shown under the matchup header —
+useful since the site itself has no visitor timezone to build the page
+around.
 
 ## The map: fetch_team_colors.py (state) + build_site.py + historical_data/us_state_shapes.json
 
@@ -454,6 +483,19 @@ TrueType fonts at their usual Linux paths (present on GitHub Actions'
 Pillow's own built-in font if none are found, so a missing font file can
 never fail the build — worst case, a plainer-looking image still gets
 made.
+
+Also in this same script: `site/favicon.png` (32×32) and
+`site/apple-touch-icon.png` (180×180), a simple belt-buckle glyph drawn
+with Pillow's shape primitives (no image asset needed), and a downloadable
+**belt-history poster** — `site/posters/<slug>.png`, one per program,
+linked from that team's own page — a portrait (1200px wide) timeline of
+every reign that team's ever had, newest first, in the team's own colors,
+capped at the 9 most recent reigns with a "+N earlier reigns" note below
+for a team with more than that (USC, at 13, is the current max). A team
+with only one short reign doesn't get a mostly-empty poster: the canvas
+height is computed from how many rows actually get drawn (measured on a
+throwaway 1×1 surface before the real image is created), floored at a
+minimum height rather than fixed at one tall size for every team.
 
 ## SEO, analytics, and the RSS feed
 

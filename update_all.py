@@ -71,8 +71,11 @@ this is safe to point at an existing belt_data/ folder:
  10. generate_share_image.py -- no network call, no API key; renders
                                  site/share.png (the Open Graph / Twitter
                                  Card image for the homepage) for whoever
-                                 currently holds the belt, straight from
-                                 belt_data/lineage.json + team_colors.json.
+                                 currently holds the belt, the site's
+                                 favicon in the same colors, and a
+                                 downloadable belt-history poster per team,
+                                 straight from belt_data/lineage.json +
+                                 team_colors.json.
 
 CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst limit).
 Steps 1, 3 and 5 default to the cheap incremental fetch above; step 4's
@@ -107,7 +110,7 @@ STAGES = [
     ("generate_ai_preview.py", "Writing the AI game preview + prediction (optional)", None),
     ("generate_recaps.py", "Writing AI recaps of settled games (optional)", None),
     ("build_site.py", "Rebuilding the site", None),
-    ("generate_share_image.py", "Rendering the social share image", None),
+    ("generate_share_image.py", "Rendering the share image, favicon, and team posters", None),
 ]
 
 

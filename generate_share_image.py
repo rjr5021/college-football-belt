@@ -5,10 +5,13 @@ size) for whoever currently holds the College Football Belt -- team color
 background, the holder's name, and how long they've held it. Also renders
 the site's favicon (site/favicon.png + apple-touch-icon.png) in the same
 team colors -- a small belt-buckle glyph, not a photo, so it stays legible
-down to 16x16.
+down to 16x16 -- and a downloadable portrait "belt history" poster
+(site/posters/<slug>.png) for every program that's ever held the belt: a
+timeline of that team's reigns in its own colors, linked from its team
+page.
 
 Usage:
-    python3 generate_share_image.py          # reads belt_data/, writes site/share.png + favicons
+    python3 generate_share_image.py          # reads belt_data/, writes site/share.png + favicons + posters
 
 No API key, no network call, no headless browser -- just belt_data/lineage.json
 + belt_data/team_colors.json (both already on disk after build_lineage.py and
@@ -182,6 +185,172 @@ def draw_belt_icon(size, primary, accent, ink):
     return img
 
 
+def _team_slug(name):
+    """Must match build_site.py's team_slug() exactly -- this is the same
+    filename stem a team's own page links a poster download to."""
+    import re
+    return re.sub(r"[^A-Za-z0-9]+", "-", name.strip().lower()).strip("-") or "team"
+
+
+def vertical_gradient(w, h, top_hex, bottom_hex):
+    """Same 1px-wide-then-resize trick as the share image -- H pixel writes
+    instead of W*H."""
+    from PIL import Image
+    top_rgb, bot_rgb = hex_to_rgb(top_hex), hex_to_rgb(bottom_hex)
+    grad = Image.new("RGB", (1, h))
+    gpx = grad.load()
+    for y in range(h):
+        t = y / (h - 1) if h > 1 else 0
+        gpx[0, y] = tuple(round(top_rgb[i] + (bot_rgb[i] - top_rgb[i]) * t) for i in range(3))
+    return grad.resize((w, h))
+
+
+POSTER_W = 1200
+POSTER_MIN_H = 560  # floor for a 1-reign team so the poster isn't mostly blank
+POSTER_MAX_ROWS = 9  # more than this and the poster just notes "+N earlier reigns"
+
+
+def fmt_duration_approx(days):
+    """A light years/days breakdown for the poster's timeline rows -- uses
+    flat 365-day years (not the leap-aware anniversary math the site's own
+    pages use for exact reign lengths), which is a fine approximation for a
+    decorative image. The poster's TOTAL days-held stat is still exact real
+    date arithmetic; only this per-row breakdown is approximate."""
+    years, remainder = divmod(days, 365)
+    if years > 0:
+        return f"{years} yr{'s' if years != 1 else ''}, {remainder} day{'s' if remainder != 1 else ''}"
+    return f"{days} day{'s' if days != 1 else ''}"
+
+
+def generate_team_poster(team, team_reigns, primary, alt, out_path):
+    """One portrait poster per program that's ever held the belt: a
+    timeline of every reign it's had, newest first, in that team's own
+    colors. Same Pillow toolkit as the share image, no browser involved.
+
+    The canvas height is derived from how many rows actually get drawn
+    (measured on a throwaway 1x1 surface first), floored at POSTER_MIN_H --
+    a team with one short reign gets a short poster instead of a tall
+    canvas that's two-thirds empty gradient below the history section."""
+    from PIL import Image, ImageDraw
+    import datetime as _dt
+
+    today = _dt.date.today()
+    ink, accent, dark_stop = panel_colors(primary, alt)
+    pad = 80
+
+    eyebrow_font = _font(_MONO_CANDIDATES, 20)
+    wordmark_font = _font(_DISPLAY_CANDIDATES, 26)
+    stat_font = _font(_BODY_CANDIDATES, 24)
+    row_font = _font(_BODY_CANDIDATES, 26)
+    row_sub_font = _font(_MONO_CANDIDATES, 17)
+    url_font = _font(_MONO_CANDIDATES, 20)
+
+    measure = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    team_font = fit_font(measure, team, _DISPLAY_CANDIDATES, POSTER_W - 2 * pad, start_size=88, min_size=40)
+
+    sorted_reigns = sorted(team_reigns, key=lambda r: r["start_date"])
+    total_days = 0
+    total_defenses = 0
+    for r in sorted_reigns:
+        start = _dt.date.fromisoformat(r["start_date"])
+        end = _dt.date.fromisoformat(r["end_date"]) if r.get("end_date") else today
+        total_days += (end - start).days
+        total_defenses += r.get("defenses", 0)
+    n = len(sorted_reigns)
+    stat_line = (f"{n} reign{'s' if n != 1 else ''} · {total_days:,} total days held · "
+                 f"{total_defenses} total defense{'s' if total_defenses != 1 else ''}")
+
+    newest_first = list(reversed(sorted_reigns))
+    shown = newest_first[:POSTER_MAX_ROWS]
+    hidden_count = len(newest_first) - len(shown)
+
+    # Layout pass: walk through the exact same sequence of y-advances the
+    # draw pass below uses, just without drawing anything, to find where
+    # the content actually ends.
+    y = pad
+    y += 32
+    y += 56
+    bbox = measure.textbbox((0, 0), "Xg", font=team_font)
+    y += (bbox[3] - bbox[1]) + 22
+    y += 46
+    y += 26
+    y += 40
+    for _ in shown:
+        y += 34 + 30 + 18
+    if hidden_count > 0:
+        y += 26
+    content_bottom = y
+
+    poster_h = max(POSTER_MIN_H, content_bottom + 40 + 22 + pad)
+
+    img = vertical_gradient(POSTER_W, poster_h, primary, dark_stop)
+    draw = ImageDraw.Draw(img)
+
+    y = pad
+    draw_tracked_text(draw, (pad, y), "EST. 1869 · LINEAL CHAMPIONSHIP", eyebrow_font, ink, tracking=2)
+    y += 32
+    draw.text((pad, y), "THE COLLEGE FOOTBALL BELT", font=wordmark_font, fill=ink)
+    y += 56
+
+    draw.text((pad, y), team, font=team_font, fill=accent)
+    y += (bbox[3] - bbox[1]) + 22
+
+    draw.text((pad, y), stat_line, font=stat_font, fill=ink)
+    y += 46
+
+    draw.line([(pad, y), (POSTER_W - pad, y)], fill=ink, width=1)
+    y += 26
+    draw_tracked_text(draw, (pad, y), "BELT HISTORY", eyebrow_font, ink, tracking=2)
+    y += 40
+
+    for r in shown:
+        start = _dt.date.fromisoformat(r["start_date"])
+        is_current = r.get("end_date") is None
+        end = today if is_current else _dt.date.fromisoformat(r["end_date"])
+        days = (end - start).days
+        date_range = f"{start.strftime('%b %Y')} – {'present' if is_current else end.strftime('%b %Y')}"
+        draw.text((pad, y), date_range, font=row_font, fill=accent if is_current else ink)
+        def_txt = f"{r.get('defenses', 0)} def."
+        def_w = draw.textbbox((0, 0), def_txt, font=row_sub_font)[2]
+        draw.text((POSTER_W - pad - def_w, y + 6), def_txt, font=row_sub_font, fill=ink)
+        y += 34
+        draw.text((pad, y), fmt_duration_approx(days), font=row_sub_font, fill=ink)
+        y += 30
+        draw.line([(pad, y), (POSTER_W - pad, y)], fill=dark_stop, width=1)
+        y += 18
+
+    if hidden_count > 0:
+        draw.text((pad, y), f"+ {hidden_count} earlier reign{'s' if hidden_count != 1 else ''}",
+                   font=row_sub_font, fill=ink)
+
+    url_text = "collegefootballbelt.com"
+    url_bbox = draw.textbbox((0, 0), url_text, font=url_font)
+    url_w = url_bbox[2] - url_bbox[0]
+    draw.text((POSTER_W - pad - url_w, poster_h - pad - 22), url_text, font=url_font, fill=ink)
+
+    img.save(out_path, "PNG")
+
+
+def generate_team_posters(lineage, colors):
+    """A poster PNG per program that's ever held the belt, written to
+    site/posters/<slug>.png -- linked from that team's own page. Zero new
+    data: same lineage.json + team_colors.json already loaded for the
+    share image."""
+    posters_dir = os.path.join(OUT_DIR, "posters")
+    os.makedirs(posters_dir, exist_ok=True)
+
+    by_team = {}
+    for r in lineage["reigns"]:
+        by_team.setdefault(r["team"], []).append(r)
+
+    for team, reigns in by_team.items():
+        primary, alt = team_color(colors, team)
+        out_path = os.path.join(posters_dir, f"{_team_slug(team)}.png")
+        generate_team_poster(team, reigns, primary, alt, out_path)
+
+    print(f"Wrote {len(by_team)} team poster(s) to {posters_dir}/")
+
+
 def generate_favicon(primary, accent, ink):
     """Writes site/favicon.png (32x32, referenced as the tab icon on every
     page) and site/apple-touch-icon.png (180x180, for iOS home-screen
@@ -217,17 +386,7 @@ def main():
 
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    # Build the vertical gradient at 1px wide, then stretch it -- H pixel
-    # writes instead of W*H.
-    top_rgb = hex_to_rgb(primary)
-    bot_rgb = hex_to_rgb(dark_stop)
-    grad = Image.new("RGB", (1, H))
-    gpx = grad.load()
-    for y in range(H):
-        t = y / (H - 1)
-        gpx[0, y] = tuple(round(top_rgb[i] + (bot_rgb[i] - top_rgb[i]) * t) for i in range(3))
-    img = grad.resize((W, H))
-
+    img = vertical_gradient(W, H, primary, dark_stop)
     draw = ImageDraw.Draw(img)
 
     eyebrow_font = _font(_MONO_CANDIDATES, 22)
@@ -261,6 +420,7 @@ def main():
     print(f"Wrote {OUT_PATH} ({W}x{H}) for {holder}")
 
     generate_favicon(primary, accent, ink)
+    generate_team_posters(lineage, colors)
 
 
 if __name__ == "__main__":

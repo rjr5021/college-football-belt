@@ -196,6 +196,27 @@ def team_color(colors, name):
     return primary, alt
 
 
+def team_logo(colors, name):
+    """CFBD's own logo URL for this team, or None -- fetch_team_colors.py
+    already captures it (same /teams call as the color data, zero extra
+    cost), it just wasn't rendered anywhere yet. None for the handful of
+    historic programs CFBD doesn't track (Carlisle, Olympic Club, etc.) --
+    callers render nothing rather than a broken image."""
+    entry = colors.get(name) or {}
+    return entry.get("logo") or None
+
+
+def logo_img(colors, name, css_class="teamLogo", size=40):
+    """A ready-to-embed <img>, or "" when this team has no logo on file --
+    always check truthiness before using this in a layout that assumes an
+    image is present."""
+    url = team_logo(colors, name)
+    if not url:
+        return ""
+    return (f'<img class="{css_class}" src="{esc(url)}" alt="" width="{size}" height="{size}" '
+            f'loading="lazy" onerror="this.remove()">')
+
+
 MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July",
                "August", "September", "October", "November", "December"]
 
@@ -468,7 +489,10 @@ h1.matchup .win{ color:var(--emph); }
   border:1px solid var(--hairline); border-radius:8px; overflow:hidden; box-shadow:var(--shadow);
 }
 @media (max-width:640px){ .scoreboard{ grid-template-columns:1fr; } .scoreboard .vs{ display:none } }
+.teamLogo{ object-fit:contain; flex:none; vertical-align:middle; }
 .teamPanel{ padding:26px 22px; display:flex; flex-direction:column; gap:10px; }
+.teamPanel .panelTop{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.teamPanel .teamLogo{ filter:drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
 .teamPanel.home{ background: linear-gradient(160deg, var(--home) 0%, color-mix(in srgb, var(--home) 75%, black) 100%); color:var(--home-ink); }
 .teamPanel.away{ background: linear-gradient(160deg, var(--away) 0%, color-mix(in srgb, var(--away) 75%, black) 100%); color:var(--away-ink); }
 .teamPanel .side{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
@@ -549,10 +573,12 @@ details.moreStats .statCategory{ margin-top:18px; }
 }
 
 /* ---------- upcoming game preview page ---------- */
-.previewMeta{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:2px 0 30px; }
+.previewMeta{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:2px 0 6px; }
+.kickoffLocal{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:0 0 30px; }
+.kickoffLocal[hidden]{ display:none; }
 .formGrid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:0 0 8px; }
 @media (max-width:700px){ .formGrid{ grid-template-columns:1fr; } }
-.formCol h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:0 0 10px; }
+.formCol h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
 .formList{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
 .formList li{ display:flex; align-items:center; gap:10px; padding:9px 11px; background:var(--paper-2); border-radius:6px; font-size:13px; }
 .formBadge{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:11px; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -693,6 +719,7 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .otdMatchup{ flex:1; font-size:14.5px; }
 .otdTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
 .otdTag.changed{ color:var(--brass-bright); }
+.otdRow.hiddenRow{ display:none; }
 @media (max-width:560px){ .otdRow{ flex-wrap:wrap; } .otdTag{ order:3; width:100%; padding-left:60px; } }
 
 /* ---------- homepage: stats band ---------- */
@@ -731,6 +758,8 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 
 /* ---------- team page ---------- */
 .teamPageHead{ display:flex; align-items:center; gap:12px; border-bottom:3px solid; padding-bottom:10px; margin-top:22px; }
+.posterLink{ display:inline-block; margin-left:6px; font-size:12.5px; color:var(--brass-bright); text-decoration:none; border-bottom:1px dotted var(--brass); white-space:nowrap; }
+.posterLink:hover{ border-bottom-style:solid; }
 .teamReignList{ display:flex; flex-direction:column; gap:10px; margin-top:20px; }
 .teamReignCard{ padding:14px 18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; }
 .teamReignHead{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
@@ -776,6 +805,18 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .sortToggle button{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; white-space:nowrap; }
 .sortToggle button.active{ background:var(--brass); color:var(--paper); font-weight:600; }
 .sortToggle button:not(.active):hover{ color:var(--ink); }
+
+.dateSelect{ display:flex; gap:8px; }
+.dateSelect select{
+  font-family:"IBM Plex Mono",monospace; font-size:13px; padding:8px 12px;
+  border:1px solid var(--hairline); border-radius:20px; background:var(--paper-2); color:var(--ink);
+}
+.todayBtn{
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em;
+  padding:8px 14px; border:1px solid var(--hairline); border-radius:20px;
+  background:var(--paper-2); color:var(--ink-soft); cursor:pointer;
+}
+.todayBtn:hover{ color:var(--ink); border-color:var(--brass); }
 
 .records{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0 34px; }
 @media (max-width:820px){ .records{ grid-template-columns:1fr; } }
@@ -1164,13 +1205,19 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 
   <div class="scoreboard">
     <div class="teamPanel home">
-      <span class="side">Home &middot; {home_defender}</span>
+      <div class="panelTop">
+        <span class="side">Home &middot; {home_defender}</span>
+        {logo_img(colors, home, "teamLogo", 30)}
+      </div>
       <span class="name">{esc(home)}</span>
       <span class="pts tabular">{home_score}</span>
     </div>
     <div class="vs">AT</div>
     <div class="teamPanel away">
-      <span class="side">Away &middot; {away_defender}</span>
+      <div class="panelTop">
+        <span class="side">Away &middot; {away_defender}</span>
+        {logo_img(colors, away, "teamLogo", 30)}
+      </div>
       <span class="name">{esc(away)}</span>
       <span class="pts tabular">{away_score}</span>
     </div>
@@ -1260,7 +1307,133 @@ def render_on_this_day(belt_games, today):
     <p class="lede">{len(matches)} belt game{plural} on this date since 1869.</p>
     <div class="otdList">{rows}
     </div>
+    <p class="viewToggle">Curious about a different date? <a href="on-this-day.html">Browse On
+      This Day across all of belt history &rarr;</a></p>
   </section>'''
+
+
+def generate_on_this_day_page(belt_games):
+    """Standalone version of the homepage's "On this day" widget -- every
+    belt game ever, tagged with its month/day, filtered entirely
+    client-side against the VISITOR's own local date (not the build
+    server's), with a month/day picker to browse any other date in belt
+    history. Same data as everywhere else on the site, just reshaped --
+    no new fetches."""
+    rows = ""
+    for g in sorted(belt_games, key=lambda g: g["date"], reverse=True):
+        d = date.fromisoformat(g["date"])
+        year = g["date"][:4]
+        h, a = (int(x) for x in g["score"].split("-"))
+        if g["outcome"] in ("changed", "established"):
+            tag = '<span class="otdTag changed">Belt changed hands</span>'
+        else:
+            tag = '<span class="otdTag">Title defended</span>'
+        loc_word = "vs." if g["neutral"] else "at"
+        rows += f'''
+      <a class="otdRow" data-month="{d.month}" data-day="{d.day}" href="games/{g["game_id"]}.html">
+        <span class="otdYear tabular">{year}</span>
+        <span class="otdMatchup">{esc(g["away"])} {loc_word} {esc(g["home"])} <span class="tabular">{a}&ndash;{h}</span></span>
+        {tag}
+      </a>'''
+
+    month_options = "".join(f'<option value="{i}">{name}</option>' for i, name in enumerate(MONTH_NAMES, 1))
+    day_options = "".join(f'<option value="{d}">{d}</option>' for d in range(1, 32))
+
+    return f'''<meta charset="UTF-8">
+<title>On This Day — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">On This Day</h1>
+  <p class="lede" id="otdLede">Every belt game that&rsquo;s ever happened on this date, across
+    all 158 years of belt history.</p>
+
+  <div class="historyTop">
+    <div class="controls">
+      <div class="dateSelect">
+        <select id="monthSelect" aria-label="Month">{month_options}</select>
+        <select id="daySelect" aria-label="Day">{day_options}</select>
+      </div>
+      <button type="button" class="todayBtn" id="todayBtn">Jump to today</button>
+    </div>
+  </div>
+
+  <div class="otdList" id="otdList">{rows}
+  </div>
+  <p class="noResults" id="noResults">No belt games have ever landed on this date &mdash; the
+    season only runs August&ndash;January, so a lot of the calendar is quiet.</p>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every belt game computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){{
+  var monthSelect = document.getElementById('monthSelect');
+  var daySelect = document.getElementById('daySelect');
+  var todayBtn = document.getElementById('todayBtn');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.otdRow'));
+  var noResults = document.getElementById('noResults');
+  var lede = document.getElementById('otdLede');
+  var MONTHS = {json.dumps(MONTH_NAMES)};
+
+  function applyFilter(){{
+    var m = parseInt(monthSelect.value, 10);
+    var d = parseInt(daySelect.value, 10);
+    var shown = 0;
+    rows.forEach(function(r){{
+      var match = parseInt(r.getAttribute('data-month'), 10) === m && parseInt(r.getAttribute('data-day'), 10) === d;
+      r.classList.toggle('hiddenRow', !match);
+      if (match) shown++;
+    }});
+    noResults.style.display = shown === 0 ? 'block' : 'none';
+    lede.textContent = shown + (shown === 1 ? ' belt game has' : ' belt games have') +
+      ' happened on ' + MONTHS[m - 1] + ' ' + d + ' since 1869.';
+  }}
+
+  monthSelect.addEventListener('change', applyFilter);
+  daySelect.addEventListener('change', applyFilter);
+  todayBtn.addEventListener('click', function(){{
+    var now = new Date();
+    monthSelect.value = String(now.getMonth() + 1);
+    daySelect.value = String(now.getDate());
+    applyFilter();
+  }});
+
+  var now = new Date();
+  monthSelect.value = String(now.getMonth() + 1);
+  daySelect.value = String(now.getDate());
+  applyFilter();
+}})();
+</script>
+'''
 
 
 def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None):
@@ -2120,6 +2293,24 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
 <main class="wrap">
   <h1 class="pageTitle">Up Next: {title}</h1>
   <p class="previewMeta">{esc(holder)} {esc(side_full)} {esc(opponent)} &middot; {fmt_date(next_game["date"])} &middot; the belt is on the line</p>
+  <p class="kickoffLocal" id="kickoffLocal" data-utc="{esc(next_game.get('raw_date') or '')}" hidden></p>
+  <script>
+  (function(){{
+    var el = document.getElementById('kickoffLocal');
+    var raw = el && el.getAttribute('data-utc');
+    if (!raw) return;
+    var d = new Date(raw);
+    if (isNaN(d.getTime())) return;
+    try {{
+      var fmt = new Intl.DateTimeFormat(undefined, {{
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+      }});
+      el.textContent = 'Kickoff: ' + fmt.format(d) + ' your time';
+      el.hidden = false;
+    }} catch (e) {{}}
+  }})();
+  </script>
 {weather_html}
   <div class="sectionHead withTag">
     <span class="tag">Recent Form</span>
@@ -2128,11 +2319,11 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
   </div>
   <div class="formGrid">
     <div class="formCol">
-      <h3>{esc(holder)}</h3>
+      <h3>{logo_img(colors, holder, "teamLogo", 22)}{esc(holder)}</h3>
       {holder_form_html}
     </div>
     <div class="formCol">
-      <h3>{esc(opponent)}</h3>
+      <h3>{logo_img(colors, opponent, "teamLogo", 22)}{esc(opponent)}</h3>
       {opp_form_html}
     </div>
   </div>
@@ -2380,11 +2571,35 @@ def generate_records_page(lineage, colors, belt_games):
                                      f'+{margin(g)}', f'{win_score}&ndash;{lose_score} &middot; {fmt_date(g["date"])}',
                                      f'games/{g["game_id"]}.html')
 
+    # ---- closest calls: narrowest defenses, narrowest upsets, biggest upsets ----
+    defenses_only = [g for g in belt_games if g["holder"] and g["new_holder"] == g["holder"]]
+    changes_only = [g for g in belt_games if g["holder"] and g["new_holder"] != g["holder"]]
+
+    def close_call_row(rank, g, verb):
+        h, a = (int(x) for x in g["score"].split("-"))
+        tie = h == a
+        value = "Tie" if tie else f'+{margin(g)}'
+        return _record_row(
+            rank, team_swatch(g["new_holder"]),
+            f'{esc(g["new_holder"])} {"tied" if tie else verb} {esc(g["holder"])}',
+            value, f'{max(h, a)}&ndash;{min(h, a)} &middot; {fmt_date(g["date"])}',
+            f'games/{g["game_id"]}.html')
+
+    narrowest_defense_rows = "".join(
+        close_call_row(i, g, "over") for i, g in enumerate(sorted(defenses_only, key=margin)[:5], 1))
+    narrowest_change_rows = "".join(
+        close_call_row(i, g, "took it from") for i, g in enumerate(sorted(changes_only, key=margin)[:5], 1))
+    biggest_upset_rows = "".join(
+        close_call_row(i, g, "routed") for i, g in enumerate(sorted(changes_only, key=margin, reverse=True)[:5], 1))
+
     cards = [
         ("Longest Reigns", "By days holding the belt", longest_rows),
         ("Most Reigns", "By program, across all 158 years", most_reigns_rows),
         ("Most Defended", "Consecutive defenses in a single reign", most_defended_rows),
         ("Biggest Blowouts", "Largest margin of victory in any belt game", blowout_rows),
+        ("Narrowest Defenses", "Closest the holder has come to losing it and didn't", narrowest_defense_rows),
+        ("Narrowest Upsets", "The belt changed hands by the barest possible margin", narrowest_change_rows),
+        ("Biggest Upsets", "The belt changed hands in an outright rout", biggest_upset_rows),
     ]
     cards_html = "".join(f'''
     <section class="recordCard">
@@ -2539,12 +2754,15 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
 
 <main class="wrap">
   <div class="teamPageHead" style="border-color:{primary}">
+    {logo_img(colors, team, "teamLogo", 48)}
     <span class="swatch" style="background:{primary};width:14px;height:14px;"></span>
     <h1 class="pageTitle" style="margin:0">{esc(team)}</h1>
   </div>
   <p class="lede">{holder_line} {n} reign{"s" if n != 1 else ""} in belt history,
     {total_days:,} total day{"s" if total_days != 1 else ""} held,
-    {total_defenses} total defense{"s" if total_defenses != 1 else ""}.</p>
+    {total_defenses} total defense{"s" if total_defenses != 1 else ""}.
+    <a class="posterLink" href="../posters/{team_slug(team)}.png">Download a poster of this
+      history &darr;</a></p>
 
   <div class="teamReignList">{rows_html}
   </div>
@@ -2946,6 +3164,10 @@ def main():
     with open(os.path.join(OUT_DIR, "records.html"), "w", encoding="utf-8") as f:
         f.write(records_html)
 
+    on_this_day_html = generate_on_this_day_page(belt_games)
+    with open(os.path.join(OUT_DIR, "on-this-day.html"), "w", encoding="utf-8") as f:
+        f.write(on_this_day_html)
+
     teams_dir = os.path.join(OUT_DIR, "teams")
     teams_written, team_slugs = generate_team_pages(lineage, colors, belt_games, teams_dir)
 
@@ -2970,7 +3192,8 @@ def main():
                          f"(run this from the project folder, where that file lives)")
 
     sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
-                     f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html"]
+                     f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html",
+                     f"{SITE_URL}/on-this-day.html"]
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -2998,6 +3221,7 @@ def main():
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
     print(f"Wrote records page to {OUT_DIR}/records.html")
+    print(f"Wrote On This Day page to {OUT_DIR}/on-this-day.html")
     print(f"Wrote {teams_written} team pages to {teams_dir}/")
     if wrote_map:
         print(f"Wrote map page to {OUT_DIR}/map.html")
