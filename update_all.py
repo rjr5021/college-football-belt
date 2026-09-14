@@ -96,6 +96,13 @@ this is safe to point at an existing belt_data/ folder:
                                  only on the workflow's dedicated Friday
                                  evening run (see update-and-deploy.yml's
                                  X_POST_PREVIEW) and only once per game.
+                                 Also syncs the account's bio to always name
+                                 the current holder, whenever it changes.
+
+follow_batch.py is deliberately NOT a stage here -- it runs on its own much
+more frequent schedule (every ~2 hours, see follow-accounts.yml) to slowly
+build up who @CollegeFBBelt follows, independent of the game-driven cadence
+above. See follow_batch.py's own docstring.
 
 CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst limit).
 Steps 1, 3 and 5 default to the cheap incremental fetch above; step 4's

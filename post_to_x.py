@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Posts automated updates to X (@CollegeFBBelt). Two independent things this
-does, either or both in a single run:
+Posts automated updates to X (@CollegeFBBelt). Three independent things
+this does, any or all in a single run:
 
   1. RESULT posts -- one for every belt game since the last run, win or
      lose: both a genuine belt CHANGE and a successful DEFENSE get their
@@ -9,6 +9,10 @@ does, either or both in a single run:
   2. PREVIEW posts -- one post for the upcoming game, meant to go out the
      Friday before it, pointing at the site's AI-written preview + weather
      forecast + prediction.
+  3. BIO sync -- keeps the account bio's "Current champion: X" line in
+     step with lineage.json's current_holder, whenever it changes (see
+     sync_bio() below). Uses the legacy v1.1 API under the hood since
+     profile updates aren't exposed on v2's tweepy.Client.
 
 Usage:
     export X_API_KEY=...
@@ -79,6 +83,13 @@ CACHE_PATH = os.path.join(CACHE_DIR, "x_last_posted.json")
 SITE_URL = "https://collegefootballbelt.com"
 
 REQUIRED_ENV = ["X_API_KEY", "X_API_KEY_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SECRET"]
+
+# Kept in sync with the account's actual bio on X -- see sync_bio() below.
+# Longest holder seen in lineage.json so far ("West Virginia Wesleyan") still
+# leaves this at 149 chars, comfortably under X's 160-char bio limit.
+BIO_TEMPLATE = ("The lineal college football championship since 1869. "
+                 "Whoever last beat the holder, on the field, holds it. "
+                 "Current champion: {holder} \U0001F3C6")
 
 
 # ---------------------------------------------------------------- helpers
@@ -325,6 +336,37 @@ def post_preview(client, cache):
     save_cache(cache)
 
 
+# --------------------------------------------------------------- bio sync
+
+def sync_bio(api_v1, lineage, cache):
+    """Keeps the account's bio's "Current champion: X" line in step with
+    lineage.json's current_holder -- runs every pipeline invocation but is a
+    no-op (no API call) unless the holder actually changed since the last
+    successful sync, tracked by cache['last_synced_bio_holder'].
+
+    Needs the legacy v1.1 API (tweepy.API via OAuth1UserHandler) because
+    profile description updates aren't exposed on tweepy.Client (API v2) --
+    unlike create_tweet()/follow_user(), which are v2-only above/elsewhere.
+    """
+    holder = lineage.get("current_holder")
+    if not holder:
+        return
+    if cache.get("last_synced_bio_holder") == holder:
+        return
+
+    bio = BIO_TEMPLATE.format(holder=holder)
+    try:
+        api_v1.update_profile(description=bio)
+    except Exception as e:
+        print(f"X bio sync FAILED for holder '{holder}' (not fatal to the "
+              f"pipeline; will retry next run): {e}")
+        return
+
+    print(f"Synced bio -- current champion is now {holder}.")
+    cache["last_synced_bio_holder"] = holder
+    save_cache(cache)
+
+
 # ----------------------------------------------------------------- main
 
 def main():
@@ -350,12 +392,20 @@ def main():
         access_token=os.environ["X_ACCESS_TOKEN"],
         access_token_secret=os.environ["X_ACCESS_TOKEN_SECRET"],
     )
+    auth_v1 = tweepy.OAuth1UserHandler(
+        os.environ["X_API_KEY"],
+        os.environ["X_API_KEY_SECRET"],
+        os.environ["X_ACCESS_TOKEN"],
+        os.environ["X_ACCESS_TOKEN_SECRET"],
+    )
+    api_v1 = tweepy.API(auth_v1)
 
     lineage = load_json(LINEAGE_PATH)
     cache = load_cache()
 
     post_results(client, lineage, cache)
     post_preview(client, cache)
+    sync_bio(api_v1, lineage, cache)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,73 @@
+name: Follow accounts on X
+
+# Slowly builds up who @CollegeFBBelt follows on X, a small batch at a
+# time, roughly every 2 hours around the clock -- see follow_batch.py's own
+# docstring for why this is deliberately separate from update-and-deploy.yml
+# (which runs on the game-driven schedule, not a following schedule) and
+# deliberately small/frequent rather than one big burst (X rate-limited the
+# account after ~15-19 follows in quick succession during initial manual
+# setup).
+#
+# One-time setup this workflow depends on:
+#   Same four X_* repository secrets as update-and-deploy.yml's optional X
+#   posting step (X_API_KEY, X_API_KEY_SECRET, X_ACCESS_TOKEN,
+#   X_ACCESS_TOKEN_SECRET) -- Settings -> Secrets and variables -> Actions.
+#   If they're not set, follow_batch.py just no-ops (prints a note, exits
+#   0) -- same pattern as post_to_x.py.
+#
+# follow_targets.json (the list of accounts to follow) and
+# social_cache/x_follow_progress.json (which ones are already done) are
+# both plain files in the repo -- this workflow commits progress back the
+# same way update-and-deploy.yml commits social_cache/x_last_posted.json,
+# so progress isn't lost/repeated between runs.
+
+on:
+  schedule:
+    # Anchored to whatever minute this was created -- GitHub Actions
+    # spreads "every N hours" schedules across the hour rather than firing
+    # every scheduled workflow at exactly :00, so this doesn't need (and
+    # deliberately doesn't use) a specific minute value.
+    - cron: '0 */2 * * *'
+  workflow_dispatch: {}   # lets you trigger an extra batch manually from the Actions tab
+
+permissions:
+  contents: write   # needed to commit social_cache/x_follow_progress.json back to main
+
+concurrency:
+  group: follow-accounts
+  cancel-in-progress: false
+
+jobs:
+  follow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Follow the next batch of accounts
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python follow_batch.py
+
+      - name: Commit follow progress if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -d social_cache ]; then
+            git add social_cache/
+          fi
+          if git diff --cached --quiet; then
+            echo "No change to social_cache/ -- nothing to commit."
+          else
+            git commit -m "Advance X follow progress [skip ci]"
+            git push
+          fi

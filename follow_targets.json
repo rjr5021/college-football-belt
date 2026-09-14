@@ -1,0 +1,800 @@
+{
+  "_comment": "Master follow-target list for @CollegeFBBelt, consumed by follow_batch.py. Media accounts first (curated CFB journalists/analysts/outlets), then all 134 FBS team accounts. follow_batch.py works through this list in order, a small batch per run, and skips anything already recorded as followed in social_cache/x_follow_progress.json -- so re-running this file (e.g. after adding more accounts) never re-attempts ones already done.",
+  "targets": [
+    {
+      "handle": "AthlonSports",
+      "label": "Athlon Sports",
+      "category": "media"
+    },
+    {
+      "handle": "JasonKirkSBN",
+      "label": "Jason Kirk (SB Nation)",
+      "category": "media"
+    },
+    {
+      "handle": "HeismanPundit",
+      "label": "Heisman Pundit",
+      "category": "media"
+    },
+    {
+      "handle": "MrCFB",
+      "label": "MrCFB",
+      "category": "media"
+    },
+    {
+      "handle": "DanWetzel",
+      "label": "Dan Wetzel",
+      "category": "media"
+    },
+    {
+      "handle": "CFBMatrix",
+      "label": "CFB Matrix",
+      "category": "media"
+    },
+    {
+      "handle": "philsteele042",
+      "label": "Phil Steele",
+      "category": "media"
+    },
+    {
+      "handle": "bartonsimmons",
+      "label": "Barton Simmons",
+      "category": "media"
+    },
+    {
+      "handle": "sam_ponder",
+      "label": "Sam Ponder",
+      "category": "media"
+    },
+    {
+      "handle": "SBN_BillC",
+      "label": "Bill Connelly (SB Nation)",
+      "category": "media"
+    },
+    {
+      "handle": "ralphDRussoAP",
+      "label": "Ralph Russo (AP)",
+      "category": "media"
+    },
+    {
+      "handle": "footballscoop",
+      "label": "FootballScoop",
+      "category": "media"
+    },
+    {
+      "handle": "Finebaum",
+      "label": "Paul Finebaum",
+      "category": "media"
+    },
+    {
+      "handle": "ClayTravis",
+      "label": "Clay Travis",
+      "category": "media"
+    },
+    {
+      "handle": "CollegeGameDay",
+      "label": "ESPN College GameDay",
+      "category": "media"
+    },
+    {
+      "handle": "SEC",
+      "label": "SEC Conference",
+      "category": "media"
+    },
+    {
+      "handle": "ErinAndrews",
+      "label": "Erin Andrews",
+      "category": "media"
+    },
+    {
+      "handle": "davidpollack47",
+      "label": "David Pollack",
+      "category": "media"
+    },
+    {
+      "handle": "Brett_McMurphy",
+      "label": "Brett McMurphy",
+      "category": "media"
+    },
+    {
+      "handle": "TimBrando",
+      "label": "Tim Brando",
+      "category": "media"
+    },
+    {
+      "handle": "JoshPateCFB",
+      "label": "Josh Pate",
+      "category": "media"
+    },
+    {
+      "handle": "RedditCFB",
+      "label": "r/CFB",
+      "category": "media"
+    },
+    {
+      "handle": "Rivals",
+      "label": "Rivals",
+      "category": "media"
+    },
+    {
+      "handle": "Hayesfawcett3",
+      "label": "Hayes Fawcett",
+      "category": "media"
+    },
+    {
+      "handle": "Clowfb",
+      "label": "Chris Low",
+      "category": "media"
+    },
+    {
+      "handle": "AlabamaFTBL",
+      "label": "Alabama Football",
+      "category": "team"
+    },
+    {
+      "handle": "RazorbackFB",
+      "label": "Arkansas Football",
+      "category": "team"
+    },
+    {
+      "handle": "AuburnFootball",
+      "label": "Auburn Football",
+      "category": "team"
+    },
+    {
+      "handle": "GatorsFB",
+      "label": "Florida Football",
+      "category": "team"
+    },
+    {
+      "handle": "GeorgiaFootball",
+      "label": "Georgia Football",
+      "category": "team"
+    },
+    {
+      "handle": "UKFootball",
+      "label": "Kentucky Football",
+      "category": "team"
+    },
+    {
+      "handle": "LSUfootball",
+      "label": "LSU Football",
+      "category": "team"
+    },
+    {
+      "handle": "HailStateFB",
+      "label": "Mississippi State Football",
+      "category": "team"
+    },
+    {
+      "handle": "MizzouFootball",
+      "label": "Missouri Football",
+      "category": "team"
+    },
+    {
+      "handle": "OleMissFB",
+      "label": "Ole Miss Football",
+      "category": "team"
+    },
+    {
+      "handle": "OU_Football",
+      "label": "Oklahoma Football",
+      "category": "team"
+    },
+    {
+      "handle": "GamecockFB",
+      "label": "South Carolina Football",
+      "category": "team"
+    },
+    {
+      "handle": "Vol_Football",
+      "label": "Tennessee Football",
+      "category": "team"
+    },
+    {
+      "handle": "TexasFootball",
+      "label": "Texas Football",
+      "category": "team"
+    },
+    {
+      "handle": "AggieFootball",
+      "label": "Texas A&M Football",
+      "category": "team"
+    },
+    {
+      "handle": "VandyFootball",
+      "label": "Vanderbilt Football",
+      "category": "team"
+    },
+    {
+      "handle": "IlliniFootball",
+      "label": "Illinois Football",
+      "category": "team"
+    },
+    {
+      "handle": "IndianaFootball",
+      "label": "Indiana Football",
+      "category": "team"
+    },
+    {
+      "handle": "HawkeyeFootball",
+      "label": "Iowa Football",
+      "category": "team"
+    },
+    {
+      "handle": "TerpsFootball",
+      "label": "Maryland Football",
+      "category": "team"
+    },
+    {
+      "handle": "UMichFootball",
+      "label": "Michigan Football",
+      "category": "team"
+    },
+    {
+      "handle": "MSU_Football",
+      "label": "Michigan State Football",
+      "category": "team"
+    },
+    {
+      "handle": "GopherFootball",
+      "label": "Minnesota Football",
+      "category": "team"
+    },
+    {
+      "handle": "HuskerFootball",
+      "label": "Nebraska Football",
+      "category": "team"
+    },
+    {
+      "handle": "NUFBFamily",
+      "label": "Northwestern Football",
+      "category": "team"
+    },
+    {
+      "handle": "OhioStateFB",
+      "label": "Ohio State Football",
+      "category": "team"
+    },
+    {
+      "handle": "OregonFootball",
+      "label": "Oregon Football",
+      "category": "team"
+    },
+    {
+      "handle": "PennStateFball",
+      "label": "Penn State Football",
+      "category": "team"
+    },
+    {
+      "handle": "BoilerFootball",
+      "label": "Purdue Football",
+      "category": "team"
+    },
+    {
+      "handle": "RFootball",
+      "label": "Rutgers Football",
+      "category": "team"
+    },
+    {
+      "handle": "UCLAFootball",
+      "label": "UCLA Football",
+      "category": "team"
+    },
+    {
+      "handle": "uscfb",
+      "label": "USC Football",
+      "category": "team"
+    },
+    {
+      "handle": "UW_Football",
+      "label": "Washington Football",
+      "category": "team"
+    },
+    {
+      "handle": "BadgerFootball",
+      "label": "Wisconsin Football",
+      "category": "team"
+    },
+    {
+      "handle": "ArizonaFBall",
+      "label": "Arizona Football",
+      "category": "team"
+    },
+    {
+      "handle": "ASUFootball",
+      "label": "Arizona State Football",
+      "category": "team"
+    },
+    {
+      "handle": "BUFootball",
+      "label": "Baylor Football",
+      "category": "team"
+    },
+    {
+      "handle": "BYUfootball",
+      "label": "BYU Football",
+      "category": "team"
+    },
+    {
+      "handle": "GoBearcatsFB",
+      "label": "Cincinnati Football",
+      "category": "team"
+    },
+    {
+      "handle": "CUBuffsFootball",
+      "label": "Colorado Football",
+      "category": "team"
+    },
+    {
+      "handle": "UHCougarFB",
+      "label": "Houston Football",
+      "category": "team"
+    },
+    {
+      "handle": "CycloneFB",
+      "label": "Iowa State Football",
+      "category": "team"
+    },
+    {
+      "handle": "KU_Football",
+      "label": "Kansas Football",
+      "category": "team"
+    },
+    {
+      "handle": "KStateFB",
+      "label": "Kansas State Football",
+      "category": "team"
+    },
+    {
+      "handle": "CowboyFB",
+      "label": "Oklahoma State Football",
+      "category": "team"
+    },
+    {
+      "handle": "TCUFootball",
+      "label": "TCU Football",
+      "category": "team"
+    },
+    {
+      "handle": "TexasTechFB",
+      "label": "Texas Tech Football",
+      "category": "team"
+    },
+    {
+      "handle": "UCF_Football",
+      "label": "UCF Football",
+      "category": "team"
+    },
+    {
+      "handle": "Utah_Football",
+      "label": "Utah Football",
+      "category": "team"
+    },
+    {
+      "handle": "WVUfootball",
+      "label": "West Virginia Football",
+      "category": "team"
+    },
+    {
+      "handle": "BCFootball",
+      "label": "Boston College Football",
+      "category": "team"
+    },
+    {
+      "handle": "CalFootball",
+      "label": "California Football",
+      "category": "team"
+    },
+    {
+      "handle": "ClemsonFB",
+      "label": "Clemson Football",
+      "category": "team"
+    },
+    {
+      "handle": "DukeFOOTBALL",
+      "label": "Duke Football",
+      "category": "team"
+    },
+    {
+      "handle": "FSUFootball",
+      "label": "Florida State Football",
+      "category": "team"
+    },
+    {
+      "handle": "GeorgiaTechFB",
+      "label": "Georgia Tech Football",
+      "category": "team"
+    },
+    {
+      "handle": "LouisvilleFB",
+      "label": "Louisville Football",
+      "category": "team"
+    },
+    {
+      "handle": "CanesFootball",
+      "label": "Miami Football",
+      "category": "team"
+    },
+    {
+      "handle": "PackFootball",
+      "label": "NC State Football",
+      "category": "team"
+    },
+    {
+      "handle": "UNCFootball",
+      "label": "North Carolina Football",
+      "category": "team"
+    },
+    {
+      "handle": "Pitt_FB",
+      "label": "Pittsburgh Football",
+      "category": "team"
+    },
+    {
+      "handle": "SMUFB",
+      "label": "SMU Football",
+      "category": "team"
+    },
+    {
+      "handle": "StanfordFball",
+      "label": "Stanford Football",
+      "category": "team"
+    },
+    {
+      "handle": "CuseFootball",
+      "label": "Syracuse Football",
+      "category": "team"
+    },
+    {
+      "handle": "UVAFootball",
+      "label": "Virginia Football",
+      "category": "team"
+    },
+    {
+      "handle": "HokiesFB",
+      "label": "Virginia Tech Football",
+      "category": "team"
+    },
+    {
+      "handle": "WakeFB",
+      "label": "Wake Forest Football",
+      "category": "team"
+    },
+    {
+      "handle": "NDFootball",
+      "label": "Notre Dame Football",
+      "category": "team"
+    },
+    {
+      "handle": "UConnFootball",
+      "label": "UConn Football",
+      "category": "team"
+    },
+    {
+      "handle": "UMassFootball",
+      "label": "UMass Football",
+      "category": "team"
+    },
+    {
+      "handle": "ArmyWP_Football",
+      "label": "Army Football",
+      "category": "team"
+    },
+    {
+      "handle": "CharlotteFTBL",
+      "label": "Charlotte Football",
+      "category": "team"
+    },
+    {
+      "handle": "ECUPiratesFB",
+      "label": "East Carolina Football",
+      "category": "team"
+    },
+    {
+      "handle": "FAUFootball",
+      "label": "Florida Atlantic Football",
+      "category": "team"
+    },
+    {
+      "handle": "MemphisFB",
+      "label": "Memphis Football",
+      "category": "team"
+    },
+    {
+      "handle": "NavyFB",
+      "label": "Navy Football",
+      "category": "team"
+    },
+    {
+      "handle": "UNTFootball",
+      "label": "North Texas Football",
+      "category": "team"
+    },
+    {
+      "handle": "RiceFootball",
+      "label": "Rice Football",
+      "category": "team"
+    },
+    {
+      "handle": "USFFootball",
+      "label": "South Florida Football",
+      "category": "team"
+    },
+    {
+      "handle": "Temple_FB",
+      "label": "Temple Football",
+      "category": "team"
+    },
+    {
+      "handle": "GreenWaveFB",
+      "label": "Tulane Football",
+      "category": "team"
+    },
+    {
+      "handle": "TulsaFootball",
+      "label": "Tulsa Football",
+      "category": "team"
+    },
+    {
+      "handle": "UAB_FB",
+      "label": "UAB Football",
+      "category": "team"
+    },
+    {
+      "handle": "UTSAFTBL",
+      "label": "UTSA Football",
+      "category": "team"
+    },
+    {
+      "handle": "UDBlueHens",
+      "label": "Delaware Football",
+      "category": "team"
+    },
+    {
+      "handle": "FIUFootball",
+      "label": "FIU Football",
+      "category": "team"
+    },
+    {
+      "handle": "JaxStateFB",
+      "label": "Jacksonville State Football",
+      "category": "team"
+    },
+    {
+      "handle": "KennesawStFB",
+      "label": "Kennesaw State Football",
+      "category": "team"
+    },
+    {
+      "handle": "LibertyFootball",
+      "label": "Liberty Football",
+      "category": "team"
+    },
+    {
+      "handle": "LATechFB",
+      "label": "Louisiana Tech Football",
+      "category": "team"
+    },
+    {
+      "handle": "MT_FB",
+      "label": "Middle Tennessee Football",
+      "category": "team"
+    },
+    {
+      "handle": "MoStateFootball",
+      "label": "Missouri State Football",
+      "category": "team"
+    },
+    {
+      "handle": "NMStateFootball",
+      "label": "New Mexico State Football",
+      "category": "team"
+    },
+    {
+      "handle": "BearkatsFB",
+      "label": "Sam Houston Football",
+      "category": "team"
+    },
+    {
+      "handle": "UTEPFB",
+      "label": "UTEP Football",
+      "category": "team"
+    },
+    {
+      "handle": "WKUFootball",
+      "label": "Western Kentucky Football",
+      "category": "team"
+    },
+    {
+      "handle": "ZipsFB",
+      "label": "Akron Football",
+      "category": "team"
+    },
+    {
+      "handle": "BallStateFB",
+      "label": "Ball State Football",
+      "category": "team"
+    },
+    {
+      "handle": "BG_Football",
+      "label": "Bowling Green Football",
+      "category": "team"
+    },
+    {
+      "handle": "UBFootball",
+      "label": "Buffalo Football",
+      "category": "team"
+    },
+    {
+      "handle": "CMU_Football",
+      "label": "Central Michigan Football",
+      "category": "team"
+    },
+    {
+      "handle": "EMUFB",
+      "label": "Eastern Michigan Football",
+      "category": "team"
+    },
+    {
+      "handle": "KentStFootball",
+      "label": "Kent State Football",
+      "category": "team"
+    },
+    {
+      "handle": "MiamiOHFootball",
+      "label": "Miami (OH) Football",
+      "category": "team"
+    },
+    {
+      "handle": "NIU_Football",
+      "label": "Northern Illinois Football",
+      "category": "team"
+    },
+    {
+      "handle": "OhioFootball",
+      "label": "Ohio Football",
+      "category": "team"
+    },
+    {
+      "handle": "ToledoFB",
+      "label": "Toledo Football",
+      "category": "team"
+    },
+    {
+      "handle": "WMU_Football",
+      "label": "Western Michigan Football",
+      "category": "team"
+    },
+    {
+      "handle": "AF_Football",
+      "label": "Air Force Football",
+      "category": "team"
+    },
+    {
+      "handle": "BroncoSportsFB",
+      "label": "Boise State Football",
+      "category": "team"
+    },
+    {
+      "handle": "CSUFootball",
+      "label": "Colorado State Football",
+      "category": "team"
+    },
+    {
+      "handle": "FresnoStateFB",
+      "label": "Fresno State Football",
+      "category": "team"
+    },
+    {
+      "handle": "HawaiiFootball",
+      "label": "Hawaii Football",
+      "category": "team"
+    },
+    {
+      "handle": "NevadaFootball",
+      "label": "Nevada Football",
+      "category": "team"
+    },
+    {
+      "handle": "UNMLoboFB",
+      "label": "New Mexico Football",
+      "category": "team"
+    },
+    {
+      "handle": "AztecFB",
+      "label": "San Diego State Football",
+      "category": "team"
+    },
+    {
+      "handle": "SanJoseStateFB",
+      "label": "San Jose State Football",
+      "category": "team"
+    },
+    {
+      "handle": "unlvfootball",
+      "label": "UNLV Football",
+      "category": "team"
+    },
+    {
+      "handle": "USUFootball",
+      "label": "Utah State Football",
+      "category": "team"
+    },
+    {
+      "handle": "wyo_football",
+      "label": "Wyoming Football",
+      "category": "team"
+    },
+    {
+      "handle": "AppState_FB",
+      "label": "Appalachian State Football",
+      "category": "team"
+    },
+    {
+      "handle": "AStateFB",
+      "label": "Arkansas State Football",
+      "category": "team"
+    },
+    {
+      "handle": "CoastalFootball",
+      "label": "Coastal Carolina Football",
+      "category": "team"
+    },
+    {
+      "handle": "GSAthletics_FB",
+      "label": "Georgia Southern Football",
+      "category": "team"
+    },
+    {
+      "handle": "GeorgiaStateFB",
+      "label": "Georgia State Football",
+      "category": "team"
+    },
+    {
+      "handle": "JMUFootball",
+      "label": "James Madison Football",
+      "category": "team"
+    },
+    {
+      "handle": "RaginCajunsFB",
+      "label": "Louisiana Football",
+      "category": "team"
+    },
+    {
+      "handle": "ULM_FB",
+      "label": "Louisiana-Monroe Football",
+      "category": "team"
+    },
+    {
+      "handle": "HerdFB",
+      "label": "Marshall Football",
+      "category": "team"
+    },
+    {
+      "handle": "ODUFootball",
+      "label": "Old Dominion Football",
+      "category": "team"
+    },
+    {
+      "handle": "SouthAlabamaFB",
+      "label": "South Alabama Football",
+      "category": "team"
+    },
+    {
+      "handle": "SouthernMissFB",
+      "label": "Southern Miss Football",
+      "category": "team"
+    },
+    {
+      "handle": "TXSTATEFOOTBALL",
+      "label": "Texas State Football",
+      "category": "team"
+    },
+    {
+      "handle": "TroyTrojansFB",
+      "label": "Troy Football",
+      "category": "team"
+    }
+  ]
+}
