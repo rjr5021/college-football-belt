@@ -283,6 +283,20 @@ def logo_img(colors, name, css_class="teamLogo", size=40):
             f'loading="lazy" onerror="this.remove()">')
 
 
+def logo_chip(colors, name, size=30):
+    """Like logo_img(), but wraps the image in a small white circular
+    backdrop -- for placing a team's logo on top of a panel that's filled
+    with that SAME team's own primary color (the game-page scoreboard).
+    Without this, a team whose logo is mostly its own primary color --
+    Penn State's navy crest on a navy panel, for instance -- nearly
+    disappears against its own background. Returns "" when the team has
+    no logo on file, same as logo_img()."""
+    img = logo_img(colors, name, "teamLogo", size)
+    if not img:
+        return ""
+    return f'<span class="logoChip" style="width:{size + 6}px;height:{size + 6}px">{img}</span>'
+
+
 MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July",
                "August", "September", "October", "November", "December"]
 
@@ -559,6 +573,8 @@ h1.matchup .win{ color:var(--emph); }
 .teamPanel{ padding:26px 22px; display:flex; flex-direction:column; gap:10px; }
 .teamPanel .panelTop{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .teamPanel .teamLogo{ filter:drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
+.logoChip{ display:flex; align-items:center; justify-content:center; flex:none; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); }
+.logoChip .teamLogo{ filter:none; }
 .teamPanel.home{ background: linear-gradient(160deg, var(--home) 0%, color-mix(in srgb, var(--home) 75%, black) 100%); color:var(--home-ink); }
 .teamPanel.away{ background: linear-gradient(160deg, var(--away) 0%, color-mix(in srgb, var(--away) 75%, black) 100%); color:var(--away-ink); }
 .teamPanel .side{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
@@ -1533,7 +1549,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     <div class="teamPanel home">
       <div class="panelTop">
         <span class="side">Home &middot; {home_defender}</span>
-        {logo_img(colors, home, "teamLogo", 30)}
+        {logo_chip(colors, home, 30)}
       </div>
       <span class="name">{esc(home)}</span>
       <span class="pts tabular">{home_score}</span>
@@ -1542,7 +1558,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     <div class="teamPanel away">
       <div class="panelTop">
         <span class="side">Away &middot; {away_defender}</span>
-        {logo_img(colors, away, "teamLogo", 30)}
+        {logo_chip(colors, away, 30)}
       </div>
       <span class="name">{esc(away)}</span>
       <span class="pts tabular">{away_score}</span>
