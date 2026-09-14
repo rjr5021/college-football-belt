@@ -2910,7 +2910,7 @@ def _record_row(rank, swatch_color, main_html, value_html, sub_html, href=None):
 
 
 def generate_records_page(lineage, colors, belt_games):
-    """Four record boards, all computed straight from data already on hand
+    """Eight record boards, all computed straight from data already on hand
     -- no new API calls, no AI. Ties aren't broken (a team a few days short
     of another's reign length still shows up if it's genuinely top-5)."""
     reigns = lineage["reigns"]
@@ -2936,6 +2936,23 @@ def generate_records_page(lineage, colors, belt_games):
             sub += ' <span class="currentTag">current</span>'
         longest_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
                                      fmt_duration(start, end), sub, start_game_href(r))
+
+    # ---- most total days held, all-time -- summed across every reign a
+    # program has ever had, not just its longest one. A different ranking
+    # from "Longest Reigns" above: a program with several shorter reigns
+    # can outrank one with a single long one. ----
+    total_days_by_team = {}
+    reign_count_by_team = {}
+    for r in reigns:
+        total_days_by_team[r["team"]] = total_days_by_team.get(r["team"], 0) + reign_duration_days(r, today)
+        reign_count_by_team[r["team"]] = reign_count_by_team.get(r["team"], 0) + 1
+    most_total_days = sorted(total_days_by_team.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    total_days_rows = ""
+    for i, (team, days) in enumerate(most_total_days, 1):
+        n = reign_count_by_team[team]
+        sub = f'across {n} reign{"s" if n != 1 else ""}'
+        total_days_rows += _record_row(i, team_swatch(team), esc(team),
+                                        f'{days:,}', sub, f'teams/{team_slug(team)}.html')
 
     # ---- most reigns held by one program ----
     reign_counts = {}
@@ -2996,6 +3013,7 @@ def generate_records_page(lineage, colors, belt_games):
         close_call_row(i, g, "routed") for i, g in enumerate(sorted(changes_only, key=margin, reverse=True)[:5], 1))
 
     cards = [
+        ("Total Days Held", "All-time, summed across every reign a program has had", total_days_rows),
         ("Longest Reigns", "By days holding the belt", longest_rows),
         ("Most Reigns", "By program, across all 158 years", most_reigns_rows),
         ("Most Defended", "Consecutive defenses in a single reign", most_defended_rows),
