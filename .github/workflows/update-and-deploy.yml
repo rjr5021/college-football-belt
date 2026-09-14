@@ -14,6 +14,13 @@ name: Update and deploy
 #      value is a key from console.anthropic.com. Everything else on the
 #      site works fine without this one; skip it and generate_ai_preview.py
 #      / generate_recaps.py just no-op.
+#   4. OPTIONAL, to auto-post to X (@CollegeFBBelt) after every belt game
+#      (both a change of holder AND a successful defense) plus a preview
+#      post the Friday before each upcoming game -> same place -> four
+#      more repository secrets: X_API_KEY, X_API_KEY_SECRET,
+#      X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET, from the app's Keys & Tokens
+#      page at developer.x.com. Skip any of the four and post_to_x.py just
+#      no-ops -- nothing else on the site depends on it.
 # See README.md for the full walkthrough.
 #
 # CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst
@@ -33,7 +40,10 @@ name: Update and deploy
 # last run, not on every run. Skipping this commit step for recap_cache/
 # in particular would silently re-spend a full historical backfill's
 # worth of Claude calls every single week, so all three caches are
-# committed back the same way.
+# committed back the same way. social_cache/ is committed for the same
+# reason again -- it's how post_to_x.py remembers which belt change it
+# already posted about, so skipping this step would repost the same
+# change on every single scheduled run instead of just once.
 
 on:
   schedule:
@@ -55,7 +65,11 @@ on:
     - cron: '30 4 * * 0'
     #   - Sun 1:00am ET  -- final overnight catch-all
     - cron: '0 6 * * 0'
-    # All four are written for EST (UTC-5, winter clock) since that's
+    #   - Fri 6:00pm ET  -- dedicated run for the X preview post below;
+    #     doesn't hurt to also pick up any last-minute data change before
+    #     the weekend's games
+    - cron: '0 23 * * 5'
+    # All five are written for EST (UTC-5, winter clock) since that's
     # what was asked for -- during EDT (UTC-4, roughly late Aug into
     # early Nov), each of these actually lands ONE HOUR EARLIER on the
     # clock (e.g. the "1:00am ET" one fires at what's actually 12:00am
@@ -64,7 +78,7 @@ on:
     # a real limitation, not a bug, and the gap is only ever an hour.
     # A Thursday/Friday game (occasional, mostly early season and
     # championship week) won't get its own near-real-time check -- it
-    # just gets picked up at the next one of these four, same as any
+    # just gets picked up at the next one of these five, same as any
     # in-progress week always has been. Use "Run workflow" below for an
     # on-demand check any time none of this fits.
   workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
@@ -97,9 +111,18 @@ jobs:
         env:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          # True only on the Friday 6pm ET cron line above -- that's the
+          # one and only run meant to post the upcoming-game preview to X.
+          # github.event.schedule tells us which cron line fired this run
+          # (unset for workflow_dispatch/push, so those never post one).
+          X_POST_PREVIEW: ${{ github.event.schedule == '0 23 * * 5' }}
         run: python update_all.py
 
-      - name: Commit historical_data/, ai_preview_cache/ and recap_cache/ if any changed
+      - name: Commit historical_data/, ai_preview_cache/, recap_cache/ and social_cache/ if any changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -110,10 +133,13 @@ jobs:
           if [ -d recap_cache ]; then
             git add recap_cache/
           fi
+          if [ -d social_cache ]; then
+            git add social_cache/
+          fi
           if git diff --cached --quiet; then
-            echo "No change to historical_data/, ai_preview_cache/ or recap_cache/ -- nothing to commit."
+            echo "No change to historical_data/, ai_preview_cache/, recap_cache/ or social_cache/ -- nothing to commit."
           else
-            git commit -m "Advance historical baseline / AI preview + recap caches [skip ci]"
+            git commit -m "Advance historical baseline / AI preview + recap + social caches [skip ci]"
             git push
           fi
 

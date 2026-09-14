@@ -8,6 +8,10 @@ rebuild the site, then render the share image. One command instead of ten.
 Usage:
     export CFBD_API_KEY=your_key_here        # required -- every CFBD step needs it
     export ANTHROPIC_API_KEY=your_key_here   # optional -- only for the AI preview + recaps
+    export X_API_KEY=your_x_api_key          # optional -- only to post results/previews to X
+    export X_API_KEY_SECRET=your_x_secret    # optional, same as above
+    export X_ACCESS_TOKEN=your_x_token       # optional, same as above
+    export X_ACCESS_TOKEN_SECRET=your_x_ts   # optional, same as above
     python3 update_all.py
 
 Each stage is just the existing script, run as a subprocess with the same
@@ -76,6 +80,22 @@ this is safe to point at an existing belt_data/ folder:
                                  downloadable belt-history poster per team,
                                  straight from belt_data/lineage.json +
                                  team_colors.json.
+ 11. post_to_x.py            -- OPTIONAL, same idea as generate_ai_preview.py
+                                 / generate_recaps.py: skips itself cleanly
+                                 unless X_API_KEY, X_API_KEY_SECRET,
+                                 X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET are
+                                 ALL set. Posts to @CollegeFBBelt on X for
+                                 EVERY belt game result since the last post
+                                 -- a successful defense as well as a genuine
+                                 change of holder, each worded differently
+                                 -- tracked by game_id in
+                                 social_cache/x_last_posted.json so nothing
+                                 posts twice and a first-ever run doesn't
+                                 dump the whole 1869-present history. Also
+                                 posts one preview of the upcoming game, but
+                                 only on the workflow's dedicated Friday
+                                 evening run (see update-and-deploy.yml's
+                                 X_POST_PREVIEW) and only once per game.
 
 CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst limit).
 Steps 1, 3 and 5 default to the cheap incremental fetch above; step 4's
@@ -111,6 +131,7 @@ STAGES = [
     ("generate_recaps.py", "Writing AI recaps of settled games (optional)", None),
     ("build_site.py", "Rebuilding the site", None),
     ("generate_share_image.py", "Rendering the share image, favicon, and team posters", None),
+    ("post_to_x.py", "Posting results/preview to X (optional)", None),
 ]
 
 

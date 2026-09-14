@@ -10,3 +10,9 @@ timezonefinder
 # standard library plus historical_data/us_state_shapes.json, which is
 # static committed data, not a package.
 Pillow
+
+# post_to_x.py needs this to post to X (Twitter) via API v2 with OAuth 1.0a
+# user-context credentials. OPTIONAL in the sense that post_to_x.py itself
+# no-ops cleanly if the X_* env vars aren't set -- but the import has to
+# succeed either way, so this stays a normal (non-optional) requirement.
+tweepy
