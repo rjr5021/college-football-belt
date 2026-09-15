@@ -221,6 +221,7 @@ STAGES = [
     ("generate_recaps.py", "Writing AI recaps of settled games (optional)", None),
     ("generate_historical_notes.py", "Writing fact-only notes for games with no box score (optional)", None),
     ("build_site.py", "Rebuilding the site", None),
+    ("seo_enhance.py", "SEO polish (viewport, canonical, titles/descriptions, sitemap lastmod)", None),
     ("generate_share_image.py", "Rendering the share image, favicon, and team posters", None),
     ("post_to_x.py", "Posting results/preview to X (optional)", None),
     ("post_to_instagram.py", "Posting results/preview to Instagram (optional)", None),
