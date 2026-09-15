@@ -246,7 +246,7 @@ def lineage_path(scope):
 # separate bug that silently disabled gap-awareness for the rest of
 # history once triggered -- which is what actually let multi-thousand-day
 # gaps like Abilene Christian's slip through even at 700. That deeper bug
-# is fixed now (see the skip_first_gap forgive-one-gap-at-a-time loop),
+# is fixed now (see the gaps_to_forgive forgive-more-gaps-each-pass loop),
 # but a lower threshold is still worth having on top of the fix: it
 # catches shorter, subtler silences (well under "thousands of days") that
 # 700 was too loose to flag at all, at the accepted cost of a higher
@@ -341,7 +341,7 @@ def filter_division1_games(games, d1_teams, scope=None):
 
 
 def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
-                 gap_threshold_days=None, skip_first_gap=False):
+                 gap_threshold_days=None, gaps_to_forgive=0):
     """Same shape and calling convention as build_lineage.py's walk(), and
     the SAME outcome vocabulary ("changed"/"retained"/"retained (tie)"/
     "lost (tie)"/"established") -- so split_at_season() (imported unchanged
@@ -376,16 +376,19 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
     bypassed by a re-walk the way the old gap-awareness-disabling
     fallback could.
 
-    `skip_first_gap`, when True, forgives exactly the FIRST over-threshold
-    gap this call would otherwise stop on: that one game is processed
-    normally (crediting the silence as an unusually long but real
-    defense) and the flag is immediately cleared, so any LATER gap later
-    in this same call still stops the walk as usual. This is deliberately
-    narrower than passing `gap_threshold_days=None` (which switches gap
-    awareness off for the rest of the call, however much history remains)
-    -- it exists so resolve_vacancies() below can forgive one
-    un-revertable gap at a time while keeping gap detection fully armed
-    for everything downstream.
+    `gaps_to_forgive`, when greater than 0, forgives that many
+    over-threshold gaps this call would otherwise stop on: each forgiven
+    gap's game is processed normally (crediting the silence as an
+    unusually long but real defense) and the counter is decremented, so
+    once it reaches 0 any FURTHER gap in this same call still stops the
+    walk as usual. This is deliberately narrower than passing
+    `gap_threshold_days=None` (which switches gap awareness off for the
+    rest of the call, however much history remains) -- it exists so
+    resolve_vacancies() below can forgive un-revertable gaps, one MORE
+    than the previous attempt each time, while keeping gap detection
+    fully armed for everything downstream. (Passing a fixed count of 1 on
+    every retry, instead of counting up, was the bug fixed in the
+    infinite-loop incident below -- see resolve_vacancies()'s docstring.)
     """
     games = [g for g in games if g["date"] >= FIRST_GAME_DATE]
 
@@ -433,17 +436,17 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
             if _disrupted_era_overlap(reign["last_game_date"], g["date"]):
                 effective_threshold = max(effective_threshold, DISRUPTION_GAP_THRESHOLD_DAYS)
             if gap > effective_threshold:
-                if skip_first_gap:
-                    # Forgive exactly this one over-threshold gap -- the
-                    # caller already knows this reign can't be reverted
-                    # right now (no predecessor, or already reverted once
+                if gaps_to_forgive > 0:
+                    # Forgive this over-threshold gap -- the caller
+                    # already knows this reign can't be reverted right
+                    # now (no predecessor, or already reverted once
                     # before) and is deliberately asking us to credit this
                     # specific silence as a real defense and keep going,
                     # WITHOUT switching off gap-awareness for the rest of
-                    # the walk. Clear the flag so any FURTHER gap later in
-                    # this same call still stops it as usual -- only the
-                    # first one is forgiven.
-                    skip_first_gap = False
+                    # the walk. Decrement the counter so only that many
+                    # gaps total are forgiven -- any gap past the count
+                    # still stops the walk as usual.
+                    gaps_to_forgive -= 1
                 else:
                     # A real, later game for this holder exists (this one)
                     # -- but only after a suspiciously long silence. Stop
@@ -608,17 +611,33 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
     those must NOT just be silently dropped from the rest of history. So
     whenever a pass lands on a tip that has a gap but nowhere to revert
     it, an inner loop re-walks that exact (holder, reign) again with
-    `skip_first_gap=True` -- forgiving ONLY that one gap, crediting it as
-    an unusually long (but real) defense, with normal GAP_THRESHOLD_DAYS
-    awareness restored for everything after it -- and recomputes the tip.
-    If the new tip still can't be reverted and still has a (different,
-    later) gap, this repeats; it stops as soon as either the tip becomes
-    genuinely revertable (a predecessor exists and this exact reign
-    hasn't been reverted before) or it's truly gap-free. Each forgiven
-    pass consumes strictly more of the finite games list, so this always
-    terminates, and -- unlike an earlier version of this fallback that
-    disabled gap-awareness for the rest of the call once triggered --
+    `gaps_to_forgive` set one higher than the previous attempt --
+    forgiving that many gaps, crediting each as an unusually long (but
+    real) defense, with normal GAP_THRESHOLD_DAYS awareness restored for
+    everything after the last forgiven one -- and recomputes the tip. If
+    the new tip still can't be reverted and still has a (different,
+    later) gap, this repeats with the count one higher again; it stops as
+    soon as either the tip becomes genuinely revertable (a predecessor
+    exists and this exact reign hasn't been reverted before) or it's
+    truly gap-free. Counting UP each pass (rather than re-asking for the
+    same single gap to be forgiven every time) is what makes each pass
+    provably consume more of the finite games list than the last, so this
+    always terminates -- and, unlike an earlier version of this fallback
+    that disabled gap-awareness for the rest of the call once triggered,
     gap detection is never switched off for the remainder of history.
+
+    (A THIRD bug lived here for a while, after the two described just
+    below were fixed: the inner loop re-walked from the same (holder,
+    reign) with a bare "forgive one gap" request every single pass,
+    instead of counting up. walk_losers() is a pure function of its
+    arguments, so identical arguments produced the identical tip every
+    time -- meaning that once a SECOND gap sat past the first forgiven
+    one with still no predecessor, this became a true infinite loop that
+    never advanced, rather than the "always terminates" guarantee this
+    docstring already claimed. Caught live when a from-scratch bootstrap
+    walk of the SIAA conference hit exactly that shape and spun forever
+    reprinting the same warning. Fixed by threading a counter through
+    instead of a bare flag -- see `gaps_to_forgive` above.)
     (This matters because it isn't a hypothetical: an early version of
     this fallback shipped broken once already, in two stages. First, the
     Losers Belt's own origin holder, Princeton, hit a gap soon after 1869
@@ -735,17 +754,29 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         # walk_losers already stopped dead right before that later game,
         # and everything after it -- possibly a lot of real history --
         # would silently vanish if we accepted `reigns` as final here. So
-        # forgive ONE gap at a time (re-walk with skip_first_gap=True,
-        # gap-awareness otherwise fully restored) and recompute the tip,
-        # until it's either revertable or genuinely gap-free -- never
+        # forgive gaps one MORE than the previous attempt each pass
+        # (re-walk with gaps_to_forgive counting up, gap-awareness
+        # otherwise fully restored) and recompute the tip, until it's
+        # either revertable or genuinely gap-free -- never
         # disabling gap detection for the rest of history the way a full
         # gap_threshold_days=None re-walk would.
+        # BUGFIX: forgive strictly MORE gaps each pass (1, then 2, then
+        # 3, ...), always re-walking from the SAME original (holder,
+        # reign) -- never from `tip`, which would just replay the same
+        # first gap again. A bare skip_first_gap=True re-issued every
+        # pass fed walk_losers() identical arguments forever once a
+        # second un-revertable gap existed, so it never advanced -- see
+        # this function's docstring for the live incident that surfaced
+        # it. Counting up guarantees each pass consumes more of the
+        # finite games list than the last.
+        gaps_to_forgive = 0
         while has_gap and (predecessor is None or reign_key in seen
                             or tip["team"] in chain_teams):
+            gaps_to_forgive += 1
             belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder,
                                               start_reign=reign,
                                               gap_threshold_days=GAP_THRESHOLD_DAYS,
-                                              skip_first_gap=True)
+                                              gaps_to_forgive=gaps_to_forgive)
             tip = reigns[-1]
             predecessor = _predecessor(tip)
             has_gap = any(g["date"] > tip["last_game_date"]

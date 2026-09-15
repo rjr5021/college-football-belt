@@ -72,7 +72,7 @@ def _disrupted_era_overlap(start_date, end_date):
 
 
 def walk_winner(games, tie_rule="holder", start_holder=None, start_reign=None,
-                 gap_threshold_days=None, skip_first_gap=False,
+                 gap_threshold_days=None, gaps_to_forgive=0,
                  first_game_date=FIRST_GAME_DATE):
     """Walk `games` in chronological order under the NORMAL belt rule: the
     WINNER of each game the holder plays becomes (or stays) the holder.
@@ -80,7 +80,8 @@ def walk_winner(games, tie_rule="holder", start_holder=None, start_reign=None,
     vocabulary as build_losers_lineage.py's walk_losers() -- see that
     function's docstring for the full explanation of `start_holder`/
     `start_reign` (resuming), `gap_threshold_days` (stop-early-on-a-
-    too-long-silence), and `skip_first_gap` (forgive exactly one gap).
+    too-long-silence), and `gaps_to_forgive` (forgive this many
+    over-threshold gaps before actually stopping on one).
     The only difference is who "wins" a belt game.
     """
     games = [g for g in games if g["date"] >= first_game_date]
@@ -127,8 +128,8 @@ def walk_winner(games, tie_rule="holder", start_holder=None, start_reign=None,
             if _disrupted_era_overlap(reign["last_game_date"], g["date"]):
                 effective_threshold = max(effective_threshold, DISRUPTION_GAP_THRESHOLD_DAYS)
             if gap > effective_threshold:
-                if skip_first_gap:
-                    skip_first_gap = False
+                if gaps_to_forgive > 0:
+                    gaps_to_forgive -= 1
                 else:
                     break
 
@@ -226,12 +227,27 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         if tip.get("defenses", 0) > 0 or len(reigns) > 1:
             chain_teams = set()
 
+        # BUGFIX (see belt_engine.py's own history): this loop used to
+        # call walk_winner() again with the SAME holder/reign and a bare
+        # skip_first_gap=True every pass -- a pure function fed identical
+        # inputs, so once one pass didn't resolve, every later pass
+        # recomputed the exact same tip forever (a true infinite loop --
+        # this is what run #76 hit live on the [siaa] conference, whose
+        # origin reign has a gap with no predecessor and, it turns out,
+        # more than one such gap before real data resumes). The fix:
+        # forgive strictly MORE gaps each pass (1, then 2, then 3, ...),
+        # always re-walking from the SAME original (holder, reign) --
+        # never from `tip`, which would just replay the same first gap
+        # again -- so each pass provably consumes more of the finite
+        # games list than the last, guaranteeing this terminates.
+        gaps_to_forgive = 0
         while has_gap and (predecessor is None or reign_key in seen
                             or tip["team"] in chain_teams):
+            gaps_to_forgive += 1
             belt_games, reigns = walk_winner(games, tie_rule, start_holder=holder,
                                               start_reign=reign,
                                               gap_threshold_days=gap_threshold_days,
-                                              skip_first_gap=True)
+                                              gaps_to_forgive=gaps_to_forgive)
             tip = reigns[-1]
             predecessor = _predecessor(tip)
             has_gap = any(g["date"] > tip["last_game_date"]
