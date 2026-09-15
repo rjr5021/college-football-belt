@@ -160,22 +160,28 @@ def fetch_venues(api_key, retries=8):
 
 def fetch_division1_teams(api_key, retries=8):
     """Every school CFBD currently classifies as "fbs" or "fcs" -- i.e.
-    NCAA Division 1 -- as a set of school names. A single cheap call
-    (GET /teams, no year filter), so it's negligible against the call
-    budget either belt cares about.
+    NCAA Division 1 -- as a {school: classification} dict (classification
+    is the literal string "fbs" or "fcs"). A single cheap call (GET
+    /teams, no year filter), so it's negligible against the call budget
+    either belt cares about.
 
     Used only by the Losers Belt (see build_losers_lineage.py's own
     filter_division1_games) to keep that belt restricted to Division 1
-    programs -- not applied to this, the real belt. This is CFBD's
-    CURRENT classification, applied uniformly across all of history,
-    not a season-by-season historical one: the FBS/FCS split didn't
-    exist before 1978, so there's no meaningful historical classification
-    to apply before then anyway. A school is either a Division 1 program
-    today or it isn't; that's the eligibility bar, regardless of when a
-    given game was played.
+    programs -- not applied to this, the real belt. The per-team
+    classification lets the Losers Belt build three separate lineages
+    (FBS-only, FCS-only, and combined Division 1) from one shared fetch
+    instead of one flat "is D1" bit. This is CFBD's CURRENT
+    classification, applied uniformly across all of history, not a
+    season-by-season historical one: the FBS/FCS split didn't exist
+    before 1978, so there's no meaningful historical classification to
+    apply before then anyway. A school is either a Division 1 program
+    today or it isn't (and is either FBS or FCS today or it isn't);
+    that's the eligibility bar, regardless of when a given game was
+    played.
     """
     teams = _get_json(f"{API_BASE}/teams", api_key, "teams", retries=retries)
-    return {t["school"] for t in teams if t.get("classification") in ("fbs", "fcs")}
+    return {t["school"]: t["classification"] for t in teams
+            if t.get("classification") in ("fbs", "fcs")}
 
 
 _TZF = "UNSET"

@@ -23,19 +23,41 @@ unlike the real belt, this one is restricted to programs CFBD currently
 classifies as "fbs" or "fcs" -- NCAA Division 1 -- via
 filter_division1_games() / fetch_division1_teams() (the latter in
 build_lineage.py). A game where either side isn't a current Division 1
-program is dropped before the walk ever sees it, same as if it never
-happened. Two reasons: (1) CFBD's game data for this belt is pulled across
-"any classification" (see below), which includes prep schools and D-II/D-III
-programs that occasionally show up in the earliest era of college football
--- Wyoming Seminary, a prep school, is a real example that used to hold this
-belt for 13 years; (2) those same small/non-D1 programs tend to have far
-sparser historical coverage in CFBD, which was producing wildly implausible
-"reigns" -- Bloomsburg (D-II) once showed an unbroken 101-year reign that
-was really just an 87-year hole in CFBD's own data (1919 to 2006) with no
-recorded games at all in between, not 101 years of real dominance. This is
-CFBD's CURRENT classification applied uniformly across all of history, not
-a season-by-season one -- the FBS/FCS split didn't exist before 1978, so
-there's nothing historically meaningful to apply before then anyway.
+program is dropped before any walk ever sees it, same as if it never
+happened, regardless of scope (below). Two reasons: (1) CFBD's game data
+for this belt is pulled across "any classification" (see below), which
+includes prep schools and D-II/D-III programs that occasionally show up in
+the earliest era of college football -- Wyoming Seminary, a prep school, is
+a real example that used to hold this belt for 13 years; (2) those same
+small/non-D1 programs tend to have far sparser historical coverage in
+CFBD, which was producing wildly implausible "reigns" -- Bloomsburg (D-II)
+once showed an unbroken 101-year reign that was really just an 87-year hole
+in CFBD's own data (1919 to 2006) with no recorded games at all in between,
+not 101 years of real dominance. This is CFBD's CURRENT classification
+applied uniformly across all of history, not a season-by-season one -- the
+FBS/FCS split didn't exist before 1978, so there's nothing historically
+meaningful to apply before then anyway.
+
+SCOPES -- three separate, independently-bootstrapped lineages (see SCOPES's
+own comment, and paths.py-style helpers baseline_path/vacancy_path/
+lineage_path): "combined" keeps FBS and FCS together, exactly as this belt
+originally worked. "fbs" additionally requires BOTH sides of every game to
+be FBS, and "fcs" the same for FCS -- these are what let a program cross
+back OUT of a level it fell into, which "combined" cannot do. This matters
+because the "combined" scope and the well-known, widely-tracked "College
+Football Loser's Belt" (started by u/funtubs/u/rm_a on r/CFB in 2014, still
+actively followed -- e.g. an "Oregon now holds the belt" post in September
+2026) are NOT the same thing: that version is explicitly FBS-only
+("Only teams in the highest level of play are qualified, so FBS now" --
+funtubs, in the original thread's comments). Once "combined"'s belt crosses
+down into FCS it can get stuck cycling among FCS programs indefinitely
+(ours has been there since November 8, 1997, when FBS Arkansas State beat
+FCS Southwest Missouri State), which is exactly why "combined" alone
+diverges so sharply, and permanently, from the FBS-only version everyone
+associates with this. The "fbs" scope is the one that lines up with that
+version; "combined" and "fcs" are their own distinct lineages, offered
+alongside it rather than replacing it (2026-09-15, Bob: "i thought we were
+going to make 3 paths that we can pick from, FCS, FBS and combined").
 
 This deliberately reuses build_lineage.py's own CFBD-fetching, venue/date,
 and baseline-splitting machinery (identical import, zero duplication of the
@@ -185,9 +207,37 @@ from build_lineage import (
 )
 
 HIST_DIR = "historical_data"
-BASELINE_PATH = os.path.join(HIST_DIR, "losers_baseline.json")
-VACANCY_PATH = os.path.join(HIST_DIR, "losers_vacancies.json")
-LINEAGE_PATH = os.path.join(OUT_DIR, "losers_lineage.json")
+
+# Three parallel lineages, one per SCOPE, each with its own baseline/
+# vacancy/output files so they can be bootstrapped and updated
+# independently: "combined" is Division 1 (FBS+FCS together, the
+# original and only version of this belt until now -- keeps the
+# UNSUFFIXED filenames so the already-committed, already-live baseline
+# stays valid with zero migration); "fbs" and "fcs" each restrict
+# filter_division1_games() to that one classification only. "fbs" is
+# what lines up with the "official" College Football Loser's Belt
+# everyone else tracks (funtubs/rm_a's 2014 original: "Only teams in
+# the highest level of play are qualified, so FBS now") -- Bob asked
+# for all three as separate, pickable pages rather than picking one
+# (2026-09-15: "i thought we were going to make 3 paths that we can
+# pick from, FCS, FBS and combined").
+SCOPES = ("combined", "fbs", "fcs")
+
+
+def _scope_suffix(scope):
+    return "" if scope == "combined" else f"_{scope}"
+
+
+def baseline_path(scope):
+    return os.path.join(HIST_DIR, f"losers_baseline{_scope_suffix(scope)}.json")
+
+
+def vacancy_path(scope):
+    return os.path.join(HIST_DIR, f"losers_vacancies{_scope_suffix(scope)}.json")
+
+
+def lineage_path(scope):
+    return os.path.join(OUT_DIR, f"losers_lineage{_scope_suffix(scope)}.json")
 
 # Was 700 days ("roughly two full seasons of silence", matching the
 # ORIGINAL terminal-only dormancy check's current+previous-season window).
@@ -260,21 +310,34 @@ def _disrupted_era_overlap(start_date, end_date):
                for w_start, w_end in DISRUPTION_WINDOWS)
 
 
-def filter_division1_games(games, d1_teams):
-    """Keep only games where BOTH participants are current Division 1
-    (FBS/FCS) programs -- see fetch_division1_teams's docstring (in
-    build_lineage.py) for the full reasoning. A game involving even one
-    non-D1 opponent (a prep school, a D-II/D-III program, anything CFBD's
+def filter_division1_games(games, d1_teams, scope=None):
+    """Keep only games where BOTH participants are eligible under `scope`:
+    `d1_teams` is the {school: "fbs"|"fcs"} dict from fetch_division1_teams
+    (build_lineage.py). scope=None (or "combined") keeps both current
+    Division 1 classifications -- FBS and FCS -- exactly as this always
+    behaved. scope="fbs" or scope="fcs" additionally requires BOTH sides
+    to carry that one classification, restricting the belt to a single
+    level of play; that's what makes an FBS-only Losers Belt line up with
+    the "official" version of this internet phenomenon everyone else
+    tracks (see the module docstring's SCOPES section) -- a game between,
+    say, an FBS team and an FCS team simply doesn't transfer the belt
+    under that scope, exactly as if it never happened, rather than
+    letting the belt cross down into the other level.
+
+    See fetch_division1_teams's docstring (in build_lineage.py) for why
+    non-D1 opponents (prep schools, D-II/D-III programs, anything CFBD's
     "any classification" game pull picks up that isn't a Division 1
-    school today) is dropped entirely, exactly as if it never happened
-    for Losers Belt purposes -- the D1 side of that matchup is otherwise
-    unaffected via its other, all-D1 games. This is what keeps a program
-    like Bloomsburg (D-II, and hence also very sparsely covered by CFBD
-    across most of the 20th century -- see the module docstring) from
-    ever entering the lineage and producing a multi-decade "reign" that's
-    really just a hole in the source data.
+    school today) are dropped entirely under every scope -- that's what
+    keeps a program like Bloomsburg (D-II, and hence also very sparsely
+    covered by CFBD across most of the 20th century -- see the module
+    docstring) from ever entering any of the three lineages and producing
+    a multi-decade "reign" that's really just a hole in the source data.
     """
-    return [g for g in games if g["home"] in d1_teams and g["away"] in d1_teams]
+    if scope in (None, "combined"):
+        eligible = set(d1_teams)
+    else:
+        eligible = {school for school, c in d1_teams.items() if c == scope}
+    return [g for g in games if g["home"] in eligible and g["away"] in eligible]
 
 
 def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
@@ -434,25 +497,25 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
     return belt_games, reigns
 
 
-def load_baseline():
-    if not os.path.exists(BASELINE_PATH):
+def load_baseline(path):
+    if not os.path.exists(path):
         return None
-    with open(BASELINE_PATH) as f:
+    with open(path) as f:
         return json.load(f)
 
 
-def load_vacancies():
-    if not os.path.exists(VACANCY_PATH):
+def load_vacancies(path):
+    if not os.path.exists(path):
         return []
-    with open(VACANCY_PATH) as f:
+    with open(path) as f:
         return json.load(f)
 
 
-def save_vacancies(vacancies):
+def save_vacancies(vacancies, path):
     os.makedirs(HIST_DIR, exist_ok=True)
-    with open(VACANCY_PATH, "w") as f:
+    with open(path, "w") as f:
         json.dump(vacancies, f, indent=2)
-    print(f"Wrote {VACANCY_PATH} ({len(vacancies)} recorded vacanc{'y' if len(vacancies) == 1 else 'ies'})")
+    print(f"Wrote {path} ({len(vacancies)} recorded vacanc{'y' if len(vacancies) == 1 else 'ies'})")
 
 
 def merge_vacancies(all_vacancies, new_vacancies):
@@ -758,26 +821,27 @@ def split_losers_baseline(belt_games, all_vacancies, first_reign, live_start_yea
     return historical_belt_games, closed, reign
 
 
-def save_baseline(historical_belt_games, historical_reigns, open_reign, live_start_year):
+def save_baseline(historical_belt_games, historical_reigns, open_reign, live_start_year, path):
     os.makedirs(HIST_DIR, exist_ok=True)
-    with open(BASELINE_PATH, "w") as f:
+    with open(path, "w") as f:
         json.dump({
             "live_start_year": live_start_year,
             "historical_belt_games": historical_belt_games,
             "historical_reigns": historical_reigns,
             "open_reign": open_reign,
         }, f, indent=2)
-    print(f"Wrote {BASELINE_PATH} (historical through season {live_start_year - 1}, "
+    print(f"Wrote {path} (historical through season {live_start_year - 1}, "
           f"{len(historical_belt_games)} losers-belt games / {len(historical_reigns)} "
           f"closed reigns frozen)")
 
 
-def write_outputs(belt_games, reigns, tie_rule):
+def write_outputs(belt_games, reigns, tie_rule, scope, path):
     current = reigns[-1]
-    with open(LINEAGE_PATH, "w") as f:
+    with open(path, "w") as f:
         json.dump({
             "generated": time.strftime("%Y-%m-%d"),
             "tie_rule": tie_rule,
+            "scope": scope,
             "origin": {"date": FIRST_GAME_DATE,
                        "note": "Princeton lost to Rutgers 4-6, the first game ever "
                                "played -- the first team to come up short, and so "
@@ -793,7 +857,7 @@ def write_outputs(belt_games, reigns, tie_rule):
             "reigns": reigns,
             "belt_games": belt_games,
         }, f, indent=2)
-    print(f"Wrote {LINEAGE_PATH} ({len(belt_games)} losers-belt games, "
+    print(f"Wrote {path} ({len(belt_games)} losers-belt games, "
           f"{len(reigns)} reigns)")
 
 
@@ -818,17 +882,27 @@ def main():
 
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    baseline = None if args.full_refetch else load_baseline()
     live_start_year = args.end_year - 1
     today = time.strftime("%Y-%m-%d")
 
-    if baseline is None and not args.full_refetch:
-        print("No historical_data/losers_baseline.json yet, and the one-time "
+    # Three independent baselines, one per SCOPE (see SCOPES's own comment)
+    # -- each may be at a different point (freshly bootstrapped, or not
+    # bootstrapped yet at all) independent of the others, e.g. right after
+    # this shipped, "combined" already has a baseline but "fbs"/"fcs" don't.
+    baselines = {
+        scope: (None if args.full_refetch else load_baseline(baseline_path(scope)))
+        for scope in SCOPES
+    }
+
+    if all(b is None for b in baselines.values()) and not args.full_refetch:
+        print("No historical_data/losers_baseline*.json yet, and the one-time "
               "historical bootstrap wasn't requested -- skipping the Losers Belt "
-              "this run (belt_data/losers_lineage.json won't be written, so "
-              "build_site.py just won't render losers-belt.html yet; nothing else "
-              "is affected). Tick the 'bootstrap_losers_belt' checkbox on a manual "
-              "'Run workflow' to build it once (~316 CFBD calls, one-time).")
+              "entirely this run (none of belt_data/losers_lineage*.json will be "
+              "written, so build_site.py just won't render any losers-belt*.html "
+              "page yet; nothing else is affected). Tick the "
+              "'bootstrap_losers_belt' checkbox on a manual 'Run workflow' to "
+              "build all three scopes once (~316 CFBD calls total, one-time -- "
+              "shared across all three, see the module docstring).")
         return
 
     print("Fetching venue timezones from CFBD...")
@@ -836,64 +910,82 @@ def main():
 
     print("Fetching current Division 1 (FBS/FCS) team list from CFBD...")
     d1_teams = fetch_division1_teams(args.key)
-    print(f"{len(d1_teams)} current FBS/FCS programs -- the Losers Belt can only "
-          f"pass between these (see filter_division1_games's docstring)")
+    fbs_n = sum(1 for c in d1_teams.values() if c == "fbs")
+    fcs_n = sum(1 for c in d1_teams.values() if c == "fcs")
+    print(f"{len(d1_teams)} current Division 1 programs ({fbs_n} FBS, {fcs_n} FCS) "
+          f"-- see filter_division1_games's docstring for how each scope uses these")
 
-    if baseline is None:
-        print(f"Doing the one-time full {args.start_year}-{args.end_year} Losers "
-              f"Belt walk from CFBD (~{2 * (args.end_year - args.start_year + 1)} calls).")
-        raw = fetch_seasons(range(args.start_year, args.end_year + 1), args.key)
-        games = normalize(raw, venue_tz)
-        all_games_count = len(games)
-        games = filter_division1_games(games, d1_teams)
-        print(f"{len(games)} of {all_games_count} completed games are Division 1 "
-              f"vs. Division 1, in chronological order")
-        recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
-                       {g["away"] for g in games if g["season"] >= live_start_year}
-        belt_games, reigns, new_vacancies = resolve_vacancies(
-            games, args.tie_rule, start_holder=None, start_reign=None,
-            recent_teams=recent_teams, today=today)
-        context_reigns = []
+    # One shared CFBD fetch sized to whatever the neediest scope requires --
+    # a full 1869-now walk (~316 calls) if ANY scope still needs bootstrapping,
+    # otherwise just the live window every scope's baseline already covers.
+    # Each scope below re-filters and re-season-scopes this SAME raw pull, so
+    # running three scopes costs no more CFBD calls than running one used to.
+    if any(b is None for b in baselines.values()):
+        fetch_start = args.start_year
+        print(f"At least one scope needs the one-time full {fetch_start}-"
+              f"{args.end_year} Losers Belt walk from CFBD "
+              f"(~{2 * (args.end_year - fetch_start + 1)} calls, shared across "
+              f"all three scopes).")
     else:
-        fetch_from = min(baseline["live_start_year"], live_start_year)
-        seasons = range(fetch_from, args.end_year + 1)
-        print(f"Losers Belt baseline found (through season {fetch_from - 1}, "
-              f"{len(baseline['historical_belt_games'])} losers-belt games already "
-              f"settled) -- fetching only seasons {list(seasons)} fresh "
-              f"(~{2 * len(list(seasons))} calls).")
-        raw = fetch_seasons(seasons, args.key)
-        games = normalize(raw, venue_tz)
-        all_games_count = len(games)
-        games = filter_division1_games(games, d1_teams)
-        print(f"{len(games)} of {all_games_count} completed games in the live "
-              f"window are Division 1 vs. Division 1")
-        recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
-                       {g["away"] for g in games if g["season"] >= live_start_year}
-        tail_belt_games, tail_reigns, new_vacancies = resolve_vacancies(
-            games, args.tie_rule,
-            start_holder=baseline["open_reign"]["team"],
-            start_reign=baseline["open_reign"],
-            recent_teams=recent_teams, today=today,
-            context_reigns=baseline["historical_reigns"])
-        belt_games = baseline["historical_belt_games"] + tail_belt_games
-        reigns = baseline["historical_reigns"] + tail_reigns
-        context_reigns = baseline["historical_reigns"]
+        fetch_start = min(min(b["live_start_year"] for b in baselines.values()),
+                           live_start_year)
+        seasons = list(range(fetch_start, args.end_year + 1))
+        print(f"Losers Belt baselines found for all three scopes -- fetching only "
+              f"seasons {seasons} fresh (~{2 * len(seasons)} calls, shared across "
+              f"all three scopes).")
+    raw = fetch_seasons(range(fetch_start, args.end_year + 1), args.key)
+    games_all = normalize(raw, venue_tz)
 
-    all_vacancies = load_vacancies()
-    if new_vacancies:
-        all_vacancies, changed = merge_vacancies(all_vacancies, new_vacancies)
-        if changed:
-            save_vacancies(all_vacancies)
+    for scope in SCOPES:
+        baseline = baselines[scope]
+        games = filter_division1_games(games_all, d1_teams, scope)
+        label = {"combined": "Division 1 (FBS+FCS)", "fbs": "FBS-only",
+                  "fcs": "FCS-only"}[scope]
 
-    write_outputs(belt_games, reigns, args.tie_rule)
+        if baseline is None:
+            print(f"\n[{scope}] Doing the one-time full walk ({label}).")
+            print(f"[{scope}] {len(games)} of {len(games_all)} completed games "
+                  f"are {label} vs. {label}, in chronological order")
+            recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
+                           {g["away"] for g in games if g["season"] >= live_start_year}
+            belt_games, reigns, new_vacancies = resolve_vacancies(
+                games, args.tie_rule, start_holder=None, start_reign=None,
+                recent_teams=recent_teams, today=today)
+        else:
+            scope_fetch_from = min(baseline["live_start_year"], live_start_year)
+            games = [g for g in games if g["season"] >= scope_fetch_from]
+            print(f"\n[{scope}] Baseline found (through season "
+                  f"{baseline['live_start_year'] - 1}, "
+                  f"{len(baseline['historical_belt_games'])} losers-belt games "
+                  f"already settled) -- using {len(games)} {label} games from "
+                  f"season {scope_fetch_from} on")
+            tail_belt_games, tail_reigns, new_vacancies = resolve_vacancies(
+                games, args.tie_rule,
+                start_holder=baseline["open_reign"]["team"],
+                start_reign=baseline["open_reign"],
+                recent_teams={g["home"] for g in games if g["season"] >= live_start_year} |
+                              {g["away"] for g in games if g["season"] >= live_start_year},
+                today=today,
+                context_reigns=baseline["historical_reigns"])
+            belt_games = baseline["historical_belt_games"] + tail_belt_games
+            reigns = baseline["historical_reigns"] + tail_reigns
 
-    hist_belt_games, hist_reigns, open_reign = split_losers_baseline(
-        belt_games, all_vacancies, reigns[0], live_start_year)
-    save_baseline(hist_belt_games, hist_reigns, open_reign, live_start_year)
+        all_vacancies = load_vacancies(vacancy_path(scope))
+        if new_vacancies:
+            all_vacancies, changed = merge_vacancies(all_vacancies, new_vacancies)
+            if changed:
+                save_vacancies(all_vacancies, vacancy_path(scope))
 
-    current = reigns[-1]
-    print(f"\nLosers Belt current holder: {current['team']} since "
-          f"{current['start_date']} ({current['defenses']} defenses)")
+        write_outputs(belt_games, reigns, args.tie_rule, scope, lineage_path(scope))
+
+        hist_belt_games, hist_reigns, open_reign = split_losers_baseline(
+            belt_games, all_vacancies, reigns[0], live_start_year)
+        save_baseline(hist_belt_games, hist_reigns, open_reign, live_start_year,
+                      baseline_path(scope))
+
+        current = reigns[-1]
+        print(f"[{scope}] Losers Belt current holder: {current['team']} since "
+              f"{current['start_date']} ({current['defenses']} defenses)")
 
 
 if __name__ == "__main__":

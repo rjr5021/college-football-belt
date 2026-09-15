@@ -202,9 +202,13 @@ FULL_REFETCH_GAME_DETAILS = os.environ.get("FULL_REFETCH_GAME_DETAILS", "").stri
 # "bootstrap Losers Belt" checkbox is ticked -- see the module docstring
 # above and build_losers_lineage.py's own docstring. Only affects the
 # build_losers_lineage.py stage; every other stage runs exactly as it
-# always has. A no-op once the Losers Belt has already been bootstrapped
-# once (that stage goes back to its own cheap incremental fetch on its
-# own from then on, same as build_lineage.py).
+# always has. Bootstraps all three SCOPES (combined/fbs/fcs) in one go,
+# still only ~316 CFBD calls total -- they share one raw games fetch, see
+# build_losers_lineage.py's main(). A no-op for any scope that's already
+# bootstrapped (that scope goes back to its own cheap incremental fetch
+# on its own from then on, same as build_lineage.py) -- so re-ticking
+# this is also how to backfill fbs/fcs the first time after this scopes
+# feature ships, without redoing "combined"'s own already-settled history.
 BOOTSTRAP_LOSERS_BELT = os.environ.get("BOOTSTRAP_LOSERS_BELT", "").strip().lower() in (
     "1", "true", "yes", "on")
 

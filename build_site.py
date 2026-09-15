@@ -279,14 +279,22 @@ def load_data():
     recaps = load_optional_json("recaps.json") or {}
     historical_notes = load_optional_json("historical_notes.json") or {}
     game_plays = load_optional_json("game_plays.json") or {}
-    # None until build_losers_lineage.py's one-time historical bootstrap has
-    # been run once (see its own docstring) -- main() below skips rendering
-    # losers-belt.html entirely when this is None, same no-op-when-unset
-    # pattern as every other optional feature on this site.
-    losers_lineage = load_optional_json("losers_lineage.json")
+    # Three independent, independently-optional Losers Belt lineages (see
+    # build_losers_lineage.py's SCOPES) -- each entry is None until that
+    # scope's one-time historical bootstrap has been run (see that
+    # module's own docstring); main() below skips rendering that scope's
+    # losers-belt*.html page entirely when its entry is None, same
+    # no-op-when-unset pattern as every other optional feature on this
+    # site. "combined" keeps the original unsuffixed filename so the
+    # already-live page/data needs no migration.
+    losers_lineages = {
+        "combined": load_optional_json("losers_lineage.json"),
+        "fbs": load_optional_json("losers_lineage_fbs.json"),
+        "fcs": load_optional_json("losers_lineage_fcs.json"),
+    }
     return (lineage, details, colors, next_game, upcoming_games, matchup,
             ai_preview, weather, recaps, historical_notes, game_plays,
-            losers_lineage)
+            losers_lineages)
 
 
 def team_color(colors, name):
@@ -1054,6 +1062,14 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .sortToggle button{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; white-space:nowrap; }
 .sortToggle button.active{ background:var(--brass); color:var(--paper); font-weight:600; }
 .sortToggle button:not(.active):hover{ color:var(--ink); }
+
+/* Losers Belt scope switcher (Combined/FBS/FCS) -- same pill look as
+   .sortToggle above but for <a>/<span>, deliberately a separate class so
+   it can never be picked up by .sortToggle .sortBtn's sort-order JS. */
+.scopeSwitch{ display:inline-flex; border:1px solid var(--hairline); border-radius:20px; overflow:hidden; background:var(--paper-2); }
+.scopeBtn{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; color:var(--ink-soft); text-decoration:none; white-space:nowrap; }
+.scopeBtn.active{ background:var(--brass); color:var(--paper); font-weight:600; }
+.scopeBtn:not(.active):hover{ color:var(--ink); background:var(--paper); }
 
 .dateSelect{ display:flex; gap:8px; }
 .dateSelect select{
@@ -2400,15 +2416,64 @@ def generate_lineage_page(lineage, colors, belt_games):
 '''
 
 
-def generate_losers_belt_page(lineage):
+# Three parallel Losers Belt pages, one per build_losers_lineage.py SCOPE.
+# "combined" keeps the original unsuffixed filename -- it's the page
+# that's already live and indexed. Order here is also switcher order.
+LOSERS_BELT_FILENAMES = {"combined": "losers-belt.html", "fbs": "losers-belt-fbs.html",
+                          "fcs": "losers-belt-fcs.html"}
+LOSERS_BELT_SWITCHER_LABELS = {"combined": "Combined (FBS + FCS)", "fbs": "FBS Only",
+                                "fcs": "FCS Only"}
+
+
+def generate_losers_belt_page(lineage, scope="combined", available_scopes=("combined",)):
     """The Losers Belt page -- current holder + full reign history, in the
     same spirit as generate_lineage_page() but deliberately lighter: no
     per-game detail pages exist for Losers Belt games (only the real belt
     gets those), so nothing here links out to a games/ or teams/ page --
     a losers-belt-only team may never have earned a real-belt team page,
     and this has no way to know without risking a broken link. lineage
-    here is belt_data/losers_lineage.json, same shape as lineage.json.
+    here is belt_data/losers_lineage*.json, same shape as lineage.json.
+
+    `scope` is one of build_losers_lineage.py's SCOPES ("combined"/"fbs"/
+    "fcs") -- which of the three independently-computed lineages this
+    particular page renders. `available_scopes` is whichever of the three
+    actually have data yet (each is bootstrapped independently, so e.g.
+    right after this shipped only "combined" would be available) -- the
+    switcher only links to scopes that are in it, so this never renders a
+    link to a page that doesn't exist yet.
     """
+    SCOPE_INTRO = {
+        "combined": "This one folds FBS and FCS together, exactly how this belt "
+            "has always worked here.",
+        "fbs": "This one is restricted to FBS programs only &mdash; both sides of "
+            "every game have to be FBS, so the belt can never cross down into FCS. "
+            "This is the scope that matches the &ldquo;official&rdquo; College "
+            "Football Loser's Belt that's been tracked on r/CFB since 2014 and "
+            "still goes viral there today.",
+        "fcs": "This one is restricted to FCS programs only &mdash; both sides of "
+            "every game have to be FCS, so the belt can never cross up into FBS.",
+    }
+    SCOPE_TITLE_SUFFIX = {"combined": "", "fbs": " (FBS)", "fcs": " (FCS)"}
+    SCOPE_META_NOTE = {
+        "combined": "Combines FBS and FCS.",
+        "fbs": "Restricted to FBS programs -- matches the version tracked on r/CFB since 2014.",
+        "fcs": "Restricted to FCS programs.",
+    }
+
+    switcher_html = ""
+    if len(available_scopes) > 1:
+        pills = []
+        for s in ("combined", "fbs", "fcs"):
+            if s not in available_scopes:
+                continue
+            label = esc(LOSERS_BELT_SWITCHER_LABELS[s])
+            if s == scope:
+                pills.append(f'<span class="scopeBtn active" aria-current="page">{label}</span>')
+            else:
+                pills.append(f'<a class="scopeBtn" href="{LOSERS_BELT_FILENAMES[s]}">{label}</a>')
+        switcher_html = f'''
+  <div class="scopeSwitch" role="group" aria-label="Which programs count" style="margin-top:18px">{"".join(pills)}</div>'''
+
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
@@ -2497,11 +2562,13 @@ def generate_losers_belt_page(lineage):
           <td class="lost">{passed_txt}</td>
         </tr>'''
 
+    title_suffix = SCOPE_TITLE_SUFFIX[scope]
+    meta_note = SCOPE_META_NOTE[scope]
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
-<title>The Losers Belt — The College Football Belt</title>
-<meta name="description" content="A mirror-image lineage: the belt passes to whoever LOSES to the holder, not whoever beats them. Currently held by {esc(current["team"])}.">
+<title>The Losers Belt{title_suffix} — The College Football Belt</title>
+<meta name="description" content="A mirror-image lineage: the belt passes to whoever LOSES to the holder, not whoever beats them. {meta_note} Currently held by {esc(current["team"])}.">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
@@ -2528,14 +2595,15 @@ def generate_losers_belt_page(lineage):
 </header>
 
 <main class="wrap">
-  <h1 class="pageTitle">The Losers Belt</h1>
+  <h1 class="pageTitle">The Losers Belt{title_suffix}</h1>
   <p class="lede">The real belt passes to whoever BEATS the holder. This one is its
     mirror image: it passes to whoever LOSES to the holder &mdash; you catch it the way
     you&rsquo;d catch a cold, by losing to the team that currently has it. Lose again, and
     you keep it (you&rsquo;re still the reigning worst team in the country). Win, and
     whoever you just beat catches it from you. It starts the same place the real belt
     does: Princeton, who lost the very first college football game ever played, 6&ndash;4 to
-    Rutgers on November&nbsp;6, 1869.</p>
+    Rutgers on November&nbsp;6, 1869. {SCOPE_INTRO[scope]}</p>
+{switcher_html}
 
   <div class="rules">
     <div class="rule-card">
@@ -5481,7 +5549,7 @@ def generate_feed(belt_games, recaps):
 def main():
     (lineage, details, colors, next_game, upcoming_games, matchup,
      ai_preview, weather, recaps, historical_notes, game_plays,
-     losers_lineage) = load_data()
+     losers_lineages) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -5527,14 +5595,21 @@ def main():
     with open(os.path.join(OUT_DIR, "lineage.html"), "w", encoding="utf-8") as f:
         f.write(lineage_html)
 
-    wrote_losers_belt = losers_lineage is not None
-    if wrote_losers_belt:
-        with open(os.path.join(OUT_DIR, "losers-belt.html"), "w", encoding="utf-8") as f:
-            f.write(generate_losers_belt_page(losers_lineage))
-    else:
-        warnings.append(f"{DATA_DIR}/losers_lineage.json not found -- skipped "
-                         f"losers-belt.html (run build_losers_lineage.py's one-time "
-                         f"bootstrap to enable it)")
+    # Each of the three Losers Belt scopes (build_losers_lineage.py's
+    # SCOPES) is bootstrapped independently, so any subset of them may
+    # have data at a given point -- only "combined" is guaranteed once
+    # any Losers Belt data exists at all (it's the original scope, and
+    # keeps the original unsuffixed filename/URL).
+    available_scopes = tuple(s for s in ("combined", "fbs", "fcs") if losers_lineages[s] is not None)
+    for scope in available_scopes:
+        page_html = generate_losers_belt_page(losers_lineages[scope], scope, available_scopes)
+        with open(os.path.join(OUT_DIR, LOSERS_BELT_FILENAMES[scope]), "w", encoding="utf-8") as f:
+            f.write(page_html)
+    for scope in ("combined", "fbs", "fcs"):
+        if scope not in available_scopes:
+            warnings.append(f"{DATA_DIR}/losers_lineage{'' if scope == 'combined' else '_' + scope}.json "
+                             f"not found -- skipped {LOSERS_BELT_FILENAMES[scope]} (run "
+                             f"build_losers_lineage.py's one-time bootstrap to enable it)")
 
     all_games_html = generate_all_games_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "all-games.html"), "w", encoding="utf-8") as f:
@@ -5632,8 +5707,8 @@ def main():
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
         sitemap_urls.append(f"{SITE_URL}/map.html")
-    if wrote_losers_belt:
-        sitemap_urls.append(f"{SITE_URL}/losers-belt.html")
+    for scope in available_scopes:
+        sitemap_urls.append(f"{SITE_URL}/{LOSERS_BELT_FILENAMES[scope]}")
     sitemap_urls += [f"{SITE_URL}/teams/{slug}.html" for slug in team_slugs]
     sitemap_urls += [f"{SITE_URL}/players/{slug}.html" for slug in player_slugs]
     sitemap_urls += [f"{SITE_URL}/games/{g['game_id']}.html" for g in belt_games]
@@ -5666,8 +5741,8 @@ def main():
     print(f"Wrote {OUT_DIR}/CNAME ({CUSTOM_DOMAIN})")
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
-    if wrote_losers_belt:
-        print(f"Wrote Losers Belt page to {OUT_DIR}/losers-belt.html")
+    for scope in available_scopes:
+        print(f"Wrote Losers Belt ({scope}) page to {OUT_DIR}/{LOSERS_BELT_FILENAMES[scope]}")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
     print(f"Wrote records page to {OUT_DIR}/records.html")
