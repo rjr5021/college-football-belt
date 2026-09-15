@@ -110,9 +110,45 @@ on:
           later without redoing combined's already-settled history. Uses
           far more CFBD API calls (~316 total, shared across all three
           scopes) than a normal run -- don't tick this in the same
-          run/month as the full-refetch checkbox above without checking
-          your CFBD usage first. Leave unchecked for an ordinary manual
-          run.
+          run/month as any other bootstrap checkbox on this form without
+          checking your CFBD usage first. Leave unchecked for an ordinary
+          manual run.
+        required: false
+        type: boolean
+        default: false
+      bootstrap_championship_scopes:
+        description: >-
+          One-time historical build of the championship belt's FBS-only
+          and FCS-only scopes (see build_lineage.py's docstring) --
+          required once before lineage_fbs.html/lineage_fcs.html and
+          all-games_fbs.html/all-games_fcs.html ever appear on the site.
+          The original combined scope (lineage.html/all-games.html, and
+          everything else on the site) is untouched either way. Every run
+          after this one is cheap and automatic per scope. Uses far more
+          CFBD API calls (~316 total, shared across both scopes) than a
+          normal run -- don't tick this in the same run/month as any
+          other bootstrap checkbox on this form without checking your
+          CFBD usage first. Leave unchecked for an ordinary manual run.
+        required: false
+        type: boolean
+        default: false
+      bootstrap_conference_belts:
+        description: >-
+          One-time historical build of every FBS/FCS conference belt, all
+          conferences together in one go (see
+          build_conference_lineage.py's docstring) -- required once
+          before conferences/index.html and any conferences/<slug>.html
+          ever appear on the site. Eligibility is membership at the time
+          of each game (CFBD's own per-game conference fields), so
+          realignment is handled automatically. Every run after this one
+          is cheap and automatic per conference; a no-op for any
+          conference that's already bootstrapped, so re-ticking this
+          later also backfills a newly-added conference on its own. Uses
+          far more CFBD API calls (~316 total, shared across all
+          conferences) than a normal run -- don't tick this in the same
+          run/month as any other bootstrap checkbox on this form without
+          checking your CFBD usage first. Leave unchecked for an ordinary
+          manual run.
         required: false
         type: boolean
         default: false
@@ -166,6 +202,14 @@ jobs:
           # bootstrap -- see the input above and update_all.py's own
           # docstring/BOOTSTRAP_LOSERS_BELT.
           BOOTSTRAP_LOSERS_BELT: ${{ github.event.inputs.bootstrap_losers_belt }}
+          # Same idea, for the championship belt's fbs/fcs scopes -- see
+          # the input above and update_all.py's own docstring/
+          # BOOTSTRAP_CHAMPIONSHIP_SCOPES.
+          BOOTSTRAP_CHAMPIONSHIP_SCOPES: ${{ github.event.inputs.bootstrap_championship_scopes }}
+          # Same idea, for the FBS/FCS conference belts' one-time
+          # historical bootstrap -- see the input above and
+          # update_all.py's own docstring/BOOTSTRAP_CONFERENCE_BELTS.
+          BOOTSTRAP_CONFERENCE_BELTS: ${{ github.event.inputs.bootstrap_conference_belts }}
         run: python update_all.py
 
       - name: Commit historical_data/, ai_preview_cache/, recap_cache/ and social_cache/ if any changed
