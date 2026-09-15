@@ -1788,13 +1788,109 @@
       "defenses": 1,
       "end_date": "2024-11-02",
       "lost_to": "Seton Hill"
+    },
+    {
+      "team": "Seton Hill",
+      "start_date": "2024-11-02",
+      "won_from": "Edinboro",
+      "won_score": "24-22",
+      "defenses": 0,
+      "end_date": "2024-11-02",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Edinboro",
+      "start_date": "2024-11-03",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Seton Hill",
+      "predecessor": "Clarion",
+      "end_date": "2024-11-03",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Clarion",
+      "start_date": "2024-11-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Edinboro",
+      "predecessor": "Shippensburg",
+      "end_date": "2024-11-04",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Shippensburg",
+      "start_date": "2024-11-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Clarion",
+      "predecessor": "American International",
+      "end_date": "2024-11-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "American International",
+      "start_date": "2024-11-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Shippensburg",
+      "predecessor": "Franklin Pierce",
+      "end_date": "2024-11-06",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Franklin Pierce",
+      "start_date": "2024-11-07",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "American International",
+      "predecessor": "Post",
+      "end_date": "2024-11-07",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Post",
+      "start_date": "2024-11-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Franklin Pierce",
+      "predecessor": "Lock Haven",
+      "end_date": "2024-11-08",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Lock Haven",
+      "start_date": "2024-11-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 1,
+      "reclaimed_after": "Post",
+      "predecessor": "Clarion",
+      "end_date": "2024-11-09",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Seton Hill",
-    "start_date": "2024-11-02",
-    "won_from": "Edinboro",
-    "won_score": "24-22",
-    "defenses": 2
+    "team": "Clarion",
+    "start_date": "2024-11-10",
+    "won_from": null,
+    "won_score": null,
+    "defenses": 1,
+    "reclaimed_after": "Lock Haven",
+    "predecessor": "Shippensburg"
   }
 }
