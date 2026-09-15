@@ -382,21 +382,6 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
                     # first one is forgiven.
                     skip_first_gap = False
                 else:
-                    # TEMPORARY DIAGNOSTIC (remove before the next real
-                    # ship) -- 2026-09-15: widening to
-                    # DISRUPTION_GAP_THRESHOLD_DAYS=1500 had ZERO effect on
-                    # the live WW2/COVID vacancy count (still 322, still
-                    # 169+128 in-window, byte-identical reign durations) on
-                    # the very next bootstrap. That means every one of
-                    # those real underlying gaps is >1500 days even when it
-                    # overlaps a disruption window -- need the actual
-                    # sizes to know whether to widen further or exempt
-                    # these windows from the gap check entirely, rather
-                    # than guess again blind.
-                    print(f"GAP-DEBUG: {holder} gap={gap}d disrupted="
-                          f"{_disrupted_era_overlap(reign['last_game_date'], g['date'])} "
-                          f"last_activity={reign['last_game_date']} next_game={g['date']}",
-                          file=sys.stderr)
                     # A real, later game for this holder exists (this one)
                     # -- but only after a suspiciously long silence. Stop
                     # here rather than silently crediting it as an
@@ -468,6 +453,40 @@ def save_vacancies(vacancies):
     with open(VACANCY_PATH, "w") as f:
         json.dump(vacancies, f, indent=2)
     print(f"Wrote {VACANCY_PATH} ({len(vacancies)} recorded vacanc{'y' if len(vacancies) == 1 else 'ies'})")
+
+
+def merge_vacancies(all_vacancies, new_vacancies):
+    """Upsert `new_vacancies` into `all_vacancies` by (team, reign_started),
+    OVERWRITING an existing record when the recomputed one differs on any
+    field that matters downstream (last_activity_date, effective_date,
+    reverted_to) -- not skip-if-key-already-present.
+
+    A fresh recomputation of an already-known reign (e.g. from a
+    gap-detection algorithm/threshold change, like the WW2/COVID
+    disruption-window widening) can legitimately produce a different
+    effective_date / last_activity_date / reverted_to for that same key.
+    The old skip-if-present logic silently discarded that update, which
+    permanently froze historical_data/losers_baseline.json on stale
+    boundaries even after a genuine --full-refetch bootstrap recomputed the
+    right answer.
+
+    Returns (merged_list, changed) where `changed` is True iff the merged
+    list differs from `all_vacancies` (so the caller only needs to write
+    the file back when there's actually something new to persist).
+    """
+    by_key = {(v["team"], v["reign_started"]): v for v in all_vacancies}
+    changed = False
+    for v in new_vacancies:
+        key = (v["team"], v["reign_started"])
+        existing = by_key.get(key)
+        if existing is None or (
+            existing.get("last_activity_date") != v.get("last_activity_date")
+            or existing.get("effective_date") != v.get("effective_date")
+            or existing.get("reverted_to") != v.get("reverted_to")
+        ):
+            by_key[key] = v
+            changed = True
+    return list(by_key.values()), changed
 
 
 def _predecessor(reign):
@@ -862,11 +881,8 @@ def main():
 
     all_vacancies = load_vacancies()
     if new_vacancies:
-        existing_keys = {(v["team"], v["reign_started"]) for v in all_vacancies}
-        to_add = [v for v in new_vacancies
-                  if (v["team"], v["reign_started"]) not in existing_keys]
-        if to_add:
-            all_vacancies = all_vacancies + to_add
+        all_vacancies, changed = merge_vacancies(all_vacancies, new_vacancies)
+        if changed:
             save_vacancies(all_vacancies)
 
     write_outputs(belt_games, reigns, args.tie_rule)
