@@ -133,9 +133,23 @@ CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst limit).
 Steps 1, 3 and 5 default to the cheap incremental fetch above; step 4's
 one-time backfill (~280 calls) still leaves comfortable headroom under that
 cap even in the same month as everything else. Pass --full-refetch to
-build_lineage.py's, fetch_game_details.py's, or fetch_game_plays.py's own
-invocation (not exposed here) for a genuine from-scratch rebuild when you
+build_lineage.py's or fetch_game_plays.py's own invocation (not exposed
+here) for a genuine from-scratch rebuild of either of those when you
 actually need one.
+
+Step 3 (fetch_game_details.py) is the one exception -- it IS exposed here,
+because it's the one CFBD stage a non-technical site owner is actually
+likely to want to trigger on purpose: set the environment variable
+FULL_REFETCH_GAME_DETAILS=true (update-and-deploy.yml wires this to a
+checkbox on the workflow's manual "Run workflow" button, so this never
+needs a local Python install) and this stage runs with --full-refetch
+instead of the normal incremental fetch, redoing every 2003+ belt game's
+box score from scratch (~600 calls -- CFBD's athlete `id` field, used to
+link a player's name to their own page, was only added to this site's
+data after most of 2003-2024 was already cached, so those seasons won't
+carry a player_id, and player names on those older games won't link,
+until this runs once). Safe to run more than once; every following
+scheduled/pushed run goes back to the cheap incremental fetch on its own.
 
 Stops immediately if a CFBD stage fails (nonzero exit code), rather than
 building a site from a half-updated data set. generate_ai_preview.py,
@@ -150,6 +164,13 @@ what it's already done.
 import os
 import subprocess
 import sys
+
+# Set by update-and-deploy.yml when the manual "Run workflow" button's
+# "full refetch" checkbox is ticked -- see the module docstring above.
+# Only affects the fetch_game_details.py stage; every other stage runs
+# exactly as it always has.
+FULL_REFETCH_GAME_DETAILS = os.environ.get("FULL_REFETCH_GAME_DETAILS", "").strip().lower() in (
+    "1", "true", "yes", "on")
 
 # (script, human-readable label, env var it needs -- or None if it needs no key)
 STAGES = [
@@ -182,8 +203,16 @@ def main():
             sys.exit(f"No API key. Set {required_key} first. "
                       f"Free key at https://collegefootballdata.com/key")
 
-        print(f"\n=== [{i}/{len(STAGES)}] {label} ({script}) ===")
-        result = subprocess.run([sys.executable, script_path], cwd=here)
+        cmd = [sys.executable, script_path]
+        if script == "fetch_game_details.py" and FULL_REFETCH_GAME_DETAILS:
+            cmd.append("--full-refetch")
+            print(f"\n=== [{i}/{len(STAGES)}] {label} ({script} --full-refetch) ===")
+            print("    FULL_REFETCH_GAME_DETAILS is set -- redoing every 2003+ belt game's "
+                  "box score from scratch (~600 CFBD calls) instead of the usual incremental "
+                  "fetch. This is a one-off; the next run goes back to normal.")
+        else:
+            print(f"\n=== [{i}/{len(STAGES)}] {label} ({script}) ===")
+        result = subprocess.run(cmd, cwd=here)
         if result.returncode != 0:
             sys.exit(f"\n{script} failed (exit code {result.returncode}) -- "
                       f"stopping here rather than rebuild from a half-updated "
