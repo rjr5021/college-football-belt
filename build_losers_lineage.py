@@ -410,6 +410,25 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
     forward from there, repeating until every reign in the resulting
     history is clean.
 
+    A gap alone isn't always actionable, though: the very first (origin)
+    reign has no predecessor to revert to, and `seen` can (rarely) already
+    contain this exact reign's key. In either case we're NOT going to void
+    it -- but there can still be real, later games sitting unprocessed
+    past the gap (that's what proved has_gap in the first place), and
+    those must NOT just be silently dropped from the rest of history. So
+    when we decide not to revert but has_gap is still true, this re-walks
+    that exact (holder, reign) one final time with NO gap awareness at
+    all, crediting the long silence as an unusually long (but real)
+    defense and letting every real game after it keep getting processed
+    normally. (This isn't a hypothetical: it's exactly what shipped
+    broken once already -- the Losers Belt's own origin holder,
+    Princeton, hit a gap soon after 1869 with no predecessor to revert
+    to, and without this fallback the walk silently froze there forever,
+    collapsing 150+ years of real history down to 5 reigns. Games are
+    sparse enough in the earliest era of college football that even the
+    origin team can go stretches longer than GAP_THRESHOLD_DAYS between
+    its own real games -- not a rare edge case at all.)
+
     `context_reigns` is optional extra history (e.g. the frozen
     historical_reigns from baseline) consulted only to look up a
     reverted-to team's OWN predecessor, for correctly chaining a further
@@ -440,6 +459,25 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
 
         if predecessor is None or reign_key in seen or \
                 not (has_gap or tip["team"] not in recent_teams):
+            if has_gap:
+                # There's a real, later game for this team proving a
+                # genuine gap -- but we're NOT going to void this reign
+                # over it, either because it's the very first (origin)
+                # reign with nowhere to revert to (e.g. Princeton for the
+                # Losers Belt), or because reign_key is already in `seen`
+                # (the infinite-loop guard: we've reverted this exact
+                # reign once before). Either way, walk_losers already
+                # stopped dead right before that later game and everything
+                # after it -- possibly the rest of history -- would
+                # silently vanish from the output if we just accepted
+                # `reigns` as final here. So re-walk this exact
+                # (holder, reign) one more time with NO gap awareness at
+                # all, so the long silence gets credited as an unusually
+                # long (but real) defense and every real game after it
+                # keeps getting processed normally instead of being
+                # dropped.
+                belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder,
+                                                  start_reign=reign, gap_threshold_days=None)
             all_belt_games += belt_games
             all_reigns += reigns
             return all_belt_games, all_reigns, vacancies
