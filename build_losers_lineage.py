@@ -83,25 +83,46 @@ operation (like fetch_game_details.py's own --full-refetch, ~600 calls) --
 CFBD's free tier is 1,000 calls/MONTH, and stacking two ~300-600 call
 one-offs in the same month can blow through that.
 
-Defunct-program handling (historical_data/losers_vacancies.json): the
-Losers Belt can only change hands when the holder WINS a game. That's fine
-for an active program, but it means a holder that stops fielding a team at
-all -- and a lot of this belt's holders are exactly the small/historic
-programs that don't exist anymore, since it drifts toward whoever gets
-blown out -- would hold it forever under the literal rule, with no way to
-ever lose it back. Every run, after walking as far as the freshly-fetched
-games allow, this script checks whether the CURRENT holder (only the live
-tip -- a closed historical reign already ended via a real, dated game and
-is never touched) has shown up in ANY game, any classification, in the
-freshly-fetched current + previous season window. If not, they're treated
-as having discontinued football, and the belt reverts to whoever they'd
-caught it from -- walking back further if that team is ALSO absent (a
-chain of defunct programs), and stopping at the very first (1869) reign if
-it somehow comes to that. Because a team is only checked against the
-current + previous season window, and that window only drops a team's
-last game once a further season has fully passed, this in practice needs
-roughly two full seasons of silence before it fires -- not a single quiet
-offseason.
+Defunct-program / mid-reign gap handling (historical_data/losers_vacancies.json):
+the Losers Belt can only change hands when the holder WINS a game. That's
+fine for an active program, but it means a holder that stops fielding a
+team at all -- and a lot of this belt's holders are exactly the
+small/historic programs that don't exist anymore, since it drifts toward
+whoever gets blown out -- would hold it forever under the literal rule,
+with no way to ever lose it back. There are two ways this shows up, and a
+single unified mechanism (walk_losers's `gap_threshold_days` +
+resolve_vacancies's `has_gap` check, both above) catches both:
+
+  - TERMINAL dormancy: the CURRENT holder (the live tip -- a closed
+    historical reign already ended via a real, dated game and is never
+    touched) hasn't shown up in ANY game, any classification, in the
+    freshly-fetched current + previous season window. Because a team is
+    only checked against that window, and the window only drops a team's
+    last game once a further season has fully passed, this in practice
+    needs roughly two full seasons of silence before it fires -- not a
+    single quiet offseason.
+  - IN-REIGN gap, ANYWHERE in history: a team goes quiet for more than
+    GAP_THRESHOLD_DAYS (700 days -- comfortably wider than a normal
+    season-to-season gap, or even a single skipped season) and only later
+    shows up again in a real game. This is deliberately the SAME
+    mechanism as the Division 1 restriction's own effect: a team that
+    temporarily drops out of Division 1 partway through history has its
+    non-D1-era games filtered out entirely by filter_division1_games
+    before the walk ever runs, which produces exactly this same shape --
+    a real game, then a long silence in the (already-filtered) data, then
+    a real game again -- so "give the belt back to whoever it belonged to
+    before a team dropped from D1" falls straight out of the general gap
+    check with no extra CFBD calls or historical classification data
+    needed. It's also what catches an implausibly long, mostly-inactive
+    reign that isn't really about Division 1 status at all -- e.g. a
+    small program that just has a multi-decade hole in CFBD's own
+    coverage (see Bloomsburg above) rather than 40+ years of genuinely
+    unbroken dominance.
+
+Either way, once a tip needs reverting, the belt goes back to whoever it
+was caught from -- walking back further if that team is ALSO
+defunct/gapped (a chain of reverts), and stopping at the very first (1869)
+reign if it somehow comes to that.
 
 Crucially, a revert doesn't just freeze the belt on the previous holder
 forever: it re-walks the SAME already-fetched games starting from that
@@ -168,6 +189,17 @@ BASELINE_PATH = os.path.join(HIST_DIR, "losers_baseline.json")
 VACANCY_PATH = os.path.join(HIST_DIR, "losers_vacancies.json")
 LINEAGE_PATH = os.path.join(OUT_DIR, "losers_lineage.json")
 
+# "Roughly two full seasons of silence" -- the same effective threshold the
+# ORIGINAL (terminal-only) dormancy check already used via its current +
+# previous season window, now applied uniformly to every reign in history,
+# not just the live tip. Comfortably wider than any real gap an
+# every-season program should ever show (last game of one season to first
+# game of the next is typically ~270-300 days; even a single skipped
+# season -- e.g. the COVID-disrupted 2020 season for several FCS
+# conferences -- is usually still under this), so it shouldn't false-fire
+# on a normal offseason or a one-off cancelled season.
+GAP_THRESHOLD_DAYS = 700
+
 
 def filter_division1_games(games, d1_teams):
     """Keep only games where BOTH participants are current Division 1
@@ -186,7 +218,8 @@ def filter_division1_games(games, d1_teams):
     return [g for g in games if g["home"] in d1_teams and g["away"] in d1_teams]
 
 
-def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
+def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
+                 gap_threshold_days=None):
     """Same shape and calling convention as build_lineage.py's walk(), and
     the SAME outcome vocabulary ("changed"/"retained"/"retained (tie)"/
     "lost (tie)"/"established") -- so split_at_season() (imported unchanged
@@ -202,6 +235,17 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
     SAME full games list a bootstrap walk already has in hand, and must
     not re-match any of that team's OWN earlier games from before this
     particular reign began.
+
+    `gap_threshold_days`, when given, stops the walk early -- BEFORE
+    processing a game -- the moment the gap since the reign's last real
+    activity (`last_game_date`) would exceed it. This is what lets
+    resolve_vacancies() below catch a too-long silence ANYWHERE in
+    history, not just at the live tip: the stop leaves a real, later game
+    for this same team sitting unprocessed in the remaining games, which
+    is exactly the signal resolve_vacancies() uses to tell "this was a
+    genuine in-reign gap" apart from "we've simply run out of data so
+    far." None of the existing callers (tests, and any plain walk) pass
+    this, so the default (no gap awareness at all) is unchanged.
     """
     games = [g for g in games if g["date"] >= FIRST_GAME_DATE]
 
@@ -241,6 +285,17 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
     for g in remaining:
         if holder not in (g["home"], g["away"]):
             continue
+
+        if gap_threshold_days is not None:
+            gap = (date.fromisoformat(g["date"])
+                   - date.fromisoformat(reign["last_game_date"])).days
+            if gap > gap_threshold_days:
+                # A real, later game for this holder exists (this one) --
+                # but only after a suspiciously long silence. Stop here
+                # rather than silently crediting it as an unbroken
+                # defense; leave it (and everything after) unprocessed for
+                # the caller to pick up from a reopened predecessor.
+                break
 
         hp, ap = g["home_points"], g["away_points"]
         if hp == ap:
@@ -325,15 +380,35 @@ def _predecessor(reign):
 def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
                        today, context_reigns=()):
     """Walk `games` from (start_holder, start_reign) -- exactly like
-    calling walk_losers() directly -- except that if the resulting tip has
-    gone dormant (absent from `recent_teams`, see the module docstring),
-    it doesn't just get left stuck there: the belt is reverted to whoever
-    it was caught from, and `games` gets RE-WALKED starting from that
-    team's reopened reign, so any real games they played while the
-    dormant team was incorrectly "still holding" it get processed too,
-    instead of silently discarded. Repeats for a chain of more than one
-    defunct program, and stops at the very first (origin) reign if it
-    somehow comes to that.
+    calling walk_losers() directly -- except that whenever the resulting
+    tip needs reverting, it doesn't just get left stuck there: the belt is
+    reverted to whoever it was caught from, and `games` gets RE-WALKED
+    starting from that team's reopened reign, so any real games they
+    played while the dormant/gapped team was incorrectly "still holding"
+    it get processed too, instead of silently discarded. Repeats for a
+    chain of more than one defunct/gapped program, and stops at the very
+    first (origin) reign if it somehow comes to that.
+
+    A tip needs reverting for either of two reasons, checked every pass:
+      - IN-REIGN GAP: walk_losers (called with GAP_THRESHOLD_DAYS) stopped
+        early because a real, LATER game for this same team exists in
+        `games`, just too far past their last activity to credit as an
+        unbroken defense. Proven by that later game's own presence in
+        `games` -- this is what catches a too-long silence ANYWHERE in
+        history, e.g. a program that stopped fielding a team for years
+        (or even permanently dropped out of Division 1, since a non-D1
+        team's games are already filtered out entirely before this ever
+        runs -- see filter_division1_games) and only later resumed
+        Division 1 play, not just a team that's dormant as of today.
+      - TERMINAL dormancy: we've simply run out of fetched games (the live
+        edge) and the team hasn't shown up in the current+previous season
+        window (`recent_teams`) -- the original check, unchanged, for
+        when there's no later game (yet) to prove a gap either way.
+    Because this fires on ANY reign a pass produces -- not only the very
+    last one in history -- a single bootstrap walk (start_holder=None)
+    naturally finds and fixes the EARLIEST such issue first, then re-walks
+    forward from there, repeating until every reign in the resulting
+    history is clean.
 
     `context_reigns` is optional extra history (e.g. the frozen
     historical_reigns from baseline) consulted only to look up a
@@ -349,11 +424,22 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
     seen = set()
 
     while True:
-        belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder, start_reign=reign)
+        belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder, start_reign=reign,
+                                          gap_threshold_days=GAP_THRESHOLD_DAYS)
         tip = reigns[-1]
         predecessor = _predecessor(tip)
 
-        if predecessor is None or tip["team"] in recent_teams or tip["team"] in seen:
+        # A later game for this team sitting unprocessed in `games` is the
+        # proof an in-reign gap is what stopped the walk (see walk_losers's
+        # own gap_threshold_days docstring) -- as opposed to genuinely
+        # having no more data yet, which is what the recent_teams check
+        # below is for.
+        has_gap = any(g["date"] > tip["last_game_date"]
+                      and tip["team"] in (g["home"], g["away"]) for g in games)
+        reign_key = (tip["team"], tip["start_date"])
+
+        if predecessor is None or reign_key in seen or \
+                not (has_gap or tip["team"] not in recent_teams):
             all_belt_games += belt_games
             all_reigns += reigns
             return all_belt_games, all_reigns, vacancies
@@ -361,36 +447,37 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         # Date the void to the team's TRUE last recorded activity, not
         # blindly to when they first caught it -- a team can catch the
         # belt, genuinely defend it for real (real losses, real dates)
-        # for a while, and only THEN stop playing for good. Collapsing
-        # that whole span down to "voided the same day it started" would
-        # be wrong whenever defenses > 0: last_game_date already equals
-        # start_date for a team that never played again at all, so this
-        # naturally reduces to the original same-day behavior in that case.
+        # for a while, and only THEN go quiet. Collapsing that whole span
+        # down to "voided the same day it started" would be wrong
+        # whenever defenses > 0: last_game_date already equals start_date
+        # for a team with zero real defenses, so this naturally reduces to
+        # the original same-day behavior in that case.
         last_activity = tip.get("last_game_date", tip["start_date"])
         v = {"team": tip["team"], "reign_started": tip["start_date"],
              "last_activity_date": last_activity,
              "effective_date": (date.fromisoformat(last_activity)
                                  + timedelta(days=1)).isoformat(),
              "detected_on": today, "reverted_to": predecessor}
-        if last_activity == tip["start_date"]:
-            print(f"Losers Belt: {v['team']} hasn't shown up in any game since "
-                  f"catching it on {v['reign_started']} -- treating their program "
-                  f"as having discontinued football. Voiding that reign and "
-                  f"reverting the belt to {v['reverted_to']}, in effect since "
-                  f"{v['effective_date']}.")
+        if has_gap:
+            reason = ("went quiet for a long stretch (no game in well over two "
+                      "seasons) before showing up again later in the data -- "
+                      "whether that's a real gap in the program's own history "
+                      "or just a hole in CFBD's coverage, either way it's not "
+                      "a real unbroken defense")
+        elif last_activity == tip["start_date"]:
+            reason = "hasn't shown up in any game since catching it"
         else:
-            print(f"Losers Belt: {v['team']} caught it on {v['reign_started']}, "
-                  f"defended it for real through {last_activity}, and hasn't shown "
-                  f"up in any game since -- treating their program as having "
-                  f"discontinued football. Closing that reign as of their last game "
-                  f"and reverting the belt to {v['reverted_to']}, in effect since "
-                  f"{v['effective_date']}.")
+            reason = "hasn't shown up in any game since"
+        print(f"Losers Belt: {v['team']} {reason} on {v['reign_started']}"
+              f"{'' if last_activity == v['reign_started'] else f', defended it for real through {last_activity},'} "
+              f"-- closing that reign as of their last real activity and reverting "
+              f"the belt to {v['reverted_to']}, in effect since {v['effective_date']}.")
         vacated_tip = {**tip, "end_date": last_activity, "lost_to": None,
                         "vacated": True}
         all_belt_games += belt_games
         all_reigns += reigns[:-1] + [vacated_tip]
         vacancies.append(v)
-        seen.add(tip["team"])
+        seen.add(reign_key)
 
         inherited = None
         for r in reversed(list(context_reigns) + all_reigns):
