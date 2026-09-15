@@ -24,6 +24,10 @@
     "JoshPateCFB": "lookup failed: 401 Unauthorized\nUnauthorized",
     "RedditCFB": "lookup failed: 401 Unauthorized\nUnauthorized",
     "Rivals": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "Hayesfawcett3": "lookup failed: 401 Unauthorized\nUnauthorized"
+    "Hayesfawcett3": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "Clowfb": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "AlabamaFTBL": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "RazorbackFB": "lookup failed: 401 Unauthorized\nUnauthorized",
+    "AuburnFootball": "lookup failed: 401 Unauthorized\nUnauthorized"
   }
 }
