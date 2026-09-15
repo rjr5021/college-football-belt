@@ -664,6 +664,30 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
     through an unusually long (but real) silence, crediting it as one
     defense, exactly like the no-predecessor/already-seen cases.
 
+    That guard alone turned out not to be enough: it was only ever
+    consulted inside the has_gap forgiveness loop above, so a cycle
+    reached through the OTHER revert reason -- TERMINAL dormancy, where
+    none of the cycling teams has any later game at all left in `games`
+    -- sailed straight past it every single lap. `seen` doesn't catch
+    this either, for the same reason noted above (each lap's synthetic
+    start_date is new). And the cycle isn't hypothetical there either:
+    once a team's dormant reign gets reverted, the "inherited" lookup
+    below finds that team's MOST RECENT prior appearance in `all_reigns`
+    to figure out what IT inherits from on the next go-round -- and once
+    a team has been through this once, its most recent prior appearance
+    is its own already-vacated reign from earlier in this same cycle,
+    whose predecessor is fixed at creation and always points to the same
+    next team in the loop. So the cycle isn't just under-guarded, it's
+    self-perpetuating by construction: A's second reopening always
+    inherits from the same team its first one did, forever (see the FCS
+    Losers Belt's Holy Cross/Brown/William & Mary/Dartmouth/Harvard
+    stretch, discovered live during the historical bootstrap run this
+    fix shipped for). So `tip["team"] in chain_teams` is also checked in
+    the main stop/revert decision below, independent of has_gap -- a
+    team we've already reverted once in this unbroken chain never gets
+    reverted a second time, however it was reached; we simply stop and
+    let it stand as the (unresolved) tip rather than spin forever.
+
     Returns (belt_games, reigns, vacancies) -- `vacancies` is just the
     NEW reverts found this call (for the audit-trail log), not a
     replayed/cumulative list.
@@ -733,7 +757,7 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
             if tip.get("defenses", 0) > 0 or len(reigns) > 1:
                 chain_teams = set()
 
-        if predecessor is None or reign_key in seen or \
+        if predecessor is None or reign_key in seen or tip["team"] in chain_teams or \
                 not (has_gap or tip["team"] not in recent_teams):
             all_belt_games += belt_games
             all_reigns += reigns
