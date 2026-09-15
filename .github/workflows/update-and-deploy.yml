@@ -87,7 +87,19 @@ on:
     # just gets picked up at the next one of these five, same as any
     # in-progress week always has been. Use "Run workflow" below for an
     # on-demand check any time none of this fits.
-  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+  workflow_dispatch:      # lets you trigger a run manually from the Actions tab
+    inputs:
+      full_refetch_game_details:
+        description: >-
+          Full refetch of every 2003+ belt game's box score (backfills
+          CFBD's player id into older cached seasons so player names link
+          on those games too -- see fetch_game_details.py's docstring).
+          Only check this for that one-time backfill; it uses far more
+          CFBD API calls (~600) than a normal run. Leave unchecked for an
+          ordinary manual run.
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -130,6 +142,10 @@ jobs:
           # github.event.schedule tells us which cron line fired this run
           # (unset for workflow_dispatch/push, so those never post one).
           X_POST_PREVIEW: ${{ github.event.schedule == '0 23 * * 5' }}
+          # Only set (to the string "true") on a manual "Run workflow" run
+          # with the full-refetch checkbox ticked -- see the input above
+          # and update_all.py's own docstring/FULL_REFETCH_GAME_DETAILS.
+          FULL_REFETCH_GAME_DETAILS: ${{ github.event.inputs.full_refetch_game_details }}
         run: python update_all.py
 
       - name: Commit historical_data/, ai_preview_cache/, recap_cache/ and social_cache/ if any changed
