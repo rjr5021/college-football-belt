@@ -26,11 +26,15 @@ Output (into ./belt_data/, regenerated fresh every run, not committed):
                   "away": {"team": "Notre Dame", "stats": {"totalYards": "441", ...}}
               } or null,
               "player_stats": {
-                  "passing": [{"player": "T. Smith", "team": "Stanford",
+                  "passing": [{"player": "T. Smith", "player_id": "4567890",
+                                "team": "Stanford",
                                 "stats": {"C/ATT": "18/29", "YDS": "245", ...}}, ...],
                   "rushing": [...], "receiving": [...],
                   "defensive": [...], "kicking": [...], ...
-              } or null
+              } or null  -- player_id is CFBD's own athlete id (a string), used
+                            to link a player to their own page across every
+                            belt game they appear in; null for the rare
+                            athlete CFBD itself didn't tag with one
           }, ... }
 
 IMPORTANT DATA LIMIT, not a bug: CFBD only has line scores, team box-score
@@ -248,7 +252,10 @@ def build_team_stats_index(raw_cache):
 
 def build_player_stats_index(raw_cache):
     """game_id -> {category_name: {"columns": [type names...],
-    "rows": [{"player":, "team":, "home_away":, "stats": {type: value}}, ...]}}.
+    "rows": [{"player":, "player_id":, "team":, "home_away":, "stats": {type: value}}, ...]}}.
+    player_id is CFBD's own athlete id (used to link a player to their own
+    page across every belt game they appear in) -- null on the rare athlete
+    CFBD itself didn't tag with one.
 
     CFBD's own shape is type-major (team -> categories -> types -> athletes,
     with one stat value per athlete per type) -- this pivots it to
@@ -284,9 +291,11 @@ def build_player_stats_index(raw_cache):
                         player_name = pick(ath, "name")
                         if not player_name:
                             continue
+                        athlete_id = pick(ath, "id")
                         key = (team_name, player_name)
                         prow = bucket["players"].setdefault(key, {
-                            "player": player_name, "team": team_name,
+                            "player": player_name, "player_id": athlete_id,
+                            "team": team_name,
                             "home_away": side, "stats": {},
                         })
                         prow["stats"][type_name] = pick(ath, "stat")

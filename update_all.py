@@ -72,9 +72,22 @@ this is safe to point at an existing belt_data/ folder:
                                  every historical belt game at once (~280+
                                  Claude calls) -- see README.md's "AI recaps"
                                  section for the one-time cost estimate.
-  9. build_site.py           -- no network calls; regenerates every page
+  9. generate_historical_notes.py -- writes a short, strictly factual note
+                                 (NOT a recap -- no box score to write one
+                                 from) for every belt game that has no box
+                                 score on file, almost all of them pre-2003.
+                                 Built ONLY from facts this site already has
+                                 (matchup, date, score, what it meant for the
+                                 belt) -- explicitly forbidden from inventing
+                                 plays, players, attendance, or anything else
+                                 not given to it. OPTIONAL, same pattern as
+                                 generate_recaps.py: skips cleanly with no
+                                 key, and a committed cache
+                                 (recap_cache/historical_notes.json) means
+                                 each game is only ever generated once.
+ 10. build_site.py           -- no network calls; regenerates every page
                                  from whatever's now in belt_data/.
- 10. generate_share_image.py -- no network call, no API key; renders
+ 11. generate_share_image.py -- no network call, no API key; renders
                                  site/share.png (the Open Graph / Twitter
                                  Card image for the homepage) for whoever
                                  currently holds the belt, the site's
@@ -82,7 +95,7 @@ this is safe to point at an existing belt_data/ folder:
                                  downloadable belt-history poster per team,
                                  straight from belt_data/lineage.json +
                                  team_colors.json.
- 11. post_to_x.py            -- OPTIONAL, same idea as generate_ai_preview.py
+ 12. post_to_x.py            -- OPTIONAL, same idea as generate_ai_preview.py
                                  / generate_recaps.py: skips itself cleanly
                                  unless X_API_KEY, X_API_KEY_SECRET,
                                  X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET are
@@ -100,7 +113,7 @@ this is safe to point at an existing belt_data/ folder:
                                  X_POST_PREVIEW) and only once per game.
                                  Also syncs the account's bio to always name
                                  the current holder, whenever it changes.
- 12. post_to_instagram.py   -- OPTIONAL, same idea again: skips itself
+ 13. post_to_instagram.py   -- OPTIONAL, same idea again: skips itself
                                  cleanly unless IG_ACCESS_TOKEN and
                                  IG_BUSINESS_ACCOUNT_ID are BOTH set. Mirrors
                                  post_to_x.py's result/preview posts and
@@ -148,6 +161,7 @@ STAGES = [
     ("fetch_weather.py", "Fetching the kickoff forecast", None),
     ("generate_ai_preview.py", "Writing the AI game preview + prediction (optional)", None),
     ("generate_recaps.py", "Writing AI recaps of settled games (optional)", None),
+    ("generate_historical_notes.py", "Writing fact-only notes for games with no box score (optional)", None),
     ("build_site.py", "Rebuilding the site", None),
     ("generate_share_image.py", "Rendering the share image, favicon, and team posters", None),
     ("post_to_x.py", "Posting results/preview to X (optional)", None),

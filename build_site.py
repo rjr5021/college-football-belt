@@ -277,9 +277,10 @@ def load_data():
     ai_preview = load_optional_json("ai_preview.json")
     weather = load_optional_json("weather.json")
     recaps = load_optional_json("recaps.json") or {}
+    historical_notes = load_optional_json("historical_notes.json") or {}
     game_plays = load_optional_json("game_plays.json") or {}
     return (lineage, details, colors, next_game, upcoming_games, matchup,
-            ai_preview, weather, recaps, game_plays)
+            ai_preview, weather, recaps, historical_notes, game_plays)
 
 
 def team_color(colors, name):
@@ -387,6 +388,16 @@ def team_slug(name):
     return s or "team"
 
 
+def player_slug(player_id, name):
+    """URL-safe filename stem for a player's own page -- the name AND
+    CFBD's own athlete id, since two different players can (and do) share
+    a name; the id keeps their pages from colliding. Deterministic and
+    shared by every player-page link across the site, so it only has to be
+    right once."""
+    base = re.sub(r"[^A-Za-z0-9]+", "-", (name or "").strip().lower()).strip("-")
+    return f"{base}-{player_id}" if player_id else (base or "player")
+
+
 def reign_dates(reign, today):
     start = date.fromisoformat(reign["start_date"])
     end = date.fromisoformat(reign["end_date"]) if reign.get("end_date") else today
@@ -477,14 +488,13 @@ def fmt_stat(raw, kind):
 
 def render_recap(g):
     recap = g.get("recap")
-    if not recap or not (recap.get("recap") or recap.get("key_moments")):
-        return ""
-    body = recap.get("recap") or ""
-    moments = recap.get("key_moments") or []
-    moments_html = "".join(f"<li>{esc(m)}</li>" for m in moments)
-    moments_block = f'<ul class="keyMatchups">{moments_html}</ul>' if moments_html else ""
+    if recap and (recap.get("recap") or recap.get("key_moments")):
+        body = recap.get("recap") or ""
+        moments = recap.get("key_moments") or []
+        moments_html = "".join(f"<li>{esc(m)}</li>" for m in moments)
+        moments_block = f'<ul class="keyMatchups">{moments_html}</ul>' if moments_html else ""
 
-    return f'''
+        return f'''
   <section>
     <div class="sectionHead withTag">
       <span class="tag">AI-Written</span>
@@ -495,6 +505,22 @@ def render_recap(g):
     {moments_block}
     <p class="noteBox">Written by Claude from the box score and play-by-play on this page &mdash; a plain-English recap of the numbers below, not a substitute for them.</p>
   </section>'''
+
+    note = g.get("historical_note")
+    note_text = (note or {}).get("note")
+    if note_text:
+        return f'''
+  <section>
+    <div class="sectionHead withTag">
+      <span class="tag">Historical Note</span>
+      <span class="rule"></span>
+      <h2>About this game</h2>
+    </div>
+    <div class="aiPreviewBody"><p>{esc(note_text)}</p></div>
+    <p class="noteBox">Written by Claude, strictly from this site&rsquo;s own record of the game &mdash; the score and what it meant for the belt. CFBD doesn&rsquo;t have a box score for games this old, so nothing here is invented beyond what&rsquo;s verifiably on file.</p>
+  </section>'''
+
+    return ""
 
 
 def render_key_plays(g):
@@ -639,6 +665,21 @@ table.playerStatsTable td{ padding:8px; border-bottom:1px solid var(--hairline);
 table.playerStatsTable td.teamCell{ text-align:left; font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; white-space:nowrap; }
 table.playerStatsTable td.teamCell .playerTeam{ font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:10.5px; color:var(--ink-soft); margin-left:6px; text-transform:uppercase; letter-spacing:.04em; }
 table.playerStatsTable tbody tr:last-child td{ border-bottom:none; }
+table.playerStatsTable td.teamCell a{ color:inherit; text-decoration:none; border-bottom:1px dotted var(--ink-soft); }
+table.playerStatsTable td.teamCell a:hover{ border-bottom-style:solid; border-bottom-color:var(--ink); }
+.statCategoryTeams{ display:grid; grid-template-columns:1fr 1fr; gap:10px 22px; align-items:start; }
+@media (max-width:640px){ .statCategoryTeams{ grid-template-columns:1fr; gap:18px; } }
+.statTeamBlock h4.statTeamName{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; margin:0 0 6px; color:var(--ink); }
+.noStatsForTeam{ font-size:12.5px; color:var(--ink-soft); font-style:italic; margin:0; }
+table.playerGameLog{ width:100%; border-collapse:collapse; font-size:13.5px; }
+table.playerGameLog th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:7px 8px; border-bottom:1px solid var(--brass-line); }
+table.playerGameLog td{ padding:9px 8px; border-bottom:1px solid var(--hairline); vertical-align:top; }
+table.playerGameLog tbody tr:last-child td{ border-bottom:none; }
+table.playerGameLog td.tabular{ font-family:"IBM Plex Mono",monospace; white-space:nowrap; }
+.playerGameCat{ margin:0 0 3px; font-size:12.5px; }
+.playerGameCat:last-child{ margin-bottom:0; }
+.playerGameCat .catLabel{ font-weight:700; margin-right:6px; }
+.playerGameCat .catLine{ color:var(--ink-soft); font-family:"IBM Plex Mono",monospace; font-size:11.5px; }
 table.keyPlaysTable{ width:100%; border-collapse:collapse; font-size:13.5px; }
 table.keyPlaysTable th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:7px 8px; border-bottom:1px solid var(--brass-line); }
 table.keyPlaysTable td{ padding:9px 8px; border-bottom:1px solid var(--hairline); vertical-align:top; }
@@ -1399,32 +1440,65 @@ def category_label(name):
     return CATEGORY_LABELS.get(name.lower(), name.replace("_", " ").title())
 
 
-def render_stat_table(cat_name, cat_data, home_team):
-    columns = cat_data.get("columns", [])
-    rows = cat_data.get("rows", [])
-    if not columns or not rows:
-        return ""
+def _player_link(row):
+    """A player's name, linked to their own page when CFBD gave us a
+    stable athlete id for them (see fetch_game_details.py), plain text
+    otherwise -- e.g. a game whose box score was cached before player_id
+    started being captured, until that season's stats get refetched."""
+    name = row.get("player", "")
+    pid = row.get("player_id")
+    if not pid:
+        return esc(name)
+    return f'<a href="../players/{esc(player_slug(pid, name))}.html">{esc(name)}</a>'
 
-    rows_sorted = sorted(rows, key=lambda r: 0 if r.get("team") == home_team else 1)
 
+def _team_stat_table(columns, rows):
+    if not rows:
+        return '<p class="noStatsForTeam">No recorded stats in this category.</p>'
     head_cells = "".join(f"<th>{esc(c)}</th>" for c in columns)
     body_rows = ""
-    for r in rows_sorted:
+    for r in rows:
         stats = r.get("stats", {})
         cells = ""
         for c in columns:
             val = stats.get(c)
             cells += f'<td class="tabular">{"—" if val is None else esc(str(val))}</td>'
-        body_rows += (f'<tr><td class="teamCell">{esc(r.get("player", ""))}'
-                       f'<span class="playerTeam">{esc(r.get("team", ""))}</span></td>{cells}</tr>')
+        body_rows += f'<tr><td class="teamCell">{_player_link(r)}</td>{cells}</tr>'
+    return f'''
+      <table class="playerStatsTable">
+        <thead><tr><th class="teamCell">Player</th>{head_cells}</tr></thead>
+        <tbody>{body_rows}</tbody>
+      </table>'''
+
+
+def render_stat_table(cat_name, cat_data, home_team, away_team):
+    columns = cat_data.get("columns", [])
+    rows = cat_data.get("rows", [])
+    if not columns or not rows:
+        return ""
+
+    home_rows = [r for r in rows if r.get("team") == home_team]
+    away_rows = [r for r in rows if r.get("team") == away_team]
+    # Anything that matched neither team name exactly -- shouldn't normally
+    # happen, but CFBD team-name drift (a mid-season rename, a mascot
+    # change) is a real thing -- still gets shown rather than silently
+    # dropped, folded in with the away side.
+    leftover = [r for r in rows if r.get("team") not in (home_team, away_team)]
+    away_rows += leftover
 
     return f'''
     <div class="statCategory">
       <h3>{esc(category_label(cat_name))}</h3>
-      <table class="playerStatsTable">
-        <thead><tr><th class="teamCell">Player</th>{head_cells}</tr></thead>
-        <tbody>{body_rows}</tbody>
-      </table>
+      <div class="statCategoryTeams">
+        <div class="statTeamBlock">
+          <h4 class="statTeamName">{esc(home_team)}</h4>
+          {_team_stat_table(columns, home_rows)}
+        </div>
+        <div class="statTeamBlock">
+          <h4 class="statTeamName">{esc(away_team)}</h4>
+          {_team_stat_table(columns, away_rows)}
+        </div>
+      </div>
     </div>'''
 
 
@@ -1433,13 +1507,14 @@ def render_player_stats(g):
     if not ps:
         return ""
     home = g["home"]
+    away = g["away"]
 
     skill_keys = [k for k in ps if k.lower() in SKILL_STAT_CATEGORIES]
     skill_keys.sort(key=lambda k: SKILL_STAT_CATEGORIES.index(k.lower()))
     other_keys = [k for k in ps if k.lower() not in SKILL_STAT_CATEGORIES]
 
-    skill_html = "".join(render_stat_table(k, ps[k], home) for k in skill_keys)
-    more_html = "".join(render_stat_table(k, ps[k], home) for k in other_keys)
+    skill_html = "".join(render_stat_table(k, ps[k], home, away) for k in skill_keys)
+    more_html = "".join(render_stat_table(k, ps[k], home, away) for k in other_keys)
 
     if not skill_html and not more_html:
         return ""
@@ -1468,7 +1543,7 @@ def render_player_stats(g):
     </div>
     {skill_html}
     {more_block}
-    <p class="noteBox">Full player stats from CFBD’s <span class="mono">/games/players</span> data. This section only appears for belt games from 2003 onward — CFBD doesn’t have player-level stats that far back.</p>
+    <p class="noteBox">Full player stats from CFBD’s <span class="mono">/games/players</span> data, split out by team. This section only appears for belt games from 2003 onward — CFBD doesn’t have player-level stats that far back. Linked player names go to that player’s stat line in every other belt game they’ve appeared in.</p>
   </section>'''
 
 
@@ -3579,6 +3654,137 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
     return written, [team_slug(t) for t in by_team]
 
 
+# ------------------------------------------------------------ player pages
+
+def _format_stat_line(line):
+    return ", ".join(f"{c} {v}" for c, v in line.items())
+
+
+def _player_game_row(g, team, categories):
+    opp = g["away"] if team == g["home"] else g["home"]
+    cats_html = "".join(
+        f'<div class="playerGameCat"><span class="catLabel">{esc(category_label(cat))}</span>'
+        f'<span class="catLine">{esc(_format_stat_line(line))}</span></div>'
+        for cat, line in categories.items())
+    return f'''
+    <tr>
+      <td><a href="../games/{g["game_id"]}.html">{esc(fmt_date(g["date"]))}</a></td>
+      <td>{esc(team)} vs {esc(opp)}</td>
+      <td class="tabular">{esc(g["score"])}</td>
+      <td>{cats_html}</td>
+    </tr>'''
+
+
+def generate_player_pages(belt_games, details, players_dir):
+    """One page per player CFBD gave a stable athlete id to in a belt
+    game's box score (2003 onward -- see render_player_stats()) -- their
+    full recorded stat line in every belt game they've appeared in, newest
+    first. Keyed by that id (not just the name), since two different
+    players can share a name; see player_slug(). A player CFBD didn't tag
+    with an id doesn't get a page -- their name just isn't linked
+    anywhere, rather than risk colliding two different people onto one
+    page."""
+    os.makedirs(players_dir, exist_ok=True)
+
+    # player_id -> {"name":, "teams": {team, ...}, "games": [(g, team, {cat: {col: val}}), ...]}
+    players = {}
+    for g in belt_games:
+        ps = (details.get(str(g["game_id"])) or {}).get("player_stats")
+        if not ps:
+            continue
+        # player_id -> {"name":, "team":, "categories": {cat: {col: val}}}
+        per_game = {}
+        for cat_name, cat in ps.items():
+            columns = cat.get("columns", [])
+            for row in cat.get("rows", []):
+                pid = row.get("player_id")
+                if not pid:
+                    continue
+                entry = per_game.setdefault(pid, {
+                    "name": row.get("player", ""), "team": row.get("team", ""),
+                    "categories": {},
+                })
+                stats = row.get("stats", {})
+                line = {c: stats[c] for c in columns if stats.get(c) not in (None, "")}
+                if line:
+                    entry["categories"][cat_name] = line
+
+        for pid, entry in per_game.items():
+            if not entry["categories"]:
+                continue
+            p = players.setdefault(pid, {"name": entry["name"], "teams": set(), "games": []})
+            p["teams"].add(entry["team"])
+            p["games"].append((g, entry["team"], entry["categories"]))
+
+    written = 0
+    slugs = []
+    for pid, p in players.items():
+        slug = player_slug(pid, p["name"])
+        slugs.append(slug)
+        games_sorted = sorted(p["games"], key=lambda t: t[0]["date"], reverse=True)
+        n = len(games_sorted)
+        teams_bit = " / ".join(sorted(p["teams"]))
+        rows_html = "".join(_player_game_row(g, team, cats) for g, team, cats in games_sorted)
+
+        page = f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>{esc(p["name"])} — The College Football Belt</title>
+<meta name="description" content="{esc(p['name'])}&#8217;s recorded stat line in every College Football Belt game on file.">
+<link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
+{head_extras('../')}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <a class="back" href="../index.html">&larr; The College Football Belt</a>
+    <nav class="site" aria-label="Primary">
+      <a href="../lineage.html">Full History</a>
+      <a href="../all-games.html">All Games</a>
+      <a href="../records.html">Records</a>
+      <a href="../ruleset.html">Ruleset</a>
+      <a href="../map.html">Map</a>
+      <a href="../compare.html">Compare</a>
+      <a href="../trivia.html">Trivia</a>
+      <a href="../stories.html">Stories</a>
+    </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">{esc(p["name"])}</h1>
+  <p class="lede">{esc(teams_bit)} &middot; a recorded stat line in {n} belt game{"s" if n != 1 else ""} on file.</p>
+
+  <table class="playerGameLog">
+    <thead><tr><th>Date</th><th>Matchup</th><th>Score</th><th>Stat line</th></tr></thead>
+    <tbody>{rows_html}
+    </tbody>
+  </table>
+  <p class="noteBox">Only covers belt games from 2003 onward, and only the stat categories CFBD recorded for this player in each one &mdash; see a game&rsquo;s own page for its full box score.</p>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="../index.html">Home</a>
+      <a href="../lineage.html">Full History</a>
+      <a href="../records.html">Records</a>
+      <a href="../embed.html">Embed</a>
+      <a href="../api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="../privacy.html">Privacy</a>
+    </nav>
+  </div>
+</footer>
+'''
+        with open(os.path.join(players_dir, f"{slug}.html"), "w", encoding="utf-8") as f:
+            f.write(page)
+        written += 1
+
+    return written, slugs
+
+
 # --------------------------------------------------------------- belt map
 
 HISTORICAL_DIR = "historical_data"
@@ -4946,7 +5152,7 @@ def generate_feed(belt_games, recaps):
 
 def main():
     (lineage, details, colors, next_game, upcoming_games, matchup,
-     ai_preview, weather, recaps, game_plays) = load_data()
+     ai_preview, weather, recaps, historical_notes, game_plays) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -4973,6 +5179,7 @@ def main():
         merged["team_stats"] = d.get("team_stats")
         merged["player_stats"] = d.get("player_stats")
         merged["recap"] = recaps.get(str(gid))
+        merged["historical_note"] = historical_notes.get(str(gid))
         merged["key_plays"] = game_plays.get(str(gid))
 
         prev_game = belt_games[i - 1] if i > 0 else None
@@ -5018,6 +5225,9 @@ def main():
 
     teams_dir = os.path.join(OUT_DIR, "teams")
     teams_written, team_slugs = generate_team_pages(lineage, colors, belt_games, teams_dir)
+
+    players_dir = os.path.join(OUT_DIR, "players")
+    players_written, player_slugs = generate_player_pages(belt_games, details, players_dir)
 
     map_html = generate_map_page(lineage, colors)
     wrote_map = map_html is not None
@@ -5085,6 +5295,7 @@ def main():
     if wrote_map:
         sitemap_urls.append(f"{SITE_URL}/map.html")
     sitemap_urls += [f"{SITE_URL}/teams/{slug}.html" for slug in team_slugs]
+    sitemap_urls += [f"{SITE_URL}/players/{slug}.html" for slug in player_slugs]
     sitemap_urls += [f"{SITE_URL}/games/{g['game_id']}.html" for g in belt_games]
 
     with open(os.path.join(OUT_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
@@ -5121,6 +5332,7 @@ def main():
     print(f"Wrote stories.html and 2 story articles to {OUT_DIR}/")
     print(f"Wrote On This Day page to {OUT_DIR}/on-this-day.html")
     print(f"Wrote {teams_written} team pages to {teams_dir}/")
+    print(f"Wrote {players_written} player pages to {players_dir}/")
     if wrote_map:
         print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
