@@ -1695,6 +1695,8 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="../privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -1856,6 +1858,8 @@ def generate_on_this_day_page(belt_games):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -2182,6 +2186,8 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -2349,6 +2355,8 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -2615,6 +2623,8 @@ def generate_losers_belt_page(lineage):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -2797,6 +2807,8 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -2981,6 +2993,8 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>'''
@@ -3295,6 +3309,8 @@ def generate_ruleset_page(md_text):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -3484,6 +3500,8 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -3527,6 +3545,8 @@ def _story_nav_footer(active_href=None):
       <a href="stories.html">Stories</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>'''
@@ -3925,6 +3945,8 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="../privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -4057,6 +4079,8 @@ def generate_player_pages(belt_games, details, players_dir):
       <a href="../api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="../privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -4383,6 +4407,8 @@ def generate_map_page(lineage, colors):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -4495,6 +4521,8 @@ def generate_embed_page(lineage, colors):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -4654,6 +4682,8 @@ def generate_privacy_page():
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -4845,6 +4875,8 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -5092,6 +5124,8 @@ def generate_trivia_page(pool):
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -5200,6 +5234,8 @@ def generate_api_docs_page():
       <a href="records.html">Records</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
@@ -5285,6 +5321,8 @@ def generate_404_page():
       <a href="api.html">API</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
     </nav>
   </div>
 </footer>
