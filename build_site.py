@@ -292,9 +292,34 @@ def load_data():
         "fbs": load_optional_json("losers_lineage_fbs.json"),
         "fcs": load_optional_json("losers_lineage_fcs.json"),
     }
+    # Same idea for the real championship belt's own new FBS-only/FCS-only
+    # scopes (2026-09-15, Bob: "do the same on the Full History and All
+    # Games tabs") -- "combined" here is just `lineage` above, already
+    # loaded (unsuffixed lineage.json, always present); "fbs"/"fcs" are
+    # None until build_lineage.py's own one-time bootstrap for those two
+    # scopes has run.
+    championship_lineages = {
+        "combined": lineage,
+        "fbs": load_optional_json("lineage_fbs.json"),
+        "fcs": load_optional_json("lineage_fcs.json"),
+    }
+    # Conference belts (build_conference_lineage.py) -- unlike the fixed
+    # three scopes above, this is an open-ended, dynamically-discovered
+    # set: whichever belt_data/conferences/<slug>_lineage.json files
+    # actually exist, since which conferences have been bootstrapped (and
+    # which even HAVE enough qualifying history to build at all) isn't
+    # known ahead of time.
+    conference_lineages = {}
+    conferences_dir = os.path.join(DATA_DIR, "conferences")
+    if os.path.isdir(conferences_dir):
+        for fname in sorted(os.listdir(conferences_dir)):
+            if fname.endswith("_lineage.json"):
+                slug = fname[:-len("_lineage.json")]
+                with open(os.path.join(conferences_dir, fname)) as f:
+                    conference_lineages[slug] = json.load(f)
     return (lineage, details, colors, next_game, upcoming_games, matchup,
             ai_preview, weather, recaps, historical_notes, game_plays,
-            losers_lineages)
+            losers_lineages, championship_lineages, conference_lineages)
 
 
 def team_color(colors, name):
@@ -1658,6 +1683,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -1836,6 +1862,7 @@ def generate_on_this_day_page(belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -2082,6 +2109,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -2212,11 +2240,55 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
 
 # ---------------------------------------------------------- full history page
 
-def generate_lineage_page(lineage, colors, belt_games):
+# Championship-belt scope switcher (Combined/FBS-only/FCS-only), same
+# pattern as LOSERS_BELT_FILENAMES/LOSERS_BELT_SWITCHER_LABELS above --
+# "combined" keeps the original unsuffixed lineage.html/all-games.html
+# URLs. Applies only to these two pages (Full History, All Games), per
+# Bob's 2026-09-15 request -- the rest of the site (homepage, records,
+# team pages, etc.) stays on the combined/real belt, unchanged.
+CHAMPIONSHIP_LINEAGE_FILENAMES = {"combined": "lineage.html", "fbs": "lineage_fbs.html",
+                                   "fcs": "lineage_fcs.html"}
+CHAMPIONSHIP_ALL_GAMES_FILENAMES = {"combined": "all-games.html", "fbs": "all-games_fbs.html",
+                                     "fcs": "all-games_fcs.html"}
+CHAMPIONSHIP_SWITCHER_LABELS = {"combined": "Combined (No Restriction)", "fbs": "FBS Only",
+                                 "fcs": "FCS Only"}
+CHAMPIONSHIP_SCOPE_TITLE_SUFFIX = {"combined": "", "fbs": " (FBS)", "fcs": " (FCS)"}
+CHAMPIONSHIP_SCOPE_INTRO = {
+    "combined": "",
+    "fbs": " Restricted to FBS programs only &mdash; both sides of every game "
+        "have to be FBS, so the belt can never cross down into FCS.",
+    "fcs": " Restricted to FCS programs only &mdash; both sides of every game "
+        "have to be FCS, so the belt can never cross up into FBS.",
+}
+
+
+def _championship_switcher_html(filenames, scope, available_scopes):
+    if len(available_scopes) <= 1:
+        return ""
+    pills = []
+    for s in ("combined", "fbs", "fcs"):
+        if s not in available_scopes:
+            continue
+        label = esc(CHAMPIONSHIP_SWITCHER_LABELS[s])
+        if s == scope:
+            pills.append(f'<span class="scopeBtn active" aria-current="page">{label}</span>')
+        else:
+            pills.append(f'<a class="scopeBtn" href="{filenames[s]}">{label}</a>')
+    return f'''
+    <div class="scopeSwitch" role="group" aria-label="Which programs count" style="margin-top:10px">{"".join(pills)}</div>'''
+
+
+def generate_lineage_page(lineage, colors, belt_games, scope="combined", available_scopes=("combined",)):
+    """`scope` is one of build_lineage.py's SCOPES ("combined"/"fbs"/"fcs").
+    Only "combined" has real games/<id>.html detail pages to link to (those
+    are only ever generated from the combined lineage's own belt_games in
+    main()) -- an fbs/fcs game_id may not have a page at all, so those two
+    scopes render plain text instead of a link, same as the Losers Belt
+    already does for every scope."""
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
-    change_index = build_change_game_index(belt_games)
+    change_index = build_change_game_index(belt_games) if scope == "combined" else {}
     today = date.today()
 
     # ---- records: computed, not curated -- same ethos as the rest of the site
@@ -2284,10 +2356,14 @@ def generate_lineage_page(lineage, colors, belt_games):
           <td class="lost">{lost_txt}</td>
         </tr>'''
 
+    title_suffix = CHAMPIONSHIP_SCOPE_TITLE_SUFFIX[scope]
+    scope_intro = CHAMPIONSHIP_SCOPE_INTRO[scope]
+    switcher_html = _championship_switcher_html(CHAMPIONSHIP_LINEAGE_FILENAMES, scope, available_scopes)
+    all_games_href = CHAMPIONSHIP_ALL_GAMES_FILENAMES[scope]
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
-<title>Full History — The College Football Belt</title>
+<title>Full History{title_suffix} — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
@@ -2308,17 +2384,19 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
-  <h1 class="pageTitle">The Full History</h1>
+  <h1 class="pageTitle">The Full History{title_suffix}</h1>
   <p class="lede">Every reign since Rutgers beat Princeton on November&nbsp;6, 1869 &mdash;
     {totals["reigns"]:,} of them, computed from {totals["belt_games"]:,} belt games across
     {totals["distinct_teams"]} programs. Type a team name to filter; tap a team to jump to the
-    game that won it.</p>
+    game that won it.{scope_intro}</p>
+  {switcher_html}
 
   <div class="historyTop">
     <div class="historyStats">
@@ -2355,7 +2433,7 @@ def generate_lineage_page(lineage, colors, belt_games):
     <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
   <p class="viewToggle">Want every individual game, defenses included &mdash;
-    not just who won each reign? <a href="all-games.html">See the full game log &rarr;</a></p>
+    not just who won each reign? <a href="{all_games_href}">See the full game log &rarr;</a></p>
 </main>
 
 <footer class="wrap">
@@ -2589,6 +2667,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -2736,15 +2815,303 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
 '''
 
 
+# ---------------------------------------------------------- conference belts
+
+def generate_conference_belt_page(lineage, slug):
+    """One page per FBS/FCS conference (build_conference_lineage.py) --
+    current holder + full chain of custody, deliberately as lightweight as
+    the Losers Belt page: no per-game detail pages exist for these games
+    either (only the real belt's combined scope gets those), so nothing
+    here links out to games/ or teams/. `lineage` is
+    belt_data/conferences/<slug>_lineage.json's already-loaded contents."""
+    conference = lineage["conference"]
+    classification = lineage.get("classification", "fbs")
+    reigns = lineage["reigns"]
+    totals = lineage["totals"]
+    current = reigns[-1]
+    today = date.today()
+
+    since_date = date.fromisoformat(current["start_date"])
+    defenses = current["defenses"]
+    won_from = current.get("won_from")
+    reclaimed_after = current.get("reclaimed_after")
+
+    if reclaimed_after:
+        lede = (f"{esc(reclaimed_after)} caught it but left {esc(conference)} &mdash; since "
+                 f"this belt only passes among {esc(conference)} members, it reverted back to "
+                 f"{esc(current['team'])} on {fmt_date(current['start_date'])}.")
+    elif won_from:
+        lede = (f"Caught it by beating {esc(won_from)} on {fmt_date(current['start_date'])}.")
+    else:
+        lede = f"Has held it since {fmt_date(current['start_date'])}."
+    if defenses:
+        lede += (f" Defended it {defenses} more time{'s' if defenses != 1 else ''} since.")
+
+    durations = [(r, reign_duration_days(r, today)) for r in reigns]
+    longest_reign, longest_days = max(durations, key=lambda p: p[1])
+    most_defended = max(reigns, key=lambda r: r["defenses"])
+    reign_counts = Counter(r["team"] for r in reigns)
+    most_reigns_team, most_reigns_n = reign_counts.most_common(1)[0]
+
+    records_html = f'''
+    <div class="record-card">
+      <div class="l">Longest Reign</div>
+      <div class="v">{esc(longest_reign["team"])} &mdash; {fmt_duration(*reign_dates(longest_reign, today))}</div>
+      <div class="sub">{fmt_date(longest_reign["start_date"])} &ndash; {fmt_date(longest_reign["end_date"]) if longest_reign.get("end_date") else "present"}</div>
+    </div>
+    <div class="record-card">
+      <div class="l">Most Defenses, One Reign</div>
+      <div class="v">{esc(most_defended["team"])} &mdash; {most_defended["defenses"]}</div>
+      <div class="sub">starting {fmt_date(most_defended["start_date"])}</div>
+    </div>
+    <div class="record-card">
+      <div class="l">Most Reigns, All-Time</div>
+      <div class="v">{esc(most_reigns_team)} &mdash; {most_reigns_n} separate reign{"s" if most_reigns_n != 1 else ""}</div>
+      <div class="sub">{totals["distinct_teams"]} {esc(conference)} programs have held it</div>
+    </div>'''
+
+    rows_html = ""
+    for i, r in enumerate(reigns, 1):
+        is_current = r is current
+        team = r["team"]
+
+        if r.get("reclaimed_after"):
+            caught_txt = f"reverted after {esc(r['reclaimed_after'])} left {esc(conference)}"
+        elif r.get("won_from"):
+            caught_txt = f"beat {esc(r['won_from'])}"
+        else:
+            caught_txt = "Established it (first game on record)"
+
+        if is_current:
+            passed_txt = '<span class="mono">— present —</span>'
+            end_txt = "Present"
+        elif r.get("vacated"):
+            passed_txt = f"vacated — left {esc(conference)}"
+            end_txt = fmt_date(r["end_date"])
+        elif r.get("lost_to"):
+            passed_txt = f"lost to {esc(r['lost_to'])}"
+            end_txt = fmt_date(r["end_date"])
+        else:
+            passed_txt = "—"
+            end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
+
+        cls = " current" if is_current else ""
+        rows_html += f'''
+        <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
+          <td class="num">{i}</td>
+          <td class="teamCell">{esc(team)}</td>
+          <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
+          <td class="tabular">{fmt_duration(*reign_dates(r, today))}</td>
+          <td class="tabular">{r["defenses"]}</td>
+          <td class="won">{caught_txt}</td>
+          <td class="lost">{passed_txt}</td>
+        </tr>'''
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>The {esc(conference)} Belt — The College Football Belt</title>
+<meta name="description" content="The lineal {esc(conference)} championship: passes to whoever beats the holder, restricted to games between two {esc(conference)} members at the time they played. Currently held by {esc(current["team"])}.">
+<link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">{classification.upper()} Conference Belt</span>
+      <span class="wordmark">The {esc(conference)} Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="../index.html">Home</a>
+      <a href="../lineage.html">Full History</a>
+      <a href="../all-games.html">All Games</a>
+      <a href="../records.html">Records</a>
+      <a href="../ruleset.html">Ruleset</a>
+      <a href="../map.html">Map</a>
+      <a href="../compare.html">Compare</a>
+      <a href="../trivia.html">Trivia</a>
+      <a href="../stories.html">Stories</a>
+      <a href="../losers-belt.html">Losers Belt</a>
+      <a href="index.html">Conferences</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">The {esc(conference)} Belt</h1>
+  <p class="lede">A companion lineage restricted to {esc(conference)}: the belt passes to
+    whoever beats the holder, exactly like the real belt, but only games between two
+    {esc(conference)} members COUNT &mdash; and only for the seasons both sides were actually
+    in {esc(conference)} at the time. {lede}</p>
+
+  <div class="historyTop">
+    <div class="historyStats">
+      <div><span class="n tabular">{totals["reigns"]:,}</span><span class="l">Reigns</span></div>
+      <div><span class="n tabular">{totals["belt_games"]:,}</span><span class="l">Belt Games</span></div>
+      <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
+    </div>
+    <div class="searchBox">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+      <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="records">{records_html}
+  </div>
+
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Team</th><th>Reign</th><th style="text-align:right">Length</th>
+          <th style="text-align:right">Def.</th><th>Won it</th><th>Lost it</th>
+        </tr>
+      </thead>
+      <tbody>{rows_html}
+      </tbody>
+    </table>
+    <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
+  </div>
+  <p class="viewToggle"><a href="index.html">&larr; See every conference belt</a></p>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="../index.html">Home</a>
+      <a href="index.html">Conferences</a>
+      <a href="../ruleset.html">Ruleset</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="../privacy.html">Privacy</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){{
+  var input = document.getElementById('teamSearch');
+  var tbody = document.querySelector('table.reignsTable tbody');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
+  var noResults = document.getElementById('noResults');
+  var noResultsTerm = document.getElementById('noResultsTerm');
+  input.addEventListener('input', function(){{
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function(r){{
+      var name = r.getAttribute('data-team') || '';
+      var match = !q || name.indexOf(q) !== -1;
+      r.classList.toggle('hiddenRow', !match);
+      if (match) shown++;
+    }});
+    noResultsTerm.textContent = input.value.trim();
+    noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
+  }});
+}})();
+</script>
+'''
+
+
+def generate_conferences_index_page(conference_lineages):
+    """Hub page linking every bootstrapped conference belt
+    (conferences/<slug>.html), grouped FBS then FCS, each row showing the
+    current holder at a glance. `conference_lineages` is a
+    {slug: lineage_dict} map of whatever's actually been bootstrapped so
+    far (see build_conference_lineage.py) -- a conference simply doesn't
+    appear here until its own one-time historical build has run."""
+    def card_for(slug, lineage):
+        conference = lineage["conference"]
+        current = lineage["reigns"][-1]
+        totals = lineage["totals"]
+        return f'''
+    <a class="record-card" href="{slug}.html" style="display:block;text-decoration:none;color:inherit">
+      <div class="l">{esc(conference)}</div>
+      <div class="v">{esc(current["team"])}</div>
+      <div class="sub">since {fmt_date(current["start_date"])} &middot; {totals["reigns"]} reigns all-time</div>
+    </a>'''
+
+    fbs_items = sorted((s, l) for s, l in conference_lineages.items() if l.get("classification") == "fbs")
+    fcs_items = sorted((s, l) for s, l in conference_lineages.items() if l.get("classification") == "fcs")
+
+    fbs_html = "".join(card_for(s, l) for s, l in fbs_items) or '<p class="lede">None built yet.</p>'
+    fcs_html = "".join(card_for(s, l) for s, l in fcs_items) or '<p class="lede">None built yet.</p>'
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Conference Belts — The College Football Belt</title>
+<meta name="description" content="A lineal championship belt for every FBS and FCS conference -- the same beat-the-holder rule as the real belt, restricted to games between two members of that one conference.">
+<link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; One Per Conference</span>
+      <span class="wordmark">Conference Belts</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="../index.html">Home</a>
+      <a href="../lineage.html">Full History</a>
+      <a href="../all-games.html">All Games</a>
+      <a href="../records.html">Records</a>
+      <a href="../ruleset.html">Ruleset</a>
+      <a href="../map.html">Map</a>
+      <a href="../compare.html">Compare</a>
+      <a href="../trivia.html">Trivia</a>
+      <a href="../stories.html">Stories</a>
+      <a href="../losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Conference Belts</h1>
+  <p class="lede">The same lineal rule as the real belt &mdash; you catch it by beating the
+    holder &mdash; run separately for every FBS and FCS conference, counting only games
+    between two members of that ONE conference, at the time they actually played (so
+    realignment moves a team's games with it, the way it should).</p>
+
+  <h2>FBS Conferences</h2>
+  <div class="records">{fbs_html}
+  </div>
+
+  <h2>FCS Conferences</h2>
+  <div class="records">{fcs_html}
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="../index.html">Home</a>
+      <a href="../ruleset.html">Ruleset</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="../privacy.html">Privacy</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
 # -------------------------------------------------------------- all games page
 
-def generate_all_games_page(lineage, colors, belt_games):
+def generate_all_games_page(lineage, colors, belt_games, scope="combined", available_scopes=("combined",)):
     """Every belt game, one row each -- title changes AND defenses, unlike
     the Full History page above which only has one row per reign (the game
     where it STARTED). Reuses the same reignsTable/searchBox/historyTop
     CSS and search-filter JS as generate_lineage_page for a consistent look,
-    just with a different (game-shaped, not reign-shaped) column set."""
+    just with a different (game-shaped, not reign-shaped) column set.
+
+    `scope`/`available_scopes`: same meaning as generate_lineage_page. Only
+    "combined" games reliably have a games/<id>.html detail page (see that
+    function's own docstring), so fbs/fcs render each row's matchup/score
+    as plain text instead of a link."""
     totals = lineage["totals"]
+    linkable = scope == "combined"
     # "established" (the very first belt game, which put the title up in the
     # first place) is folded into title_changes for this stat band -- it's
     # not a "defense" of anything, and folding it in keeps title_changes +
@@ -2774,7 +3141,10 @@ def generate_all_games_page(lineage, colors, belt_games):
 
         loc_word = "vs." if g["neutral"] else "at"
         matchup_text = f'{esc(away)} {loc_word} {esc(home)}'
-        matchup_html = f'<a href="games/{g["game_id"]}.html">{matchup_text}</a>'
+        matchup_html = (f'<a href="games/{g["game_id"]}.html">{matchup_text}</a>'
+                         if linkable else matchup_text)
+        score_html = (f'<a href="games/{g["game_id"]}.html">{away_score}&ndash;{home_score}</a>'
+                      if linkable else f'{away_score}&ndash;{home_score}')
 
         cls_bits = []
         if outcome in ("changed", "established"):
@@ -2788,14 +3158,18 @@ def generate_all_games_page(lineage, colors, belt_games):
           <td class="num">{g["game_number"]:,}</td>
           <td class="dates">{fmt_date(g["date"])}</td>
           <td class="matchup">{matchup_html}</td>
-          <td class="tabular"><a href="games/{g["game_id"]}.html">{away_score}&ndash;{home_score}</a></td>
+          <td class="tabular">{score_html}</td>
           <td class="result">{result_html}</td>
         </tr>'''
 
+    title_suffix = CHAMPIONSHIP_SCOPE_TITLE_SUFFIX[scope]
+    scope_intro = CHAMPIONSHIP_SCOPE_INTRO[scope]
+    switcher_html = _championship_switcher_html(CHAMPIONSHIP_ALL_GAMES_FILENAMES, scope, available_scopes)
+    lineage_href = CHAMPIONSHIP_LINEAGE_FILENAMES[scope]
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
-<title>All Games — The College Football Belt</title>
+<title>All Games{title_suffix} — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
@@ -2816,17 +3190,19 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
-  <h1 class="pageTitle">Every Belt Game</h1>
+  <h1 class="pageTitle">Every Belt Game{title_suffix}</h1>
   <p class="lede">Every game with the belt on the line since Rutgers beat Princeton on
     November&nbsp;6, 1869 &mdash; {len(belt_games):,} of them: {title_changes:,} title changes
-    and {defenses_total:,} successful defenses, across {totals["distinct_teams"]} programs.
+    and {defenses_total:,} successful defenses, across {totals["distinct_teams"]} programs.{scope_intro}
     Type a team name to filter; tap any game to open its page.</p>
+  {switcher_html}
 
   <div class="historyTop">
     <div class="historyStats">
@@ -2859,7 +3235,7 @@ def generate_all_games_page(lineage, colors, belt_games):
     <p class="noResults" id="noResults">No games match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
   <p class="viewToggle">Looking for the reign-by-reign summary instead?
-    <a href="lineage.html">See the Full History page &rarr;</a></p>
+    <a href="{lineage_href}">See the Full History page &rarr;</a></p>
 </main>
 
 <footer class="wrap">
@@ -3037,6 +3413,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>'''
     header = f'''<header class="site wrap">
@@ -3352,6 +3729,7 @@ def generate_ruleset_page(md_text):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -3540,6 +3918,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -3593,6 +3972,7 @@ def _story_nav_footer(active_href=None):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>'''
     header = f'''<header class="site wrap">
@@ -3981,6 +4361,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4119,6 +4500,7 @@ def generate_player_pages(belt_games, details, players_dir):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4364,6 +4746,7 @@ def generate_map_page(lineage, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4552,6 +4935,7 @@ def generate_embed_page(lineage, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4645,6 +5029,7 @@ def generate_privacy_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4834,6 +5219,7 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5079,6 +5465,7 @@ def generate_trivia_page(pool):
       <a href="compare.html">Compare</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5256,6 +5643,7 @@ def generate_api_docs_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5356,6 +5744,7 @@ def generate_404_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="conferences/index.html">Conferences</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>'''
     return f'''<!doctype html>
@@ -5549,7 +5938,7 @@ def generate_feed(belt_games, recaps):
 def main():
     (lineage, details, colors, next_game, upcoming_games, matchup,
      ai_preview, weather, recaps, historical_notes, game_plays,
-     losers_lineages) = load_data()
+     losers_lineages, championship_lineages, conference_lineages) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -5591,9 +5980,35 @@ def main():
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 
-    lineage_html = generate_lineage_page(lineage, colors, belt_games)
-    with open(os.path.join(OUT_DIR, "lineage.html"), "w", encoding="utf-8") as f:
-        f.write(lineage_html)
+    # Championship belt Full History / All Games, in each available scope
+    # (build_lineage.py's own SCOPES -- Combined/FBS-only/FCS-only, see
+    # that module's docstring). "combined" is always available (it's
+    # `lineage`/`belt_games` above, already loaded); "fbs"/"fcs" only once
+    # their own one-time historical bootstrap has run. Only these two
+    # pages get the scope treatment for now -- the rest of the site
+    # (homepage, records, team pages) stays on the combined/real belt.
+    championship_available_scopes = tuple(
+        s for s in ("combined", "fbs", "fcs") if championship_lineages[s] is not None)
+    championship_belt_games = {"combined": belt_games}
+    for scope in championship_available_scopes:
+        if scope == "combined":
+            continue
+        scope_belt_games = championship_lineages[scope]["belt_games"]
+        compute_sequence(scope_belt_games)
+        championship_belt_games[scope] = scope_belt_games
+
+    for scope in championship_available_scopes:
+        lineage_html = generate_lineage_page(
+            championship_lineages[scope], colors, championship_belt_games[scope],
+            scope, championship_available_scopes)
+        with open(os.path.join(OUT_DIR, CHAMPIONSHIP_LINEAGE_FILENAMES[scope]), "w", encoding="utf-8") as f:
+            f.write(lineage_html)
+    for scope in ("fbs", "fcs"):
+        if scope not in championship_available_scopes:
+            warnings.append(f"{DATA_DIR}/lineage_{scope}.json not found -- skipped "
+                             f"{CHAMPIONSHIP_LINEAGE_FILENAMES[scope]}/"
+                             f"{CHAMPIONSHIP_ALL_GAMES_FILENAMES[scope]} (run build_lineage.py's "
+                             f"one-time bootstrap for that scope to enable it)")
 
     # Each of the three Losers Belt scopes (build_losers_lineage.py's
     # SCOPES) is bootstrapped independently, so any subset of them may
@@ -5611,9 +6026,34 @@ def main():
                              f"not found -- skipped {LOSERS_BELT_FILENAMES[scope]} (run "
                              f"build_losers_lineage.py's one-time bootstrap to enable it)")
 
-    all_games_html = generate_all_games_page(lineage, colors, belt_games)
-    with open(os.path.join(OUT_DIR, "all-games.html"), "w", encoding="utf-8") as f:
-        f.write(all_games_html)
+    for scope in championship_available_scopes:
+        all_games_html = generate_all_games_page(
+            championship_lineages[scope], colors, championship_belt_games[scope],
+            scope, championship_available_scopes)
+        with open(os.path.join(OUT_DIR, CHAMPIONSHIP_ALL_GAMES_FILENAMES[scope]), "w", encoding="utf-8") as f:
+            f.write(all_games_html)
+
+    # Conference belts (build_conference_lineage.py) -- one page per
+    # conference that's actually been bootstrapped, plus an index hub.
+    # Same no-op-when-unset pattern as everything else here: a conference
+    # with no lineage file yet simply doesn't get a page, no error.
+    conferences_out_dir = os.path.join(OUT_DIR, "conferences")
+    if conference_lineages:
+        os.makedirs(conferences_out_dir, exist_ok=True)
+        for slug, conf_lineage in conference_lineages.items():
+            conf_html = generate_conference_belt_page(conf_lineage, slug)
+            with open(os.path.join(conferences_out_dir, f"{slug}.html"), "w", encoding="utf-8") as f:
+                f.write(conf_html)
+        index_html = generate_conferences_index_page(conference_lineages)
+        with open(os.path.join(conferences_out_dir, "index.html"), "w", encoding="utf-8") as f:
+            f.write(index_html)
+        print(f"Wrote {len(conference_lineages)} conference belt page(s) + index to "
+              f"{conferences_out_dir}/")
+    else:
+        warnings.append(f"no {DATA_DIR}/conferences/*_lineage.json found -- skipped every "
+                         f"conference belt page (run build_conference_lineage.py's one-time "
+                         f"bootstrap to enable them; the nav's \"Conferences\" link will 404 "
+                         f"until at least one exists)")
 
     preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
@@ -5709,6 +6149,14 @@ def main():
         sitemap_urls.append(f"{SITE_URL}/map.html")
     for scope in available_scopes:
         sitemap_urls.append(f"{SITE_URL}/{LOSERS_BELT_FILENAMES[scope]}")
+    for scope in championship_available_scopes:
+        if scope == "combined":
+            continue  # lineage.html/all-games.html already in the base list above
+        sitemap_urls.append(f"{SITE_URL}/{CHAMPIONSHIP_LINEAGE_FILENAMES[scope]}")
+        sitemap_urls.append(f"{SITE_URL}/{CHAMPIONSHIP_ALL_GAMES_FILENAMES[scope]}")
+    if conference_lineages:
+        sitemap_urls.append(f"{SITE_URL}/conferences/index.html")
+        sitemap_urls += [f"{SITE_URL}/conferences/{slug}.html" for slug in conference_lineages]
     sitemap_urls += [f"{SITE_URL}/teams/{slug}.html" for slug in team_slugs]
     sitemap_urls += [f"{SITE_URL}/players/{slug}.html" for slug in player_slugs]
     sitemap_urls += [f"{SITE_URL}/games/{g['game_id']}.html" for g in belt_games]

@@ -25,6 +25,16 @@ this is safe to point at an existing belt_data/ folder:
                                  refetches the current + previous season
                                  (~4-6 calls), not the full 1869-now history
                                  (~316 calls). Also writes next_game.json.
+                                 Also drives the championship belt's own
+                                 fbs/fcs SCOPES (mirroring the Losers Belt's
+                                 three-way split) -- see
+                                 BOOTSTRAP_CHAMPIONSHIP_SCOPES below. Those
+                                 two extra scopes no-op cleanly (no
+                                 lineage_fbs.html/lineage_fcs.html on the
+                                 site) until their own one-time bootstrap is
+                                 explicitly requested; "combined" (the
+                                 original, unsuffixed lineage.html) is
+                                 completely unaffected either way.
   2. build_losers_lineage.py -- the "Losers Belt" (see its own docstring):
                                  the mirror-image lineage where the belt
                                  passes to whoever LOSES to the holder
@@ -36,25 +46,45 @@ this is safe to point at an existing belt_data/ folder:
                                  BOOTSTRAP_LOSERS_BELT below. Once
                                  bootstrapped, incremental the same way as
                                  build_lineage.py (~4-6 more calls/run).
-  3. fetch_team_colors.py    -- cheap; re-derives team_colors.json from a
+  3. build_conference_lineage.py -- one lineal "championship belt" per
+                                 FBS/FCS conference, using CFBD's own
+                                 per-game home_conference/away_conference
+                                 fields so only games where BOTH teams were
+                                 actually IN that conference AT THE TIME
+                                 count -- realignment (a team leaving its
+                                 conference) is handled the same way the
+                                 Losers Belt handles a program going dark.
+                                 OPTIONAL, same pattern as
+                                 build_losers_lineage.py: every conference
+                                 without a baseline yet skips itself
+                                 cleanly (no conferences/<slug>.html for it)
+                                 until BOOTSTRAP_CONFERENCE_BELTS below is
+                                 set; once a conference has a baseline it's
+                                 incremental from then on. Bootstraps ALL
+                                 FBS and FCS conferences together in one
+                                 run, sharing a single raw games fetch
+                                 (~316 CFBD calls total, same cost as one
+                                 full 1869-now history fetch, regardless of
+                                 how many conferences exist).
+  4. fetch_team_colors.py    -- cheap; re-derives team_colors.json from a
                                  single /teams call, picking up any new
                                  belt-holding team.
-  4. fetch_game_details.py   -- incremental the same way as build_lineage.py:
+  5. fetch_game_details.py   -- incremental the same way as build_lineage.py:
                                  resumes from historical_data/team_stats.json
                                  and only refetches the current + previous
                                  season's belt games (~10-20 calls), not
                                  every 2003+ belt game (~300+ calls).
-  5. fetch_game_plays.py     -- incremental the same way, against
+  6. fetch_game_plays.py     -- incremental the same way, against
                                  historical_data/game_plays.json: real
                                  play-by-play (trimmed to the notable plays)
                                  for every belt game since 2003, one call
                                  each, only for games not already cached.
-  6. fetch_matchup_preview.py -- 1 call for the all-time head-to-head record
+  7. fetch_matchup_preview.py -- 1 call for the all-time head-to-head record
                                  against the holder's next opponent; recent
                                  form for both teams is mined for free out
                                  of games_raw.json from step 1. No-ops (no
                                  call) if there's no upcoming game.
-  7. fetch_weather.py        -- kickoff-hour forecast (temp, wind, precip,
+  8. fetch_weather.py        -- kickoff-hour forecast (temp, wind, precip,
                                  sky condition) for the upcoming game, from
                                  Open-Meteo -- free, no key, no signup. Venue
                                  lat/lon comes for free out of step 1's own
@@ -62,17 +92,17 @@ this is safe to point at an existing belt_data/ folder:
                                  game, no venue coordinates, or the game's
                                  more than ~15 days out (outside Open-Meteo's
                                  free forecast window).
-  8. generate_ai_preview.py  -- writes a short AI preview of the upcoming
+  9. generate_ai_preview.py  -- writes a short AI preview of the upcoming
                                  game (overview, key matchups, betting
                                  angles) plus a predicted winner/score and a
                                  write-up, via the Claude API -- folding in
-                                 the forecast from step 7 when there is one.
+                                 the forecast from step 8 when there is one.
                                  OPTIONAL: skips itself cleanly if
                                  ANTHROPIC_API_KEY isn't set, or reuses its
                                  committed cache if nothing about the
                                  upcoming game has changed since the last
                                  real generation.
-  9. generate_recaps.py      -- writes an AI recap (highlighting the plays
+ 10. generate_recaps.py      -- writes an AI recap (highlighting the plays
                                  and drives that mattered) for every SETTLED
                                  belt game since 2003 that has a box score.
                                  OPTIONAL, same as generate_ai_preview.py --
@@ -83,7 +113,7 @@ this is safe to point at an existing belt_data/ folder:
                                  every historical belt game at once (~280+
                                  Claude calls) -- see README.md's "AI recaps"
                                  section for the one-time cost estimate.
- 10. generate_historical_notes.py -- writes a short, strictly factual note
+ 11. generate_historical_notes.py -- writes a short, strictly factual note
                                  (NOT a recap -- no box score to write one
                                  from) for every belt game that has no box
                                  score on file, almost all of them pre-2003.
@@ -96,9 +126,9 @@ this is safe to point at an existing belt_data/ folder:
                                  key, and a committed cache
                                  (recap_cache/historical_notes.json) means
                                  each game is only ever generated once.
- 11. build_site.py           -- no network calls; regenerates every page
+ 12. build_site.py           -- no network calls; regenerates every page
                                  from whatever's now in belt_data/.
- 12. generate_share_image.py -- no network call, no API key; renders
+ 13. generate_share_image.py -- no network call, no API key; renders
                                  site/share.png (the Open Graph / Twitter
                                  Card image for the homepage) for whoever
                                  currently holds the belt, the site's
@@ -106,7 +136,7 @@ this is safe to point at an existing belt_data/ folder:
                                  downloadable belt-history poster per team,
                                  straight from belt_data/lineage.json +
                                  team_colors.json.
- 13. post_to_x.py            -- OPTIONAL, same idea as generate_ai_preview.py
+ 14. post_to_x.py            -- OPTIONAL, same idea as generate_ai_preview.py
                                  / generate_recaps.py: skips itself cleanly
                                  unless X_API_KEY, X_API_KEY_SECRET,
                                  X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET are
@@ -124,7 +154,7 @@ this is safe to point at an existing belt_data/ folder:
                                  X_POST_PREVIEW) and only once per game.
                                  Also syncs the account's bio to always name
                                  the current holder, whenever it changes.
- 14. post_to_instagram.py   -- OPTIONAL, same idea again: skips itself
+ 15. post_to_instagram.py   -- OPTIONAL, same idea again: skips itself
                                  cleanly unless IG_ACCESS_TOKEN and
                                  IG_BUSINESS_ACCOUNT_ID are BOTH set. Mirrors
                                  post_to_x.py's result/preview posts and
@@ -172,10 +202,34 @@ own docstring. Set BOOTSTRAP_LOSERS_BELT=true (also wired to its own
 "Run workflow" checkbox) to run it once; after that it's incremental like
 everything else and this flag does nothing.
 
-Don't tick both the FULL_REFETCH_GAME_DETAILS and BOOTSTRAP_LOSERS_BELT
-checkboxes in the same run (or even the same month) unless you've checked
-your CFBD usage first -- ~600 + ~316 calls, plus whatever the schedule has
-already spent that month, can exceed the 1,000-call/month free-tier cap.
+Step 1's fbs/fcs championship-belt scopes and step 3
+(build_conference_lineage.py) are two MORE exceptions of the same shape,
+added alongside the Losers Belt/conference-belts feature. Each no-ops
+until its own one-time bootstrap is explicitly requested, because each
+costs real CFBD budget (~316 calls) the first time it runs:
+
+  - Set BOOTSTRAP_CHAMPIONSHIP_SCOPES=true (wired to its own "Run
+    workflow" checkbox) to bootstrap the championship belt's fbs/fcs
+    scopes once. This only affects build_lineage.py's fbs/fcs scopes --
+    the original "combined" scope (lineage.html, everything the rest of
+    the site already links to) is on its own separate, already-live code
+    path and is never affected by this flag either way.
+  - Set BOOTSTRAP_CONFERENCE_BELTS=true (wired to its own "Run workflow"
+    checkbox) to bootstrap every FBS/FCS conference belt at once (per the
+    site owner's own choice: all conferences together, not staged).
+    Same no-op-until-requested behavior; a no-op for any conference
+    that's already bootstrapped, so re-ticking this later is also how to
+    pick up any newly-added conference without redoing the rest.
+
+Don't tick more than one of FULL_REFETCH_GAME_DETAILS,
+BOOTSTRAP_LOSERS_BELT, BOOTSTRAP_CHAMPIONSHIP_SCOPES, and
+BOOTSTRAP_CONFERENCE_BELTS in the same run (or even the same month)
+unless you've checked your CFBD usage first -- each of the three
+bootstrap flags costs ~316 calls on its own (~600 for the full box-score
+refetch), and stacking them, plus whatever the schedule has already spent
+that month, can easily exceed the 1,000-call/month free-tier cap. When in
+doubt, run them one at a time across separate months/weeks rather than
+all at once.
 
 Stops immediately if a CFBD stage fails (nonzero exit code), rather than
 building a site from a half-updated data set. generate_ai_preview.py,
@@ -212,10 +266,32 @@ FULL_REFETCH_GAME_DETAILS = os.environ.get("FULL_REFETCH_GAME_DETAILS", "").stri
 BOOTSTRAP_LOSERS_BELT = os.environ.get("BOOTSTRAP_LOSERS_BELT", "").strip().lower() in (
     "1", "true", "yes", "on")
 
+# Set by update-and-deploy.yml when the manual "Run workflow" button's
+# "bootstrap championship scopes" checkbox is ticked -- see the module
+# docstring above. Only affects build_lineage.py's fbs/fcs scopes; the
+# original "combined" scope (and every other stage) runs exactly as it
+# always has. A no-op for any of fbs/fcs that's already bootstrapped.
+BOOTSTRAP_CHAMPIONSHIP_SCOPES = os.environ.get("BOOTSTRAP_CHAMPIONSHIP_SCOPES", "").strip().lower() in (
+    "1", "true", "yes", "on")
+
+# Set by update-and-deploy.yml when the manual "Run workflow" button's
+# "bootstrap conference belts" checkbox is ticked -- see the module
+# docstring above and build_conference_lineage.py's own docstring. Only
+# affects the build_conference_lineage.py stage; every other stage runs
+# exactly as it always has. Bootstraps every FBS/FCS conference together
+# in one go (the site owner's own choice over staging FBS-then-FCS),
+# sharing one raw games fetch (~316 CFBD calls total, same as any other
+# single full-history bootstrap regardless of how many conferences exist).
+# A no-op for any conference that's already bootstrapped -- so re-ticking
+# this later also backfills any newly-added conference on its own.
+BOOTSTRAP_CONFERENCE_BELTS = os.environ.get("BOOTSTRAP_CONFERENCE_BELTS", "").strip().lower() in (
+    "1", "true", "yes", "on")
+
 # (script, human-readable label, env var it needs -- or None if it needs no key)
 STAGES = [
     ("build_lineage.py", "Updating the lineage (current + previous season)", "CFBD_API_KEY"),
     ("build_losers_lineage.py", "Updating the Losers Belt (optional)", "CFBD_API_KEY"),
+    ("build_conference_lineage.py", "Updating the FBS/FCS conference belts (optional)", "CFBD_API_KEY"),
     ("fetch_team_colors.py", "Refreshing team colors", "CFBD_API_KEY"),
     ("fetch_game_details.py", "Refreshing box scores for belt games", "CFBD_API_KEY"),
     ("fetch_game_plays.py", "Refreshing play-by-play for belt games", "CFBD_API_KEY"),
@@ -259,6 +335,22 @@ def main():
                   "Losers Belt walk (~316 CFBD calls) instead of skipping this stage. "
                   "This is a one-off; the next run goes back to the normal incremental "
                   "update.")
+        elif script == "build_lineage.py" and BOOTSTRAP_CHAMPIONSHIP_SCOPES:
+            cmd.append("--bootstrap-championship-scopes")
+            print(f"\n=== [{i}/{len(STAGES)}] {label} ({script} --bootstrap-championship-scopes) ===")
+            print("    BOOTSTRAP_CHAMPIONSHIP_SCOPES is set -- doing the one-time full "
+                  "1869-now walk for the championship belt's fbs/fcs scopes (~316 CFBD "
+                  "calls) instead of skipping them. The 'combined' scope (lineage.html) "
+                  "is unaffected either way. This is a one-off; the next run goes back to "
+                  "the normal incremental update.")
+        elif script == "build_conference_lineage.py" and BOOTSTRAP_CONFERENCE_BELTS:
+            cmd.append("--full-refetch")
+            print(f"\n=== [{i}/{len(STAGES)}] {label} ({script} --full-refetch) ===")
+            print("    BOOTSTRAP_CONFERENCE_BELTS is set -- doing the one-time full "
+                  "1869-now walk for every FBS/FCS conference belt (~316 CFBD calls "
+                  "total, shared across all conferences) instead of skipping them. "
+                  "This is a one-off; the next run goes back to the normal incremental "
+                  "update for any conference that now has a baseline.")
         else:
             print(f"\n=== [{i}/{len(STAGES)}] {label} ({script}) ===")
         result = subprocess.run(cmd, cwd=here)
