@@ -1135,6 +1135,22 @@ table.reignsTable tr.hiddenRow{ display:none; }
 .reignChip{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:9px; vertical-align:middle; border:1px solid var(--hairline); }
 .noResults{ padding:34px 0; text-align:center; color:var(--ink-soft); font-style:italic; display:none; }
 
+/* Reign-history pagination (long Losers Belt tables split at 100 rows/page
+   -- see generate_losers_belt_page()). Same pill look as .scopeSwitch, kept
+   as its own class for the same reason .scopeBtn is separate from
+   .sortToggle: no shared JS should ever end up toggling these by mistake. */
+.pagerRow{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; margin:14px 0 4px; }
+.pagerInfo{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); }
+.pagerInfo a{ color:inherit; border-bottom:1px dotted var(--ink-soft); text-decoration:none; }
+.pagerInfo a:hover{ color:var(--brass-text); border-bottom-color:var(--brass); }
+.reignsPager{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--hairline); border-radius:20px; overflow:hidden; background:var(--paper-2); }
+.pagerBtn{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; color:var(--ink-soft); text-decoration:none; white-space:nowrap; border-left:1px solid var(--hairline); }
+.pagerBtn:first-child{ border-left:none; }
+.pagerBtn.active{ background:var(--brass); color:var(--paper); font-weight:600; }
+.pagerBtn:not(.active):hover{ color:var(--ink); background:var(--paper); }
+.pagerBtn.ellipsis{ cursor:default; }
+.pagerBtn.ellipsis:hover{ background:transparent; color:var(--ink-soft); }
+
 .gameNav{ display:flex; gap:12px; margin:26px 0 0; font-family:"IBM Plex Mono",monospace; font-size:12px; }
 .gameNav a{ text-decoration:none; color:var(--ink-soft); border:1px solid var(--hairline); border-radius:20px; padding:7px 16px; flex:1; }
 .gameNav a:hover{ color:var(--ink); border-color:var(--brass); }
@@ -2502,8 +2518,26 @@ LOSERS_BELT_FILENAMES = {"combined": "losers-belt.html", "fbs": "losers-belt-fbs
 LOSERS_BELT_SWITCHER_LABELS = {"combined": "Combined (FBS + FCS)", "fbs": "FBS Only",
                                 "fcs": "FCS Only"}
 
+# Full chain-of-custody tables get long -- FCS-scope alone is 7,500+ reigns,
+# which was slow enough to load that it prompted this pagination in the
+# first place. Any scope whose reign count exceeds this gets split across
+# multiple physical pages instead of one giant table, so this also quietly
+# protects Combined/FBS if their histories keep growing.
+LOSERS_BELT_PAGE_SIZE = 100
 
-def generate_losers_belt_page(lineage, scope="combined", available_scopes=("combined",)):
+
+def losers_belt_page_filename(scope, page):
+    """Page 1 keeps the scope's normal filename (so every existing link to
+    losers-belt.html/-fbs.html/-fcs.html keeps working unchanged); page 2+
+    gets "-2"/"-3"/... spliced in before the extension."""
+    base = LOSERS_BELT_FILENAMES[scope]
+    if page <= 1:
+        return base
+    stem = base[:-len(".html")]
+    return f"{stem}-{page}.html"
+
+
+def generate_losers_belt_page(lineage, scope="combined", available_scopes=("combined",), page=1):
     """The Losers Belt page -- current holder + full reign history, in the
     same spirit as generate_lineage_page() but deliberately lighter: no
     per-game detail pages exist for Losers Belt games (only the real belt
@@ -2519,6 +2553,16 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     right after this shipped only "combined" would be available) -- the
     switcher only links to scopes that are in it, so this never renders a
     link to a page that doesn't exist yet.
+
+    The full reign table is paginated at LOSERS_BELT_PAGE_SIZE rows/page
+    (some scopes -- FCS especially -- run into the thousands of reigns,
+    which was slow enough to load as one giant table that it prompted this).
+    `page` selects which slice of the table this call renders; everything
+    ABOVE the table (hero, records, totals) always reflects the FULL
+    history regardless of page, since those are all-time stats, not
+    page-scoped. Call this once per page (1..total_pages, computed from
+    len(reigns) and LOSERS_BELT_PAGE_SIZE) and write each result to
+    losers_belt_page_filename(scope, page).
     """
     SCOPE_INTRO = {
         "combined": "This one folds FBS and FCS together, exactly how this belt "
@@ -2585,6 +2629,58 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     reign_counts = Counter(r["team"] for r in reigns)
     most_reigns_team, most_reigns_n = reign_counts.most_common(1)[0]
 
+    total_reigns = len(reigns)
+    total_pages = max(1, math.ceil(total_reigns / LOSERS_BELT_PAGE_SIZE))
+    page = max(1, min(page, total_pages))
+    page_start_idx = (page - 1) * LOSERS_BELT_PAGE_SIZE
+    page_reigns = reigns[page_start_idx:page_start_idx + LOSERS_BELT_PAGE_SIZE]
+    range_start = page_start_idx + 1
+    range_end = page_start_idx + len(page_reigns)
+
+    def _page_href(p):
+        return losers_belt_page_filename(scope, p)
+
+    pager_html = ""
+    if total_pages > 1:
+        def _pager_btn(p, label, active=False, extra_cls=""):
+            classes = "pagerBtn" + (" active" if active else "") + (f" {extra_cls}" if extra_cls else "")
+            if active:
+                return f'<span class="{classes}" aria-current="page">{label}</span>'
+            return f'<a class="{classes}" href="{esc(_page_href(p))}">{label}</a>'
+
+        window = 2
+        page_numbers = sorted(set(
+            [1, total_pages] +
+            [p for p in range(page - window, page + window + 1) if 1 <= p <= total_pages]))
+        links = []
+        if page > 1:
+            links.append(_pager_btn(page - 1, "&lsaquo; Prev"))
+        prev_n = None
+        for n in page_numbers:
+            if prev_n is not None and n - prev_n > 1:
+                links.append('<span class="pagerBtn ellipsis">&hellip;</span>')
+            links.append(_pager_btn(n, f"{n}", active=(n == page)))
+            prev_n = n
+        if page < total_pages:
+            links.append(_pager_btn(page + 1, "Next &rsaquo;"))
+        pager_nav = f'<nav class="reignsPager" aria-label="Reign history pages">{"".join(links)}</nav>'
+
+        jump_html = ""
+        if page != total_pages:
+            jump_html = f' &middot; <a href="{esc(_page_href(total_pages))}">Jump to current holder &rarr;</a>'
+        elif page != 1:
+            jump_html = f' &middot; <a href="{esc(_page_href(1))}">Jump to the beginning &rarr;</a>'
+
+        pager_html = f'''
+  <div class="pagerRow">
+    <div class="pagerInfo">Reigns {range_start:,}&ndash;{range_end:,} of {total_reigns:,} &middot; page {page} of {total_pages}{jump_html}</div>
+    {pager_nav}
+  </div>'''
+
+    search_placeholder = "Filter this page&hellip;" if total_pages > 1 else "Filter by team&hellip;"
+    search_note_html = (f'<span class="pagerInfo">Searches this page only (reigns {range_start:,}&ndash;{range_end:,})</span>'
+                         if total_pages > 1 else "")
+
     records_html = f'''
     <div class="record-card">
       <div class="l">Longest Reign</div>
@@ -2603,7 +2699,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     </div>'''
 
     rows_html = ""
-    for i, r in enumerate(reigns, 1):
+    for i, r in enumerate(page_reigns, range_start):
         is_current = r is current
         team = r["team"]
         w, l = _reign_win_score(r, change_index)
@@ -2642,11 +2738,14 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
 
     title_suffix = SCOPE_TITLE_SUFFIX[scope]
     meta_note = SCOPE_META_NOTE[scope]
+    page_title_suffix = f" — Page {page} of {total_pages}" if total_pages > 1 else ""
+    canonical_href = _page_href(page)
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
-<title>The Losers Belt{title_suffix} — The College Football Belt</title>
-<meta name="description" content="A mirror-image lineage: the belt passes to whoever LOSES to the holder, not whoever beats them. {meta_note} Currently held by {esc(current["team"])}.">
+<title>The Losers Belt{title_suffix}{page_title_suffix} — The College Football Belt</title>
+<meta name="description" content="A mirror-image lineage: the belt passes to whoever LOSES to the holder, not whoever beats them. {meta_note} Currently held by {esc(current["team"])}.{' Reign history, page ' + str(page) + ' of ' + str(total_pages) + '.' if total_pages > 1 else ''}">
+<link rel="canonical" href="{SITE_URL}/{canonical_href}">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
@@ -2728,19 +2827,17 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
     </div>
     <div class="controls">
-      <div class="sortToggle" role="group" aria-label="Sort order">
-        <button type="button" class="sortBtn active" data-order="asc">Oldest First</button>
-        <button type="button" class="sortBtn" data-order="desc">Newest First</button>
-      </div>
       <div class="searchBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+        <input id="teamSearch" type="text" placeholder="{search_placeholder}" autocomplete="off">
       </div>
+      {search_note_html}
     </div>
   </div>
 
   <div class="records">{records_html}
   </div>
+{pager_html}
 
   <div class="tableScroll">
     <table class="reignsTable">
@@ -2755,6 +2852,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     </table>
     <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
+{pager_html}
 </main>
 
 <footer class="wrap">
@@ -2779,7 +2877,6 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
 <script>
 (function(){{
   var input = document.getElementById('teamSearch');
-  var tbody = document.querySelector('table.reignsTable tbody');
   var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
   var noResults = document.getElementById('noResults');
   var noResultsTerm = document.getElementById('noResultsTerm');
@@ -2795,21 +2892,6 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     noResultsTerm.textContent = input.value.trim();
     noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
   }});
-
-  var STORAGE_KEY = 'cfbBelt:losersSortOrder';
-  var sortBtns = Array.prototype.slice.call(document.querySelectorAll('.sortToggle .sortBtn'));
-  function applyOrder(order){{
-    var ordered = order === 'desc' ? rows.slice().reverse() : rows.slice();
-    ordered.forEach(function(r){{ tbody.appendChild(r); }});
-    sortBtns.forEach(function(b){{ b.classList.toggle('active', b.getAttribute('data-order') === order); }});
-    try {{ localStorage.setItem(STORAGE_KEY, order); }} catch(e) {{}}
-  }}
-  sortBtns.forEach(function(b){{
-    b.addEventListener('click', function(){{ applyOrder(b.getAttribute('data-order')); }});
-  }});
-  var savedOrder = null;
-  try {{ savedOrder = localStorage.getItem(STORAGE_KEY); }} catch(e) {{}}
-  if (savedOrder === 'desc') applyOrder('desc');
 }})();
 </script>
 '''
@@ -6016,10 +6098,16 @@ def main():
     # any Losers Belt data exists at all (it's the original scope, and
     # keeps the original unsuffixed filename/URL).
     available_scopes = tuple(s for s in ("combined", "fbs", "fcs") if losers_lineages[s] is not None)
+    losers_belt_total_pages = {}
     for scope in available_scopes:
-        page_html = generate_losers_belt_page(losers_lineages[scope], scope, available_scopes)
-        with open(os.path.join(OUT_DIR, LOSERS_BELT_FILENAMES[scope]), "w", encoding="utf-8") as f:
-            f.write(page_html)
+        total_reigns = len(losers_lineages[scope]["reigns"])
+        total_pages = max(1, math.ceil(total_reigns / LOSERS_BELT_PAGE_SIZE))
+        losers_belt_total_pages[scope] = total_pages
+        for page in range(1, total_pages + 1):
+            page_html = generate_losers_belt_page(losers_lineages[scope], scope, available_scopes, page)
+            filename = losers_belt_page_filename(scope, page)
+            with open(os.path.join(OUT_DIR, filename), "w", encoding="utf-8") as f:
+                f.write(page_html)
     for scope in ("combined", "fbs", "fcs"):
         if scope not in available_scopes:
             warnings.append(f"{DATA_DIR}/losers_lineage{'' if scope == 'combined' else '_' + scope}.json "
@@ -6190,7 +6278,9 @@ def main():
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
     for scope in available_scopes:
-        print(f"Wrote Losers Belt ({scope}) page to {OUT_DIR}/{LOSERS_BELT_FILENAMES[scope]}")
+        n_pages = losers_belt_total_pages[scope]
+        page_note = f" ({n_pages} pages)" if n_pages > 1 else ""
+        print(f"Wrote Losers Belt ({scope}) page to {OUT_DIR}/{LOSERS_BELT_FILENAMES[scope]}{page_note}")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
     print(f"Wrote records page to {OUT_DIR}/records.html")
