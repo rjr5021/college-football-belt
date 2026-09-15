@@ -91,5 +91,21 @@
     "effective_date": "2024-11-10",
     "detected_on": "2026-09-15",
     "reverted_to": "Clarion"
+  },
+  {
+    "team": "Columbia",
+    "reign_started": "1870-11-05",
+    "last_activity_date": "1870-11-05",
+    "effective_date": "1870-11-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "1870-11-06",
+    "last_activity_date": "1870-11-12",
+    "effective_date": "1870-11-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Princeton"
   }
 ]
