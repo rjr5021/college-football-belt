@@ -107,5 +107,2469 @@
     "effective_date": "1870-11-13",
     "detected_on": "2026-09-15",
     "reverted_to": "Princeton"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "1874-11-14",
+    "last_activity_date": "1875-11-06",
+    "effective_date": "1875-11-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Columbia"
+  },
+  {
+    "team": "Columbia",
+    "reign_started": "1884-10-15",
+    "last_activity_date": "1884-10-15",
+    "effective_date": "1884-10-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Columbia",
+    "reign_started": "1891-10-28",
+    "last_activity_date": "1891-10-28",
+    "effective_date": "1891-10-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "1892-10-29",
+    "last_activity_date": "1892-11-05",
+    "effective_date": "1892-11-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Lafayette"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "1902-10-12",
+    "last_activity_date": "1902-10-12",
+    "effective_date": "1902-10-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Lehigh"
+  },
+  {
+    "team": "Elon",
+    "reign_started": "1920-09-25",
+    "last_activity_date": "1931-09-19",
+    "effective_date": "1931-09-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Furman"
+  },
+  {
+    "team": "Samford",
+    "reign_started": "1935-09-20",
+    "last_activity_date": "1941-11-08",
+    "effective_date": "1941-11-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Western Kentucky",
+    "reign_started": "1942-09-26",
+    "last_activity_date": "1942-09-26",
+    "effective_date": "1942-09-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Memphis",
+    "reign_started": "1942-10-31",
+    "last_activity_date": "1942-10-31",
+    "effective_date": "1942-11-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-11-01",
+    "last_activity_date": "1942-11-28",
+    "effective_date": "1942-11-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-11-29",
+    "last_activity_date": "1942-11-29",
+    "effective_date": "1942-11-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-11-30",
+    "last_activity_date": "1942-11-30",
+    "effective_date": "1942-12-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-01",
+    "last_activity_date": "1942-12-01",
+    "effective_date": "1942-12-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-02",
+    "last_activity_date": "1942-12-02",
+    "effective_date": "1942-12-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-03",
+    "last_activity_date": "1942-12-03",
+    "effective_date": "1942-12-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-04",
+    "last_activity_date": "1942-12-04",
+    "effective_date": "1942-12-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-05",
+    "last_activity_date": "1942-12-05",
+    "effective_date": "1942-12-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-06",
+    "last_activity_date": "1942-12-06",
+    "effective_date": "1942-12-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-07",
+    "last_activity_date": "1942-12-07",
+    "effective_date": "1942-12-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-08",
+    "last_activity_date": "1942-12-08",
+    "effective_date": "1942-12-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-09",
+    "last_activity_date": "1942-12-09",
+    "effective_date": "1942-12-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-10",
+    "last_activity_date": "1942-12-10",
+    "effective_date": "1942-12-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-11",
+    "last_activity_date": "1942-12-11",
+    "effective_date": "1942-12-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-12",
+    "last_activity_date": "1942-12-12",
+    "effective_date": "1942-12-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-13",
+    "last_activity_date": "1942-12-13",
+    "effective_date": "1942-12-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-14",
+    "last_activity_date": "1942-12-14",
+    "effective_date": "1942-12-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-15",
+    "last_activity_date": "1942-12-15",
+    "effective_date": "1942-12-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-16",
+    "last_activity_date": "1942-12-16",
+    "effective_date": "1942-12-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-17",
+    "last_activity_date": "1942-12-17",
+    "effective_date": "1942-12-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-18",
+    "last_activity_date": "1942-12-18",
+    "effective_date": "1942-12-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-19",
+    "last_activity_date": "1942-12-19",
+    "effective_date": "1942-12-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-20",
+    "last_activity_date": "1942-12-20",
+    "effective_date": "1942-12-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-21",
+    "last_activity_date": "1942-12-21",
+    "effective_date": "1942-12-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-22",
+    "last_activity_date": "1942-12-22",
+    "effective_date": "1942-12-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-23",
+    "last_activity_date": "1942-12-23",
+    "effective_date": "1942-12-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-24",
+    "last_activity_date": "1942-12-24",
+    "effective_date": "1942-12-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-25",
+    "last_activity_date": "1942-12-25",
+    "effective_date": "1942-12-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-26",
+    "last_activity_date": "1942-12-26",
+    "effective_date": "1942-12-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-27",
+    "last_activity_date": "1942-12-27",
+    "effective_date": "1942-12-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-28",
+    "last_activity_date": "1942-12-28",
+    "effective_date": "1942-12-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-29",
+    "last_activity_date": "1942-12-29",
+    "effective_date": "1942-12-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1942-12-30",
+    "last_activity_date": "1942-12-30",
+    "effective_date": "1942-12-31",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1942-12-31",
+    "last_activity_date": "1942-12-31",
+    "effective_date": "1943-01-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-01",
+    "last_activity_date": "1943-01-01",
+    "effective_date": "1943-01-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-02",
+    "last_activity_date": "1943-01-02",
+    "effective_date": "1943-01-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-03",
+    "last_activity_date": "1943-01-03",
+    "effective_date": "1943-01-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-04",
+    "last_activity_date": "1943-01-04",
+    "effective_date": "1943-01-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-05",
+    "last_activity_date": "1943-01-05",
+    "effective_date": "1943-01-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-06",
+    "last_activity_date": "1943-01-06",
+    "effective_date": "1943-01-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-07",
+    "last_activity_date": "1943-01-07",
+    "effective_date": "1943-01-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-08",
+    "last_activity_date": "1943-01-08",
+    "effective_date": "1943-01-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-09",
+    "last_activity_date": "1943-01-09",
+    "effective_date": "1943-01-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-10",
+    "last_activity_date": "1943-01-10",
+    "effective_date": "1943-01-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-11",
+    "last_activity_date": "1943-01-11",
+    "effective_date": "1943-01-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-12",
+    "last_activity_date": "1943-01-12",
+    "effective_date": "1943-01-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-13",
+    "last_activity_date": "1943-01-13",
+    "effective_date": "1943-01-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-14",
+    "last_activity_date": "1943-01-14",
+    "effective_date": "1943-01-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-15",
+    "last_activity_date": "1943-01-15",
+    "effective_date": "1943-01-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-16",
+    "last_activity_date": "1943-01-16",
+    "effective_date": "1943-01-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-17",
+    "last_activity_date": "1943-01-17",
+    "effective_date": "1943-01-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-18",
+    "last_activity_date": "1943-01-18",
+    "effective_date": "1943-01-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-19",
+    "last_activity_date": "1943-01-19",
+    "effective_date": "1943-01-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-20",
+    "last_activity_date": "1943-01-20",
+    "effective_date": "1943-01-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-21",
+    "last_activity_date": "1943-01-21",
+    "effective_date": "1943-01-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-22",
+    "last_activity_date": "1943-01-22",
+    "effective_date": "1943-01-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-23",
+    "last_activity_date": "1943-01-23",
+    "effective_date": "1943-01-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-24",
+    "last_activity_date": "1943-01-24",
+    "effective_date": "1943-01-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-25",
+    "last_activity_date": "1943-01-25",
+    "effective_date": "1943-01-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-26",
+    "last_activity_date": "1943-01-26",
+    "effective_date": "1943-01-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-27",
+    "last_activity_date": "1943-01-27",
+    "effective_date": "1943-01-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-28",
+    "last_activity_date": "1943-01-28",
+    "effective_date": "1943-01-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-29",
+    "last_activity_date": "1943-01-29",
+    "effective_date": "1943-01-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-01-30",
+    "last_activity_date": "1943-01-30",
+    "effective_date": "1943-01-31",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-01-31",
+    "last_activity_date": "1943-01-31",
+    "effective_date": "1943-02-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-01",
+    "last_activity_date": "1943-02-01",
+    "effective_date": "1943-02-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-02",
+    "last_activity_date": "1943-02-02",
+    "effective_date": "1943-02-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-03",
+    "last_activity_date": "1943-02-03",
+    "effective_date": "1943-02-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-04",
+    "last_activity_date": "1943-02-04",
+    "effective_date": "1943-02-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-05",
+    "last_activity_date": "1943-02-05",
+    "effective_date": "1943-02-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-06",
+    "last_activity_date": "1943-02-06",
+    "effective_date": "1943-02-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-07",
+    "last_activity_date": "1943-02-07",
+    "effective_date": "1943-02-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-08",
+    "last_activity_date": "1943-02-08",
+    "effective_date": "1943-02-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-09",
+    "last_activity_date": "1943-02-09",
+    "effective_date": "1943-02-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-10",
+    "last_activity_date": "1943-02-10",
+    "effective_date": "1943-02-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-11",
+    "last_activity_date": "1943-02-11",
+    "effective_date": "1943-02-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-12",
+    "last_activity_date": "1943-02-12",
+    "effective_date": "1943-02-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-13",
+    "last_activity_date": "1943-02-13",
+    "effective_date": "1943-02-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-14",
+    "last_activity_date": "1943-02-14",
+    "effective_date": "1943-02-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-15",
+    "last_activity_date": "1943-02-15",
+    "effective_date": "1943-02-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-16",
+    "last_activity_date": "1943-02-16",
+    "effective_date": "1943-02-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-17",
+    "last_activity_date": "1943-02-17",
+    "effective_date": "1943-02-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-18",
+    "last_activity_date": "1943-02-18",
+    "effective_date": "1943-02-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-19",
+    "last_activity_date": "1943-02-19",
+    "effective_date": "1943-02-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-20",
+    "last_activity_date": "1943-02-20",
+    "effective_date": "1943-02-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-21",
+    "last_activity_date": "1943-02-21",
+    "effective_date": "1943-02-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-22",
+    "last_activity_date": "1943-02-22",
+    "effective_date": "1943-02-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-23",
+    "last_activity_date": "1943-02-23",
+    "effective_date": "1943-02-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-24",
+    "last_activity_date": "1943-02-24",
+    "effective_date": "1943-02-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-25",
+    "last_activity_date": "1943-02-25",
+    "effective_date": "1943-02-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-26",
+    "last_activity_date": "1943-02-26",
+    "effective_date": "1943-02-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-02-27",
+    "last_activity_date": "1943-02-27",
+    "effective_date": "1943-02-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-02-28",
+    "last_activity_date": "1943-02-28",
+    "effective_date": "1943-03-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-01",
+    "last_activity_date": "1943-03-01",
+    "effective_date": "1943-03-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-02",
+    "last_activity_date": "1943-03-02",
+    "effective_date": "1943-03-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-03",
+    "last_activity_date": "1943-03-03",
+    "effective_date": "1943-03-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-04",
+    "last_activity_date": "1943-03-04",
+    "effective_date": "1943-03-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-05",
+    "last_activity_date": "1943-03-05",
+    "effective_date": "1943-03-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-06",
+    "last_activity_date": "1943-03-06",
+    "effective_date": "1943-03-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-07",
+    "last_activity_date": "1943-03-07",
+    "effective_date": "1943-03-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-08",
+    "last_activity_date": "1943-03-08",
+    "effective_date": "1943-03-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-09",
+    "last_activity_date": "1943-03-09",
+    "effective_date": "1943-03-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-10",
+    "last_activity_date": "1943-03-10",
+    "effective_date": "1943-03-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-11",
+    "last_activity_date": "1943-03-11",
+    "effective_date": "1943-03-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-12",
+    "last_activity_date": "1943-03-12",
+    "effective_date": "1943-03-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-13",
+    "last_activity_date": "1943-03-13",
+    "effective_date": "1943-03-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-14",
+    "last_activity_date": "1943-03-14",
+    "effective_date": "1943-03-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-15",
+    "last_activity_date": "1943-03-15",
+    "effective_date": "1943-03-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-16",
+    "last_activity_date": "1943-03-16",
+    "effective_date": "1943-03-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-17",
+    "last_activity_date": "1943-03-17",
+    "effective_date": "1943-03-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-18",
+    "last_activity_date": "1943-03-18",
+    "effective_date": "1943-03-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-19",
+    "last_activity_date": "1943-03-19",
+    "effective_date": "1943-03-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-20",
+    "last_activity_date": "1943-03-20",
+    "effective_date": "1943-03-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-21",
+    "last_activity_date": "1943-03-21",
+    "effective_date": "1943-03-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-22",
+    "last_activity_date": "1943-03-22",
+    "effective_date": "1943-03-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-23",
+    "last_activity_date": "1943-03-23",
+    "effective_date": "1943-03-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-24",
+    "last_activity_date": "1943-03-24",
+    "effective_date": "1943-03-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-25",
+    "last_activity_date": "1943-03-25",
+    "effective_date": "1943-03-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-26",
+    "last_activity_date": "1943-03-26",
+    "effective_date": "1943-03-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-27",
+    "last_activity_date": "1943-03-27",
+    "effective_date": "1943-03-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-28",
+    "last_activity_date": "1943-03-28",
+    "effective_date": "1943-03-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-29",
+    "last_activity_date": "1943-03-29",
+    "effective_date": "1943-03-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-03-30",
+    "last_activity_date": "1943-03-30",
+    "effective_date": "1943-03-31",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-03-31",
+    "last_activity_date": "1943-03-31",
+    "effective_date": "1943-04-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-01",
+    "last_activity_date": "1943-04-01",
+    "effective_date": "1943-04-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-02",
+    "last_activity_date": "1943-04-02",
+    "effective_date": "1943-04-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-03",
+    "last_activity_date": "1943-04-03",
+    "effective_date": "1943-04-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-04",
+    "last_activity_date": "1943-04-04",
+    "effective_date": "1943-04-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-05",
+    "last_activity_date": "1943-04-05",
+    "effective_date": "1943-04-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-06",
+    "last_activity_date": "1943-04-06",
+    "effective_date": "1943-04-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-07",
+    "last_activity_date": "1943-04-07",
+    "effective_date": "1943-04-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-08",
+    "last_activity_date": "1943-04-08",
+    "effective_date": "1943-04-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-09",
+    "last_activity_date": "1943-04-09",
+    "effective_date": "1943-04-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-10",
+    "last_activity_date": "1943-04-10",
+    "effective_date": "1943-04-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-11",
+    "last_activity_date": "1943-04-11",
+    "effective_date": "1943-04-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-12",
+    "last_activity_date": "1943-04-12",
+    "effective_date": "1943-04-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-13",
+    "last_activity_date": "1943-04-13",
+    "effective_date": "1943-04-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-14",
+    "last_activity_date": "1943-04-14",
+    "effective_date": "1943-04-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-15",
+    "last_activity_date": "1943-04-15",
+    "effective_date": "1943-04-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-16",
+    "last_activity_date": "1943-04-16",
+    "effective_date": "1943-04-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-17",
+    "last_activity_date": "1943-04-17",
+    "effective_date": "1943-04-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-18",
+    "last_activity_date": "1943-04-18",
+    "effective_date": "1943-04-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-19",
+    "last_activity_date": "1943-04-19",
+    "effective_date": "1943-04-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-20",
+    "last_activity_date": "1943-04-20",
+    "effective_date": "1943-04-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-21",
+    "last_activity_date": "1943-04-21",
+    "effective_date": "1943-04-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-22",
+    "last_activity_date": "1943-04-22",
+    "effective_date": "1943-04-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-23",
+    "last_activity_date": "1943-04-23",
+    "effective_date": "1943-04-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-24",
+    "last_activity_date": "1943-04-24",
+    "effective_date": "1943-04-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-25",
+    "last_activity_date": "1943-04-25",
+    "effective_date": "1943-04-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-26",
+    "last_activity_date": "1943-04-26",
+    "effective_date": "1943-04-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-27",
+    "last_activity_date": "1943-04-27",
+    "effective_date": "1943-04-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-28",
+    "last_activity_date": "1943-04-28",
+    "effective_date": "1943-04-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-04-29",
+    "last_activity_date": "1943-04-29",
+    "effective_date": "1943-04-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-04-30",
+    "last_activity_date": "1943-04-30",
+    "effective_date": "1943-05-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-05-01",
+    "last_activity_date": "1943-05-01",
+    "effective_date": "1943-05-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-05-02",
+    "last_activity_date": "1943-05-02",
+    "effective_date": "1943-05-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-05-03",
+    "last_activity_date": "1943-05-03",
+    "effective_date": "1943-05-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-05-04",
+    "last_activity_date": "1943-05-04",
+    "effective_date": "1943-05-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-05-05",
+    "last_activity_date": "1943-05-05",
+    "effective_date": "1943-05-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-05-06",
+    "last_activity_date": "1943-05-06",
+    "effective_date": "1943-05-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-05-07",
+    "last_activity_date": "1943-05-07",
+    "effective_date": "1943-05-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-05-08",
+    "last_activity_date": "1943-05-08",
+    "effective_date": "1943-05-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-05-09",
+    "last_activity_date": "1943-05-09",
+    "effective_date": "1943-05-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-05-10",
+    "last_activity_date": "1943-05-10",
+    "effective_date": "1943-05-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Ole Miss",
+    "reign_started": "1943-05-11",
+    "last_activity_date": "1943-05-11",
+    "effective_date": "1943-05-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Mississippi State"
+  },
+  {
+    "team": "Mississippi State",
+    "reign_started": "1943-05-12",
+    "last_activity_date": "1943-05-12",
+    "effective_date": "1943-05-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Ole Miss"
+  },
+  {
+    "team": "Marshall",
+    "reign_started": "1951-09-15",
+    "last_activity_date": "1953-09-19",
+    "effective_date": "1953-09-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Temple",
+    "reign_started": "1954-10-30",
+    "last_activity_date": "1955-09-24",
+    "effective_date": "1955-09-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Morehead State",
+    "reign_started": "1980-09-06",
+    "last_activity_date": "1981-09-12",
+    "effective_date": "1981-09-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Marshall"
+  },
+  {
+    "team": "Southern Illinois",
+    "reign_started": "1988-10-22",
+    "last_activity_date": "1995-09-16",
+    "effective_date": "1995-09-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Northern Illinois"
+  },
+  {
+    "team": "Jacksonville State",
+    "reign_started": "1995-10-28",
+    "last_activity_date": "1997-09-20",
+    "effective_date": "1997-09-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Arkansas State"
+  },
+  {
+    "team": "Florida A&M",
+    "reign_started": "2019-11-23",
+    "last_activity_date": "2019-11-23",
+    "effective_date": "2019-11-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Bethune-Cookman"
+  },
+  {
+    "team": "Bethune-Cookman",
+    "reign_started": "2019-11-24",
+    "last_activity_date": "2019-11-24",
+    "effective_date": "2019-11-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Delaware State"
+  },
+  {
+    "team": "Delaware State",
+    "reign_started": "2019-11-25",
+    "last_activity_date": "2019-11-25",
+    "effective_date": "2019-11-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2019-11-26",
+    "last_activity_date": "2019-11-26",
+    "effective_date": "2019-11-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2019-11-27",
+    "last_activity_date": "2019-11-27",
+    "effective_date": "2019-11-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "Alcorn State",
+    "reign_started": "2019-12-21",
+    "last_activity_date": "2019-12-21",
+    "effective_date": "2019-12-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-22",
+    "last_activity_date": "2019-12-22",
+    "effective_date": "2019-12-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2019-12-23",
+    "last_activity_date": "2019-12-23",
+    "effective_date": "2019-12-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2019-12-24",
+    "last_activity_date": "2019-12-24",
+    "effective_date": "2019-12-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-25",
+    "last_activity_date": "2019-12-25",
+    "effective_date": "2019-12-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2019-12-26",
+    "last_activity_date": "2019-12-26",
+    "effective_date": "2019-12-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2019-12-27",
+    "last_activity_date": "2019-12-27",
+    "effective_date": "2019-12-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-28",
+    "last_activity_date": "2019-12-28",
+    "effective_date": "2019-12-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2019-12-29",
+    "last_activity_date": "2019-12-29",
+    "effective_date": "2019-12-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2019-12-30",
+    "last_activity_date": "2019-12-30",
+    "effective_date": "2019-12-31",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-31",
+    "last_activity_date": "2019-12-31",
+    "effective_date": "2020-01-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-01",
+    "last_activity_date": "2020-01-01",
+    "effective_date": "2020-01-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-02",
+    "last_activity_date": "2020-01-02",
+    "effective_date": "2020-01-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-03",
+    "last_activity_date": "2020-01-03",
+    "effective_date": "2020-01-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-04",
+    "last_activity_date": "2020-01-04",
+    "effective_date": "2020-01-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-05",
+    "last_activity_date": "2020-01-05",
+    "effective_date": "2020-01-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-06",
+    "last_activity_date": "2020-01-06",
+    "effective_date": "2020-01-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-07",
+    "last_activity_date": "2020-01-07",
+    "effective_date": "2020-01-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-08",
+    "last_activity_date": "2020-01-08",
+    "effective_date": "2020-01-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-09",
+    "last_activity_date": "2020-01-09",
+    "effective_date": "2020-01-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-10",
+    "last_activity_date": "2020-01-10",
+    "effective_date": "2020-01-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-11",
+    "last_activity_date": "2020-01-11",
+    "effective_date": "2020-01-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-12",
+    "last_activity_date": "2020-01-12",
+    "effective_date": "2020-01-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-13",
+    "last_activity_date": "2020-01-13",
+    "effective_date": "2020-01-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-14",
+    "last_activity_date": "2020-01-14",
+    "effective_date": "2020-01-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-15",
+    "last_activity_date": "2020-01-15",
+    "effective_date": "2020-01-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-16",
+    "last_activity_date": "2020-01-16",
+    "effective_date": "2020-01-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-17",
+    "last_activity_date": "2020-01-17",
+    "effective_date": "2020-01-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-18",
+    "last_activity_date": "2020-01-18",
+    "effective_date": "2020-01-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-19",
+    "last_activity_date": "2020-01-19",
+    "effective_date": "2020-01-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-20",
+    "last_activity_date": "2020-01-20",
+    "effective_date": "2020-01-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-21",
+    "last_activity_date": "2020-01-21",
+    "effective_date": "2020-01-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-22",
+    "last_activity_date": "2020-01-22",
+    "effective_date": "2020-01-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-23",
+    "last_activity_date": "2020-01-23",
+    "effective_date": "2020-01-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-24",
+    "last_activity_date": "2020-01-24",
+    "effective_date": "2020-01-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-25",
+    "last_activity_date": "2020-01-25",
+    "effective_date": "2020-01-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-26",
+    "last_activity_date": "2020-01-26",
+    "effective_date": "2020-01-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-27",
+    "last_activity_date": "2020-01-27",
+    "effective_date": "2020-01-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-28",
+    "last_activity_date": "2020-01-28",
+    "effective_date": "2020-01-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-01-29",
+    "last_activity_date": "2020-01-29",
+    "effective_date": "2020-01-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-01-30",
+    "last_activity_date": "2020-01-30",
+    "effective_date": "2020-01-31",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-01-31",
+    "last_activity_date": "2020-01-31",
+    "effective_date": "2020-02-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-01",
+    "last_activity_date": "2020-02-01",
+    "effective_date": "2020-02-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-02",
+    "last_activity_date": "2020-02-02",
+    "effective_date": "2020-02-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-03",
+    "last_activity_date": "2020-02-03",
+    "effective_date": "2020-02-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-04",
+    "last_activity_date": "2020-02-04",
+    "effective_date": "2020-02-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-05",
+    "last_activity_date": "2020-02-05",
+    "effective_date": "2020-02-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-06",
+    "last_activity_date": "2020-02-06",
+    "effective_date": "2020-02-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-07",
+    "last_activity_date": "2020-02-07",
+    "effective_date": "2020-02-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-08",
+    "last_activity_date": "2020-02-08",
+    "effective_date": "2020-02-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-09",
+    "last_activity_date": "2020-02-09",
+    "effective_date": "2020-02-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-10",
+    "last_activity_date": "2020-02-10",
+    "effective_date": "2020-02-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-11",
+    "last_activity_date": "2020-02-11",
+    "effective_date": "2020-02-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-12",
+    "last_activity_date": "2020-02-12",
+    "effective_date": "2020-02-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-13",
+    "last_activity_date": "2020-02-13",
+    "effective_date": "2020-02-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-14",
+    "last_activity_date": "2020-02-14",
+    "effective_date": "2020-02-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-15",
+    "last_activity_date": "2020-02-15",
+    "effective_date": "2020-02-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-16",
+    "last_activity_date": "2020-02-16",
+    "effective_date": "2020-02-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-17",
+    "last_activity_date": "2020-02-17",
+    "effective_date": "2020-02-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-18",
+    "last_activity_date": "2020-02-18",
+    "effective_date": "2020-02-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-19",
+    "last_activity_date": "2020-02-19",
+    "effective_date": "2020-02-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-20",
+    "last_activity_date": "2020-02-20",
+    "effective_date": "2020-02-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-21",
+    "last_activity_date": "2020-02-21",
+    "effective_date": "2020-02-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-22",
+    "last_activity_date": "2020-02-22",
+    "effective_date": "2020-02-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-23",
+    "last_activity_date": "2020-02-23",
+    "effective_date": "2020-02-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-24",
+    "last_activity_date": "2020-02-24",
+    "effective_date": "2020-02-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-25",
+    "last_activity_date": "2020-02-25",
+    "effective_date": "2020-02-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-26",
+    "last_activity_date": "2020-02-26",
+    "effective_date": "2020-02-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-02-27",
+    "last_activity_date": "2020-02-27",
+    "effective_date": "2020-02-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-02-28",
+    "last_activity_date": "2020-02-28",
+    "effective_date": "2020-02-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-02-29",
+    "last_activity_date": "2020-02-29",
+    "effective_date": "2020-03-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-01",
+    "last_activity_date": "2020-03-01",
+    "effective_date": "2020-03-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-02",
+    "last_activity_date": "2020-03-02",
+    "effective_date": "2020-03-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-03",
+    "last_activity_date": "2020-03-03",
+    "effective_date": "2020-03-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-04",
+    "last_activity_date": "2020-03-04",
+    "effective_date": "2020-03-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-05",
+    "last_activity_date": "2020-03-05",
+    "effective_date": "2020-03-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-06",
+    "last_activity_date": "2020-03-06",
+    "effective_date": "2020-03-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-07",
+    "last_activity_date": "2020-03-07",
+    "effective_date": "2020-03-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-08",
+    "last_activity_date": "2020-03-08",
+    "effective_date": "2020-03-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-09",
+    "last_activity_date": "2020-03-09",
+    "effective_date": "2020-03-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-10",
+    "last_activity_date": "2020-03-10",
+    "effective_date": "2020-03-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-11",
+    "last_activity_date": "2020-03-11",
+    "effective_date": "2020-03-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-12",
+    "last_activity_date": "2020-03-12",
+    "effective_date": "2020-03-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-13",
+    "last_activity_date": "2020-03-13",
+    "effective_date": "2020-03-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-14",
+    "last_activity_date": "2020-03-14",
+    "effective_date": "2020-03-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-15",
+    "last_activity_date": "2020-03-15",
+    "effective_date": "2020-03-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-16",
+    "last_activity_date": "2020-03-16",
+    "effective_date": "2020-03-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-17",
+    "last_activity_date": "2020-03-17",
+    "effective_date": "2020-03-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-18",
+    "last_activity_date": "2020-03-18",
+    "effective_date": "2020-03-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-19",
+    "last_activity_date": "2020-03-19",
+    "effective_date": "2020-03-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-20",
+    "last_activity_date": "2020-03-20",
+    "effective_date": "2020-03-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-21",
+    "last_activity_date": "2020-03-21",
+    "effective_date": "2020-03-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-22",
+    "last_activity_date": "2020-03-22",
+    "effective_date": "2020-03-23",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-23",
+    "last_activity_date": "2020-03-23",
+    "effective_date": "2020-03-24",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-24",
+    "last_activity_date": "2020-03-24",
+    "effective_date": "2020-03-25",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-25",
+    "last_activity_date": "2020-03-25",
+    "effective_date": "2020-03-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-26",
+    "last_activity_date": "2020-03-26",
+    "effective_date": "2020-03-27",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-27",
+    "last_activity_date": "2020-03-27",
+    "effective_date": "2020-03-28",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-28",
+    "last_activity_date": "2020-03-28",
+    "effective_date": "2020-03-29",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-03-29",
+    "last_activity_date": "2020-03-29",
+    "effective_date": "2020-03-30",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-03-30",
+    "last_activity_date": "2020-03-30",
+    "effective_date": "2020-03-31",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-03-31",
+    "last_activity_date": "2020-03-31",
+    "effective_date": "2020-04-01",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-01",
+    "last_activity_date": "2020-04-01",
+    "effective_date": "2020-04-02",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-02",
+    "last_activity_date": "2020-04-02",
+    "effective_date": "2020-04-03",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-03",
+    "last_activity_date": "2020-04-03",
+    "effective_date": "2020-04-04",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-04",
+    "last_activity_date": "2020-04-04",
+    "effective_date": "2020-04-05",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-05",
+    "last_activity_date": "2020-04-05",
+    "effective_date": "2020-04-06",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-06",
+    "last_activity_date": "2020-04-06",
+    "effective_date": "2020-04-07",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-07",
+    "last_activity_date": "2020-04-07",
+    "effective_date": "2020-04-08",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-08",
+    "last_activity_date": "2020-04-08",
+    "effective_date": "2020-04-09",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-09",
+    "last_activity_date": "2020-04-09",
+    "effective_date": "2020-04-10",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-10",
+    "last_activity_date": "2020-04-10",
+    "effective_date": "2020-04-11",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-11",
+    "last_activity_date": "2020-04-11",
+    "effective_date": "2020-04-12",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-12",
+    "last_activity_date": "2020-04-12",
+    "effective_date": "2020-04-13",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-13",
+    "last_activity_date": "2020-04-13",
+    "effective_date": "2020-04-14",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-14",
+    "last_activity_date": "2020-04-14",
+    "effective_date": "2020-04-15",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-15",
+    "last_activity_date": "2020-04-15",
+    "effective_date": "2020-04-16",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-16",
+    "last_activity_date": "2020-04-16",
+    "effective_date": "2020-04-17",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-17",
+    "last_activity_date": "2020-04-17",
+    "effective_date": "2020-04-18",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-18",
+    "last_activity_date": "2020-04-18",
+    "effective_date": "2020-04-19",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
+  },
+  {
+    "team": "South Carolina State",
+    "reign_started": "2020-04-19",
+    "last_activity_date": "2020-04-19",
+    "effective_date": "2020-04-20",
+    "detected_on": "2026-09-15",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2020-04-20",
+    "last_activity_date": "2020-04-20",
+    "effective_date": "2020-04-21",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Morgan State"
+  },
+  {
+    "team": "Morgan State",
+    "reign_started": "2020-04-21",
+    "last_activity_date": "2020-04-21",
+    "effective_date": "2020-04-22",
+    "detected_on": "2026-09-15",
+    "reverted_to": "South Carolina State"
   }
 ]
