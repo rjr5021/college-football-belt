@@ -99,15 +99,23 @@ fresh --full-refetch, which walks the true 1869-now history in one
 continuous pass and so naturally re-derives every real result in between.)
 
 The dormant team's reign is dated as VOIDED, not as having lasted until
-whenever the pipeline happened to notice: it closes the same day it
-started (a real, sourced event -- they genuinely caught the belt -- that
-just never got the chance to stand for anything, since they never played
-again to either defend or lose it), and the team it reverts to picks back
-up the very next day, as though that one game never actually cost them the
-belt. So if Wyoming Seminary caught it on 1899-09-23 and never fielded a
-team again, their reign shows as 1899-09-23 to 1899-09-23 ("vacated"), and
-Bucknell's reign resumes 1899-09-24 -- not from today, whenever a run
-happens to catch it. Detected vacancies are appended once to
+whenever the pipeline happened to notice, and NOT blindly frozen to the day
+they first caught it either: it closes on their TRUE last recorded game --
+tracked via each reign's `last_game_date`, updated on every real defense,
+not just the catch -- and the team it reverts to picks back up the very
+next day. If a team caught the belt and simply never played again (zero
+real defenses), `last_game_date` never moves past the catch date, so their
+reign correctly shows as voided the same day it started -- e.g. if Wyoming
+Seminary caught it on 1899-09-23 and never fielded a team again, their
+reign shows as 1899-09-23 to 1899-09-23 ("vacated"), and Bucknell's reign
+resumes 1899-09-24. But if a team caught the belt, genuinely defended it
+for real one or more times (real losses, real dates, real games), and only
+THEN stopped fielding a team, their reign closes on that true last game
+instead -- so a team with, say, 11 recorded losses before going dark never
+shows a self-contradictory 0-day reign alongside those 11 defenses. Either
+way, the reverted-to team resumes the day after the dormant team's true
+last activity, not from today, whenever a run happens to catch it.
+Detected vacancies are appended once to
 historical_data/losers_vacancies.json (committed, same pattern as
 losers_baseline.json) purely as a running audit trail of what's been found
 and when -- since a revert is fully baked into the reigns it produces (and
@@ -173,7 +181,7 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
                   else first["home"])
         reign = {"team": holder, "start_date": first["date"], "won_from": None,
                  "won_score": f"{first['home_points']}-{first['away_points']}",
-                 "defenses": 0}
+                 "defenses": 0, "last_game_date": first["date"]}
         remaining = games[1:]
         bootstrap_belt_game = {
             "date": first["date"], "season": first["season"], "week": first["week"],
@@ -187,6 +195,7 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
     else:
         holder = start_holder
         reign = dict(start_reign)
+        reign.setdefault("last_game_date", reign["start_date"])
         remaining = [g for g in games if g["date"] >= start_reign["start_date"]]
         bootstrap_belt_game = None
 
@@ -228,10 +237,11 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
             reign["lost_to"] = new_holder
             reigns.append(reign)
             reign = {"team": new_holder, "start_date": g["date"], "won_from": holder,
-                     "won_score": f"{hp}-{ap}", "defenses": 0}
+                     "won_score": f"{hp}-{ap}", "defenses": 0, "last_game_date": g["date"]}
             holder = new_holder
         else:
             reign["defenses"] += 1
+            reign["last_game_date"] = g["date"]
 
     reign["end_date"] = None
     reign["lost_to"] = None
@@ -311,16 +321,34 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
             all_reigns += reigns
             return all_belt_games, all_reigns, vacancies
 
+        # Date the void to the team's TRUE last recorded activity, not
+        # blindly to when they first caught it -- a team can catch the
+        # belt, genuinely defend it for real (real losses, real dates)
+        # for a while, and only THEN stop playing for good. Collapsing
+        # that whole span down to "voided the same day it started" would
+        # be wrong whenever defenses > 0: last_game_date already equals
+        # start_date for a team that never played again at all, so this
+        # naturally reduces to the original same-day behavior in that case.
+        last_activity = tip.get("last_game_date", tip["start_date"])
         v = {"team": tip["team"], "reign_started": tip["start_date"],
-             "effective_date": (date.fromisoformat(tip["start_date"])
+             "last_activity_date": last_activity,
+             "effective_date": (date.fromisoformat(last_activity)
                                  + timedelta(days=1)).isoformat(),
              "detected_on": today, "reverted_to": predecessor}
-        print(f"Losers Belt: {v['team']} hasn't shown up in any game since "
-              f"catching it on {v['reign_started']} -- treating their program "
-              f"as having discontinued football. Voiding that reign and "
-              f"reverting the belt to {v['reverted_to']}, in effect since "
-              f"{v['effective_date']}.")
-        vacated_tip = {**tip, "end_date": v["reign_started"], "lost_to": None,
+        if last_activity == tip["start_date"]:
+            print(f"Losers Belt: {v['team']} hasn't shown up in any game since "
+                  f"catching it on {v['reign_started']} -- treating their program "
+                  f"as having discontinued football. Voiding that reign and "
+                  f"reverting the belt to {v['reverted_to']}, in effect since "
+                  f"{v['effective_date']}.")
+        else:
+            print(f"Losers Belt: {v['team']} caught it on {v['reign_started']}, "
+                  f"defended it for real through {last_activity}, and hasn't shown "
+                  f"up in any game since -- treating their program as having "
+                  f"discontinued football. Closing that reign as of their last game "
+                  f"and reverting the belt to {v['reverted_to']}, in effect since "
+                  f"{v['effective_date']}.")
+        vacated_tip = {**tip, "end_date": last_activity, "lost_to": None,
                         "vacated": True}
         all_belt_games += belt_games
         all_reigns += reigns[:-1] + [vacated_tip]
@@ -356,10 +384,14 @@ def split_losers_baseline(belt_games, all_vacancies, first_reign, live_start_yea
     """
     historical_belt_games = [bg for bg in belt_games if bg["season"] < live_start_year]
     boundary = f"{live_start_year}-01-01"
-    historical_vacancies = [v for v in all_vacancies if v["reign_started"] < boundary]
+    historical_vacancies = [
+        v for v in all_vacancies
+        if v.get("last_activity_date", v["reign_started"]) < boundary
+    ]
 
     events = [("game", bg["date"], bg) for bg in historical_belt_games]
-    events += [("vacancy", v["reign_started"], v) for v in historical_vacancies]
+    events += [("vacancy", v.get("last_activity_date", v["reign_started"]), v)
+               for v in historical_vacancies]
     events.sort(key=lambda e: e[1])
 
     if not events:
@@ -399,7 +431,7 @@ def split_losers_baseline(belt_games, all_vacancies, first_reign, live_start_yea
                       f"the reign open at that point ({reign['team']!r}) -- "
                       f"skipping it in the historical split.", file=sys.stderr)
                 continue
-            reign["end_date"] = v["reign_started"]
+            reign["end_date"] = v.get("last_activity_date", v["reign_started"])
             reign["lost_to"] = None
             reign["vacated"] = True
             closed.append(reign)
