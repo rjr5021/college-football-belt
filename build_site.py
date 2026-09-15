@@ -2523,9 +2523,9 @@ def generate_losers_belt_page(lineage):
   <h1 class="pageTitle">The Losers Belt</h1>
   <p class="lede">The real belt passes to whoever BEATS the holder. This one is its
     mirror image: it passes to whoever LOSES to the holder &mdash; you catch it the way
-    you&rsquo;d catch a cold, by losing to the team that currently has it. Win, and you keep
-    it (you&rsquo;re still the reigning worst team in the country). Lose &mdash; sorry, WIN &mdash;
-    and whoever you just beat catches it from you. It starts the same place the real belt
+    you&rsquo;d catch a cold, by losing to the team that currently has it. Lose again, and
+    you keep it (you&rsquo;re still the reigning worst team in the country). Win, and
+    whoever you just beat catches it from you. It starts the same place the real belt
     does: Princeton, who lost the very first college football game ever played, 6&ndash;4 to
     Rutgers on November&nbsp;6, 1869.</p>
 
@@ -2535,7 +2535,7 @@ def generate_losers_belt_page(lineage):
       <p>The holder wins a game, and the team that just lost to them catches the Losers Belt.</p>
     </div>
     <div class="rule-card">
-      <h3>Beat someone? You keep it.</h3>
+      <h3>Lose again? Still yours.</h3>
       <p>The holder loses again, nothing changes &mdash; still the reigning worst team.</p>
     </div>
     <div class="rule-card">
