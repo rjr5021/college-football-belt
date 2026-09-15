@@ -2413,8 +2413,13 @@ def generate_losers_belt_page(lineage):
     defenses = current["defenses"]
     won_score, lost_score = _reign_win_score(current, change_index)
     won_from = current.get("won_from")
+    reclaimed_after = current.get("reclaimed_after")
 
-    if won_from and won_score is not None:
+    if reclaimed_after:
+        lede = (f"{esc(reclaimed_after)} caught it but stopped fielding a football team "
+                 f"altogether &mdash; since the belt can only pass by losing, it reverted "
+                 f"back to {esc(current['team'])} on {fmt_date(current['start_date'])}.")
+    elif won_from and won_score is not None:
         lede = (f"Caught it by losing to {esc(won_from)}, {won_score}&ndash;{lost_score}, "
                 f"on {fmt_date(current['start_date'])}.")
     else:
@@ -2452,11 +2457,19 @@ def generate_losers_belt_page(lineage):
         team = r["team"]
         w, l = _reign_win_score(r, change_index)
 
-        caught_txt = f"lost to {esc(r['won_from'])} {w}&ndash;{l}" if (r.get("won_from") and w is not None) else "Established it (first-ever loss)"
+        if r.get("reclaimed_after"):
+            caught_txt = f"reverted after {esc(r['reclaimed_after'])} stopped playing"
+        elif r.get("won_from") and w is not None:
+            caught_txt = f"lost to {esc(r['won_from'])} {w}&ndash;{l}"
+        else:
+            caught_txt = "Established it (first-ever loss)"
 
         if is_current:
             passed_txt = '<span class="mono">— present —</span>'
             end_txt = "Present"
+        elif r.get("vacated"):
+            passed_txt = "vacated — stopped playing football"
+            end_txt = fmt_date(r["end_date"])
         elif r.get("lost_to"):
             passed_txt = f"beat {esc(r['lost_to'])}"
             end_txt = fmt_date(r["end_date"])
@@ -2534,6 +2547,12 @@ def generate_losers_belt_page(lineage):
       <p>Same mechanical, no-editorial-judgment approach as the real belt &mdash; just run in reverse.</p>
     </div>
   </div>
+
+  <p class="lede" style="margin-top:18px">One wrinkle: this belt can only pass by losing, so a holder that
+    stops fielding a football team at all would hold it forever under the literal rule &mdash; and a lot of
+    this belt&rsquo;s holders are exactly the kind of small or historic programs that don&rsquo;t exist
+    anymore. When a holder goes roughly two full seasons without playing a single game, it&rsquo;s treated
+    as having discontinued football, and the belt reverts to whoever it last caught it from.</p>
 
   <section class="hero" style="margin-top:32px">
     <div>
