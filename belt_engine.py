@@ -192,6 +192,26 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
     all_belt_games, all_reigns, vacancies = [], [], []
     holder, reign = start_holder, start_reign
     seen = set()
+    # Cycle guard, ported from build_losers_lineage.py's resolve_vacancies()
+    # (added there in commit #67, then fixed again in commit ed45ed3 after a
+    # live bootstrap run hit the exact same class of bug HERE, in this
+    # engine, because this file had been forked from an EARLIER version of
+    # that logic and never picked up either fix). `seen` alone only catches
+    # the exact same (team, start_date) key repeating -- but a revert's
+    # synthetic start_date advances by a day every hop, so a real N-team
+    # predecessor cycle (A -> B -> C -> A -> ...) never repeats an exact key
+    # even though the same teams do, and can revert once a day forever.
+    # `chain_teams` tracks every team reverted FROM since the last real
+    # forward progress (a genuine defense or a real change of holder) --
+    # reset the moment that happens. Checked in BOTH places a revert can be
+    # decided: inside the has_gap forgiveness loop below (so a cycle
+    # reached via a real-but-too-far-away game gets one gap forgiven and a
+    # chance to walk out of the cycle for real) AND in the main stop/revert
+    # decision (so a cycle reached via TERMINAL dormancy -- no later game
+    # for any of the cycling teams at all -- still gets caught; that path
+    # never touches the has_gap loop at all, which is exactly how this bug
+    # slipped through the first time it was "fixed").
+    chain_teams = set()
 
     while True:
         belt_games, reigns = walk_winner(games, tie_rule, start_holder=holder, start_reign=reign,
@@ -203,7 +223,11 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
                       and tip["team"] in (g["home"], g["away"]) for g in games)
         reign_key = (tip["team"], tip["start_date"])
 
-        while has_gap and (predecessor is None or reign_key in seen):
+        if tip.get("defenses", 0) > 0 or len(reigns) > 1:
+            chain_teams = set()
+
+        while has_gap and (predecessor is None or reign_key in seen
+                            or tip["team"] in chain_teams):
             belt_games, reigns = walk_winner(games, tie_rule, start_holder=holder,
                                               start_reign=reign,
                                               gap_threshold_days=gap_threshold_days,
@@ -213,8 +237,10 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
             has_gap = any(g["date"] > tip["last_game_date"]
                           and tip["team"] in (g["home"], g["away"]) for g in games)
             reign_key = (tip["team"], tip["start_date"])
+            if tip.get("defenses", 0) > 0 or len(reigns) > 1:
+                chain_teams = set()
 
-        if predecessor is None or reign_key in seen or \
+        if predecessor is None or reign_key in seen or tip["team"] in chain_teams or \
                 not (has_gap or tip["team"] not in recent_teams):
             all_belt_games += belt_games
             all_reigns += reigns
@@ -242,6 +268,7 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         all_reigns += reigns[:-1] + [vacated_tip]
         vacancies.append(v)
         seen.add(reign_key)
+        chain_teams.add(tip["team"])
 
         inherited = None
         for r in reversed(list(context_reigns) + all_reigns):
