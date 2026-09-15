@@ -100,6 +100,18 @@ on:
         required: false
         type: boolean
         default: false
+      bootstrap_losers_belt:
+        description: >-
+          One-time historical build of the Losers Belt (see
+          build_losers_lineage.py's docstring) -- required once before
+          losers-belt.html ever appears on the site; every run after this
+          one is cheap and automatic. Uses far more CFBD API calls (~316)
+          than a normal run -- don't tick this in the same run/month as
+          the full-refetch checkbox above without checking your CFBD usage
+          first. Leave unchecked for an ordinary manual run.
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -146,6 +158,10 @@ jobs:
           # with the full-refetch checkbox ticked -- see the input above
           # and update_all.py's own docstring/FULL_REFETCH_GAME_DETAILS.
           FULL_REFETCH_GAME_DETAILS: ${{ github.event.inputs.full_refetch_game_details }}
+          # Same idea, for the Losers Belt's own one-time historical
+          # bootstrap -- see the input above and update_all.py's own
+          # docstring/BOOTSTRAP_LOSERS_BELT.
+          BOOTSTRAP_LOSERS_BELT: ${{ github.event.inputs.bootstrap_losers_belt }}
         run: python update_all.py
 
       - name: Commit historical_data/, ai_preview_cache/, recap_cache/ and social_cache/ if any changed
