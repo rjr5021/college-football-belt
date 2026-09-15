@@ -382,6 +382,21 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
                     # first one is forgiven.
                     skip_first_gap = False
                 else:
+                    # TEMPORARY DIAGNOSTIC (remove before the next real
+                    # ship) -- 2026-09-15: widening to
+                    # DISRUPTION_GAP_THRESHOLD_DAYS=1500 had ZERO effect on
+                    # the live WW2/COVID vacancy count (still 322, still
+                    # 169+128 in-window, byte-identical reign durations) on
+                    # the very next bootstrap. That means every one of
+                    # those real underlying gaps is >1500 days even when it
+                    # overlaps a disruption window -- need the actual
+                    # sizes to know whether to widen further or exempt
+                    # these windows from the gap check entirely, rather
+                    # than guess again blind.
+                    print(f"GAP-DEBUG: {holder} gap={gap}d disrupted="
+                          f"{_disrupted_era_overlap(reign['last_game_date'], g['date'])} "
+                          f"last_activity={reign['last_game_date']} next_game={g['date']}",
+                          file=sys.stderr)
                     # A real, later game for this holder exists (this one)
                     # -- but only after a suspiciously long silence. Stop
                     # here rather than silently crediting it as an
