@@ -2537,7 +2537,85 @@ def losers_belt_page_filename(scope, page):
     return f"{stem}-{page}.html"
 
 
-def generate_losers_belt_page(lineage, scope="combined", available_scopes=("combined",), page=1):
+def losers_belt_data_filename(scope):
+    """The full-history JSON companion each Losers Belt page fetches in the
+    background so search and Oldest/Newest sort can work across every page,
+    not just whichever 100 rows happen to be server-rendered on the one the
+    visitor landed on. One file per scope, not per page -- every page of a
+    given scope shares the same full dataset."""
+    base = LOSERS_BELT_FILENAMES[scope]
+    return base[:-len(".html")] + "-data.json"
+
+
+def build_losers_belt_rows(reigns, current, change_index, today):
+    """Shared row data for a Losers Belt lineage -- used both to render each
+    page's server-side <tr> markup and to build the full-history JSON that
+    page fetches for client-side cross-page search/sort (see
+    losers_belt_data_filename()). Kept as plain data (no HTML) here so the
+    JSON side never needs escaping; _losers_belt_row_html() below is the one
+    place that turns a row into markup, whether it came fresh off this
+    function or back out of the JSON on the client."""
+    rows = []
+    for i, r in enumerate(reigns, 1):
+        is_current = r is current
+        team = r["team"]
+        w, l = _reign_win_score(r, change_index)
+
+        if r.get("reclaimed_after"):
+            caught = f"reverted after {r['reclaimed_after']} stopped playing"
+        elif r.get("won_from") and w is not None:
+            caught = f"lost to {r['won_from']} {w}–{l}"
+        else:
+            caught = "Established it (first-ever loss)"
+
+        passed = None
+        if is_current:
+            end_txt = "Present"
+        elif r.get("vacated"):
+            passed = "vacated — stopped playing football"
+            end_txt = fmt_date(r["end_date"])
+        elif r.get("lost_to"):
+            passed = f"beat {r['lost_to']}"
+            end_txt = fmt_date(r["end_date"])
+        else:
+            end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
+
+        rows.append({
+            "n": i,
+            "team": team,
+            "teamLower": team.lower(),
+            "dates": f'{fmt_date(r["start_date"])} – {end_txt}',
+            "len": fmt_duration(*reign_dates(r, today)),
+            "losses": r["defenses"],
+            "caught": caught,
+            "passed": passed,
+            "current": is_current,
+        })
+    return rows
+
+
+def _losers_belt_row_html(row):
+    """Render one build_losers_belt_rows() row as a <tr> -- the same markup
+    generate_losers_belt_page() always produced, just sourced from the
+    shared row dict instead of recomputed inline."""
+    cls = " current" if row["current"] else ""
+    if row["current"]:
+        passed_html = '<span class="mono">— present —</span>'
+    else:
+        passed_html = esc(row["passed"]) if row["passed"] else "—"
+    return f'''
+        <tr class="{cls.strip()}" data-team="{esc(row["teamLower"])}">
+          <td class="num">{row["n"]}</td>
+          <td class="teamCell">{esc(row["team"])}</td>
+          <td class="dates">{esc(row["dates"])}</td>
+          <td class="tabular">{esc(row["len"])}</td>
+          <td class="tabular">{row["losses"]}</td>
+          <td class="won">{esc(row["caught"])}</td>
+          <td class="lost">{passed_html}</td>
+        </tr>'''
+
+
+def generate_losers_belt_page(lineage, scope="combined", available_scopes=("combined",), page=1, all_rows=None):
     """The Losers Belt page -- current holder + full reign history, in the
     same spirit as generate_lineage_page() but deliberately lighter: no
     per-game detail pages exist for Losers Belt games (only the real belt
@@ -2602,6 +2680,8 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     belt_games = lineage["belt_games"]
     change_index = build_change_game_index(belt_games)
     today = date.today()
+    if all_rows is None:
+        all_rows = build_losers_belt_rows(reigns, current, change_index, today)
 
     since_date = date.fromisoformat(current["start_date"])
     days_held = (today - since_date).days
@@ -2640,14 +2720,14 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     def _page_href(p):
         return losers_belt_page_filename(scope, p)
 
-    pager_html = ""
-    if total_pages > 1:
-        def _pager_btn(p, label, active=False, extra_cls=""):
-            classes = "pagerBtn" + (" active" if active else "") + (f" {extra_cls}" if extra_cls else "")
-            if active:
-                return f'<span class="{classes}" aria-current="page">{label}</span>'
-            return f'<a class="{classes}" href="{esc(_page_href(p))}">{label}</a>'
+    def _pager_btn(p, label, active=False, extra_cls=""):
+        classes = "pagerBtn" + (" active" if active else "") + (f" {extra_cls}" if extra_cls else "")
+        if active:
+            return f'<span class="{classes}" aria-current="page">{label}</span>'
+        return f'<a class="{classes}" href="{esc(_page_href(p))}" data-page="{p}">{label}</a>'
 
+    pager_nav = ""
+    if total_pages > 1:
         window = 2
         page_numbers = sorted(set(
             [1, total_pages] +
@@ -2665,21 +2745,23 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
             links.append(_pager_btn(page + 1, "Next &rsaquo;"))
         pager_nav = f'<nav class="reignsPager" aria-label="Reign history pages">{"".join(links)}</nav>'
 
-        jump_html = ""
-        if page != total_pages:
-            jump_html = f' &middot; <a href="{esc(_page_href(total_pages))}">Jump to current holder &rarr;</a>'
-        elif page != 1:
-            jump_html = f' &middot; <a href="{esc(_page_href(1))}">Jump to the beginning &rarr;</a>'
+    jump_html = ""
+    if page != total_pages:
+        jump_html = f' &middot; <a href="{esc(_page_href(total_pages))}" class="jumpLink" data-page="{total_pages}">Jump to current holder &rarr;</a>'
+    elif page != 1:
+        jump_html = f' &middot; <a href="{esc(_page_href(1))}" class="jumpLink" data-page="1">Jump to the beginning &rarr;</a>'
 
-        pager_html = f'''
-  <div class="pagerRow">
+    # Rendered server-side so the page works with no JS at all (real links to
+    # the real physical pages); data-losers-pager marks these two containers
+    # so the script below can find and replace them once the full-history
+    # JSON (losers_belt_data_filename()) has loaded, at which point paging,
+    # sorting, and search all become client-side and span every reign, not
+    # just whichever 100 happen to be server-rendered on this one file.
+    pager_html = f'''
+  <div class="pagerRow" data-losers-pager>
     <div class="pagerInfo">Reigns {range_start:,}&ndash;{range_end:,} of {total_reigns:,} &middot; page {page} of {total_pages}{jump_html}</div>
     {pager_nav}
   </div>'''
-
-    search_placeholder = "Filter this page&hellip;" if total_pages > 1 else "Filter by team&hellip;"
-    search_note_html = (f'<span class="pagerInfo">Searches this page only (reigns {range_start:,}&ndash;{range_end:,})</span>'
-                         if total_pages > 1 else "")
 
     records_html = f'''
     <div class="record-card">
@@ -2698,43 +2780,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       <div class="sub">caught it back {most_reigns_n - 1} time{"s" if most_reigns_n - 1 != 1 else ""} after passing it on</div>
     </div>'''
 
-    rows_html = ""
-    for i, r in enumerate(page_reigns, range_start):
-        is_current = r is current
-        team = r["team"]
-        w, l = _reign_win_score(r, change_index)
-
-        if r.get("reclaimed_after"):
-            caught_txt = f"reverted after {esc(r['reclaimed_after'])} stopped playing"
-        elif r.get("won_from") and w is not None:
-            caught_txt = f"lost to {esc(r['won_from'])} {w}&ndash;{l}"
-        else:
-            caught_txt = "Established it (first-ever loss)"
-
-        if is_current:
-            passed_txt = '<span class="mono">— present —</span>'
-            end_txt = "Present"
-        elif r.get("vacated"):
-            passed_txt = "vacated — stopped playing football"
-            end_txt = fmt_date(r["end_date"])
-        elif r.get("lost_to"):
-            passed_txt = f"beat {esc(r['lost_to'])}"
-            end_txt = fmt_date(r["end_date"])
-        else:
-            passed_txt = "—"
-            end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
-
-        cls = " current" if is_current else ""
-        rows_html += f'''
-        <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
-          <td class="num">{i}</td>
-          <td class="teamCell">{esc(team)}</td>
-          <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
-          <td class="tabular">{fmt_duration(*reign_dates(r, today))}</td>
-          <td class="tabular">{r["defenses"]}</td>
-          <td class="won">{caught_txt}</td>
-          <td class="lost">{passed_txt}</td>
-        </tr>'''
+    rows_html = "".join(_losers_belt_row_html(row) for row in all_rows[page_start_idx:page_start_idx + LOSERS_BELT_PAGE_SIZE])
 
     title_suffix = SCOPE_TITLE_SUFFIX[scope]
     meta_note = SCOPE_META_NOTE[scope]
@@ -2827,11 +2873,15 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
     </div>
     <div class="controls">
+      <div class="sortToggle" role="group" aria-label="Sort order">
+        <button type="button" class="sortBtn active" data-order="asc">Oldest First</button>
+        <button type="button" class="sortBtn" data-order="desc">Newest First</button>
+      </div>
       <div class="searchBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-        <input id="teamSearch" type="text" placeholder="{search_placeholder}" autocomplete="off">
+        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
       </div>
-      {search_note_html}
+      <span class="pagerInfo" id="dataStatus" aria-live="polite"></span>
     </div>
   </div>
 
@@ -2876,21 +2926,174 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
 
 <script>
 (function(){{
-  var input = document.getElementById('teamSearch');
-  var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
+  var DATA_URL = {json.dumps(losers_belt_data_filename(scope))};
+  var PAGE_SIZE = {LOSERS_BELT_PAGE_SIZE};
+  var INITIAL_PAGE = {page};
+
+  var searchInput = document.getElementById('teamSearch');
+  var sortBtns = Array.prototype.slice.call(document.querySelectorAll('.sortToggle .sortBtn'));
+  var tbody = document.querySelector('table.reignsTable tbody');
   var noResults = document.getElementById('noResults');
   var noResultsTerm = document.getElementById('noResultsTerm');
-  input.addEventListener('input', function(){{
-    var q = input.value.trim().toLowerCase();
+  var pagerRows = Array.prototype.slice.call(document.querySelectorAll('[data-losers-pager]'));
+  var statusEl = document.getElementById('dataStatus');
+
+  // Fallback while the full-history JSON hasn't loaded yet (or failed to):
+  // the same page-scoped filter this table used before pagination existed,
+  // over just the rows this one physical page server-rendered.
+  var staticRows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
+  function staticSearch(){{
+    var q = searchInput.value.trim().toLowerCase();
     var shown = 0;
-    rows.forEach(function(r){{
+    staticRows.forEach(function(r){{
       var name = r.getAttribute('data-team') || '';
       var match = !q || name.indexOf(q) !== -1;
       r.classList.toggle('hiddenRow', !match);
       if (match) shown++;
     }});
-    noResultsTerm.textContent = input.value.trim();
+    noResultsTerm.textContent = searchInput.value.trim();
     noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
+  }}
+
+  var state = {{ rows: null, order: 'asc', query: '', page: INITIAL_PAGE }};
+
+  function escapeHtml(s){{
+    return String(s).replace(/[&<>"']/g, function(c){{
+      return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c];
+    }});
+  }}
+
+  function fmtNum(n){{
+    try {{ return n.toLocaleString('en-US'); }} catch(e){{ return String(n); }}
+  }}
+
+  function rowHtml(row){{
+    var cls = row.current ? ' current' : '';
+    var passedHtml = row.current
+      ? '<span class="mono">\\u2014 present \\u2014</span>'
+      : escapeHtml(row.passed || '\\u2014');
+    return '<tr class="' + cls.trim() + '" data-team="' + escapeHtml(row.teamLower) + '">' +
+      '<td class="num">' + row.n + '</td>' +
+      '<td class="teamCell">' + escapeHtml(row.team) + '</td>' +
+      '<td class="dates">' + escapeHtml(row.dates) + '</td>' +
+      '<td class="tabular">' + escapeHtml(row.len) + '</td>' +
+      '<td class="tabular">' + row.losses + '</td>' +
+      '<td class="won">' + escapeHtml(row.caught) + '</td>' +
+      '<td class="lost">' + passedHtml + '</td>' +
+    '</tr>';
+  }}
+
+  function pagerLink(p, label, active){{
+    if (active) return '<span class="pagerBtn active" aria-current="page">' + label + '</span>';
+    return '<a href="#" class="pagerBtn" data-goto="' + p + '">' + label + '</a>';
+  }}
+
+  function render(){{
+    var rows = state.rows;
+    if (!rows) return;
+    var q = state.query.trim().toLowerCase();
+    var filtered = q ? rows.filter(function(r){{ return r.teamLower.indexOf(q) !== -1; }}) : rows;
+    var ordered = state.order === 'desc' ? filtered.slice().reverse() : filtered;
+    var totalCount = ordered.length;
+    var totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    var page = Math.min(Math.max(1, state.page), totalPages);
+    state.page = page;
+    var startIdx = (page - 1) * PAGE_SIZE;
+    var pageRows = ordered.slice(startIdx, startIdx + PAGE_SIZE);
+
+    if (totalCount === 0) {{
+      tbody.innerHTML = '';
+      noResultsTerm.textContent = state.query.trim();
+      noResults.style.display = 'block';
+    }} else {{
+      noResults.style.display = 'none';
+      tbody.innerHTML = pageRows.map(rowHtml).join('');
+    }}
+
+    // Where the current holder sits under this order/filter, for the jump link.
+    var jumpPage = null, jumpLabel = null;
+    for (var i = 0; i < ordered.length; i++) {{
+      if (ordered[i].current) {{
+        jumpPage = Math.floor(i / PAGE_SIZE) + 1;
+        jumpLabel = state.order === 'asc' ? 'Jump to current holder' : 'Jump to the beginning';
+        break;
+      }}
+    }}
+
+    var rangeStart = totalCount === 0 ? 0 : startIdx + 1;
+    var rangeEnd = startIdx + pageRows.length;
+    var noun = q ? 'Matches' : 'Reigns';
+    var infoHtml = noun + ' ' + fmtNum(rangeStart) + '\\u2013' + fmtNum(rangeEnd) + ' of ' +
+      fmtNum(totalCount) + ' \\u00b7 page ' + page + ' of ' + totalPages;
+    if (jumpPage !== null && jumpPage !== page) {{
+      infoHtml += ' \\u00b7 <a href="#" class="jumpLink" data-goto="' + jumpPage + '">' + jumpLabel + ' \\u2192</a>';
+    }}
+
+    var navHtml = '';
+    if (totalPages > 1) {{
+      var winSize = 2;
+      var nums = [1, totalPages];
+      for (var n = page - winSize; n <= page + winSize; n++) {{ if (n >= 1 && n <= totalPages) nums.push(n); }}
+      nums = nums.filter(function(v, idx){{ return nums.indexOf(v) === idx; }}).sort(function(a,b){{ return a - b; }});
+      var parts = [];
+      if (page > 1) parts.push(pagerLink(page - 1, '&lsaquo; Prev'));
+      var prevN = null;
+      nums.forEach(function(n){{
+        if (prevN !== null && n - prevN > 1) parts.push('<span class="pagerBtn ellipsis">&hellip;</span>');
+        parts.push(pagerLink(n, String(n), n === page));
+        prevN = n;
+      }});
+      if (page < totalPages) parts.push(pagerLink(page + 1, 'Next &rsaquo;'));
+      navHtml = '<nav class="reignsPager" aria-label="Reign history pages">' + parts.join('') + '</nav>';
+    }}
+
+    var fullHtml = '<div class="pagerInfo">' + infoHtml + '</div>' + navHtml;
+    pagerRows.forEach(function(el){{ el.innerHTML = fullHtml; }});
+  }}
+
+  // Pager/jump links are rebuilt fresh on every render(), so bind the click
+  // handler once on each stable container (event delegation) rather than on
+  // the links themselves.
+  pagerRows.forEach(function(el){{
+    el.addEventListener('click', function(e){{
+      var target = e.target.closest ? e.target.closest('[data-goto]') : null;
+      if (!target) return;
+      e.preventDefault();
+      state.page = parseInt(target.getAttribute('data-goto'), 10) || 1;
+      render();
+    }});
+  }});
+
+  sortBtns.forEach(function(b){{
+    b.addEventListener('click', function(){{
+      state.order = b.getAttribute('data-order');
+      state.page = 1;
+      sortBtns.forEach(function(x){{ x.classList.toggle('active', x === b); }});
+      render();
+    }});
+  }});
+
+  var searchDebounce = null;
+  searchInput.addEventListener('input', function(){{
+    if (!state.rows) {{ staticSearch(); return; }}
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(function(){{
+      state.query = searchInput.value;
+      state.page = 1;
+      render();
+    }}, 80);
+  }});
+
+  if (statusEl) statusEl.textContent = 'Loading full history for sitewide search\\u2026';
+  fetch(DATA_URL).then(function(resp){{
+    if (!resp.ok) throw new Error('bad status');
+    return resp.json();
+  }}).then(function(data){{
+    state.rows = data;
+    if (statusEl) statusEl.textContent = '';
+    render();
+  }}).catch(function(){{
+    if (statusEl) statusEl.textContent = 'Full history failed to load \\u2014 search and sort are limited to this page.';
   }});
 }})();
 </script>
@@ -6100,11 +6303,25 @@ def main():
     available_scopes = tuple(s for s in ("combined", "fbs", "fcs") if losers_lineages[s] is not None)
     losers_belt_total_pages = {}
     for scope in available_scopes:
-        total_reigns = len(losers_lineages[scope]["reigns"])
+        scope_lineage = losers_lineages[scope]
+        scope_reigns = scope_lineage["reigns"]
+        scope_current = scope_reigns[-1]
+        scope_change_index = build_change_game_index(scope_lineage["belt_games"])
+        scope_today = date.today()
+        # Computed once per scope (not once per page) -- every page of a
+        # scope shares the same full-history rows, both for slicing into
+        # each page's <tr> markup and for the JSON companion file the page
+        # fetches client-side for search/sort across every reign, not just
+        # whichever 100 happen to be server-rendered on that one file.
+        all_rows = build_losers_belt_rows(scope_reigns, scope_current, scope_change_index, scope_today)
+        data_path = os.path.join(OUT_DIR, losers_belt_data_filename(scope))
+        with open(data_path, "w", encoding="utf-8") as f:
+            json.dump(all_rows, f, separators=(",", ":"))
+        total_reigns = len(scope_reigns)
         total_pages = max(1, math.ceil(total_reigns / LOSERS_BELT_PAGE_SIZE))
         losers_belt_total_pages[scope] = total_pages
         for page in range(1, total_pages + 1):
-            page_html = generate_losers_belt_page(losers_lineages[scope], scope, available_scopes, page)
+            page_html = generate_losers_belt_page(scope_lineage, scope, available_scopes, page, all_rows=all_rows)
             filename = losers_belt_page_filename(scope, page)
             with open(os.path.join(OUT_DIR, filename), "w", encoding="utf-8") as f:
                 f.write(page_html)
