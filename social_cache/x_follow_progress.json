@@ -1,33 +1,4 @@
 {
   "followed": [],
-  "failed": {
-    "AthlonSports": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "JasonKirkSBN": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "HeismanPundit": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "MrCFB": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "DanWetzel": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "CFBMatrix": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "philsteele042": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "bartonsimmons": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "sam_ponder": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "SBN_BillC": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "ralphDRussoAP": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "footballscoop": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "Finebaum": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "ClayTravis": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "CollegeGameDay": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "SEC": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "ErinAndrews": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "davidpollack47": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "Brett_McMurphy": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "TimBrando": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "JoshPateCFB": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "RedditCFB": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "Rivals": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "Hayesfawcett3": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "Clowfb": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "AlabamaFTBL": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "RazorbackFB": "lookup failed: 401 Unauthorized\nUnauthorized",
-    "AuburnFootball": "lookup failed: 401 Unauthorized\nUnauthorized"
-  }
+  "failed": {}
 }
