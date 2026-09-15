@@ -189,16 +189,23 @@ BASELINE_PATH = os.path.join(HIST_DIR, "losers_baseline.json")
 VACANCY_PATH = os.path.join(HIST_DIR, "losers_vacancies.json")
 LINEAGE_PATH = os.path.join(OUT_DIR, "losers_lineage.json")
 
-# "Roughly two full seasons of silence" -- the same effective threshold the
-# ORIGINAL (terminal-only) dormancy check already used via its current +
-# previous season window, now applied uniformly to every reign in history,
-# not just the live tip. Comfortably wider than any real gap an
-# every-season program should ever show (last game of one season to first
-# game of the next is typically ~270-300 days; even a single skipped
-# season -- e.g. the COVID-disrupted 2020 season for several FCS
-# conferences -- is usually still under this), so it shouldn't false-fire
-# on a normal offseason or a one-off cancelled season.
-GAP_THRESHOLD_DAYS = 700
+# Was 700 days ("roughly two full seasons of silence", matching the
+# ORIGINAL terminal-only dormancy check's current+previous-season window).
+# Lowered to 500 on purpose, after confirming the mid-reign gap check's
+# own fallback for un-revertable reigns (see resolve_vacancies) had a
+# separate bug that silently disabled gap-awareness for the rest of
+# history once triggered -- which is what actually let multi-thousand-day
+# gaps like Abilene Christian's slip through even at 700. That deeper bug
+# is fixed now (see the skip_first_gap forgive-one-gap-at-a-time loop),
+# but a lower threshold is still worth having on top of the fix: it
+# catches shorter, subtler silences (well under "thousands of days") that
+# 700 was too loose to flag at all, at the accepted cost of a higher
+# chance of a false-positive short "flash revert" on a genuinely
+# irregular-but-real schedule -- e.g. a single skipped season (last game
+# of one season to first game two seasons later can run ~550-650 days)
+# may now trip this where it wouldn't have at 700. Every resulting
+# reign was manually reviewed for plausibility before this shipped.
+GAP_THRESHOLD_DAYS = 500
 
 
 def filter_division1_games(games, d1_teams):
@@ -219,7 +226,7 @@ def filter_division1_games(games, d1_teams):
 
 
 def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
-                 gap_threshold_days=None):
+                 gap_threshold_days=None, skip_first_gap=False):
     """Same shape and calling convention as build_lineage.py's walk(), and
     the SAME outcome vocabulary ("changed"/"retained"/"retained (tie)"/
     "lost (tie)"/"established") -- so split_at_season() (imported unchanged
@@ -246,6 +253,17 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
     genuine in-reign gap" apart from "we've simply run out of data so
     far." None of the existing callers (tests, and any plain walk) pass
     this, so the default (no gap awareness at all) is unchanged.
+
+    `skip_first_gap`, when True, forgives exactly the FIRST over-threshold
+    gap this call would otherwise stop on: that one game is processed
+    normally (crediting the silence as an unusually long but real
+    defense) and the flag is immediately cleared, so any LATER gap later
+    in this same call still stops the walk as usual. This is deliberately
+    narrower than passing `gap_threshold_days=None` (which switches gap
+    awareness off for the rest of the call, however much history remains)
+    -- it exists so resolve_vacancies() below can forgive one
+    un-revertable gap at a time while keeping gap detection fully armed
+    for everything downstream.
     """
     games = [g for g in games if g["date"] >= FIRST_GAME_DATE]
 
@@ -290,12 +308,25 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
             gap = (date.fromisoformat(g["date"])
                    - date.fromisoformat(reign["last_game_date"])).days
             if gap > gap_threshold_days:
-                # A real, later game for this holder exists (this one) --
-                # but only after a suspiciously long silence. Stop here
-                # rather than silently crediting it as an unbroken
-                # defense; leave it (and everything after) unprocessed for
-                # the caller to pick up from a reopened predecessor.
-                break
+                if skip_first_gap:
+                    # Forgive exactly this one over-threshold gap -- the
+                    # caller already knows this reign can't be reverted
+                    # right now (no predecessor, or already reverted once
+                    # before) and is deliberately asking us to credit this
+                    # specific silence as a real defense and keep going,
+                    # WITHOUT switching off gap-awareness for the rest of
+                    # the walk. Clear the flag so any FURTHER gap later in
+                    # this same call still stops it as usual -- only the
+                    # first one is forgiven.
+                    skip_first_gap = False
+                else:
+                    # A real, later game for this holder exists (this one)
+                    # -- but only after a suspiciously long silence. Stop
+                    # here rather than silently crediting it as an
+                    # unbroken defense; leave it (and everything after)
+                    # unprocessed for the caller to pick up from a
+                    # reopened predecessor.
+                    break
 
         hp, ap = g["home_points"], g["away_points"]
         if hp == ap:
@@ -416,18 +447,35 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
     it -- but there can still be real, later games sitting unprocessed
     past the gap (that's what proved has_gap in the first place), and
     those must NOT just be silently dropped from the rest of history. So
-    when we decide not to revert but has_gap is still true, this re-walks
-    that exact (holder, reign) one final time with NO gap awareness at
-    all, crediting the long silence as an unusually long (but real)
-    defense and letting every real game after it keep getting processed
-    normally. (This isn't a hypothetical: it's exactly what shipped
-    broken once already -- the Losers Belt's own origin holder,
-    Princeton, hit a gap soon after 1869 with no predecessor to revert
-    to, and without this fallback the walk silently froze there forever,
-    collapsing 150+ years of real history down to 5 reigns. Games are
-    sparse enough in the earliest era of college football that even the
-    origin team can go stretches longer than GAP_THRESHOLD_DAYS between
-    its own real games -- not a rare edge case at all.)
+    whenever a pass lands on a tip that has a gap but nowhere to revert
+    it, an inner loop re-walks that exact (holder, reign) again with
+    `skip_first_gap=True` -- forgiving ONLY that one gap, crediting it as
+    an unusually long (but real) defense, with normal GAP_THRESHOLD_DAYS
+    awareness restored for everything after it -- and recomputes the tip.
+    If the new tip still can't be reverted and still has a (different,
+    later) gap, this repeats; it stops as soon as either the tip becomes
+    genuinely revertable (a predecessor exists and this exact reign
+    hasn't been reverted before) or it's truly gap-free. Each forgiven
+    pass consumes strictly more of the finite games list, so this always
+    terminates, and -- unlike an earlier version of this fallback that
+    disabled gap-awareness for the rest of the call once triggered --
+    gap detection is never switched off for the remainder of history.
+    (This matters because it isn't a hypothetical: an early version of
+    this fallback shipped broken once already, in two stages. First, the
+    Losers Belt's own origin holder, Princeton, hit a gap soon after 1869
+    with no predecessor to revert to, and with no fallback at all the
+    walk silently froze there forever, collapsing 150+ years of real
+    history down to 5 reigns. Games are sparse enough in the earliest era
+    of college football that even the origin team can go stretches
+    longer than GAP_THRESHOLD_DAYS between its own real games -- not a
+    rare edge case at all. Then, once a one-shot "re-walk with gap
+    awareness off entirely" fallback was added to fix that, it turned out
+    to swallow ALL later gaps too -- including a team like Abilene
+    Christian's genuine, decades-long, multiple-gap absence -- because
+    turning gap-awareness off for the rest of that one walk silently
+    disabled it for everything chronologically after wherever it first
+    triggered. The forgive-one-gap-at-a-time loop here is what fixes
+    both.)
 
     `context_reigns` is optional extra history (e.g. the frozen
     historical_reigns from baseline) consulted only to look up a
@@ -457,27 +505,33 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
                       and tip["team"] in (g["home"], g["away"]) for g in games)
         reign_key = (tip["team"], tip["start_date"])
 
+        # There's a real, later game for this team proving a genuine gap,
+        # but we can't void this reign over it yet -- either it's the
+        # very first (origin) reign with nowhere to revert to (e.g.
+        # Princeton for the Losers Belt), or reign_key is already in
+        # `seen` (the infinite-loop guard: we've reverted this exact
+        # reign once before). walk_losers already stopped dead right
+        # before that later game, and everything after it -- possibly a
+        # lot of real history -- would silently vanish if we accepted
+        # `reigns` as final here. So forgive ONE gap at a time (re-walk
+        # with skip_first_gap=True, gap-awareness otherwise fully
+        # restored) and recompute the tip, until it's either revertable
+        # or genuinely gap-free -- never disabling gap detection for the
+        # rest of history the way a full gap_threshold_days=None re-walk
+        # would.
+        while has_gap and (predecessor is None or reign_key in seen):
+            belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder,
+                                              start_reign=reign,
+                                              gap_threshold_days=GAP_THRESHOLD_DAYS,
+                                              skip_first_gap=True)
+            tip = reigns[-1]
+            predecessor = _predecessor(tip)
+            has_gap = any(g["date"] > tip["last_game_date"]
+                          and tip["team"] in (g["home"], g["away"]) for g in games)
+            reign_key = (tip["team"], tip["start_date"])
+
         if predecessor is None or reign_key in seen or \
                 not (has_gap or tip["team"] not in recent_teams):
-            if has_gap:
-                # There's a real, later game for this team proving a
-                # genuine gap -- but we're NOT going to void this reign
-                # over it, either because it's the very first (origin)
-                # reign with nowhere to revert to (e.g. Princeton for the
-                # Losers Belt), or because reign_key is already in `seen`
-                # (the infinite-loop guard: we've reverted this exact
-                # reign once before). Either way, walk_losers already
-                # stopped dead right before that later game and everything
-                # after it -- possibly the rest of history -- would
-                # silently vanish from the output if we just accepted
-                # `reigns` as final here. So re-walk this exact
-                # (holder, reign) one more time with NO gap awareness at
-                # all, so the long silence gets credited as an unusually
-                # long (but real) defense and every real game after it
-                # keeps getting processed normally instead of being
-                # dropped.
-                belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder,
-                                                  start_reign=reign, gap_threshold_days=None)
             all_belt_games += belt_games
             all_reigns += reigns
             return all_belt_games, all_reigns, vacancies
