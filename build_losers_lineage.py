@@ -207,6 +207,58 @@ LINEAGE_PATH = os.path.join(OUT_DIR, "losers_lineage.json")
 # reign was manually reviewed for plausibility before this shipped.
 GAP_THRESHOLD_DAYS = 500
 
+# That manual review missed a whole CATEGORY of false positives: two
+# real, well-documented, nationwide interruptions to the college football
+# schedule, where a large fraction of programs suspended or drastically
+# curtailed play for one or more seasons. Neither is a hole in CFBD's own
+# coverage or a program going dormant -- it's what the sport itself
+# looked like that year -- but at 500 days (and even at the old 700) a
+# LOT of teams' real last game before the interruption sits more than
+# GAP_THRESHOLD_DAYS from their real first game after it, and because
+# resolve_vacancies() reverts unconditionally the moment walk_losers
+# reports a gap (see its own docstring), that produced a visible cascade
+# of dozens of same-week reigns each immediately vacated to the next --
+# exactly the pattern a human reviewer flags on sight as noise, not
+# signal. Reported directly (Bob, 2026-09-15: "ignore all reverts around
+# WW2 and COVID").
+#
+# Fix: widen (never fully disable -- a program that goes quiet AT THE
+# START of one of these windows and simply never comes back, e.g. drops
+# to non-D1 or shuts down its program mid-war, is still a real, revertable
+# gap once the silence runs past DISRUPTION_GAP_THRESHOLD_DAYS) the
+# threshold for any gap whose span overlaps one of these windows at all.
+DISRUPTION_WINDOWS = [
+    # WWII: many programs suspended football for one or more full
+    # seasons -- 1943 especially, the low point -- as rosters emptied out
+    # to enlistment; normal nationwide play had resumed by 1946. A team
+    # silent from its last 1942-season game to its first 1946-season game
+    # is not a data gap.
+    ("1941-09-01", "1946-09-01"),
+    # COVID-19: the 2020 season was postponed, shortened, played
+    # conference-only, or (many FCS programs) moved wholesale to spring
+    # 2021 -- schedules that don't remotely resemble a normal season's
+    # game-to-game cadence. Normal fall play was back across Division I
+    # by the 2021 season.
+    ("2019-12-01", "2021-09-01"),
+]
+# ~3.3 seasons' worth of silence -- comfortably covers a program that
+# lost multiple consecutive WWII seasons (e.g. last game in 1942, first
+# game back in 1946) while still catching a gap that runs well past the
+# disruption window's own end, which is exactly what a genuine permanent
+# dropout starting during the war looks like.
+DISRUPTION_GAP_THRESHOLD_DAYS = 1500
+
+
+def _disrupted_era_overlap(start_date, end_date):
+    """True if the [start_date, end_date] span (a reign's last real game
+    through the next candidate game) overlaps any DISRUPTION_WINDOWS
+    entry at all. Overlap, not containment -- a gap that starts before a
+    window and ends inside it (or vice versa) is exactly the shape a real
+    war/pandemic-interrupted reign takes."""
+    s, e = date.fromisoformat(start_date), date.fromisoformat(end_date)
+    return any(s <= date.fromisoformat(w_end) and e >= date.fromisoformat(w_start)
+               for w_start, w_end in DISRUPTION_WINDOWS)
+
 
 def filter_division1_games(games, d1_teams):
     """Keep only games where BOTH participants are current Division 1
@@ -253,6 +305,13 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
     genuine in-reign gap" apart from "we've simply run out of data so
     far." None of the existing callers (tests, and any plain walk) pass
     this, so the default (no gap awareness at all) is unchanged.
+
+    Whatever `gap_threshold_days` is passed, it's automatically widened
+    to DISRUPTION_GAP_THRESHOLD_DAYS for any gap whose span overlaps a
+    DISRUPTION_WINDOWS entry (WWII, COVID-19) -- see that constant's own
+    comment. This applies uniformly regardless of caller, so it can't be
+    bypassed by a re-walk the way the old gap-awareness-disabling
+    fallback could.
 
     `skip_first_gap`, when True, forgives exactly the FIRST over-threshold
     gap this call would otherwise stop on: that one game is processed
@@ -307,7 +366,10 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None,
         if gap_threshold_days is not None:
             gap = (date.fromisoformat(g["date"])
                    - date.fromisoformat(reign["last_game_date"])).days
-            if gap > gap_threshold_days:
+            effective_threshold = gap_threshold_days
+            if _disrupted_era_overlap(reign["last_game_date"], g["date"]):
+                effective_threshold = max(effective_threshold, DISRUPTION_GAP_THRESHOLD_DAYS)
+            if gap > effective_threshold:
                 if skip_first_gap:
                     # Forgive exactly this one over-threshold gap -- the
                     # caller already knows this reign can't be reverted
