@@ -18,6 +18,25 @@ It starts from the same historic anchor as the real belt -- the very
 first college football game, Rutgers over Princeton, 1869-11-06 -- except
 here PRINCETON (the loser) is who starts holding it, not Rutgers.
 
+Division 1 restriction (Losers Belt only -- NOT applied to the real belt):
+unlike the real belt, this one is restricted to programs CFBD currently
+classifies as "fbs" or "fcs" -- NCAA Division 1 -- via
+filter_division1_games() / fetch_division1_teams() (the latter in
+build_lineage.py). A game where either side isn't a current Division 1
+program is dropped before the walk ever sees it, same as if it never
+happened. Two reasons: (1) CFBD's game data for this belt is pulled across
+"any classification" (see below), which includes prep schools and D-II/D-III
+programs that occasionally show up in the earliest era of college football
+-- Wyoming Seminary, a prep school, is a real example that used to hold this
+belt for 13 years; (2) those same small/non-D1 programs tend to have far
+sparser historical coverage in CFBD, which was producing wildly implausible
+"reigns" -- Bloomsburg (D-II) once showed an unbroken 101-year reign that
+was really just an 87-year hole in CFBD's own data (1919 to 2006) with no
+recorded games at all in between, not 101 years of real dominance. This is
+CFBD's CURRENT classification applied uniformly across all of history, not
+a season-by-season one -- the FBS/FCS split didn't exist before 1978, so
+there's nothing historically meaningful to apply before then anyway.
+
 This deliberately reuses build_lineage.py's own CFBD-fetching, venue/date,
 and baseline-splitting machinery (identical import, zero duplication of the
 tricky parts) rather than re-implementing any of it -- only the belt-walk
@@ -137,6 +156,7 @@ from build_lineage import (
     FIRST_GAME_DATE,
     OUT_DIR,
     collect_venues,
+    fetch_division1_teams,
     fetch_seasons,
     normalize,
     pick,
@@ -147,6 +167,23 @@ HIST_DIR = "historical_data"
 BASELINE_PATH = os.path.join(HIST_DIR, "losers_baseline.json")
 VACANCY_PATH = os.path.join(HIST_DIR, "losers_vacancies.json")
 LINEAGE_PATH = os.path.join(OUT_DIR, "losers_lineage.json")
+
+
+def filter_division1_games(games, d1_teams):
+    """Keep only games where BOTH participants are current Division 1
+    (FBS/FCS) programs -- see fetch_division1_teams's docstring (in
+    build_lineage.py) for the full reasoning. A game involving even one
+    non-D1 opponent (a prep school, a D-II/D-III program, anything CFBD's
+    "any classification" game pull picks up that isn't a Division 1
+    school today) is dropped entirely, exactly as if it never happened
+    for Losers Belt purposes -- the D1 side of that matchup is otherwise
+    unaffected via its other, all-D1 games. This is what keeps a program
+    like Bloomsburg (D-II, and hence also very sparsely covered by CFBD
+    across most of the 20th century -- see the module docstring) from
+    ever entering the lineage and producing a multi-decade "reign" that's
+    really just a hole in the source data.
+    """
+    return [g for g in games if g["home"] in d1_teams and g["away"] in d1_teams]
 
 
 def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
@@ -522,12 +559,20 @@ def main():
     print("Fetching venue timezones from CFBD...")
     venue_tz, _venue_info = collect_venues(args.key)
 
+    print("Fetching current Division 1 (FBS/FCS) team list from CFBD...")
+    d1_teams = fetch_division1_teams(args.key)
+    print(f"{len(d1_teams)} current FBS/FCS programs -- the Losers Belt can only "
+          f"pass between these (see filter_division1_games's docstring)")
+
     if baseline is None:
         print(f"Doing the one-time full {args.start_year}-{args.end_year} Losers "
               f"Belt walk from CFBD (~{2 * (args.end_year - args.start_year + 1)} calls).")
         raw = fetch_seasons(range(args.start_year, args.end_year + 1), args.key)
         games = normalize(raw, venue_tz)
-        print(f"{len(games)} completed games in chronological order")
+        all_games_count = len(games)
+        games = filter_division1_games(games, d1_teams)
+        print(f"{len(games)} of {all_games_count} completed games are Division 1 "
+              f"vs. Division 1, in chronological order")
         recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
                        {g["away"] for g in games if g["season"] >= live_start_year}
         belt_games, reigns, new_vacancies = resolve_vacancies(
@@ -543,7 +588,10 @@ def main():
               f"(~{2 * len(list(seasons))} calls).")
         raw = fetch_seasons(seasons, args.key)
         games = normalize(raw, venue_tz)
-        print(f"{len(games)} completed games in the live window")
+        all_games_count = len(games)
+        games = filter_division1_games(games, d1_teams)
+        print(f"{len(games)} of {all_games_count} completed games in the live "
+              f"window are Division 1 vs. Division 1")
         recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
                        {g["away"] for g in games if g["season"] >= live_start_year}
         tail_belt_games, tail_reigns, new_vacancies = resolve_vacancies(
