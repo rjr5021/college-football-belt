@@ -609,7 +609,7 @@ a{ color:inherit }
 .wrap{ max-width:980px; margin:0 auto; padding-inline:20px; }
 @media (min-width:760px){ .wrap{ padding-inline:32px } }
 
-header.site{ padding-block:20px 14px; border-bottom:1px solid var(--hairline); }
+header.site{ position:relative; padding-block:20px 14px; border-bottom:1px solid var(--hairline); }
 .back{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:var(--ink-soft); text-decoration:none; display:inline-flex; gap:6px; }
 .back:hover{ color:var(--ink) }
 .crumbTitle{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:20px; margin-top:8px; }
@@ -843,10 +843,10 @@ footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-to
 .brandBlock{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; }
 .wordmark{ font-family:"Big Shoulders Display", sans-serif; font-weight:800; font-size:clamp(28px, 4.4vw, 44px); letter-spacing:.01em; line-height:.95; margin:2px 0 0; text-wrap:balance; }
-nav.site{ display:flex; flex-wrap:wrap; row-gap:9px; column-gap:16px; font-family:"IBM Plex Mono", monospace; font-size:12.5px; letter-spacing:.03em; }
+nav.site{ display:flex; flex-wrap:wrap; align-items:center; row-gap:9px; column-gap:16px; font-family:"IBM Plex Mono", monospace; font-size:12.5px; letter-spacing:.03em; }
 nav.site a{ text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; color:var(--ink-soft); white-space:nowrap; }
 nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
-.themeToggle{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; margin:0 0 2px; flex:none; border:1px solid var(--hairline); border-radius:50%; background:var(--paper-2); color:var(--ink-soft); font-size:13px; line-height:1; cursor:pointer; transition:border-color .15s ease, color .15s ease; }
+.themeToggle{ display:inline-flex; align-items:center; justify-content:center; position:absolute; top:0; right:0; width:28px; height:28px; padding:0; margin:0; flex:none; border:1px solid var(--hairline); border-radius:50%; background:var(--paper-2); color:var(--ink-soft); font-size:13px; line-height:1; cursor:pointer; transition:border-color .15s ease, color .15s ease; }
 .themeToggle:hover{ border-color:var(--brass); color:var(--ink); }
 .themeToggle-icon{ display:block; }
 .tagline{ font-style:italic; color:var(--ink-soft); max-width:46ch; font-size:15px; margin:10px 0 16px; }
@@ -1642,8 +1642,8 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
   <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
 </header>
@@ -1820,8 +1820,8 @@ def generate_on_this_day_page(belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2066,8 +2066,8 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
   <p class="tagline">The title that has passed hand to hand, on the field, since Rutgers beat Princeton 6&ndash;4 on November&nbsp;6, 1869. No committee, no poll &mdash; you have to take it from whoever&rsquo;s holding it.</p>
 </header>
@@ -2292,8 +2292,8 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2522,8 +2522,8 @@ def generate_losers_belt_page(lineage):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2748,8 +2748,8 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -2969,8 +2969,8 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
-    </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>'''
     header = f'''<header class="site wrap">
   <div class="headerRow">
     <div class="brandBlock">
@@ -3284,8 +3284,8 @@ def generate_ruleset_page(md_text):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3472,8 +3472,8 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -3525,8 +3525,8 @@ def _story_nav_footer(active_href=None):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="losers-belt.html">Losers Belt</a>
-    </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>'''
     header = f'''<header class="site wrap">
   <div class="headerRow">
     <div class="brandBlock">
@@ -3913,8 +3913,8 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -4051,8 +4051,8 @@ def generate_player_pages(belt_games, details, players_dir):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -4296,8 +4296,8 @@ def generate_map_page(lineage, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -4484,8 +4484,8 @@ def generate_embed_page(lineage, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -4577,8 +4577,8 @@ def generate_privacy_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -4766,8 +4766,8 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -5011,8 +5011,8 @@ def generate_trivia_page(pool):
       <a href="compare.html">Compare</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -5188,8 +5188,8 @@ def generate_api_docs_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
 </header>
 
@@ -5288,8 +5288,8 @@ def generate_404_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
-    </nav>
-    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>'''
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
