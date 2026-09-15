@@ -70,18 +70,33 @@ for an active program, but it means a holder that stops fielding a team at
 all -- and a lot of this belt's holders are exactly the small/historic
 programs that don't exist anymore, since it drifts toward whoever gets
 blown out -- would hold it forever under the literal rule, with no way to
-ever lose it back. Every run, after the walk above, this script checks
-whether the CURRENT holder (only the live tip -- a closed historical reign
-already ended via a real, dated game and is never touched) appears in ANY
-game, any classification, across this run's freshly-fetched current +
-previous season data. If they don't, they're treated as having
-discontinued football, and the belt reverts to whoever they'd caught it
-from -- walking back further if that team is ALSO absent (a chain of
-defunct programs), and stopping at the very first (1869) reign if it
-somehow comes to that. Because a team is only checked against the current
-+ previous season window, and that window only drops a team's last game
-once a further season has fully passed, this in practice needs roughly two
-full seasons of silence before it fires -- not a single quiet offseason.
+ever lose it back. Every run, after walking as far as the freshly-fetched
+games allow, this script checks whether the CURRENT holder (only the live
+tip -- a closed historical reign already ended via a real, dated game and
+is never touched) has shown up in ANY game, any classification, in the
+freshly-fetched current + previous season window. If not, they're treated
+as having discontinued football, and the belt reverts to whoever they'd
+caught it from -- walking back further if that team is ALSO absent (a
+chain of defunct programs), and stopping at the very first (1869) reign if
+it somehow comes to that. Because a team is only checked against the
+current + previous season window, and that window only drops a team's
+last game once a further season has fully passed, this in practice needs
+roughly two full seasons of silence before it fires -- not a single quiet
+offseason.
+
+Crucially, a revert doesn't just freeze the belt on the previous holder
+forever: it re-walks the SAME already-fetched games starting from that
+team's reopened reign, so if THEY have real games sitting in that window
+too, those get processed normally -- the belt keeps moving by real results
+from there, exactly as if the dormant team had simply been skipped over.
+(For a defunct program discovered deep in history, e.g. from 1899, this
+means an ordinary incremental run -- which only ever fetches the current +
+previous season -- can only pick the reverted team back up from THIS
+season forward; it has no way to see the 100+ years of real games they
+played in between, since those seasons were frozen into the historical
+baseline long before this fix existed. Recovering that backlog needs a
+fresh --full-refetch, which walks the true 1869-now history in one
+continuous pass and so naturally re-derives every real result in between.)
 
 The dormant team's reign is dated as VOIDED, not as having lasted until
 whenever the pipeline happened to notice: it closes the same day it
@@ -92,12 +107,15 @@ up the very next day, as though that one game never actually cost them the
 belt. So if Wyoming Seminary caught it on 1899-09-23 and never fielded a
 team again, their reign shows as 1899-09-23 to 1899-09-23 ("vacated"), and
 Bucknell's reign resumes 1899-09-24 -- not from today, whenever a run
-happens to catch it. Detected vacancies are recorded once in
+happens to catch it. Detected vacancies are appended once to
 historical_data/losers_vacancies.json (committed, same pattern as
-losers_baseline.json) and replayed identically on every future run, so
-these dates never drift just because the pipeline happened to run again.
-(The `detected_on` field on each record is only an audit trail of when the
-pipeline first noticed -- it's never used for any displayed date.)
+losers_baseline.json) purely as a running audit trail of what's been found
+and when -- since a revert is fully baked into the reigns it produces (and
+from there into historical_data/losers_baseline.json, via the vacancy-aware
+split below), nothing is ever replayed FROM that file; it's write-only
+bookkeeping for humans. (The `detected_on` field on each record is
+likewise just an audit trail of when the pipeline first noticed -- never
+used for any displayed date.)
 """
 
 import argparse
@@ -130,6 +148,15 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
     from build_lineage.py) works on this output with zero modification.
     The only real difference is which team "wins" a belt game: see the
     module docstring for the exact rule.
+
+    When resuming (`start_holder` given), only games at or after
+    `start_reign["start_date"]` are considered -- harmless for a normal
+    resume (the caller's `games` is already scoped to the live window, all
+    later than that date anyway), but required for resolve_vacancies()
+    below, which re-walks a reverted holder's reopened reign against the
+    SAME full games list a bootstrap walk already has in hand, and must
+    not re-match any of that team's OWN earlier games from before this
+    particular reign began.
     """
     games = [g for g in games if g["date"] >= FIRST_GAME_DATE]
 
@@ -160,7 +187,7 @@ def walk_losers(games, tie_rule="holder", start_holder=None, start_reign=None):
     else:
         holder = start_holder
         reign = dict(start_reign)
-        remaining = games
+        remaining = [g for g in games if g["date"] >= start_reign["start_date"]]
         bootstrap_belt_game = None
 
     belt_games, reigns = ([bootstrap_belt_game] if bootstrap_belt_game else []), []
@@ -236,80 +263,155 @@ def save_vacancies(vacancies):
 def _predecessor(reign):
     """Whoever a reign's team caught the belt from -- `won_from` for a
     normal, game-based reign, or the explicit `predecessor` field for one
-    that was reopened by a vacancy (see apply_vacancies below). None for
+    that was reopened by a vacancy (see resolve_vacancies below). None for
     the very first (origin) reign, which has neither.
 
     This explicit pointer is what makes a CHAIN of vacancies (more than
     one defunct program in a row) revert to the right place. Once any
-    vacancy has been applied, the entry immediately before a reign in the
+    vacancy has been applied, the entry immediately before a reign in a
     `reigns` list is no longer reliably its predecessor -- it might just
     be the closed, vacated reign that triggered this one reopening.
     """
     return reign.get("predecessor") or reign.get("won_from")
 
 
-def apply_vacancies(reigns, vacancies):
-    """Replay already-recorded vacancy events (see module docstring) onto a
-    freshly-walked `reigns` list. Each vacancy always applies to whatever is
-    currently the open (last) reign -- that's the only place one can ever
-    happen, since a closed reign already ended via a real game -- so this
-    just walks the list in recorded order, voiding the dormant team's reign
-    (closed the same day it started -- see the module docstring for why)
-    and reopening the team it reverts to starting the very next day. Both
-    dates come from the vacancy record itself, fixed at detection time and
-    never today's date, so a reign's dates stay stable no matter how many
-    times this runs.
+def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
+                       today, context_reigns=()):
+    """Walk `games` from (start_holder, start_reign) -- exactly like
+    calling walk_losers() directly -- except that if the resulting tip has
+    gone dormant (absent from `recent_teams`, see the module docstring),
+    it doesn't just get left stuck there: the belt is reverted to whoever
+    it was caught from, and `games` gets RE-WALKED starting from that
+    team's reopened reign, so any real games they played while the
+    dormant team was incorrectly "still holding" it get processed too,
+    instead of silently discarded. Repeats for a chain of more than one
+    defunct program, and stops at the very first (origin) reign if it
+    somehow comes to that.
+
+    `context_reigns` is optional extra history (e.g. the frozen
+    historical_reigns from baseline) consulted only to look up a
+    reverted-to team's OWN predecessor, for correctly chaining a further
+    revert later -- see the `inherited` lookup below.
+
+    Returns (belt_games, reigns, vacancies) -- `vacancies` is just the
+    NEW reverts found this call (for the audit-trail log), not a
+    replayed/cumulative list.
     """
-    reigns = list(reigns)
-    for v in vacancies:
+    all_belt_games, all_reigns, vacancies = [], [], []
+    holder, reign = start_holder, start_reign
+    seen = set()
+
+    while True:
+        belt_games, reigns = walk_losers(games, tie_rule, start_holder=holder, start_reign=reign)
         tip = reigns[-1]
-        if tip["team"] != v["team"]:
-            print(f"WARNING: recorded vacancy for {v['team']!r} doesn't match "
-                  f"the current tip {tip['team']!r} -- skipping it (the "
-                  f"recorded facts may have changed upstream).", file=sys.stderr)
-            continue
-        reigns[-1] = {**tip, "end_date": v["reign_started"], "lost_to": None,
-                       "vacated": True}
-        # The reopened reign's predecessor is v["reverted_to"]'s OWN prior
-        # predecessor (found from the last time THEY held it) -- NOT the
-        # vacating team's predecessor, which is a different thing (that's
-        # just v["reverted_to"] itself). Needed so a second vacancy on this
-        # same reopened reign reverts to the right team. See _predecessor().
+        predecessor = _predecessor(tip)
+
+        if predecessor is None or tip["team"] in recent_teams or tip["team"] in seen:
+            all_belt_games += belt_games
+            all_reigns += reigns
+            return all_belt_games, all_reigns, vacancies
+
+        v = {"team": tip["team"], "reign_started": tip["start_date"],
+             "effective_date": (date.fromisoformat(tip["start_date"])
+                                 + timedelta(days=1)).isoformat(),
+             "detected_on": today, "reverted_to": predecessor}
+        print(f"Losers Belt: {v['team']} hasn't shown up in any game since "
+              f"catching it on {v['reign_started']} -- treating their program "
+              f"as having discontinued football. Voiding that reign and "
+              f"reverting the belt to {v['reverted_to']}, in effect since "
+              f"{v['effective_date']}.")
+        vacated_tip = {**tip, "end_date": v["reign_started"], "lost_to": None,
+                        "vacated": True}
+        all_belt_games += belt_games
+        all_reigns += reigns[:-1] + [vacated_tip]
+        vacancies.append(v)
+        seen.add(tip["team"])
+
         inherited = None
-        for r in reversed(reigns[:-1]):
-            if r["team"] == v["reverted_to"]:
+        for r in reversed(list(context_reigns) + all_reigns):
+            if r["team"] == predecessor:
                 inherited = _predecessor(r)
                 break
-        reigns.append({"team": v["reverted_to"], "start_date": v["effective_date"],
-                        "won_from": None, "won_score": None, "defenses": 0,
-                        "end_date": None, "lost_to": None,
-                        "reclaimed_after": v["team"], "predecessor": inherited})
-    return reigns
+        holder = predecessor
+        reign = {"team": predecessor, "start_date": v["effective_date"],
+                 "won_from": None, "won_score": None, "defenses": 0,
+                 "reclaimed_after": v["team"], "predecessor": inherited}
 
 
-def detect_new_vacancy(reigns, recent_teams, today):
-    """Check ONLY the live tip against `recent_teams` (every team that's
-    appeared, any classification, in this run's current + previous season
-    fetch). Returns a new vacancy record if the tip's team is absent and
-    there's a previous reign to revert to, else None. Call in a loop (see
-    main()) to walk back through a chain of more than one defunct program.
+def split_losers_baseline(belt_games, all_vacancies, first_reign, live_start_year):
+    """Vacancy-aware counterpart to build_lineage.py's own split_at_season.
+    That function alone would silently lose a vacancy-driven transition
+    when freezing history, since it reconstructs everything purely by
+    replaying real belt_games -- and a vacancy has no belt game of its
+    own. This does the same job (freeze everything before
+    `live_start_year` into closed reigns, return the reign that's open as
+    of that boundary for resuming) but replays vacancy events in their
+    correct chronological position too, so a defunct-program revert deep
+    in history stays correctly reflected in the frozen baseline forever,
+    not just in this run's own output.
 
-    `today` is recorded only as an audit trail (`detected_on`) of when the
-    pipeline first noticed -- every date that actually gets DISPLAYED
-    (reign_started/effective_date) comes from the dormant team's own real
-    reign, not from whenever this happens to run. See apply_vacancies.
+    `all_vacancies` should be every vacancy on record (persisted plus any
+    newly found this run). Returns (historical_belt_games,
+    historical_reigns, open_reign) -- same shape as split_at_season.
     """
-    tip = reigns[-1]
-    reverted_to = _predecessor(tip)
-    if reverted_to is None:
-        return None  # the origin reign -- nothing to revert to
-    if tip["team"] in recent_teams:
-        return None
-    reign_started = tip["start_date"]
-    effective_date = (date.fromisoformat(reign_started) + timedelta(days=1)).isoformat()
-    return {"team": tip["team"], "reign_started": reign_started,
-            "effective_date": effective_date, "detected_on": today,
-            "reverted_to": reverted_to}
+    historical_belt_games = [bg for bg in belt_games if bg["season"] < live_start_year]
+    boundary = f"{live_start_year}-01-01"
+    historical_vacancies = [v for v in all_vacancies if v["reign_started"] < boundary]
+
+    events = [("game", bg["date"], bg) for bg in historical_belt_games]
+    events += [("vacancy", v["reign_started"], v) for v in historical_vacancies]
+    events.sort(key=lambda e: e[1])
+
+    if not events:
+        open_reign = {"team": first_reign["team"], "start_date": first_reign["start_date"],
+                      "won_from": first_reign.get("won_from"),
+                      "won_score": first_reign.get("won_score"), "defenses": 0,
+                      "predecessor": first_reign.get("predecessor")}
+        return [], [], open_reign
+
+    closed = []
+    reign = {"team": first_reign["team"], "start_date": first_reign["start_date"],
+             "won_from": first_reign.get("won_from"),
+             "won_score": first_reign.get("won_score"), "defenses": 0,
+             "predecessor": first_reign.get("predecessor")}
+    for kind, _, e in events:
+        if kind == "game":
+            bg = e
+            if bg["outcome"] == "established":
+                # The bootstrap game itself -- already fully reflected in
+                # the seed `reign` above. Not a defense, don't double-count.
+                continue
+            if bg["outcome"] in ("changed", "lost (tie)"):
+                reign["end_date"] = bg["date"]
+                reign["lost_to"] = bg["new_holder"]
+                closed.append(reign)
+                reign = {"team": bg["new_holder"], "start_date": bg["date"],
+                         "won_from": bg["holder"], "won_score": bg["score"], "defenses": 0}
+            else:
+                reign["defenses"] += 1
+        else:
+            v = e
+            if reign["team"] != v["team"]:
+                # Shouldn't happen if events are truly chronological, but
+                # don't crash the pipeline over a bookkeeping mismatch --
+                # just skip it and note it for investigation.
+                print(f"WARNING: vacancy record for {v['team']!r} doesn't match "
+                      f"the reign open at that point ({reign['team']!r}) -- "
+                      f"skipping it in the historical split.", file=sys.stderr)
+                continue
+            reign["end_date"] = v["reign_started"]
+            reign["lost_to"] = None
+            reign["vacated"] = True
+            closed.append(reign)
+            inherited = None
+            for r in reversed(closed):
+                if r["team"] == v["reverted_to"]:
+                    inherited = _predecessor(r)
+                    break
+            reign = {"team": v["reverted_to"], "start_date": v["effective_date"],
+                     "won_from": None, "won_score": None, "defenses": 0,
+                     "reclaimed_after": v["team"], "predecessor": inherited}
+    return historical_belt_games, closed, reign
 
 
 def save_baseline(historical_belt_games, historical_reigns, open_reign, live_start_year):
@@ -374,6 +476,7 @@ def main():
 
     baseline = None if args.full_refetch else load_baseline()
     live_start_year = args.end_year - 1
+    today = time.strftime("%Y-%m-%d")
 
     if baseline is None and not args.full_refetch:
         print("No historical_data/losers_baseline.json yet, and the one-time "
@@ -393,7 +496,12 @@ def main():
         raw = fetch_seasons(range(args.start_year, args.end_year + 1), args.key)
         games = normalize(raw, venue_tz)
         print(f"{len(games)} completed games in chronological order")
-        belt_games, reigns = walk_losers(games, args.tie_rule)
+        recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
+                       {g["away"] for g in games if g["season"] >= live_start_year}
+        belt_games, reigns, new_vacancies = resolve_vacancies(
+            games, args.tie_rule, start_holder=None, start_reign=None,
+            recent_teams=recent_teams, today=today)
+        context_reigns = []
     else:
         fetch_from = min(baseline["live_start_year"], live_start_year)
         seasons = range(fetch_from, args.end_year + 1)
@@ -404,43 +512,31 @@ def main():
         raw = fetch_seasons(seasons, args.key)
         games = normalize(raw, venue_tz)
         print(f"{len(games)} completed games in the live window")
-        new_belt_games, tail_reigns = walk_losers(
+        recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
+                       {g["away"] for g in games if g["season"] >= live_start_year}
+        tail_belt_games, tail_reigns, new_vacancies = resolve_vacancies(
             games, args.tie_rule,
             start_holder=baseline["open_reign"]["team"],
             start_reign=baseline["open_reign"],
-        )
-        belt_games = baseline["historical_belt_games"] + new_belt_games
+            recent_teams=recent_teams, today=today,
+            context_reigns=baseline["historical_reigns"])
+        belt_games = baseline["historical_belt_games"] + tail_belt_games
         reigns = baseline["historical_reigns"] + tail_reigns
+        context_reigns = baseline["historical_reigns"]
 
-    # Defunct-program handling -- see the module docstring. Replay whatever
-    # vacancies are already on record (fixed dates, never re-derived), then
-    # check whether the live tip has newly gone dark, walking back through
-    # a chain of more than one defunct program if needed.
-    vacancies = load_vacancies()
-    reigns = apply_vacancies(reigns, vacancies)
-
-    recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
-                   {g["away"] for g in games if g["season"] >= live_start_year}
-    today = time.strftime("%Y-%m-%d")
-    new_vacancies = []
-    while True:
-        v = detect_new_vacancy(reigns, recent_teams, today)
-        if v is None:
-            break
-        print(f"Losers Belt: {v['team']} hasn't shown up in any game since "
-              f"catching it on {v['reign_started']} -- treating their program "
-              f"as having discontinued football. Voiding that reign and "
-              f"reverting the belt to {v['reverted_to']}, in effect since "
-              f"{v['effective_date']}.")
-        reigns = apply_vacancies(reigns, [v])
-        new_vacancies.append(v)
+    all_vacancies = load_vacancies()
     if new_vacancies:
-        save_vacancies(vacancies + new_vacancies)
+        existing_keys = {(v["team"], v["reign_started"]) for v in all_vacancies}
+        to_add = [v for v in new_vacancies
+                  if (v["team"], v["reign_started"]) not in existing_keys]
+        if to_add:
+            all_vacancies = all_vacancies + to_add
+            save_vacancies(all_vacancies)
 
     write_outputs(belt_games, reigns, args.tie_rule)
 
-    hist_belt_games, hist_reigns, open_reign = split_at_season(
-        belt_games, reigns, live_start_year)
+    hist_belt_games, hist_reigns, open_reign = split_losers_baseline(
+        belt_games, all_vacancies, reigns[0], live_start_year)
     save_baseline(hist_belt_games, hist_reigns, open_reign, live_start_year)
 
     current = reigns[-1]
