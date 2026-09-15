@@ -19,5 +19,13 @@
     "effective_date": "1899-10-08",
     "detected_on": "2026-09-15",
     "reverted_to": "Bucknell"
+  },
+  {
+    "team": "Maryland-Baltimore",
+    "reign_started": "1912-11-09",
+    "last_activity_date": "1913-10-25",
+    "effective_date": "1913-10-26",
+    "detected_on": "2026-09-15",
+    "reverted_to": "Pittsburgh"
   }
 ]
