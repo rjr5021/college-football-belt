@@ -32,11 +32,11 @@ paced, with the full ~150-account list worked through in a few days rather
 than all at once.
 
 Usage:
-    export X_API_KEY=...
-    export X_API_KEY_SECRET=...
-    export X_ACCESS_TOKEN=...
-    export X_ACCESS_TOKEN_SECRET=...
-    python3 follow_batch.py
+  export X_API_KEY=...
+  export X_API_KEY_SECRET=...
+  export X_ACCESS_TOKEN=...
+  export X_ACCESS_TOKEN_SECRET=...
+  python3 follow_batch.py
 
 OPTIONAL, same pattern as post_to_x.py: if any of the four X_* env vars
 aren't set, this prints a note and exits 0 (success) rather than failing
@@ -51,6 +51,20 @@ followed manually/via browser automation before this script existed; it
 just follows everyone in follow_targets.json that its OWN cache doesn't
 yet show as done, and a handful of harmless no-op API calls for accounts
 followed earlier by hand is a fine trade for keeping the logic simple.
+
+Handling auth failures separately from "this account doesn't exist"
+----------------------------------------------------------------------
+A lookup or follow call can fail for two very different reasons: the
+account genuinely doesn't exist (or is suspended), which is permanent and
+safe to record as "failed" -- or the X_* credentials themselves are being
+rejected (401 Unauthorized / "Could not authenticate you"), which has
+nothing to do with this specific account and will be true for every
+account until the credentials are fixed. Treating the second case like
+the first would permanently blacklist real, valid accounts just because
+they happened to be up next when the credentials broke. So an auth-looking
+error stops the run early instead -- nobody in that batch gets marked
+failed, and the whole batch is retried automatically on the next scheduled
+run once the credentials work again.
 """
 
 import json
@@ -72,6 +86,16 @@ REQUIRED_ENV = ["X_API_KEY", "X_API_KEY_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOK
 BATCH_SIZE = 4
 
 SLEEP_BETWEEN = 3  # seconds between consecutive follow attempts, politeness
+
+# Substrings that mean "the credentials themselves were rejected", not
+# "this particular account is bad". Kept as a list (rather than one big
+# check) so it's easy to extend if X's error wording ever changes.
+AUTH_ERROR_MARKERS = ["401", "Unauthorized", "Could not authenticate"]
+
+
+def _is_auth_error(exc):
+    msg = str(exc)
+    return any(marker in msg for marker in AUTH_ERROR_MARKERS)
 
 
 def load_targets():
@@ -143,6 +167,13 @@ def main():
         try:
             user = client.get_user(username=handle)
         except Exception as e:
+            if _is_auth_error(e):
+                print(f"  {handle} ({label}): couldn't look up user -- {e}")
+                print("  X API credentials are being rejected -- this isn't about "
+                      "this account. Stopping this run early without marking anyone "
+                      "permanently failed; the whole batch will retry once the "
+                      "credentials work again.")
+                break
             print(f"  {handle} ({label}): couldn't look up user -- {e}")
             cache["failed"][handle] = f"lookup failed: {e}"
             save_cache(cache)
@@ -163,6 +194,13 @@ def main():
             if "429" in msg or "Too Many Requests" in msg or "rate limit" in msg.lower():
                 print(f"  {handle} ({label}): rate limited -- stopping this "
                       f"run early, will resume next scheduled run. {e}")
+                break
+            if _is_auth_error(e):
+                print(f"  {handle} ({label}): couldn't follow -- {e}")
+                print("  X API credentials are being rejected -- this isn't about "
+                      "this account. Stopping this run early without marking anyone "
+                      "permanently failed; the whole batch will retry once the "
+                      "credentials work again.")
                 break
             print(f"  {handle} ({label}): follow failed -- {e}")
             cache["failed"][handle] = f"follow failed: {e}"
