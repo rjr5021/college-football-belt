@@ -279,8 +279,14 @@ def load_data():
     recaps = load_optional_json("recaps.json") or {}
     historical_notes = load_optional_json("historical_notes.json") or {}
     game_plays = load_optional_json("game_plays.json") or {}
+    # None until build_losers_lineage.py's one-time historical bootstrap has
+    # been run once (see its own docstring) -- main() below skips rendering
+    # losers-belt.html entirely when this is None, same no-op-when-unset
+    # pattern as every other optional feature on this site.
+    losers_lineage = load_optional_json("losers_lineage.json")
     return (lineage, details, colors, next_game, upcoming_games, matchup,
-            ai_preview, weather, recaps, historical_notes, game_plays)
+            ai_preview, weather, recaps, historical_notes, game_plays,
+            losers_lineage)
 
 
 def team_color(colors, name):
@@ -1635,6 +1641,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../compare.html">Compare</a>
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
+      <a href="../losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -1810,6 +1817,7 @@ def generate_on_this_day_page(belt_games):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -2053,6 +2061,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="trivia.html">Trivia</a>
       <a href="#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -2276,6 +2285,7 @@ def generate_lineage_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -2382,6 +2392,253 @@ def generate_lineage_page(lineage, colors, belt_games):
 '''
 
 
+def generate_losers_belt_page(lineage):
+    """The Losers Belt page -- current holder + full reign history, in the
+    same spirit as generate_lineage_page() but deliberately lighter: no
+    per-game detail pages exist for Losers Belt games (only the real belt
+    gets those), so nothing here links out to a games/ or teams/ page --
+    a losers-belt-only team may never have earned a real-belt team page,
+    and this has no way to know without risking a broken link. lineage
+    here is belt_data/losers_lineage.json, same shape as lineage.json.
+    """
+    reigns = lineage["reigns"]
+    totals = lineage["totals"]
+    current = reigns[-1]
+    belt_games = lineage["belt_games"]
+    change_index = build_change_game_index(belt_games)
+    today = date.today()
+
+    since_date = date.fromisoformat(current["start_date"])
+    days_held = (today - since_date).days
+    defenses = current["defenses"]
+    won_score, lost_score = _reign_win_score(current, change_index)
+    won_from = current.get("won_from")
+
+    if won_from and won_score is not None:
+        lede = (f"Caught it by losing to {esc(won_from)}, {won_score}&ndash;{lost_score}, "
+                f"on {fmt_date(current['start_date'])}.")
+    else:
+        lede = f"Has held it since {fmt_date(current['start_date'])}."
+    if defenses:
+        lede += (f" Lost {defenses} more game{'s' if defenses != 1 else ''} since &mdash; "
+                 f"still the reigning worst team in the country.")
+
+    durations = [(r, reign_duration_days(r, today)) for r in reigns]
+    longest_reign, longest_days = max(durations, key=lambda p: p[1])
+    most_defended = max(reigns, key=lambda r: r["defenses"])
+    reign_counts = Counter(r["team"] for r in reigns)
+    most_reigns_team, most_reigns_n = reign_counts.most_common(1)[0]
+
+    records_html = f'''
+    <div class="record-card">
+      <div class="l">Longest Reign</div>
+      <div class="v">{esc(longest_reign["team"])} &mdash; {fmt_duration(*reign_dates(longest_reign, today))}</div>
+      <div class="sub">{fmt_date(longest_reign["start_date"])} &ndash; {fmt_date(longest_reign["end_date"]) if longest_reign.get("end_date") else "present"}</div>
+    </div>
+    <div class="record-card">
+      <div class="l">Most Losses, One Reign</div>
+      <div class="v">{esc(most_defended["team"])} &mdash; {most_defended["defenses"]}</div>
+      <div class="sub">starting {fmt_date(most_defended["start_date"])}</div>
+    </div>
+    <div class="record-card">
+      <div class="l">Most Reigns, All-Time</div>
+      <div class="v">{esc(most_reigns_team)} &mdash; {most_reigns_n} separate reign{"s" if most_reigns_n != 1 else ""}</div>
+      <div class="sub">caught it back {most_reigns_n - 1} time{"s" if most_reigns_n - 1 != 1 else ""} after passing it on</div>
+    </div>'''
+
+    rows_html = ""
+    for i, r in enumerate(reigns, 1):
+        is_current = r is current
+        team = r["team"]
+        w, l = _reign_win_score(r, change_index)
+
+        caught_txt = f"lost to {esc(r['won_from'])} {w}&ndash;{l}" if (r.get("won_from") and w is not None) else "Established it (first-ever loss)"
+
+        if is_current:
+            passed_txt = '<span class="mono">— present —</span>'
+            end_txt = "Present"
+        elif r.get("lost_to"):
+            passed_txt = f"beat {esc(r['lost_to'])}"
+            end_txt = fmt_date(r["end_date"])
+        else:
+            passed_txt = "—"
+            end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
+
+        cls = " current" if is_current else ""
+        rows_html += f'''
+        <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
+          <td class="num">{i}</td>
+          <td class="teamCell">{esc(team)}</td>
+          <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
+          <td class="tabular">{fmt_duration(*reign_dates(r, today))}</td>
+          <td class="tabular">{r["defenses"]}</td>
+          <td class="won">{caught_txt}</td>
+          <td class="lost">{passed_txt}</td>
+        </tr>'''
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>The Losers Belt — The College Football Belt</title>
+<meta name="description" content="A mirror-image lineage: the belt passes to whoever LOSES to the holder, not whoever beats them. Currently held by {esc(current["team"])}.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; A Companion Lineage</span>
+      <span class="wordmark">The Losers Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
+    </nav>
+    <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">The Losers Belt</h1>
+  <p class="lede">The real belt passes to whoever BEATS the holder. This one is its
+    mirror image: it passes to whoever LOSES to the holder &mdash; you catch it the way
+    you&rsquo;d catch a cold, by losing to the team that currently has it. Win, and you keep
+    it (you&rsquo;re still the reigning worst team in the country). Lose &mdash; sorry, WIN &mdash;
+    and whoever you just beat catches it from you. It starts the same place the real belt
+    does: Princeton, who lost the very first college football game ever played, 6&ndash;4 to
+    Rutgers on November&nbsp;6, 1869.</p>
+
+  <div class="rules">
+    <div class="rule-card">
+      <h3>Lost to the holder? It's yours.</h3>
+      <p>The holder wins a game, and the team that just lost to them catches the Losers Belt.</p>
+    </div>
+    <div class="rule-card">
+      <h3>Beat someone? You keep it.</h3>
+      <p>The holder loses again, nothing changes &mdash; still the reigning worst team.</p>
+    </div>
+    <div class="rule-card">
+      <h3>Ties: holder retains</h3>
+      <p>Same convention as the real belt &mdash; a tie changes nothing either way.</p>
+    </div>
+    <div class="rule-card">
+      <h3>Computed, not curated</h3>
+      <p>Same mechanical, no-editorial-judgment approach as the real belt &mdash; just run in reverse.</p>
+    </div>
+  </div>
+
+  <section class="hero" style="margin-top:32px">
+    <div>
+      <h2 style="font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:clamp(22px,3.4vw,30px);margin:0 0 8px">{esc(current["team"])} holds the Losers Belt.</h2>
+      <p class="lede">{lede}</p>
+      <div class="heroFacts">
+        <div><span class="n tabular">{days_held:,}</span><span class="l">Days Held</span></div>
+        <div><span class="n tabular">{defenses}</span><span class="l">Losses Since</span></div>
+        <div><span class="n tabular">1869</span><span class="l">Belt Established</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="historyTop" style="margin-top:36px">
+    <div class="historyStats">
+      <div><span class="n tabular">{totals["reigns"]:,}</span><span class="l">Reigns</span></div>
+      <div><span class="n tabular">{totals["belt_games"]:,}</span><span class="l">Belt Games</span></div>
+      <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
+    </div>
+    <div class="controls">
+      <div class="sortToggle" role="group" aria-label="Sort order">
+        <button type="button" class="sortBtn active" data-order="asc">Oldest First</button>
+        <button type="button" class="sortBtn" data-order="desc">Newest First</button>
+      </div>
+      <div class="searchBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="records">{records_html}
+  </div>
+
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Team</th><th>Reign</th><th style="text-align:right">Length</th>
+          <th style="text-align:right">Losses</th><th>Caught it</th><th>Passed it on</th>
+        </tr>
+      </thead>
+      <tbody>{rows_html}
+      </tbody>
+    </table>
+    <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every reign computed from the College Football Data API, same source as the real belt.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){{
+  var input = document.getElementById('teamSearch');
+  var tbody = document.querySelector('table.reignsTable tbody');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('table.reignsTable tbody tr'));
+  var noResults = document.getElementById('noResults');
+  var noResultsTerm = document.getElementById('noResultsTerm');
+  input.addEventListener('input', function(){{
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function(r){{
+      var name = r.getAttribute('data-team') || '';
+      var match = !q || name.indexOf(q) !== -1;
+      r.classList.toggle('hiddenRow', !match);
+      if (match) shown++;
+    }});
+    noResultsTerm.textContent = input.value.trim();
+    noResults.style.display = (shown === 0 && q) ? 'block' : 'none';
+  }});
+
+  var STORAGE_KEY = 'cfbBelt:losersSortOrder';
+  var sortBtns = Array.prototype.slice.call(document.querySelectorAll('.sortToggle .sortBtn'));
+  function applyOrder(order){{
+    var ordered = order === 'desc' ? rows.slice().reverse() : rows.slice();
+    ordered.forEach(function(r){{ tbody.appendChild(r); }});
+    sortBtns.forEach(function(b){{ b.classList.toggle('active', b.getAttribute('data-order') === order); }});
+    try {{ localStorage.setItem(STORAGE_KEY, order); }} catch(e) {{}}
+  }}
+  sortBtns.forEach(function(b){{
+    b.addEventListener('click', function(){{ applyOrder(b.getAttribute('data-order')); }});
+  }});
+  var savedOrder = null;
+  try {{ savedOrder = localStorage.getItem(STORAGE_KEY); }} catch(e) {{}}
+  if (savedOrder === 'desc') applyOrder('desc');
+}})();
+</script>
+'''
+
+
 # -------------------------------------------------------------- all games page
 
 def generate_all_games_page(lineage, colors, belt_games):
@@ -2461,6 +2718,7 @@ def generate_all_games_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -2679,6 +2937,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
     header = f'''<header class="site wrap">
@@ -2991,6 +3250,7 @@ def generate_ruleset_page(md_text):
       <a href="trivia.html">Trivia</a>
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -3176,6 +3436,7 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -3226,6 +3487,7 @@ def _story_nav_footer(active_href=None):
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
     header = f'''<header class="site wrap">
@@ -3611,6 +3873,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../compare.html">Compare</a>
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
+      <a href="../losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -3746,6 +4009,7 @@ def generate_player_pages(belt_games, details, players_dir):
       <a href="../compare.html">Compare</a>
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
+      <a href="../losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -3988,6 +4252,7 @@ def generate_map_page(lineage, colors):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -4173,6 +4438,7 @@ def generate_embed_page(lineage, colors):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -4263,6 +4529,7 @@ def generate_privacy_page():
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -4449,6 +4716,7 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="map.html">Map</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -4691,6 +4959,7 @@ def generate_trivia_page(pool):
       <a href="map.html">Map</a>
       <a href="compare.html">Compare</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -4865,6 +5134,7 @@ def generate_api_docs_page():
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
   </div>
@@ -4962,6 +5232,7 @@ def generate_404_page():
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
     </nav>
     <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>'''
     return f'''<!doctype html>
@@ -5152,7 +5423,8 @@ def generate_feed(belt_games, recaps):
 
 def main():
     (lineage, details, colors, next_game, upcoming_games, matchup,
-     ai_preview, weather, recaps, historical_notes, game_plays) = load_data()
+     ai_preview, weather, recaps, historical_notes, game_plays,
+     losers_lineage) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -5197,6 +5469,15 @@ def main():
     lineage_html = generate_lineage_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "lineage.html"), "w", encoding="utf-8") as f:
         f.write(lineage_html)
+
+    wrote_losers_belt = losers_lineage is not None
+    if wrote_losers_belt:
+        with open(os.path.join(OUT_DIR, "losers-belt.html"), "w", encoding="utf-8") as f:
+            f.write(generate_losers_belt_page(losers_lineage))
+    else:
+        warnings.append(f"{DATA_DIR}/losers_lineage.json not found -- skipped "
+                         f"losers-belt.html (run build_losers_lineage.py's one-time "
+                         f"bootstrap to enable it)")
 
     all_games_html = generate_all_games_page(lineage, colors, belt_games)
     with open(os.path.join(OUT_DIR, "all-games.html"), "w", encoding="utf-8") as f:
@@ -5294,6 +5575,8 @@ def main():
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
         sitemap_urls.append(f"{SITE_URL}/map.html")
+    if wrote_losers_belt:
+        sitemap_urls.append(f"{SITE_URL}/losers-belt.html")
     sitemap_urls += [f"{SITE_URL}/teams/{slug}.html" for slug in team_slugs]
     sitemap_urls += [f"{SITE_URL}/players/{slug}.html" for slug in player_slugs]
     sitemap_urls += [f"{SITE_URL}/games/{g['game_id']}.html" for g in belt_games]
@@ -5326,6 +5609,8 @@ def main():
     print(f"Wrote {OUT_DIR}/CNAME ({CUSTOM_DOMAIN})")
     print(f"Wrote homepage to {OUT_DIR}/index.html")
     print(f"Wrote full-history page to {OUT_DIR}/lineage.html")
+    if wrote_losers_belt:
+        print(f"Wrote Losers Belt page to {OUT_DIR}/losers-belt.html")
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
     print(f"Wrote records page to {OUT_DIR}/records.html")
