@@ -1,8 +1,9 @@
 [
-  {
-    "team": "Wyoming Seminary",
-    "reign_started": "1899-09-23",
-    "vacated_on": "2026-09-15",
-    "reverted_to": "Bucknell"
-  }
+    {
+          "team": "Wyoming Seminary",
+          "reign_started": "1899-09-23",
+          "effective_date": "1899-09-24",
+          "detected_on": "2026-09-15",
+          "reverted_to": "Bucknell"
+    }
 ]
