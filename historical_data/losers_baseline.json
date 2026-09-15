@@ -594,6 +594,7 @@
       "won_from": null,
       "won_score": "6-4",
       "defenses": 0,
+      "predecessor": null,
       "end_date": "1869-11-13",
       "lost_to": "Rutgers"
     },
@@ -659,13 +660,25 @@
       "defenses": 1,
       "end_date": "1899-09-23",
       "lost_to": "Wyoming Seminary"
+    },
+    {
+      "team": "Wyoming Seminary",
+      "start_date": "1899-09-23",
+      "won_from": "Bucknell",
+      "won_score": "22-0",
+      "defenses": 0,
+      "end_date": "1899-09-23",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Wyoming Seminary",
-    "start_date": "1899-09-23",
-    "won_from": "Bucknell",
-    "won_score": "22-0",
-    "defenses": 11
+    "team": "Bucknell",
+    "start_date": "1899-09-24",
+    "won_from": null,
+    "won_score": null,
+    "defenses": 11,
+    "reclaimed_after": "Wyoming Seminary",
+    "predecessor": "Lafayette"
   }
 }
