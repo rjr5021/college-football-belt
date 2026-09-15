@@ -843,8 +843,8 @@ footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-to
 .brandBlock{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; }
 .wordmark{ font-family:"Big Shoulders Display", sans-serif; font-weight:800; font-size:clamp(28px, 4.4vw, 44px); letter-spacing:.01em; line-height:.95; margin:2px 0 0; text-wrap:balance; }
-nav.site{ display:flex; gap:22px; font-family:"IBM Plex Mono", monospace; font-size:13px; letter-spacing:.03em; }
-nav.site a{ text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; color:var(--ink-soft); }
+nav.site{ display:flex; flex-wrap:wrap; row-gap:9px; column-gap:16px; font-family:"IBM Plex Mono", monospace; font-size:12.5px; letter-spacing:.03em; }
+nav.site a{ text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; color:var(--ink-soft); white-space:nowrap; }
 nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .themeToggle{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; margin:0 0 2px; flex:none; border:1px solid var(--hairline); border-radius:50%; background:var(--paper-2); color:var(--ink-soft); font-size:13px; line-height:1; cursor:pointer; transition:border-color .15s ease, color .15s ease; }
 .themeToggle:hover{ border-color:var(--brass); color:var(--ink); }
