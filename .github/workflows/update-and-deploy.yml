@@ -102,13 +102,17 @@ on:
         default: false
       bootstrap_losers_belt:
         description: >-
-          One-time historical build of the Losers Belt (see
-          build_losers_lineage.py's docstring) -- required once before
-          losers-belt.html ever appears on the site; every run after this
-          one is cheap and automatic. Uses far more CFBD API calls (~316)
-          than a normal run -- don't tick this in the same run/month as
-          the full-refetch checkbox above without checking your CFBD usage
-          first. Leave unchecked for an ordinary manual run.
+          One-time historical build of the Losers Belt, all three scopes
+          -- Combined, FBS-only, FCS-only (see build_losers_lineage.py's
+          docstring) -- required once before losers-belt.html/-fbs.html/
+          -fcs.html ever appear on the site; every run after this one is
+          cheap and automatic per scope. Also how to backfill fbs/fcs
+          later without redoing combined's already-settled history. Uses
+          far more CFBD API calls (~316 total, shared across all three
+          scopes) than a normal run -- don't tick this in the same
+          run/month as the full-refetch checkbox above without checking
+          your CFBD usage first. Leave unchecked for an ordinary manual
+          run.
         required: false
         type: boolean
         default: false
