@@ -702,5 +702,61 @@
     "effective_date": "1982-02-16",
     "detected_on": "2026-09-16",
     "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana Tech",
+    "reign_started": "1982-02-16",
+    "last_activity_date": "1982-02-16",
+    "effective_date": "1982-02-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arkansas State"
+  },
+  {
+    "team": "Arkansas State",
+    "reign_started": "1982-02-17",
+    "last_activity_date": "1982-02-17",
+    "effective_date": "1982-02-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas-Arlington"
+  },
+  {
+    "team": "Texas-Arlington",
+    "reign_started": "1982-02-18",
+    "last_activity_date": "1982-02-18",
+    "effective_date": "1982-02-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "McNeese"
+  },
+  {
+    "team": "McNeese",
+    "reign_started": "1982-02-19",
+    "last_activity_date": "1982-02-19",
+    "effective_date": "1982-02-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Lamar"
+  },
+  {
+    "team": "Lamar",
+    "reign_started": "1982-02-20",
+    "last_activity_date": "1982-02-20",
+    "effective_date": "1982-02-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana Tech",
+    "reign_started": "1982-02-21",
+    "last_activity_date": "1982-02-21",
+    "effective_date": "1982-02-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana"
+  },
+  {
+    "team": "Louisiana",
+    "reign_started": "1982-02-22",
+    "last_activity_date": "1982-02-22",
+    "effective_date": "1982-02-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana Tech"
   }
 ]

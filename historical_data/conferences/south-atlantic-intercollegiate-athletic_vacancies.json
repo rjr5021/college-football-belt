@@ -518,5 +518,45 @@
     "effective_date": "1922-01-25",
     "detected_on": "2026-09-16",
     "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Virginia Tech",
+    "reign_started": "1922-01-25",
+    "last_activity_date": "1922-01-25",
+    "effective_date": "1922-01-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "NC State"
+  },
+  {
+    "team": "NC State",
+    "reign_started": "1922-01-26",
+    "last_activity_date": "1922-01-26",
+    "effective_date": "1922-01-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgetown"
+  },
+  {
+    "team": "Georgetown",
+    "reign_started": "1922-01-27",
+    "last_activity_date": "1922-01-27",
+    "effective_date": "1922-01-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Virginia Tech",
+    "reign_started": "1922-01-28",
+    "last_activity_date": "1922-01-28",
+    "effective_date": "1922-01-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Maryland"
+  },
+  {
+    "team": "Maryland",
+    "reign_started": "1922-01-29",
+    "last_activity_date": "1922-01-29",
+    "effective_date": "1922-01-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Virginia Tech"
   }
 ]

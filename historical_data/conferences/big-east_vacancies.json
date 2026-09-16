@@ -1902,5 +1902,157 @@
     "effective_date": "2013-07-10",
     "detected_on": "2026-09-16",
     "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2013-07-10",
+    "last_activity_date": "2013-07-10",
+    "effective_date": "2013-07-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisville"
+  },
+  {
+    "team": "Louisville",
+    "reign_started": "2013-07-11",
+    "last_activity_date": "2013-07-11",
+    "effective_date": "2013-07-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cincinnati"
+  },
+  {
+    "team": "Cincinnati",
+    "reign_started": "2013-07-12",
+    "last_activity_date": "2013-07-12",
+    "effective_date": "2013-07-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UConn"
+  },
+  {
+    "team": "UConn",
+    "reign_started": "2013-07-13",
+    "last_activity_date": "2013-07-13",
+    "effective_date": "2013-07-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisville"
+  },
+  {
+    "team": "Louisville",
+    "reign_started": "2013-07-14",
+    "last_activity_date": "2013-07-14",
+    "effective_date": "2013-07-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Temple"
+  },
+  {
+    "team": "Temple",
+    "reign_started": "2013-07-15",
+    "last_activity_date": "2013-07-15",
+    "effective_date": "2013-07-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2013-07-16",
+    "last_activity_date": "2013-07-16",
+    "effective_date": "2013-07-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Virginia Tech",
+    "reign_started": "2013-07-17",
+    "last_activity_date": "2013-07-17",
+    "effective_date": "2013-07-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2013-07-18",
+    "last_activity_date": "2013-07-18",
+    "effective_date": "2013-07-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Virginia Tech",
+    "reign_started": "2013-07-19",
+    "last_activity_date": "2013-07-19",
+    "effective_date": "2013-07-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "2013-07-20",
+    "last_activity_date": "2013-07-20",
+    "effective_date": "2013-07-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2013-07-21",
+    "last_activity_date": "2013-07-21",
+    "effective_date": "2013-07-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boston College"
+  },
+  {
+    "team": "Boston College",
+    "reign_started": "2013-07-22",
+    "last_activity_date": "2013-07-22",
+    "effective_date": "2013-07-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "2013-07-23",
+    "last_activity_date": "2013-07-23",
+    "effective_date": "2013-07-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "2013-07-24",
+    "last_activity_date": "2013-07-24",
+    "effective_date": "2013-07-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2013-07-25",
+    "last_activity_date": "2013-07-25",
+    "effective_date": "2013-07-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "South Florida"
+  },
+  {
+    "team": "South Florida",
+    "reign_started": "2013-07-26",
+    "last_activity_date": "2013-07-26",
+    "effective_date": "2013-07-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cincinnati"
+  },
+  {
+    "team": "Cincinnati",
+    "reign_started": "2013-07-27",
+    "last_activity_date": "2013-07-27",
+    "effective_date": "2013-07-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2013-07-28",
+    "last_activity_date": "2013-07-28",
+    "effective_date": "2013-07-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisville"
   }
 ]

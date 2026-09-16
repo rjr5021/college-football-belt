@@ -3054,5 +3054,285 @@
     "effective_date": "1986-10-24",
     "detected_on": "2026-09-16",
     "reverted_to": "Drake"
+  },
+  {
+    "team": "Drake",
+    "reign_started": "1986-10-24",
+    "last_activity_date": "1986-10-24",
+    "effective_date": "1986-10-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Texas"
+  },
+  {
+    "team": "West Texas",
+    "reign_started": "1986-10-25",
+    "last_activity_date": "1986-10-25",
+    "effective_date": "1986-10-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wichita State"
+  },
+  {
+    "team": "Wichita State",
+    "reign_started": "1986-10-26",
+    "last_activity_date": "1986-10-26",
+    "effective_date": "1986-10-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Drake"
+  },
+  {
+    "team": "Drake",
+    "reign_started": "1986-10-27",
+    "last_activity_date": "1986-10-27",
+    "effective_date": "1986-10-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tulsa"
+  },
+  {
+    "team": "Tulsa",
+    "reign_started": "1986-10-28",
+    "last_activity_date": "1986-10-28",
+    "effective_date": "1986-10-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Drake"
+  },
+  {
+    "team": "Drake",
+    "reign_started": "1986-10-29",
+    "last_activity_date": "1986-10-29",
+    "effective_date": "1986-10-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Illinois"
+  },
+  {
+    "team": "Southern Illinois",
+    "reign_started": "1986-10-30",
+    "last_activity_date": "1986-10-30",
+    "effective_date": "1986-10-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Texas"
+  },
+  {
+    "team": "West Texas",
+    "reign_started": "1986-10-31",
+    "last_activity_date": "1986-10-31",
+    "effective_date": "1986-11-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisville"
+  },
+  {
+    "team": "Louisville",
+    "reign_started": "1986-11-01",
+    "last_activity_date": "1986-11-01",
+    "effective_date": "1986-11-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Texas"
+  },
+  {
+    "team": "West Texas",
+    "reign_started": "1986-11-02",
+    "last_activity_date": "1986-11-02",
+    "effective_date": "1986-11-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "1986-11-03",
+    "last_activity_date": "1986-11-03",
+    "effective_date": "1986-11-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New Mexico State"
+  },
+  {
+    "team": "New Mexico State",
+    "reign_started": "1986-11-04",
+    "last_activity_date": "1986-11-04",
+    "effective_date": "1986-11-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wichita State"
+  },
+  {
+    "team": "Wichita State",
+    "reign_started": "1986-11-05",
+    "last_activity_date": "1986-11-05",
+    "effective_date": "1986-11-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Memphis"
+  },
+  {
+    "team": "Memphis",
+    "reign_started": "1986-11-06",
+    "last_activity_date": "1986-11-06",
+    "effective_date": "1986-11-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "1986-11-07",
+    "last_activity_date": "1986-11-07",
+    "effective_date": "1986-11-08",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cincinnati"
+  },
+  {
+    "team": "Cincinnati",
+    "reign_started": "1986-11-08",
+    "last_activity_date": "1986-11-08",
+    "effective_date": "1986-11-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wichita State"
+  },
+  {
+    "team": "Wichita State",
+    "reign_started": "1986-11-09",
+    "last_activity_date": "1986-11-09",
+    "effective_date": "1986-11-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Houston"
+  },
+  {
+    "team": "Houston",
+    "reign_started": "1986-11-10",
+    "last_activity_date": "1986-11-10",
+    "effective_date": "1986-11-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cincinnati"
+  },
+  {
+    "team": "Cincinnati",
+    "reign_started": "1986-11-11",
+    "last_activity_date": "1986-11-11",
+    "effective_date": "1986-11-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma State"
+  },
+  {
+    "team": "Oklahoma State",
+    "reign_started": "1986-11-12",
+    "last_activity_date": "1986-11-12",
+    "effective_date": "1986-11-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wichita State"
+  },
+  {
+    "team": "Wichita State",
+    "reign_started": "1986-11-13",
+    "last_activity_date": "1986-11-13",
+    "effective_date": "1986-11-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Detroit Mercy"
+  },
+  {
+    "team": "Detroit Mercy",
+    "reign_started": "1986-11-14",
+    "last_activity_date": "1986-11-14",
+    "effective_date": "1986-11-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma State"
+  },
+  {
+    "team": "Oklahoma State",
+    "reign_started": "1986-11-15",
+    "last_activity_date": "1986-11-15",
+    "effective_date": "1986-11-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Creighton"
+  },
+  {
+    "team": "Creighton",
+    "reign_started": "1986-11-16",
+    "last_activity_date": "1986-11-16",
+    "effective_date": "1986-11-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Drake"
+  },
+  {
+    "team": "Drake",
+    "reign_started": "1986-11-17",
+    "last_activity_date": "1986-11-17",
+    "effective_date": "1986-11-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington St. Louis"
+  },
+  {
+    "team": "Washington St. Louis",
+    "reign_started": "1986-11-18",
+    "last_activity_date": "1986-11-18",
+    "effective_date": "1986-11-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Creighton"
+  },
+  {
+    "team": "Creighton",
+    "reign_started": "1986-11-19",
+    "last_activity_date": "1986-11-19",
+    "effective_date": "1986-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa State"
+  },
+  {
+    "team": "Iowa State",
+    "reign_started": "1986-11-20",
+    "last_activity_date": "1986-11-20",
+    "effective_date": "1986-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Drake"
+  },
+  {
+    "team": "Drake",
+    "reign_started": "1986-11-21",
+    "last_activity_date": "1986-11-21",
+    "effective_date": "1986-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1986-11-22",
+    "last_activity_date": "1986-11-22",
+    "effective_date": "1986-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas State"
+  },
+  {
+    "team": "Kansas State",
+    "reign_started": "1986-11-23",
+    "last_activity_date": "1986-11-23",
+    "effective_date": "1986-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas"
+  },
+  {
+    "team": "Kansas",
+    "reign_started": "1986-11-24",
+    "last_activity_date": "1986-11-24",
+    "effective_date": "1986-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1986-11-25",
+    "last_activity_date": "1986-11-25",
+    "effective_date": "1986-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1986-11-26",
+    "last_activity_date": "1986-11-26",
+    "effective_date": "1986-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1986-11-27",
+    "last_activity_date": "1986-11-27",
+    "effective_date": "1986-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
   }
 ]
