@@ -75,7 +75,24 @@ on:
     #     doesn't hurt to also pick up any last-minute data change before
     #     the weekend's games
     - cron: '0 23 * * 5'
-    # All five are written for EST (UTC-5, winter clock) since that's
+    # Game-day mode (wishlist #3, 2026-09-16, Bob: "On Saturdays I want the
+    # homepage to feel alive... it's just a different cron schedule on the
+    # workflow you already have") -- these two lines add an hourly check-in
+    # from noon to midnight ET every Saturday (13 runs), on top of the five
+    # above. Every run is this exact same full pipeline; nothing about the
+    # job changes for these -- fetch_gameday_status.py (added to
+    # update_all.py's STAGES) makes its own two /scoreboard calls only when
+    # today is actually the holder's own game day, and no-ops for free on
+    # every single one of these hourly ticks during a bye week. On an
+    # actual game day it's what lets the homepage show a live score and a
+    # SAFE/IN DANGER read while the game's still being played -- the five
+    # crons above already catch the game going FINAL within about 4 hours,
+    # this is only for the in-between, still-live window they can't reach.
+    #   - Sat noon-6pm ET  (17:00-23:00 UTC)
+    - cron: '0 17-23 * * 6'
+    #   - Sat 7pm-midnight ET  (00:00-05:00 UTC Sunday)
+    - cron: '0 0-5 * * 0'
+    # All seven are written for EST (UTC-5, winter clock) since that's
     # what was asked for -- during EDT (UTC-4, roughly late Aug into
     # early Nov), each of these actually lands ONE HOUR EARLIER on the
     # clock (e.g. the "1:00am ET" one fires at what's actually 12:00am
@@ -84,7 +101,7 @@ on:
     # a real limitation, not a bug, and the gap is only ever an hour.
     # A Thursday/Friday game (occasional, mostly early season and
     # championship week) won't get its own near-real-time check -- it
-    # just gets picked up at the next one of these five, same as any
+    # just gets picked up at the next one of these seven, same as any
     # in-progress week always has been. Use "Run workflow" below for an
     # on-demand check any time none of this fits.
   workflow_dispatch:      # lets you trigger a run manually from the Actions tab
