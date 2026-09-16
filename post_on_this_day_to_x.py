@@ -212,7 +212,28 @@ def pick_headline(matches, today):
 
 # ------------------------------------------------------------ composing
 
+FOUNDING_YEAR = 1869  # the very first belt game -- same "since 1869" framing as the rest of the site
+
+
+def _win_verb(margin):
+    """A little scoreline-aware color instead of always "beat" -- grounded
+    in the real margin (not random/decorative), so a blowout reads like a
+    blowout and a nailbiter doesn't get overstated."""
+    if margin >= 30:
+        return "demolished"
+    if margin >= 17:
+        return "throttled"
+    if margin >= 8:
+        return "beat"
+    return "edged"
+
+
 def compose_otd_tweet(game, belt_games, today, extra_count):
+    """Tighter/punchier than the original two-line hook+body: one combined
+    lead sentence per outcome type instead of a generic hook ("the belt
+    survived another test") followed by the actual facts -- gets to the
+    game itself faster, still varies by outcome and by milestone-year
+    framing (see MILESTONE_YEARS)."""
     year = int(game["date"][:4])
     years_ago = today.year - year
     winner_score = team_score(game, game["new_holder"])
@@ -225,36 +246,38 @@ def compose_otd_tweet(game, belt_games, today, extra_count):
     lede_year = f"{years_ago} years ago today" if milestone else f"On this day in {year}"
 
     if game["outcome"] == "established":
-        hook = f"\U0001F3C6 {lede_year}, the College Football Belt was born."
-        body = (f"{game['new_holder']} beat {other_team} {winner_score}-{other_score} "
-                f"in the very first belt game -- everything since traces back to this.")
+        verb = _win_verb(abs(int(winner_score) - int(other_score)))
+        lead = (f"\U0001F3C6 {lede_year}: {game['new_holder']} {verb} {other_team} "
+                f"{winner_score}-{other_score} in the belt's very first game -- everything since traces back to this.")
     elif game["outcome"] == "changed":
         reign_number = compute_reign_number(game, belt_games)
-        hook = f"\U0001F504 {lede_year}, the belt changed hands."
-        body = (f"{game['new_holder']} took it from {game['holder']} {winner_score}-{other_score}, "
-                f"becoming the {ordinal(reign_number)} holder in College Football Belt history.")
+        verb = _win_verb(abs(int(winner_score) - int(other_score)))
+        lead = (f"\U0001F504 {lede_year}: {game['new_holder']} {verb} {game['holder']} {winner_score}-{other_score} "
+                f"to take the belt, becoming the {ordinal(reign_number)} holder in its history.")
     elif game["outcome"] == "retained (tie)":
         h_score = team_score(game, game["holder"])
         o_score = team_score(game, game["opponent"])
-        hook = f"\U0001F6E1️ {lede_year}, a tie kept the belt right where it was."
-        body = f"{game['holder']} and {game['opponent']} played to a {h_score}-{o_score} draw -- no winner, so the holder kept it."
+        lead = (f"\U0001F6E1️ {lede_year}: {game['holder']} and {game['opponent']} played to a "
+                f"{h_score}-{o_score} draw -- no winner, so the belt stayed put.")
     else:  # ordinary defense
         defense_numbers = compute_defense_numbers(belt_games)
         n = defense_numbers.get(game["game_id"])
         h_score = team_score(game, game["holder"])
         o_score = team_score(game, game["opponent"])
-        hook = f"\U0001F6E1️ {lede_year}, the belt survived another test."
-        nth = f"defense #{n} of that reign" if n else "a successful defense"
-        body = f"{game['holder']} beat {game['opponent']} {h_score}-{o_score} -- {nth}."
+        verb = _win_verb(abs(int(h_score) - int(o_score)))
+        nth = f", defense #{n} of that reign" if n else ""
+        lead = f"\U0001F6E1️ {lede_year}: {game['holder']} {verb} {game['opponent']} {h_score}-{o_score} to defend the belt{nth}."
 
-    lines = [hook, "", body]
+    lines = [lead]
     if extra_count:
+        years_span = today.year - FOUNDING_YEAR
+        has_have = "has" if extra_count == 1 else "have"
         lines.append("")
-        lines.append(f"That's not even the only one -- {extra_count} more belt game{'s' if extra_count != 1 else ''} "
-                      f"happened on this date.")
+        lines.append(f"{extra_count} other belt game{'s' if extra_count != 1 else ''} {has_have} happened "
+                      f"on this date across {years_span} years of history.")
     # No link in the main post body on purpose -- see this module's
-    # docstring ("Reply-for-links, and a share image"). The link(s) go in
-    # a follow-up reply instead; this just points there.
+    # docstring ("Reply-for-links"). The link(s) go in a follow-up reply
+    # instead; this just points there.
     lines.append("")
     lines.append("Full story + more \U0001F447")
     lines.append("")
