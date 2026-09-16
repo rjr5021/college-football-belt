@@ -718,5 +718,93 @@
     "effective_date": "1968-02-17",
     "detected_on": "2026-09-16",
     "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1968-02-17",
+    "last_activity_date": "1968-02-17",
+    "effective_date": "1968-02-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "1968-02-18",
+    "last_activity_date": "1968-02-18",
+    "effective_date": "1968-02-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "1968-02-19",
+    "last_activity_date": "1968-02-19",
+    "effective_date": "1968-02-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1968-02-20",
+    "last_activity_date": "1968-02-20",
+    "effective_date": "1968-02-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1968-02-21",
+    "last_activity_date": "1968-02-21",
+    "effective_date": "1968-02-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1968-02-22",
+    "last_activity_date": "1968-02-22",
+    "effective_date": "1968-02-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UCLA"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "1968-02-23",
+    "last_activity_date": "1968-02-23",
+    "effective_date": "1968-02-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "1968-02-24",
+    "last_activity_date": "1968-02-24",
+    "effective_date": "1968-02-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Stanford"
+  },
+  {
+    "team": "Stanford",
+    "reign_started": "1968-02-25",
+    "last_activity_date": "1968-02-25",
+    "effective_date": "1968-02-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UCLA"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "1968-02-26",
+    "last_activity_date": "1968-02-26",
+    "effective_date": "1968-02-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington State"
+  },
+  {
+    "team": "Washington State",
+    "reign_started": "1968-02-27",
+    "last_activity_date": "1968-02-27",
+    "effective_date": "1968-02-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
   }
 ]

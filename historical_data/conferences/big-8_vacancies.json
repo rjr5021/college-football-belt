@@ -758,5 +758,101 @@
     "effective_date": "1996-02-19",
     "detected_on": "2026-09-16",
     "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1996-02-19",
+    "last_activity_date": "1996-02-19",
+    "effective_date": "1996-02-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1996-02-20",
+    "last_activity_date": "1996-02-20",
+    "effective_date": "1996-02-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colorado"
+  },
+  {
+    "team": "Colorado",
+    "reign_started": "1996-02-21",
+    "last_activity_date": "1996-02-21",
+    "effective_date": "1996-02-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa State"
+  },
+  {
+    "team": "Iowa State",
+    "reign_started": "1996-02-22",
+    "last_activity_date": "1996-02-22",
+    "effective_date": "1996-02-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1996-02-23",
+    "last_activity_date": "1996-02-23",
+    "effective_date": "1996-02-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas State"
+  },
+  {
+    "team": "Kansas State",
+    "reign_started": "1996-02-24",
+    "last_activity_date": "1996-02-24",
+    "effective_date": "1996-02-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1996-02-25",
+    "last_activity_date": "1996-02-25",
+    "effective_date": "1996-02-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1996-02-26",
+    "last_activity_date": "1996-02-26",
+    "effective_date": "1996-02-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1996-02-27",
+    "last_activity_date": "1996-02-27",
+    "effective_date": "1996-02-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma State"
+  },
+  {
+    "team": "Oklahoma State",
+    "reign_started": "1996-02-28",
+    "last_activity_date": "1996-02-28",
+    "effective_date": "1996-02-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1996-02-29",
+    "last_activity_date": "1996-02-29",
+    "effective_date": "1996-03-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas"
+  },
+  {
+    "team": "Kansas",
+    "reign_started": "1996-03-01",
+    "last_activity_date": "1996-03-01",
+    "effective_date": "1996-03-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
   }
 ]

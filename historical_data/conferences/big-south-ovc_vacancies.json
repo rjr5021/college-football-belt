@@ -214,5 +214,29 @@
     "effective_date": "2024-12-20",
     "detected_on": "2026-09-16",
     "reverted_to": "UT Martin"
+  },
+  {
+    "team": "UT Martin",
+    "reign_started": "2024-12-20",
+    "last_activity_date": "2024-12-20",
+    "effective_date": "2024-12-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Lindenwood"
+  },
+  {
+    "team": "Lindenwood",
+    "reign_started": "2024-12-21",
+    "last_activity_date": "2024-12-21",
+    "effective_date": "2024-12-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southeast Missouri State"
+  },
+  {
+    "team": "Southeast Missouri State",
+    "reign_started": "2024-12-22",
+    "last_activity_date": "2024-12-22",
+    "effective_date": "2024-12-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UT Martin"
   }
 ]

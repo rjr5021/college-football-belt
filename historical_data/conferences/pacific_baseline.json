@@ -5335,15 +5335,147 @@
       "end_date": "1959-02-10",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "1959-02-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "USC",
+      "predecessor": "Washington State",
+      "end_date": "1959-02-11",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Washington State",
+      "start_date": "1959-02-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "Oregon State",
+      "end_date": "1959-02-12",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "1959-02-13",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Washington State",
+      "predecessor": "California",
+      "end_date": "1959-02-13",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "1959-02-14",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "Washington State",
+      "end_date": "1959-02-14",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "USC",
+      "start_date": "1959-02-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "California",
+      "end_date": "1959-02-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "1959-02-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "USC",
+      "predecessor": "Washington State",
+      "end_date": "1959-02-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oregon",
+      "start_date": "1959-02-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "Stanford",
+      "end_date": "1959-02-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Stanford",
+      "start_date": "1959-02-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon",
+      "predecessor": "UCLA",
+      "end_date": "1959-02-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UCLA",
+      "start_date": "1959-02-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stanford",
+      "predecessor": "Oregon State",
+      "end_date": "1959-02-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "1959-02-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UCLA",
+      "predecessor": "California",
+      "end_date": "1959-02-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Washington",
+      "start_date": "1959-02-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "Oregon",
+      "end_date": "1959-02-21",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "California",
-    "start_date": "1959-02-11",
+    "team": "Oregon",
+    "start_date": "1959-02-22",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "USC",
-    "predecessor": "Washington State"
+    "reclaimed_after": "Washington",
+    "predecessor": "Stanford"
   }
 }
