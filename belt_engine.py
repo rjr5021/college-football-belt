@@ -256,11 +256,50 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
             if tip.get("defenses", 0) > 0 or len(reigns) > 1:
                 chain_teams = set()
 
-        if predecessor is None or reign_key in seen or tip["team"] in chain_teams or \
+        if predecessor is None or reign_key in seen or \
                 not (has_gap or tip["team"] not in recent_teams):
             all_belt_games += belt_games
             all_reigns += reigns
             return all_belt_games, all_reigns, vacancies
+
+        # BUGFIX (2026-09-16, live on the Mountain West and Conference USA
+        # conference belts -- Bob: "Conference USA and the Mountain West
+        # are still active conferences... their last champion probably
+        # changed conferences"): `predecessor` is only ever ONE hop back
+        # (whoever the current tip's team caught the belt from), and
+        # `inherited` below re-derives the NEXT hop the same way -- fine
+        # normally, but when two-or-more teams that left the conference in
+        # the same realignment wave only ever caught the belt from EACH
+        # OTHER in the tracked window (Mountain West: TCU and Utah both
+        # left for the Big 12/Pac-12 within months of each other in
+        # 2011-2012, and TCU's/Utah's real reigns alternate "won_from"
+        # each other; Conference USA: North Texas/Rice/UAB all left for
+        # the AAC together in 2022-2023), the single-hop chase just
+        # flip-flops between those same teams forever. `chain_teams`
+        # correctly detects that as a cycle -- but giving up and freezing
+        # on whichever one of them happened to be `tip` is wrong; there's
+        # real history further back with a team that's still actually in
+        # the conference (Mountain West: New Mexico; the fix just hadn't
+        # been taught how to reach past a short cycle to find it). So
+        # instead of stopping here, fall back to scanning the full real
+        # reign chronology (context_reigns + all_reigns -- every reign
+        # this walk has already produced, real AND synthetic, oldest to
+        # newest) for the most recent team this chain hasn't already
+        # tried, and jump the revert straight to them instead of their
+        # (already-tried) one-hop predecessor. Only reachable once a cycle
+        # is actually detected, so it never changes behavior for the
+        # ordinary non-cycling case.
+        if tip["team"] in chain_teams:
+            fallback = None
+            for r in reversed(list(context_reigns) + all_reigns):
+                if r["team"] not in chain_teams:
+                    fallback = r["team"]
+                    break
+            if fallback is None:
+                all_belt_games += belt_games
+                all_reigns += reigns
+                return all_belt_games, all_reigns, vacancies
+            predecessor = fallback
 
         last_activity = tip.get("last_game_date", tip["start_date"])
         v = {"team": tip["team"], "reign_started": tip["start_date"],
