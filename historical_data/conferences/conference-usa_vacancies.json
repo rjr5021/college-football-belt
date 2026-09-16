@@ -222,5 +222,61 @@
     "effective_date": "2022-12-27",
     "detected_on": "2026-09-16",
     "reverted_to": "Middle Tennessee"
+  },
+  {
+    "team": "Middle Tennessee",
+    "reign_started": "2022-12-27",
+    "last_activity_date": "2022-12-27",
+    "effective_date": "2022-12-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Old Dominion"
+  },
+  {
+    "team": "Old Dominion",
+    "reign_started": "2022-12-28",
+    "last_activity_date": "2022-12-28",
+    "effective_date": "2022-12-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Charlotte"
+  },
+  {
+    "team": "Charlotte",
+    "reign_started": "2022-12-29",
+    "last_activity_date": "2022-12-29",
+    "effective_date": "2022-12-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Marshall"
+  },
+  {
+    "team": "Marshall",
+    "reign_started": "2022-12-30",
+    "last_activity_date": "2022-12-30",
+    "effective_date": "2022-12-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida Atlantic"
+  },
+  {
+    "team": "Florida Atlantic",
+    "reign_started": "2022-12-31",
+    "last_activity_date": "2022-12-31",
+    "effective_date": "2023-01-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Charlotte"
+  },
+  {
+    "team": "Charlotte",
+    "reign_started": "2023-01-01",
+    "last_activity_date": "2023-01-01",
+    "effective_date": "2023-01-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Western Kentucky"
+  },
+  {
+    "team": "Western Kentucky",
+    "reign_started": "2023-01-02",
+    "last_activity_date": "2023-01-02",
+    "effective_date": "2023-01-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Middle Tennessee"
   }
 ]

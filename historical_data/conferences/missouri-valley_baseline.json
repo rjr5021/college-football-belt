@@ -1645,15 +1645,159 @@
       "end_date": "1927-12-11",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-12-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Washington St. Louis",
+      "predecessor": "Kansas State",
+      "end_date": "1927-12-12",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas State",
+      "start_date": "1927-12-13",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Kansas",
+      "end_date": "1927-12-13",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas",
+      "start_date": "1927-12-14",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas State",
+      "predecessor": "Missouri",
+      "end_date": "1927-12-14",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1927-12-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-12-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Kansas State",
+      "end_date": "1927-12-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Washington St. Louis",
+      "start_date": "1927-12-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-12-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Washington St. Louis",
+      "predecessor": "Kansas State",
+      "end_date": "1927-12-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1927-12-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-12-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Kansas State",
+      "end_date": "1927-12-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Drake",
+      "start_date": "1927-12-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Oklahoma",
+      "end_date": "1927-12-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1927-12-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Drake",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iowa State",
+      "start_date": "1927-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Drake",
+      "end_date": "1927-12-23",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Nebraska",
-    "start_date": "1927-12-12",
+    "team": "Drake",
+    "start_date": "1927-12-24",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Washington St. Louis",
-    "predecessor": "Kansas State"
+    "reclaimed_after": "Iowa State",
+    "predecessor": "Oklahoma"
   }
 }

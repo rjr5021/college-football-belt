@@ -2638,15 +2638,159 @@
       "end_date": "2019-12-14",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Hampton",
+      "start_date": "2019-12-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Delaware State",
+      "predecessor": "Florida A&M",
+      "end_date": "2019-12-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Florida A&M",
+      "start_date": "2019-12-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Hampton",
+      "predecessor": "North Carolina A&T",
+      "end_date": "2019-12-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "North Carolina A&T",
+      "start_date": "2019-12-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Florida A&M",
+      "predecessor": "Bethune-Cookman",
+      "end_date": "2019-12-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Bethune-Cookman",
+      "start_date": "2019-12-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "North Carolina A&T",
+      "predecessor": "Florida A&M",
+      "end_date": "2019-12-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Florida A&M",
+      "start_date": "2019-12-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Bethune-Cookman",
+      "predecessor": "North Carolina A&T",
+      "end_date": "2019-12-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Delaware State",
+      "start_date": "2019-12-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Florida A&M",
+      "predecessor": "Hampton",
+      "end_date": "2019-12-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Hampton",
+      "start_date": "2019-12-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Delaware State",
+      "predecessor": "Florida A&M",
+      "end_date": "2019-12-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Howard",
+      "start_date": "2019-12-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Hampton",
+      "predecessor": "North Carolina A&T",
+      "end_date": "2019-12-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "North Carolina A&T",
+      "start_date": "2019-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Howard",
+      "predecessor": "Bethune-Cookman",
+      "end_date": "2019-12-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "North Carolina Central",
+      "start_date": "2019-12-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "North Carolina A&T",
+      "predecessor": "North Carolina A&T",
+      "end_date": "2019-12-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "North Carolina A&T",
+      "start_date": "2019-12-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "North Carolina Central",
+      "predecessor": "Bethune-Cookman",
+      "end_date": "2019-12-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Norfolk State",
+      "start_date": "2019-12-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "North Carolina A&T",
+      "predecessor": "North Carolina Central",
+      "end_date": "2019-12-26",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Hampton",
-    "start_date": "2019-12-15",
+    "team": "North Carolina Central",
+    "start_date": "2019-12-27",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Delaware State",
-    "predecessor": "Florida A&M"
+    "reclaimed_after": "Norfolk State",
+    "predecessor": "North Carolina A&T"
   }
 }

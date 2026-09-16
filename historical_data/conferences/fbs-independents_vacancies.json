@@ -494,5 +494,453 @@
     "effective_date": "2015-02-10",
     "detected_on": "2026-09-16",
     "reverted_to": "Pennsylvania"
+  },
+  {
+    "team": "Pennsylvania",
+    "reign_started": "2015-02-10",
+    "last_activity_date": "2015-02-10",
+    "effective_date": "2015-02-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Princeton"
+  },
+  {
+    "team": "Princeton",
+    "reign_started": "2015-02-11",
+    "last_activity_date": "2015-02-11",
+    "effective_date": "2015-02-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2015-02-12",
+    "last_activity_date": "2015-02-12",
+    "effective_date": "2015-02-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2015-02-13",
+    "last_activity_date": "2015-02-13",
+    "effective_date": "2015-02-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2015-02-14",
+    "last_activity_date": "2015-02-14",
+    "effective_date": "2015-02-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Lafayette"
+  },
+  {
+    "team": "Lafayette",
+    "reign_started": "2015-02-15",
+    "last_activity_date": "2015-02-15",
+    "effective_date": "2015-02-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pennsylvania"
+  },
+  {
+    "team": "Pennsylvania",
+    "reign_started": "2015-02-16",
+    "last_activity_date": "2015-02-16",
+    "effective_date": "2015-02-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Swarthmore"
+  },
+  {
+    "team": "Swarthmore",
+    "reign_started": "2015-02-17",
+    "last_activity_date": "2015-02-17",
+    "effective_date": "2015-02-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pennsylvania"
+  },
+  {
+    "team": "Pennsylvania",
+    "reign_started": "2015-02-18",
+    "last_activity_date": "2015-02-18",
+    "effective_date": "2015-02-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Harvard"
+  },
+  {
+    "team": "Harvard",
+    "reign_started": "2015-02-19",
+    "last_activity_date": "2015-02-19",
+    "effective_date": "2015-02-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Columbia"
+  },
+  {
+    "team": "Columbia",
+    "reign_started": "2015-02-20",
+    "last_activity_date": "2015-02-20",
+    "effective_date": "2015-02-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Army"
+  },
+  {
+    "team": "Army",
+    "reign_started": "2015-02-21",
+    "last_activity_date": "2015-02-21",
+    "effective_date": "2015-02-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2015-02-22",
+    "last_activity_date": "2015-02-22",
+    "effective_date": "2015-02-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2015-02-23",
+    "last_activity_date": "2015-02-23",
+    "effective_date": "2015-02-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2015-02-24",
+    "last_activity_date": "2015-02-24",
+    "effective_date": "2015-02-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2015-02-25",
+    "last_activity_date": "2015-02-25",
+    "effective_date": "2015-02-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Carlisle"
+  },
+  {
+    "team": "Carlisle",
+    "reign_started": "2015-02-26",
+    "last_activity_date": "2015-02-26",
+    "effective_date": "2015-02-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Harvard"
+  },
+  {
+    "team": "Harvard",
+    "reign_started": "2015-02-27",
+    "last_activity_date": "2015-02-27",
+    "effective_date": "2015-02-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Brown"
+  },
+  {
+    "team": "Brown",
+    "reign_started": "2015-02-28",
+    "last_activity_date": "2015-02-28",
+    "effective_date": "2015-03-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colgate"
+  },
+  {
+    "team": "Colgate",
+    "reign_started": "2015-03-01",
+    "last_activity_date": "2015-03-01",
+    "effective_date": "2015-03-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Brown"
+  },
+  {
+    "team": "Brown",
+    "reign_started": "2015-03-02",
+    "last_activity_date": "2015-03-02",
+    "effective_date": "2015-03-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2015-03-03",
+    "last_activity_date": "2015-03-03",
+    "effective_date": "2015-03-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2015-03-04",
+    "last_activity_date": "2015-03-04",
+    "effective_date": "2015-03-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington & Jefferson"
+  },
+  {
+    "team": "Washington & Jefferson",
+    "reign_started": "2015-03-05",
+    "last_activity_date": "2015-03-05",
+    "effective_date": "2015-03-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2015-03-06",
+    "last_activity_date": "2015-03-06",
+    "effective_date": "2015-03-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Yale"
+  },
+  {
+    "team": "Yale",
+    "reign_started": "2015-03-07",
+    "last_activity_date": "2015-03-07",
+    "effective_date": "2015-03-08",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Army"
+  },
+  {
+    "team": "Army",
+    "reign_started": "2015-03-08",
+    "last_activity_date": "2015-03-08",
+    "effective_date": "2015-03-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Carnegie Mellon"
+  },
+  {
+    "team": "Carnegie Mellon",
+    "reign_started": "2015-03-09",
+    "last_activity_date": "2015-03-09",
+    "effective_date": "2015-03-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2015-03-10",
+    "last_activity_date": "2015-03-10",
+    "effective_date": "2015-03-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fordham"
+  },
+  {
+    "team": "Fordham",
+    "reign_started": "2015-03-11",
+    "last_activity_date": "2015-03-11",
+    "effective_date": "2015-03-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Saint Mary's (CA)"
+  },
+  {
+    "team": "Saint Mary's (CA)",
+    "reign_started": "2015-03-12",
+    "last_activity_date": "2015-03-12",
+    "effective_date": "2015-03-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fordham"
+  },
+  {
+    "team": "Fordham",
+    "reign_started": "2015-03-13",
+    "last_activity_date": "2015-03-13",
+    "effective_date": "2015-03-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New York University"
+  },
+  {
+    "team": "New York University",
+    "reign_started": "2015-03-14",
+    "last_activity_date": "2015-03-14",
+    "effective_date": "2015-03-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fordham"
+  },
+  {
+    "team": "Fordham",
+    "reign_started": "2015-03-15",
+    "last_activity_date": "2015-03-15",
+    "effective_date": "2015-03-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgetown"
+  },
+  {
+    "team": "Georgetown",
+    "reign_started": "2015-03-16",
+    "last_activity_date": "2015-03-16",
+    "effective_date": "2015-03-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New York University"
+  },
+  {
+    "team": "New York University",
+    "reign_started": "2015-03-17",
+    "last_activity_date": "2015-03-17",
+    "effective_date": "2015-03-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boston College"
+  },
+  {
+    "team": "Boston College",
+    "reign_started": "2015-03-18",
+    "last_activity_date": "2015-03-18",
+    "effective_date": "2015-03-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "2015-03-19",
+    "last_activity_date": "2015-03-19",
+    "effective_date": "2015-03-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2015-03-20",
+    "last_activity_date": "2015-03-20",
+    "effective_date": "2015-03-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Holy Cross"
+  },
+  {
+    "team": "Holy Cross",
+    "reign_started": "2015-03-21",
+    "last_activity_date": "2015-03-21",
+    "effective_date": "2015-03-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boston College"
+  },
+  {
+    "team": "Boston College",
+    "reign_started": "2015-03-22",
+    "last_activity_date": "2015-03-22",
+    "effective_date": "2015-03-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Dartmouth"
+  },
+  {
+    "team": "Dartmouth",
+    "reign_started": "2015-03-23",
+    "last_activity_date": "2015-03-23",
+    "effective_date": "2015-03-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Holy Cross"
+  },
+  {
+    "team": "Holy Cross",
+    "reign_started": "2015-03-24",
+    "last_activity_date": "2015-03-24",
+    "effective_date": "2015-03-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cornell"
+  },
+  {
+    "team": "Cornell",
+    "reign_started": "2015-03-25",
+    "last_activity_date": "2015-03-25",
+    "effective_date": "2015-03-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Harvard"
+  },
+  {
+    "team": "Harvard",
+    "reign_started": "2015-03-26",
+    "last_activity_date": "2015-03-26",
+    "effective_date": "2015-03-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "2015-03-27",
+    "last_activity_date": "2015-03-27",
+    "effective_date": "2015-03-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2015-03-28",
+    "last_activity_date": "2015-03-28",
+    "effective_date": "2015-03-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tulane"
+  },
+  {
+    "team": "Tulane",
+    "reign_started": "2015-03-29",
+    "last_activity_date": "2015-03-29",
+    "effective_date": "2015-03-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "2015-03-30",
+    "last_activity_date": "2015-03-30",
+    "effective_date": "2015-03-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Houston"
+  },
+  {
+    "team": "Houston",
+    "reign_started": "2015-03-31",
+    "last_activity_date": "2015-03-31",
+    "effective_date": "2015-04-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2015-04-01",
+    "last_activity_date": "2015-04-01",
+    "effective_date": "2015-04-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2015-04-02",
+    "last_activity_date": "2015-04-02",
+    "effective_date": "2015-04-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2015-04-03",
+    "last_activity_date": "2015-04-03",
+    "effective_date": "2015-04-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tampa"
+  },
+  {
+    "team": "Tampa",
+    "reign_started": "2015-04-04",
+    "last_activity_date": "2015-04-04",
+    "effective_date": "2015-04-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2015-04-05",
+    "last_activity_date": "2015-04-05",
+    "effective_date": "2015-04-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "2015-04-06",
+    "last_activity_date": "2015-04-06",
+    "effective_date": "2015-04-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
   }
 ]

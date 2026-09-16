@@ -174,5 +174,101 @@
     "effective_date": "2019-12-15",
     "detected_on": "2026-09-16",
     "reverted_to": "Hampton"
+  },
+  {
+    "team": "Hampton",
+    "reign_started": "2019-12-15",
+    "last_activity_date": "2019-12-15",
+    "effective_date": "2019-12-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida A&M"
+  },
+  {
+    "team": "Florida A&M",
+    "reign_started": "2019-12-16",
+    "last_activity_date": "2019-12-16",
+    "effective_date": "2019-12-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-17",
+    "last_activity_date": "2019-12-17",
+    "effective_date": "2019-12-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Bethune-Cookman"
+  },
+  {
+    "team": "Bethune-Cookman",
+    "reign_started": "2019-12-18",
+    "last_activity_date": "2019-12-18",
+    "effective_date": "2019-12-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida A&M"
+  },
+  {
+    "team": "Florida A&M",
+    "reign_started": "2019-12-19",
+    "last_activity_date": "2019-12-19",
+    "effective_date": "2019-12-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Delaware State"
+  },
+  {
+    "team": "Delaware State",
+    "reign_started": "2019-12-20",
+    "last_activity_date": "2019-12-20",
+    "effective_date": "2019-12-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Hampton"
+  },
+  {
+    "team": "Hampton",
+    "reign_started": "2019-12-21",
+    "last_activity_date": "2019-12-21",
+    "effective_date": "2019-12-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Howard"
+  },
+  {
+    "team": "Howard",
+    "reign_started": "2019-12-22",
+    "last_activity_date": "2019-12-22",
+    "effective_date": "2019-12-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-23",
+    "last_activity_date": "2019-12-23",
+    "effective_date": "2019-12-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina Central"
+  },
+  {
+    "team": "North Carolina Central",
+    "reign_started": "2019-12-24",
+    "last_activity_date": "2019-12-24",
+    "effective_date": "2019-12-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-12-25",
+    "last_activity_date": "2019-12-25",
+    "effective_date": "2019-12-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Norfolk State"
+  },
+  {
+    "team": "Norfolk State",
+    "reign_started": "2019-12-26",
+    "last_activity_date": "2019-12-26",
+    "effective_date": "2019-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina Central"
   }
 ]
