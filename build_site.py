@@ -95,12 +95,27 @@ PAPER_DARK = "#161009"
 
 
 def head_extras(rel=""):
-    """Favicon links, the PWA manifest/service-worker wiring, the theme-toggle
-    script, and (when GOATCOUNTER_CODE is set) the analytics snippet --
-    shared by every page template. `rel` is the relative path prefix back to
-    the site root -- "" for root-level pages, "../" for pages one directory
-    down (games/, teams/)."""
+    """Viewport + web-font links, favicon links, the PWA manifest/service-
+    worker wiring, the shared page script (theme toggle, menu drawer, search),
+    and (when GOATCOUNTER_CODE / ADSENSE_PUBLISHER_ID are set) the analytics
+    and ad-loader snippets -- shared by every page template. `rel` is the
+    relative path prefix back to the site root -- "" for root-level pages,
+    "../" for pages one directory down (games/, teams/, conferences/), "/"
+    for pages that can be served from any path (404.html, offline.html)."""
     bits = [
+        # Without this, phones render the ~980px desktop layout scaled down
+        # and none of the @media rules in STYLES_CSS ever fire (found in the
+        # 2026-09-15 audit; seo_enhance.py also back-fills it, but it belongs
+        # in the template itself).
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        # Web fonts: a <link> in <head> (with preconnect) instead of the old
+        # @import at the top of styles.css -- @import chained a third
+        # render-blocking round trip (HTML -> styles.css -> fonts.googleapis
+        # -> font files); this way the font CSS downloads in parallel with
+        # styles.css.
+        '<link rel="preconnect" href="https://fonts.googleapis.com">',
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+        f'<link rel="stylesheet" href="{FONTS_URL}">',
         f'<link rel="icon" type="image/png" href="{rel}favicon.png">',
         f'<link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">',
         f'<link rel="manifest" href="{rel}manifest.json">',
@@ -123,46 +138,137 @@ def head_extras(rel=""):
             f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
             f'?client=ca-{esc(ADSENSE_PUBLISHER_ID)}" crossorigin="anonymous"></script>'
         )
-    # Theme toggle -- reads/writes localStorage("cfbBelt:theme") so a
-    # visitor's explicit light/dark choice overrides the OS-level
-    # prefers-color-scheme default the CSS otherwise follows. The
-    # data-theme attribute is set synchronously here (before <header>
-    # renders) so there's no flash of the wrong theme; the icon/label on
-    # the .themeToggle button itself (added to every primary nav by a
-    # scripted patch) is synced once the DOM is parsed, since the button
-    # doesn't exist yet at this point in the document.
+    # The site's one shared script: the theme toggle (reads/writes
+    # localStorage("cfbBelt:theme") so a visitor's explicit light/dark
+    # choice overrides the OS-level prefers-color-scheme default; data-theme
+    # is set synchronously here, before the header renders, so there's no
+    # flash of the wrong theme), the phone menu drawer, the header search
+    # box (see generate_search_index()), and the service-worker
+    # registration. The header itself comes from site_header() below.
     bits.append('''<script>
 (function(){
   var KEY = 'cfbBelt:theme';
   var stored = null;
   try { stored = localStorage.getItem(KEY); } catch (e) {}
-  if (stored === 'light' || stored === 'dark') {
-    document.documentElement.setAttribute('data-theme', stored);
+  var root = document.documentElement;
+  function apply(t){
+    if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t);
+    else root.removeAttribute('data-theme');
+    root.setAttribute('data-theme-mode', t || 'auto');
   }
-  function iconFor(t){ return t === 'light' ? '\\u2600\\uFE0F' : (t === 'dark' ? '\\uD83C\\uDF19' : '\\u25D1'); }
-  function labelFor(t){ return t === 'light' ? 'Light' : (t === 'dark' ? 'Dark' : 'Auto'); }
+  apply(stored);
+  function labelFor(t){ return t === 'light' ? 'Light' : (t === 'dark' ? 'Dark' : 'Auto (follows your device)'); }
   function sync(){
-    var t = stored || 'auto';
-    var icons = document.querySelectorAll('.themeToggle-icon');
-    for (var i = 0; i < icons.length; i++) icons[i].textContent = iconFor(t);
     var btns = document.querySelectorAll('.themeToggle');
-    for (var j = 0; j < btns.length; j++) btns[j].setAttribute('aria-label', 'Theme: ' + labelFor(t) + ' \\u2014 tap to change');
+    for (var j = 0; j < btns.length; j++) btns[j].setAttribute('aria-label', 'Theme: ' + labelFor(stored || 'auto') + ' \\u2014 tap to change');
   }
   document.addEventListener('DOMContentLoaded', sync);
   document.addEventListener('click', function(e){
     var btn = e.target.closest && e.target.closest('.themeToggle');
-    if (!btn) return;
-    var order = ['auto', 'light', 'dark'];
-    var cur = stored || 'auto';
-    var next = order[(order.indexOf(cur) + 1) % order.length];
-    stored = next;
-    try {
-      if (next === 'auto') localStorage.removeItem(KEY);
-      else localStorage.setItem(KEY, next);
-    } catch (e) {}
-    if (next === 'light' || next === 'dark') document.documentElement.setAttribute('data-theme', next);
-    else document.documentElement.removeAttribute('data-theme');
-    sync();
+    if (btn) {
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(stored || 'auto') + 1) % order.length];
+      stored = next === 'auto' ? null : next;
+      try { if (!stored) localStorage.removeItem(KEY); else localStorage.setItem(KEY, stored); } catch (e) {}
+      apply(stored); sync();
+      return;
+    }
+    var tog = e.target.closest && e.target.closest('.navToggle');
+    if (tog) {
+      var open = root.classList.toggle('navOpen');
+      tog.setAttribute('aria-expanded', open ? 'true' : 'false');
+      tog.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      /* the "More" groups are a dropdown on desktop but plain sections in
+         the phone drawer, so they have to be open whenever the drawer is */
+      var mm = document.querySelectorAll('.moreMenu');
+      for (var k = 0; k < mm.length; k++) mm[k].open = open;
+      return;
+    }
+    if (root.classList.contains('navOpen') && !e.target.closest('.siteHead')) {
+      root.classList.remove('navOpen');
+      var t2 = document.querySelector('.navToggle');
+      if (t2) { t2.setAttribute('aria-expanded', 'false'); t2.setAttribute('aria-label', 'Open menu'); }
+    }
+    if (!root.classList.contains('navOpen')) {
+      var openMenus = document.querySelectorAll('.moreMenu[open]');
+      for (var m = 0; m < openMenus.length; m++) if (!openMenus[m].contains(e.target)) openMenus[m].open = false;
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    if (root.classList.contains('navOpen')) {
+      root.classList.remove('navOpen');
+      var t3 = document.querySelector('.navToggle');
+      if (t3) { t3.setAttribute('aria-expanded', 'false'); t3.focus(); }
+      return;
+    }
+    var om = document.querySelectorAll('.moreMenu[open]');
+    for (var q = 0; q < om.length; q++) { om[q].open = false; var s = om[q].querySelector('summary'); if (s) s.focus(); }
+  });
+  /* Header search: one lazy fetch of search-index.json (teams, seasons,
+     conferences, section pages), filtered client-side; Enter with a single
+     obvious match jumps straight there, otherwise the form falls through to
+     all-games.html?q=... which pre-fills that page's own filter. */
+  var index = null, loading = null;
+  function loadIndex(form){
+    if (index || loading) return loading;
+    loading = fetch(form.getAttribute('data-index')).then(function(r){ return r.json(); })
+      .then(function(j){ index = j; return j; }).catch(function(){ index = []; return index; });
+    return loading;
+  }
+  function rank(q, items){
+    q = q.toLowerCase();
+    var out = [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i], n = it.n.toLowerCase(), s = -1;
+      if (n === q) s = 0; else if (n.indexOf(q) === 0) s = 1; else if (n.indexOf(' ' + q) !== -1) s = 2; else if (n.indexOf(q) !== -1) s = 3;
+      else if (it.k && it.k.toLowerCase().indexOf(q) !== -1) s = 4;
+      if (s >= 0) out.push([s, it]);
+    }
+    out.sort(function(a, b){ return a[0] - b[0] || a[1].n.localeCompare(b[1].n); });
+    return out.map(function(x){ return x[1]; });
+  }
+  function initSearch(form){
+    var input = form.querySelector('input'), box = form.querySelector('.searchResults');
+    var rel = form.getAttribute('data-rel') || '';
+    var hits = [], active = -1;
+    function render(){
+      if (!hits.length) { box.hidden = true; box.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); return; }
+      box.innerHTML = hits.map(function(h, i){
+        return '<a role="option" id="ss-opt-' + i + '" class="searchHit' + (i === active ? ' active' : '') + '" href="' + rel + h.u + '"><span class="searchHitName">' + h.n.replace(/</g, '&lt;') + '</span><span class="searchHitKind">' + (h.t || '') + '</span></a>';
+      }).join('');
+      box.hidden = false; input.setAttribute('aria-expanded', 'true');
+    }
+    function update(){
+      var q = input.value.trim();
+      if (q.length < 2 || !index) { hits = []; active = -1; render(); return; }
+      hits = rank(q, index).slice(0, 7); active = -1; render();
+    }
+    input.addEventListener('focus', function(){ loadIndex(form).then(update); });
+    input.addEventListener('input', function(){ if (index) update(); else loadIndex(form).then(update); });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowDown' && hits.length) { e.preventDefault(); active = (active + 1) % hits.length; render(); }
+      else if (e.key === 'ArrowUp' && hits.length) { e.preventDefault(); active = (active - 1 + hits.length) % hits.length; render(); }
+      else if (e.key === 'Escape') { hits = []; render(); }
+      else if (e.key === 'Enter') {
+        var q = input.value.trim();
+        var pick = active >= 0 ? hits[active] : (hits.length && hits[0].n.toLowerCase() === q.toLowerCase() ? hits[0] : null);
+        if (!pick && /^(18|19|20)\\d\\d$/.test(q) && index) {
+          for (var i = 0; i < index.length; i++) if (index[i].t === 'Season' && index[i].n.indexOf(q) === 0) { pick = index[i]; break; }
+        }
+        if (!pick && hits.length === 1) pick = hits[0];
+        if (pick) { e.preventDefault(); location.href = rel + pick.u; }
+      }
+    });
+    document.addEventListener('click', function(e){ if (!form.contains(e.target)) { hits = []; render(); } });
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var forms = document.querySelectorAll('form.siteSearch');
+    for (var i = 0; i < forms.length; i++) initSearch(forms[i]);
+    var qs = null;
+    try { qs = new URLSearchParams(location.search).get('q'); } catch (e) {}
+    var filter = document.getElementById('teamSearch');
+    if (qs && filter) { filter.value = qs; filter.dispatchEvent(new Event('input')); }
   });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
@@ -172,6 +278,138 @@ def head_extras(rel=""):
 })();
 </script>'''.replace('__SW_PATH__', f'{rel}sw.js'))
     return "\n".join(bits)
+
+
+FONTS_URL = ("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800;900"
+             "&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500"
+             "&family=IBM+Plex+Mono:wght@400;500;600&display=swap")
+
+# The belt mark used in the header/footer -- an octagon medallion between two
+# side plates on a strap, the same silhouette generate_share_image.py draws
+# for the favicon/social art, in inline SVG so it recolors with the theme.
+BELT_MARK_SVG = ('<svg class="beltMark" width="34" height="22" viewBox="0 0 34 22" aria-hidden="true" focusable="false">'
+                 '<rect x="0" y="8" width="34" height="6" rx="1" fill="currentColor"/>'
+                 '<rect x="3" y="6" width="6" height="10" rx="1" fill="var(--brass-bright)"/>'
+                 '<rect x="25" y="6" width="6" height="10" rx="1" fill="var(--brass-bright)"/>'
+                 '<path d="M17 0 L24 4 L24 18 L17 22 L10 18 L10 4 Z" fill="var(--brass-bright)" stroke="currentColor" stroke-width="1.5"/>'
+                 '<circle cx="17" cy="11" r="3.5" fill="currentColor"/></svg>')
+
+# Primary navigation: the five destinations most visits are for, plus a
+# "More" menu that keeps the long tail one click away (2026-09-16 redesign --
+# the old header had grown to 15 flat links). `active` keys match the first
+# element of each tuple.
+NAV_PRIMARY = [
+    ("home", "index.html", "The Belt"),
+    ("history", "lineage.html", "History"),
+    ("records", "records.html", "Records"),
+    ("map", "map.html", "Map"),
+    ("stories", "stories.html", "Stories"),
+]
+NAV_MORE = [
+    ("Explore", [
+        ("all-games", "all-games.html", "All games"),
+        ("seasons", "seasons.html", "Seasons"),
+        ("conferences", "conferences/index.html", "Conference belts"),
+        ("losers", "losers-belt.html", "Losers Belt"),
+        ("on-this-day", "on-this-day.html", "On this day"),
+        ("preview", "preview.html", "Next belt game"),
+    ]),
+    ("Play", [
+        ("my-team", "my-team.html", "My Team"),
+        ("compare", "compare.html", "Compare teams"),
+        ("trivia", "trivia.html", "Trivia"),
+        ("dod", "defend-or-dethrone.html", "Defend or Dethrone"),
+    ]),
+    ("About", [
+        ("ruleset", "ruleset.html", "Ruleset"),
+        ("embed", "embed.html", "Embed badge"),
+        ("api", "api.html", "API"),
+        ("contact", "mailto:hello@collegefootballbelt.com", "Contact"),
+    ]),
+]
+
+THEME_TOGGLE_HTML = (
+    '<button type="button" class="themeToggle" aria-label="Theme: Auto — tap to change" title="Light / dark / auto">'
+    '<svg class="ti ti-auto" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5 A6.5 6.5 0 0 1 8 14.5 Z" fill="currentColor"/></svg>'
+    '<svg class="ti ti-light" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></svg>'
+    '<svg class="ti ti-dark" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7z" fill="currentColor"/></svg>'
+    '</button>')
+
+
+def _nav_a(rel, key, href, label, active):
+    ext = href.startswith(("http", "mailto:"))
+    url = href if ext else f"{rel}{href}"
+    cur = ' aria-current="page"' if key == active else ""
+    return f'<a href="{url}"{cur}>{label}</a>'
+
+
+def site_header(rel="", active=None, crumb=""):
+    """The shared page header: brand, five primary links, a "More" menu,
+    site search, the theme toggle, and (on phones) a menu button that opens
+    all of it as a drawer. `rel` is the path prefix back to the site root
+    ("" or "../"); `active` marks the current section; `crumb` is optional
+    HTML shown under the header row (game pages use it for "Reign #N ·
+    Game X of Y")."""
+    primary = "".join(_nav_a(rel, k, h, l, active) for k, h, l in NAV_PRIMARY)
+    more_active = any(k == active for _, items in NAV_MORE for k, _, _ in items)
+    groups = ""
+    for title, items in NAV_MORE:
+        links = "".join(_nav_a(rel, k, h, l, active) for k, h, l in items)
+        groups += f'<div class="moreGroup"><span class="moreKicker">{title}</span>{links}</div>'
+    more = (f'<details class="moreMenu"{" data-active" if more_active else ""}>'
+            f'<summary>More <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5 L5 6.5 L8 3.5"/></svg></summary>'
+            f'<div class="moreGrid">{groups}</div></details>')
+    search = (f'<form class="siteSearch" role="search" action="{rel}all-games.html" method="get" '
+              f'data-index="{rel}search-index.json" data-rel="{rel}" autocomplete="off">'
+              f'<label class="srOnly" for="siteSearchInput">Search a team or year</label>'
+              f'<label class="searchIcon" for="siteSearchInput"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M11 11 L15 15"/></svg></label>'
+              f'<input id="siteSearchInput" name="q" type="search" placeholder="Search a team or year" '
+              f'role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="siteSearchResults" enterkeyhint="search">'
+              f'<div class="searchResults" id="siteSearchResults" role="listbox" hidden></div></form>')
+    crumb_html = f'<div class="wrap crumbRow">{crumb}</div>' if crumb else ""
+    return f'''<header class="siteHead">
+  <div class="wrap siteHeadRow">
+    <a class="brand" href="{rel}index.html">{BELT_MARK_SVG}<span class="brandName"><span class="brandLong">The College Football Belt</span><span class="brandShort">The CFB Belt</span></span></a>
+    <div class="headTools">{THEME_TOGGLE_HTML}<button type="button" class="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path class="nt-open" d="M3 5.5h14M3 10h14M3 14.5h14"/><path class="nt-close" d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+    <nav class="primaryNav" id="primaryNav" aria-label="Primary">
+      <div class="navLinks">{primary}{more}</div>
+      <div class="navTools">{search}<span class="navThemeSlot">{THEME_TOGGLE_HTML}</span></div>
+    </nav>
+  </div>{crumb_html}
+</header>'''
+
+
+FOOTER_COLUMNS = [
+    ("Lineage", [("lineage.html", "Full history"), ("all-games.html", "All games"), ("seasons.html", "Seasons"),
+                 ("records.html", "Records"), ("map.html", "Map"), ("conferences/index.html", "Conference belts")]),
+    ("Tools", [("my-team.html", "My Team"), ("compare.html", "Compare teams"), ("preview.html", "Next belt game"),
+               ("embed.html", "Embed badge"), ("api.html", "API"), ("feed.xml", "RSS feed")]),
+    ("About", [("ruleset.html", "Ruleset"), ("stories.html", "Stories"), ("losers-belt.html", "Losers Belt"),
+               ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
+               ("https://x.com/CollegeFBBelt", "X · @CollegeFBBelt"), ("https://www.instagram.com/collegefbbelt/", "Instagram")]),
+]
+
+
+def site_footer(rel="", note=""):
+    """The shared page footer: brand + a one-line data note (per page),
+    three link columns, and the base line."""
+    cols = ""
+    for title, links in FOOTER_COLUMNS:
+        anchors = ""
+        for href, label in links:
+            ext = href.startswith(("http", "mailto:"))
+            url = href if ext else f"{rel}{href}"
+            target = ' target="_blank" rel="noopener"' if href.startswith("http") else ""
+            anchors += f'<a href="{url}"{target}>{label}</a>'
+        cols += f'<nav class="footCol" aria-label="{title} links"><span class="footKicker">{title}</span>{anchors}</nav>'
+    note_html = f'<p class="footNote">{note}</p>' if note else ""
+    return f'''<footer class="siteFoot">
+  <div class="wrap footGrid">
+    <div class="footBrand"><a class="brand" href="{rel}index.html">{BELT_MARK_SVG}<span class="brandName">The College Football Belt</span></a>{note_html}</div>
+    {cols}
+  </div>
+  <div class="wrap footBase"><span>Every belt game sourced from the College Football Data API. Colors on the site are the current holder&rsquo;s &mdash; it recolors itself with every change of hands.</span><span>&copy; {date.today().year} collegefootballbelt.com</span></div>
+</footer>'''
 
 
 # ---------------------------------------------------------------- color math
@@ -356,17 +594,38 @@ def logo_img(colors, name, css_class="teamLogo", size=40):
 
 
 def logo_chip(colors, name, size=30):
-    """Like logo_img(), but wraps the image in a small white circular
-    backdrop -- for placing a team's logo on top of a panel that's filled
-    with that SAME team's own primary color (the game-page scoreboard).
-    Without this, a team whose logo is mostly its own primary color --
-    Penn State's navy crest on a navy panel, for instance -- nearly
-    disappears against its own background. Returns "" when the team has
-    no logo on file, same as logo_img()."""
+    """A team's logo on a small white circular backdrop -- for placing it on
+    top of a panel filled with that SAME team's own primary color (the
+    game-page scoreboard, the homepage hero card). Without the backdrop a
+    team whose logo is mostly its own primary color -- Penn State's navy
+    crest on a navy panel -- nearly disappears. The chip always renders: the
+    team's initials sit underneath the image, so a program with no logo on
+    file (Carlisle, Olympic Club) or a logo that fails to load still gets a
+    legible mark instead of an empty circle."""
+    return team_dot(colors, name, size, "logoChip")
+
+
+def team_dot(colors, name, size=40, css_class="tlDot"):
+    """Initials-under-logo team mark (see logo_chip). `size` is the logo's
+    box; the circle itself is sized by the CSS class."""
+    primary, _ = team_color(colors, name)
     img = logo_img(colors, name, "teamLogo", size)
-    if not img:
-        return ""
-    return f'<span class="logoChip" style="width:{size + 6}px;height:{size + 6}px">{img}</span>'
+    init = esc(team_chip(name))
+    style = f' style="width:{size + 6}px;height:{size + 6}px"' if css_class == "logoChip" else ""
+    return (f'<span class="{css_class}"{style}><span class="dotInit" aria-hidden="true" '
+            f'style="color:{readable_on_white(primary)}">{init}</span>{img}</span>')
+
+
+def readable_on_white(hexcolor, minimum=4.5):
+    """The team color itself when it reads on the white chip, otherwise the
+    same hue darkened just enough to pass WCAG AA (a pale gold or orange
+    would otherwise be near-invisible as fallback initials)."""
+    c = hexcolor
+    for weight in (1.0, 0.85, 0.7, 0.55, 0.4, 0.25):
+        c = blend(hexcolor, "#000000", weight)
+        if contrast_ratio(c, "#ffffff") >= minimum:
+            return c
+    return "#211a12"
 
 
 MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July",
@@ -604,57 +863,159 @@ def render_key_plays(g):
 # ------------------------------------------------------------------- styles
 
 STYLES_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800;900&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
 :root{
-  --paper:#e7e2d5; --paper-2:#dcd5c3;
+  --paper:#e7e2d5; --paper-2:#dcd5c3; --paper-3:#d3cbb6;
   --ink:#211a12; --ink-soft:#5b5140;
   --brass:#8a6a34; --brass-bright:#a97f38; --brass-text:#725626; --brass-line: rgba(138,106,52,.32);
-  --hairline: rgba(33,26,18,.14);
+  --hairline: rgba(33,26,18,.14); --hairline-strong: rgba(33,26,18,.25);
   --shadow: 0 18px 40px -22px rgba(24,17,12,.55);
-  --good:#3f6b3f; --good-bg: rgba(63,107,63,.12);
+  --good:#3f6b3f; --good-text:#2f5a2f; --good-bg: rgba(63,107,63,.12);
+  --bad:#7a2e2e; --bad-text:#8a2f2f; --bad-bg: rgba(122,46,46,.12);
+  --band:#211a12; --band-ink:#ecdfc4;
   --map-1: rgba(138,106,52,.28); --map-2: rgba(138,106,52,.55); --map-3: rgba(138,106,52,.88);
+  --wrap:1120px; --gutter:20px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#161009; --paper-2:#1f170e;
+    --paper:#161009; --paper-2:#1f170e; --paper-3:#2a2015;
     --ink:#ece3d1; --ink-soft:#b6a98d;
     --brass:#cf9f52; --brass-bright:#e0b46a; --brass-text:#e0b46a; --brass-line: rgba(207,159,82,.32);
-    --hairline: rgba(236,227,209,.14);
+    --hairline: rgba(236,227,209,.14); --hairline-strong: rgba(236,227,209,.28);
     --shadow: 0 18px 44px -20px rgba(0,0,0,.6);
-    --good:#7fbf7f; --good-bg: rgba(127,191,127,.14);
+    --good:#7fbf7f; --good-text:#8fcf8f; --good-bg: rgba(127,191,127,.14);
+    --bad:#c65f5f; --bad-text:#e08a8a; --bad-bg: rgba(198,95,95,.14);
+    --band:#0c0805; --band-ink:#ecdfc4;
     --map-1: rgba(207,159,82,.28); --map-2: rgba(207,159,82,.55); --map-3: rgba(207,159,82,.88);
   }
 }
 :root[data-theme="dark"]{
-  --paper:#161009; --paper-2:#1f170e;
+  --paper:#161009; --paper-2:#1f170e; --paper-3:#2a2015;
   --ink:#ece3d1; --ink-soft:#b6a98d;
   --brass:#cf9f52; --brass-bright:#e0b46a; --brass-text:#e0b46a; --brass-line: rgba(207,159,82,.32);
-  --hairline: rgba(236,227,209,.14);
+  --hairline: rgba(236,227,209,.14); --hairline-strong: rgba(236,227,209,.28);
   --shadow: 0 18px 44px -20px rgba(0,0,0,.6);
-  --good:#7fbf7f; --good-bg: rgba(127,191,127,.14);
+  --good:#7fbf7f; --good-text:#8fcf8f; --good-bg: rgba(127,191,127,.14);
+  --bad:#c65f5f; --bad-text:#e08a8a; --bad-bg: rgba(198,95,95,.14);
+  --band:#0c0805; --band-ink:#ecdfc4;
   --map-1: rgba(207,159,82,.28); --map-2: rgba(207,159,82,.55); --map-3: rgba(207,159,82,.88);
 }
 
 *{box-sizing:border-box}
+html{ -webkit-text-size-adjust:100%; }
 body{ margin:0; background:var(--paper); color:var(--ink); font-family:"Spectral",Georgia,serif; line-height:1.55; -webkit-font-smoothing:antialiased; }
 h1,h2{ text-wrap:balance }
 .mono{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
 .display{ font-family:"Big Shoulders Display","Arial Narrow",sans-serif; }
 .tabular{ font-variant-numeric:tabular-nums; }
 a{ color:inherit }
+img{ max-width:100%; }
+.srOnly{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+:focus-visible{ outline:2px solid var(--brass-bright); outline-offset:2px; }
 
-.wrap{ max-width:980px; margin:0 auto; padding-inline:20px; }
-@media (min-width:760px){ .wrap{ padding-inline:32px } }
+.wrap{ max-width:var(--wrap); margin:0 auto; padding-inline:var(--gutter); }
+@media (min-width:760px){ :root{ --gutter:32px; } }
+@media (min-width:1200px){ :root{ --gutter:40px; } }
+.bleed{ margin-inline:calc(50% - 50vw); }
+[id]{ scroll-margin-top:80px; }
 
-header.site{ position:relative; padding-block:20px 14px; border-bottom:1px solid var(--hairline); }
-.back{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:var(--ink-soft); text-decoration:none; display:inline-flex; gap:6px; }
-.back:hover{ color:var(--ink) }
-.crumbTitle{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:20px; margin-top:8px; }
+/* ---------- kicker / headline system (2026-09-16 redesign) ---------- */
+.kicker{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); font-weight:500; }
+.pageIntro{ padding-block:36px 8px; }
+.pageIntro .kicker{ display:block; margin-bottom:10px; }
+.pageTitle{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(32px,4.6vw,48px); line-height:1; margin:26px 0 12px; text-wrap:balance; letter-spacing:-.005em; }
+.pageIntro .pageTitle{ margin-top:0; }
+.lede{ font-size:17px; color:var(--ink-soft); max-width:64ch; margin:0 0 8px; text-wrap:pretty; }
+.pageKicker{ display:block; margin:36px 0 0; }
+.pageKicker + .pageTitle{ margin-top:10px; }
+.eyebrow{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); }
+.hero{ display:flex; flex-direction:column; gap:10px; padding:22px 24px; border:1px solid var(--hairline-strong); }
+.hero h2{ margin:0; }
+.hero .lede{ margin:0; }
+.crumbRow{ padding:10px var(--gutter) 0; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); }
+.crumbRow a{ text-decoration:underline; text-decoration-color:var(--brass-line); text-underline-offset:3px; color:var(--brass-text); }
+.crumbRow a:hover{ color:var(--ink); }
+
+/* ---------- site header ---------- */
+.siteHead{ position:sticky; top:0; z-index:40; background:var(--paper); border-bottom:1px solid var(--hairline); }
+.siteHeadRow{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0 18px; min-height:64px; }
+.siteHeadRow > .primaryNav{ padding-block:8px; }
+.brand{ display:inline-flex; align-items:center; gap:12px; flex:none; text-decoration:none; color:var(--ink); font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:22px; letter-spacing:.01em; white-space:nowrap; }
+.beltMark{ flex:none; }
+.brandShort{ display:none; }
+.headTools{ display:none; align-items:center; gap:4px; }
+.primaryNav{ display:flex; align-items:center; gap:22px; flex:1; justify-content:flex-end; min-width:0; }
+.navLinks{ display:flex; align-items:center; gap:26px; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+.navLinks > a, .moreMenu > summary{ text-decoration:none; color:var(--ink-soft); padding:6px 0; border-bottom:2px solid transparent; white-space:nowrap; cursor:pointer; }
+.navLinks > a:hover, .moreMenu > summary:hover{ color:var(--ink); }
+.navLinks > a[aria-current="page"], .moreMenu[data-active] > summary{ color:var(--ink); border-bottom-color:var(--brass-bright); }
+.moreMenu{ position:relative; }
+.moreMenu > summary{ list-style:none; display:inline-flex; align-items:center; gap:6px; }
+.moreMenu > summary::-webkit-details-marker{ display:none; }
+.moreMenu[open] > summary svg{ transform:rotate(180deg); }
+.moreGrid{ position:absolute; right:0; top:calc(100% + 10px); z-index:50; display:grid; grid-template-columns:repeat(3,minmax(150px,1fr)); gap:22px; padding:20px 22px; background:var(--paper); border:1px solid var(--hairline-strong); border-radius:6px; box-shadow:var(--shadow); text-transform:none; letter-spacing:0; font-family:"Spectral",Georgia,serif; font-size:15px; }
+.moreGroup{ display:flex; flex-direction:column; gap:8px; }
+.moreKicker{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); margin-bottom:2px; }
+.moreGroup a{ text-decoration:none; color:var(--ink); white-space:nowrap; }
+.moreGroup a:hover, .moreGroup a[aria-current="page"]{ color:var(--brass-text); }
+.moreGroup a[aria-current="page"]{ font-weight:600; }
+.navTools{ display:flex; align-items:center; gap:10px; }
+.siteSearch{ position:relative; display:flex; align-items:center; gap:8px; height:36px; width:200px; flex:0 1 200px; min-width:120px; padding:0 12px; border:1px solid var(--hairline-strong); border-radius:18px; color:var(--ink-soft); background:var(--paper); }
+.siteSearch:focus-within{ border-color:var(--brass); color:var(--ink); }
+.siteSearch svg{ flex:none; display:block; }
+.siteSearch .searchIcon{ display:flex; }
+.siteSearch input{ flex:1; min-width:0; border:0; background:transparent; color:var(--ink); font-family:"IBM Plex Mono",monospace; font-size:12px; outline:none; padding:0; }
+.siteSearch input::placeholder{ color:var(--ink-soft); }
+.siteSearch input::-webkit-search-cancel-button{ -webkit-appearance:none; }
+.searchResults{ position:absolute; top:calc(100% + 8px); right:0; left:0; min-width:260px; z-index:60; background:var(--paper); border:1px solid var(--hairline-strong); border-radius:6px; box-shadow:var(--shadow); overflow:hidden; }
+.searchHit{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:10px 14px; text-decoration:none; color:var(--ink); border-top:1px solid var(--hairline); }
+.searchHit:first-child{ border-top:0; }
+.searchHit:hover, .searchHit.active{ background:var(--paper-2); }
+.searchHitName{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:16px; }
+.searchHitKind{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
+.themeToggle{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; margin:0; flex:none; border:1px solid var(--hairline-strong); border-radius:50%; background:transparent; color:var(--ink-soft); cursor:pointer; }
+.themeToggle:hover{ border-color:var(--brass); color:var(--ink); }
+.themeToggle .ti{ display:none; }
+html:not([data-theme-mode]) .themeToggle .ti-auto, html[data-theme-mode="auto"] .themeToggle .ti-auto{ display:block; }
+html[data-theme-mode="light"] .themeToggle .ti-light{ display:block; }
+html[data-theme-mode="dark"] .themeToggle .ti-dark{ display:block; }
+.navToggle{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:0; background:transparent; color:var(--ink); cursor:pointer; padding:0; margin-right:-10px; }
+.navToggle .nt-close{ display:none; }
+html.navOpen .navToggle .nt-open{ display:none; }
+html.navOpen .navToggle .nt-close{ display:block; }
+@media (max-width:1240px){
+  .brand{ font-size:20px; }
+  .navLinks{ gap:18px; font-size:11px; }
+  .primaryNav{ gap:14px; }
+  .siteSearch{ width:36px; min-width:36px; padding:0; justify-content:center; cursor:text; transition:width .15s ease; }
+  .siteSearch:focus-within{ width:200px; padding:0 12px; justify-content:flex-start; }
+  .siteSearch input{ width:0; opacity:0; }
+  .siteSearch:focus-within input{ width:auto; opacity:1; }
+  .siteSearch .searchIcon{ cursor:pointer; }
+}
+@media (max-width:1000px){
+  .siteHeadRow{ flex-wrap:wrap; min-height:56px; gap:0; }
+  .brand{ font-size:19px; }
+  .headTools{ display:flex; }
+  .primaryNav{ display:none; flex-basis:100%; flex-direction:column; align-items:stretch; gap:0; padding:6px 0 18px; border-top:1px solid var(--hairline); margin-top:6px; max-height:calc(100vh - 70px); max-height:calc(100dvh - 70px); overflow-y:auto; overscroll-behavior:contain; }
+  html.navOpen .primaryNav{ display:flex; }
+  .navTools{ order:-1; padding:12px 0 6px; }
+  .siteSearch{ width:100%; height:44px; border-radius:22px; }
+  .navThemeSlot{ display:none; }
+  .navLinks{ flex-direction:column; align-items:stretch; gap:0; font-size:13px; }
+  .navLinks > a, .moreMenu > summary{ display:flex; align-items:center; min-height:48px; padding:0; border-bottom:1px solid var(--hairline); color:var(--ink); }
+  .navLinks > a[aria-current="page"], .moreMenu[data-active] > summary{ border-bottom-color:var(--hairline); color:var(--brass-text); }
+  .moreMenu{ display:contents; }
+  .moreMenu > summary{ display:none; }
+  .moreGrid{ position:static; display:grid; grid-template-columns:1fr; gap:14px; padding:14px 0 0; border:0; box-shadow:none; background:transparent; }
+  .moreGroup{ gap:0; }
+  .moreKicker{ padding:12px 0 6px; }
+  .moreGroup a{ display:flex; align-items:center; min-height:44px; font-size:16px; border-bottom:1px solid var(--hairline); }
+}
+@media (max-width:420px){ .brandLong{ display:none; } .brandShort{ display:inline; } }
 
 .gameMeta{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin: 22px 0 6px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
 .gameMeta .dot{ width:4px; height:4px; border-radius:50%; background:var(--ink-soft); }
-.beltTag{ background: var(--good-bg); color:var(--good); padding:3px 9px; border-radius:3px; font-weight:600; }
+.beltTag{ background: var(--good-bg); color:var(--good-text); padding:3px 9px; border-radius:3px; font-weight:600; }
 .neutralTag{ background: color-mix(in srgb, var(--brass) 18%, transparent); color:var(--brass-text); padding:3px 9px; border-radius:3px; font-weight:600; }
 
 h1.matchup{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(28px,4.6vw,42px); line-height:1.02; margin:6px 0 26px; }
@@ -670,11 +1031,14 @@ h1.matchup .win{ color:var(--emph); }
 .teamPanel{ padding:26px 22px; display:flex; flex-direction:column; gap:10px; }
 .teamPanel .panelTop{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .teamPanel .teamLogo{ filter:drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
-.logoChip{ display:flex; align-items:center; justify-content:center; flex:none; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); }
+.logoChip{ position:relative; display:flex; align-items:center; justify-content:center; flex:none; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); overflow:hidden; }
+.dotInit{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:.38em; letter-spacing:.02em; line-height:1; }
+.logoChip .dotInit{ font-size:12px; }
+.logoChip .teamLogo, .tlDot .teamLogo{ position:absolute; inset:0; margin:auto; z-index:1; background:#fff; border-radius:50%; }
 .logoChip .teamLogo{ filter:none; }
 .teamPanel.home{ background: linear-gradient(160deg, var(--home) 0%, color-mix(in srgb, var(--home) 75%, black) 100%); color:var(--home-ink); }
 .teamPanel.away{ background: linear-gradient(160deg, var(--away) 0%, color-mix(in srgb, var(--away) 75%, black) 100%); color:var(--away-ink); }
-.teamPanel .side{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
+.teamPanel .side{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
 .teamPanel .name{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(22px,3.6vw,30px); line-height:1.02; }
 .teamPanel .pts{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(46px,7vw,64px); line-height:.9; margin-top:2px; }
 .teamPanel.home .pts{ color: var(--home-accent); }
@@ -682,12 +1046,16 @@ h1.matchup .win{ color:var(--emph); }
 .teamPanel .badge{ align-self:flex-start; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:3px 8px; border-radius:3px; border:1px solid currentColor; opacity:.85; margin-top:4px; }
 .vs{ display:flex; align-items:center; justify-content:center; padding:0 18px; background:var(--paper-2); font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:15px; color:var(--ink-soft); }
 
-/* section pattern */
-.sectionHead{ display:flex; align-items:baseline; gap:14px; margin:44px 0 16px; }
-.sectionHead .tag{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); white-space:nowrap; }
-.sectionHead .rule{ height:1px; flex:1; background:var(--brass-line); }
-.sectionHead h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(20px,3vw,25px); margin:0; white-space:nowrap; }
-.sectionHead.withTag{ flex-wrap:wrap; row-gap:8px; }
+/* section pattern: a mono kicker stacked over a display headline, with an
+   optional right-aligned link/tag on the headline's baseline */
+.sectionHead{ display:grid; grid-template-columns:1fr auto; align-items:end; column-gap:16px; row-gap:6px; margin:48px 0 18px; padding-bottom:12px; border-bottom:1px solid var(--hairline); }
+.sectionHead .tag{ grid-column:1; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); }
+.sectionHead .rule{ display:none; }
+.sectionHead h2{ grid-column:1; font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(24px,3.2vw,32px); line-height:1; margin:0; }
+.sectionHead .sourceTag, .sectionHead .sectionLink{ grid-column:2; grid-row:1 / span 2; align-self:end; }
+.sectionLink{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); text-decoration:none; white-space:nowrap; }
+.sectionLink:hover{ color:var(--ink); }
+.sectionHead.withTag{ }
 
 /* line score table */
 table.lineScore{ width:100%; border-collapse:collapse; font-family:"IBM Plex Mono",monospace; font-size:14px; }
@@ -747,8 +1115,8 @@ details.moreStats .statCategory{ margin-top:18px; }
   padding:3px 8px; border-radius:3px; border:1px dashed var(--brass-line);
 }
 .sourceTag{
-  font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-  background: var(--good-bg); color:var(--good);
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  background: var(--good-bg); color:var(--good-text);
   padding:3px 8px; border-radius:3px; border:1px solid transparent;
 }
 .statGrid{ display:grid; grid-template-columns:1fr auto auto; gap:0 18px; }
@@ -782,7 +1150,7 @@ details.moreStats .statCategory{ margin-top:18px; }
 .formBadge.t{ background:var(--ink-soft); color:var(--paper); }
 .formScore{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; }
 .formOpp{ color:var(--ink-soft); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.formDate{ margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap; }
+.formDate{ margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
 .emptyNote{ color:var(--ink-soft); font-size:13px; }
 .weatherCard{
   display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px;
@@ -801,14 +1169,78 @@ details.moreStats .statCategory{ margin-top:18px; }
 .predictionCall{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:23px; margin:0 0 10px; color:var(--brass-text); }
 .predictionBody{ margin-top:4px; }
 
+/* ---------- next-game preview page (2026-09-16 redesign) ---------- */
+.matchHead{ display:grid; grid-template-columns:1fr 200px 1fr; margin-top:18px; border-radius:6px; overflow:hidden; box-shadow:var(--shadow); }
+.matchSide{ padding:36px 36px 30px; display:flex; flex-direction:column; gap:14px; min-width:0; }
+.matchSide.home{ background:linear-gradient(160deg, var(--home) 0%, color-mix(in srgb, var(--home) 82%, black) 100%); color:var(--home-ink); }
+.matchSide.away{ background:linear-gradient(200deg, var(--away) 0%, color-mix(in srgb, var(--away) 82%, black) 100%); color:var(--away-ink); align-items:flex-end; text-align:right; }
+.matchSide .kicker{ color:inherit; opacity:.85; }
+.matchSide.home .kicker{ color:var(--home-accent); opacity:1; }
+.matchTeam{ display:flex; align-items:center; gap:16px; min-width:0; }
+.matchSide.away .matchTeam{ flex-direction:row-reverse; }
+.matchName{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(30px,4.2vw,58px); line-height:.9; text-transform:uppercase; text-wrap:balance; }
+.matchName a{ color:inherit; text-decoration:none; }
+.matchName a:hover{ text-decoration:underline; text-decoration-thickness:.05em; text-underline-offset:.08em; }
+.matchRecord{ font-size:15px; opacity:.82; }
+.matchCenter{ background:var(--band); color:var(--band-ink); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px 14px; text-align:center; }
+.matchCenter .kicker{ color:#cf9f52; }
+.matchDay{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:48px; line-height:1; }
+.matchWhen{ font-family:"IBM Plex Mono",monospace; font-size:12px; line-height:1.6; }
+.matchLocal{ font-family:"IBM Plex Mono",monospace; font-size:11px; opacity:.65; }
+.matchLocal[hidden]{ display:none; }
+@media (max-width:820px){
+  .matchHead{ grid-template-columns:1fr; }
+  .matchSide{ padding:24px 20px 20px; }
+  .matchSide.away{ align-items:flex-start; text-align:left; }
+  .matchSide.away .matchTeam{ flex-direction:row; }
+  .matchCenter{ flex-direction:row; flex-wrap:wrap; justify-content:flex-start; gap:6px 16px; text-align:left; padding:14px 20px; }
+  .matchCenter .kicker{ flex-basis:100%; }
+  .matchDay{ font-size:34px; }
+}
+.stakes{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--hairline); border-top:0; }
+.stakeCell{ padding:16px 22px; display:flex; flex-direction:column; gap:5px; border-right:1px solid var(--hairline); min-width:0; }
+.stakeCell:last-child{ border-right:0; }
+.stakeVal{ font-size:15px; line-height:1.4; }
+.stakeSub{ display:block; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); margin-top:2px; }
+@media (max-width:820px){ .stakes{ grid-template-columns:1fr 1fr; } .stakeCell:nth-child(2){ border-right:0; } .stakeCell:nth-child(-n+2){ border-bottom:1px solid var(--hairline); } }
+@media (max-width:480px){ .stakes{ grid-template-columns:1fr; } .stakeCell{ border-right:0; border-bottom:1px solid var(--hairline); } .stakeCell:last-child{ border-bottom:0; } }
+.previewOdds{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:16px 0 0; }
+.previewOdds strong{ color:var(--ink); }
+.previewGrid{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,4fr); gap:56px; margin-top:8px; align-items:start; }
+@media (max-width:900px){ .previewGrid{ grid-template-columns:minmax(0,1fr); gap:24px; } }
+.previewMain .sectionHead:first-child{ margin-top:40px; }
+.editorial{ font-size:17.5px; line-height:1.65; max-width:68ch; }
+.editorial p{ margin:0 0 18px; }
+.editorial ul{ margin:0 0 18px; }
+.leanBox{ padding:22px 24px; background:var(--paper-2); display:flex; flex-direction:column; gap:8px; margin:8px 0 8px; max-width:68ch; }
+.leanBox p{ margin:0; font-size:15.5px; line-height:1.6; }
+.leanCall{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(24px,2.6vw,30px); line-height:1.05; margin:0; }
+.leanNote{ font-size:13px; color:var(--ink-soft); }
+.previewSide{ display:flex; flex-direction:column; gap:18px; margin-top:40px; }
+.sideCard{ border:1px solid var(--hairline-strong); padding:20px 22px; display:flex; flex-direction:column; gap:12px; }
+.sideCard .calendarLinks{ flex-direction:column; margin:0; }
+.sideCard .calBtn, .sideCard .btn{ width:100%; text-align:center; justify-content:center; }
+.miniList{ display:flex; flex-direction:column; }
+.miniRow{ display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--hairline); font-size:14px; text-decoration:none; color:inherit; }
+.miniRow:last-child{ border-bottom:1px solid var(--hairline); }
+.miniRow:hover strong{ color:var(--brass-text); }
+.miniTag{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
+.miniStats{ display:flex; gap:24px; flex-wrap:wrap; }
+.miniStats div{ display:flex; flex-direction:column; gap:2px; }
+.miniStats .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:30px; line-height:1; }
+.miniStats .l{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+.sideCard .moreLink{ margin:0; }
+.crumbRow .sep{ color:var(--ink-soft); margin:0 4px; }
+
 /* ---------- add to calendar ---------- */
 .calendarLinks{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 26px; }
 .calBtn{
-  font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.02em;
-  padding:9px 14px; border:1px solid var(--hairline); border-radius:6px;
-  background:var(--paper-2); color:var(--ink); text-decoration:none; white-space:nowrap;
+  display:inline-flex; align-items:center; justify-content:center; min-height:44px;
+  font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+  padding:0 16px; border:1px solid var(--hairline-strong); border-radius:4px;
+  background:transparent; color:var(--ink); text-decoration:none; white-space:nowrap; cursor:pointer;
 }
-.calBtn:hover{ border-color:var(--brass); color:var(--brass-bright); }
+.calBtn:hover{ border-color:var(--brass); color:var(--brass-text); }
 
 /* ---------- email alerts (homepage) ---------- */
 .feedUrlBox{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; padding:14px 18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; }
@@ -848,7 +1280,7 @@ details.moreStats .statCategory{ margin-top:18px; }
 }
 .myTeamPicker button{
   font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
-  padding:11px 18px; border-radius:6px; border:none; background:var(--ink); color:var(--paper); cursor:pointer;
+  min-height:44px; padding:11px 18px; border-radius:4px; border:none; background:var(--ink); color:var(--paper); cursor:pointer;
 }
 .myTeamPicker button:hover{ opacity:.88; }
 .myTeamHeader{ display:flex; align-items:center; gap:14px; margin:0 0 22px; flex-wrap:wrap; }
@@ -886,47 +1318,73 @@ details.moreStats .statCategory{ margin-top:18px; }
 .triviaChoice:hover:not(:disabled){ border-color:var(--brass); }
 .triviaChoice:disabled{ cursor:default; }
 .triviaChoice--right{ border-color:var(--good); background:var(--good-bg); font-weight:600; }
-.triviaChoice--wrong{ border-color:#7a2e2e; background:rgba(122,46,46,.14); }
+.triviaChoice--wrong{ border-color:var(--bad); background:var(--bad-bg); }
 .triviaFeedback{ margin-top:16px; font-size:14px; font-weight:600; min-height:1.2em; }
-.triviaFeedback--right{ color:var(--good); }
+.triviaFeedback--right{ color:var(--good-text); }
 .triviaFeedback--wrong{ color:var(--ink-soft); }
 .triviaResults{ max-width:560px; }
 .triviaScore{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:56px; color:var(--brass-text); margin-bottom:6px; }
 
-footer{ padding-block:28px 40px; border-top:1px solid var(--hairline); margin-top:52px; font-size:12.5px; color:var(--ink-soft); }
-.footRow{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
-.footRow nav{ display:flex; gap:16px; font-family:"IBM Plex Mono",monospace; }
-.footRow nav a{ text-decoration:none; color:var(--ink-soft); }
-.footRow nav a:hover{ color:var(--ink); }
+/* ---------- site footer ---------- */
+.siteFoot{ margin-top:72px; border-top:1px solid var(--hairline); font-size:14px; color:var(--ink-soft); }
+.footGrid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; padding-block:44px 32px; }
+@media (max-width:820px){ .footGrid{ grid-template-columns:1fr 1fr; } .footBrand{ grid-column:1 / -1; } }
+@media (max-width:420px){ .footGrid{ grid-template-columns:1fr; gap:24px; } }
+.footBrand{ display:flex; flex-direction:column; gap:12px; }
+.footBrand .brand{ font-size:20px; }
+.footNote{ margin:0; max-width:40ch; line-height:1.55; text-wrap:pretty; }
+.footCol{ display:flex; flex-direction:column; gap:9px; }
+.footCol a{ text-decoration:none; color:var(--ink); width:fit-content; padding:3px 0; }
+@media (max-width:1000px){ .footCol{ gap:4px; } .footCol a{ padding:8px 0; } }
+.footCol a:hover{ color:var(--brass-text); }
+.footKicker{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); margin-bottom:4px; }
+.footBase{ display:flex; justify-content:space-between; gap:16px 32px; flex-wrap:wrap; padding-block:18px 36px; border-top:1px solid var(--hairline); font-size:12.5px; }
+.footBase span:first-child{ max-width:70ch; }
 
-/* ---------- homepage: header/hero ---------- */
-.headerRow{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px 28px; }
-.brandBlock{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-.eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; }
-.wordmark{ font-family:"Big Shoulders Display", sans-serif; font-weight:800; font-size:clamp(28px, 4.4vw, 44px); letter-spacing:.01em; line-height:.95; margin:2px 0 0; text-wrap:balance; }
-nav.site{ display:flex; flex-wrap:wrap; align-items:center; row-gap:9px; column-gap:16px; font-family:"IBM Plex Mono", monospace; font-size:12.5px; letter-spacing:.03em; }
-nav.site a{ text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; color:var(--ink-soft); white-space:nowrap; }
-nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
-.themeToggle{ display:inline-flex; align-items:center; justify-content:center; position:absolute; top:0; right:0; width:28px; height:28px; padding:0; margin:0; flex:none; border:1px solid var(--hairline); border-radius:50%; background:var(--paper-2); color:var(--ink-soft); font-size:13px; line-height:1; cursor:pointer; transition:border-color .15s ease, color .15s ease; }
-.themeToggle:hover{ border-color:var(--brass); color:var(--ink); }
-.themeToggle-icon{ display:block; }
-.tagline{ font-style:italic; color:var(--ink-soft); max-width:46ch; font-size:15px; margin:10px 0 16px; }
+/* ---------- homepage: hero plate ---------- */
+.heroPlate{ background:linear-gradient(180deg, var(--holder) 0%, color-mix(in srgb, var(--holder) 88%, black) 100%); color:var(--holder-ink); position:relative; overflow:hidden; }
+.heroPlate::before{ content:""; position:absolute; inset:0; background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.028) 0 2px, transparent 2px 14px); pointer-events:none; }
+.heroGrid{ position:relative; display:grid; grid-template-columns:7fr 5fr; gap:40px; align-items:end; padding-block:56px 52px; }
+@media (max-width:900px){ .heroGrid{ grid-template-columns:1fr; gap:28px; padding-block:34px 28px; } }
+.heroCopy{ display:flex; flex-direction:column; gap:20px; min-width:0; }
+.heroKicker{ display:flex; align-items:center; gap:12px; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--holder-alt); }
+.heroKicker::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--holder-alt); flex:none; }
+.heroKicker a{ color:inherit; text-decoration:none; }
+.heroName{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(64px,11.5vw,150px); line-height:.86; letter-spacing:-.01em; text-transform:uppercase; margin:0; text-wrap:balance; overflow-wrap:anywhere; }
+.heroName a{ color:inherit; text-decoration:none; }
+.heroName a:hover{ text-decoration:underline; text-decoration-thickness:.04em; text-underline-offset:.08em; }
+.heroLede{ font-size:clamp(17px,1.6vw,22px); line-height:1.4; max-width:34ch; margin:0; color:color-mix(in srgb, var(--holder-ink) 82%, transparent); text-wrap:pretty; }
+.heroStats{ display:flex; gap:clamp(24px,4vw,48px); flex-wrap:wrap; margin-top:4px; }
+.heroStats div{ display:flex; flex-direction:column; gap:4px; }
+.heroStats .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(34px,4vw,48px); line-height:1; color:var(--holder-alt); }
+.heroStats .l{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:color-mix(in srgb, var(--holder-ink) 62%, transparent); }
+.heroStats .l a{ color:inherit; text-decoration:none; border-bottom:1px dotted currentColor; }
 
-.hero{ display:grid; grid-template-columns: 1.05fr .95fr; gap:34px; align-items:center; padding-block: 34px 30px; }
-@media (max-width:820px){ .hero{ grid-template-columns:1fr; } }
-.hero h1{ font-family:"Big Shoulders Display", sans-serif; font-weight:900; font-size:clamp(30px, 4vw, 42px); line-height:1.02; margin:0 0 14px; text-wrap:balance; }
-.hero p.lede{ font-size:17px; max-width:44ch; margin:0 0 18px; }
-
-.nextGame{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; width:fit-content; max-width:100%; margin:0 0 22px; padding:9px 16px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:20px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease; }
-.nextGame:hover{ border-color:var(--brass); box-shadow:0 2px 8px rgba(0,0,0,.08); }
-.nextGame:hover .nextGameText strong{ color:var(--brass-bright); }
-.nextGameTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); font-weight:600; white-space:nowrap; padding-right:10px; border-right:1px solid var(--brass-line); }
-.nextGameText{ font-size:13.5px; color:var(--ink); }
-.nextGameText strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
-.nextGameOdds{ flex-basis:100%; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); padding-top:6px; margin-top:2px; border-top:1px solid var(--brass-line); }
-.gamedayBanner{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:9px 14px; border-radius:5px; text-decoration:none; font-family:"IBM Plex Mono",monospace; border:1px solid; animation:gamedayPulse 2.4s ease-in-out infinite; }
-.gamedayBanner.gamedaySafe{ background:var(--good-bg); border-color:var(--good); color:var(--good); }
-.gamedayBanner.gamedayDanger{ background:rgba(122,46,46,.14); border-color:#7a2e2e; color:#c65f5f; }
+/* the Up Next card -- the one call to action on the page */
+.upNext{ background:var(--paper); color:var(--ink); border-radius:6px; padding:24px 26px; display:flex; flex-direction:column; gap:16px; box-shadow:0 18px 40px -22px rgba(0,0,0,.6); }
+.upNextHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.upNextHead .kicker{ font-size:11px; }
+.soonChip{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--good-text); background:var(--good-bg); padding:4px 8px; border-radius:3px; white-space:nowrap; }
+.upNextMatch{ display:flex; align-items:center; gap:14px; }
+.upNextMatch .vs{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; background:none; padding:0; color:var(--ink-soft); }
+.upNextWho{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.upNextWho .team{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(22px,2.2vw,27px); line-height:1.05; }
+.upNextWho .when{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); }
+.upNextOdds{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); margin:-4px 0 0; }
+.btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 18px; border-radius:4px; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase; text-decoration:none; cursor:pointer; border:1px solid transparent; background:var(--ink); color:var(--paper); white-space:nowrap; }
+.btn:hover{ background:var(--brass-text); color:#fff; }
+.btn.ghost{ background:transparent; color:var(--ink); border-color:var(--hairline-strong); }
+.btn.ghost:hover{ border-color:var(--brass); color:var(--brass-text); background:transparent; }
+.btn.grow{ flex:1; }
+.beltWatch{ display:flex; flex-direction:column; gap:8px; margin:0; padding-top:14px; border-top:1px solid var(--hairline); font-size:14px; }
+.beltWatch .kicker{ font-size:10px; margin-right:10px; }
+.watchRow{ display:flex; justify-content:space-between; gap:12px; text-decoration:none; color:inherit; }
+.watchRow:hover strong{ color:var(--brass-text); }
+.watchRow .when{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); white-space:nowrap; }
+.gamedayBanner{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0; padding:10px 14px; border-radius:5px; text-decoration:none; font-family:"IBM Plex Mono",monospace; border:1px solid; animation:gamedayPulse 2.4s ease-in-out infinite; }
+.gamedayBanner.gamedaySafe{ background:var(--good-bg); border-color:var(--good); color:var(--good-text); }
+.gamedayBanner.gamedayDanger{ background:var(--bad-bg); border-color:var(--bad); color:var(--bad-text); }
 .gamedayTag{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:3px; border:1px solid currentColor; }
 .gamedayTag::before{ content:"\25CF"; display:inline-block; margin-right:4px; }
 .gamedayScore{ font-size:14px; font-weight:600; color:var(--ink); }
@@ -934,14 +1392,83 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .gamedayState{ font-size:11px; font-weight:700; letter-spacing:.06em; margin-left:auto; }
 @keyframes gamedayPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.72; } }
 @media (prefers-reduced-motion: reduce){ .gamedayBanner{ animation:none; } }
-@media (max-width:500px){ .nextGame{ white-space:normal; } }
+
+/* one-line thesis under the plate */
+.thesis{ display:flex; justify-content:space-between; align-items:center; gap:24px; padding-block:26px; border-bottom:1px solid var(--hairline); }
+.thesis p{ margin:0; font-size:clamp(16px,1.4vw,19px); font-style:italic; color:var(--ink-soft); max-width:70ch; text-wrap:pretty; }
+@media (max-width:700px){ .thesis{ flex-direction:column; align-items:flex-start; gap:12px; } .btnRow .btn{ flex:1; } }
+
+/* ---------- homepage: chain of custody timeline ---------- */
+.timeline{ position:relative; padding-top:18px; margin-top:8px; }
+.timeline::before{ content:""; position:absolute; left:0; right:0; top:46px; height:2px; background:var(--brass-line); }
+.timelineGrid{ position:relative; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:16px; }
+.tlItem{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; text-decoration:none; color:inherit; min-width:0; }
+.tlDot{ position:relative; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; background:#fff; border:3px solid var(--paper); box-shadow:0 0 0 2px var(--brass-line); font-size:14px; overflow:hidden; }
+.tlDot .dotInit{ font-size:13px; }
+.tlDot .teamLogo{ width:40px; height:40px; }
+.tlItem.current .tlDot{ box-shadow:0 0 0 3px var(--holder); }
+.tlText{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.tlTeam{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; line-height:1; }
+.tlItem:hover .tlTeam{ color:var(--brass-text); }
+.tlBeat{ font-size:13.5px; color:var(--ink-soft); }
+.tlMeta{ font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--brass-text); }
+.tlItem.current .tlMeta{ color:var(--good-text); }
+.tlEarlier{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); text-decoration:none; }
+@media (max-width:1000px){ .timelineGrid{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; } .tlItem:nth-child(-n+3){ display:none; } }
+@media (max-width:760px){
+  .timeline::before{ display:none; }
+  .timelineGrid{ grid-template-columns:1fr; gap:14px; }
+  .tlItem:nth-child(-n+3){ display:flex; }
+  .tlItem:nth-child(-n+2){ display:none; }
+  .tlItem{ position:relative; flex-direction:row; align-items:flex-start; gap:14px; }
+  .tlItem::after{ content:""; position:absolute; left:19px; top:44px; bottom:-14px; width:2px; background:var(--brass-line); }
+  .tlItem.current::after{ display:none; }
+  .tlDot{ width:40px; height:40px; font-size:12px; }
+  .tlDot .teamLogo{ width:28px; height:28px; }
+  .tlText{ flex:1; padding-top:2px; }
+  .tlText .tlRow{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .tlTeam{ font-size:20px; }
+  .tlItem.current{ background:var(--holder); color:var(--holder-ink); margin-inline:calc(-1 * var(--gutter)); padding:14px var(--gutter); align-items:center; }
+  .tlItem.current .tlDot{ box-shadow:none; border-color:transparent; }
+  .tlItem.current .tlBeat{ color:color-mix(in srgb, var(--holder-ink) 75%, transparent); }
+  .tlItem.current .tlMeta, .tlItem.current:hover .tlTeam{ color:var(--holder-alt); }
+}
+.tlEarlierRow{ display:none; }
+@media (max-width:760px){ .tlEarlierRow{ display:block; padding-left:54px; margin-bottom:4px; } }
+
+/* ---------- homepage: two-up (on this day + ruleset), explore, follow ---------- */
+.twoUp{ display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+@media (max-width:860px){ .twoUp{ grid-template-columns:minmax(0,1fr); gap:8px; } }
+.rulesList{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:14px; counter-reset:rule; }
+@media (max-width:1000px){ .rulesList{ grid-template-columns:1fr; } }
+.rulesList li{ background:var(--paper-2); padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
+.rulesList h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:20px; margin:0; line-height:1.05; }
+.rulesList p{ margin:0; font-size:14px; line-height:1.5; color:var(--ink-soft); }
+.explore{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+@media (max-width:900px){ .explore{ grid-template-columns:1fr 1fr; } }
+@media (max-width:480px){ .explore{ grid-template-columns:1fr; } }
+.exploreCard{ display:flex; flex-direction:column; gap:10px; padding:22px; border:1px solid var(--hairline-strong); text-decoration:none; color:inherit; min-height:130px; transition:border-color .15s ease; }
+.exploreCard:hover{ border-color:var(--brass); }
+.exploreCard svg{ color:var(--brass-text); }
+.exploreCard h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:22px; margin:0; line-height:1; }
+.exploreCard p{ margin:0; font-size:14px; line-height:1.45; color:var(--ink-soft); }
+.chipRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.chipLink{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; padding:10px 14px; border:1px solid var(--hairline-strong); border-radius:20px; text-decoration:none; color:var(--ink); }
+.chipLink:hover{ border-color:var(--brass); color:var(--brass-text); }
+.followStrip{ margin-top:56px; padding:28px 32px; background:var(--paper-2); display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; }
+.followStrip h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(22px,2.4vw,28px); line-height:1.05; margin:0 0 6px; }
+.followStrip p{ margin:0; font-size:15px; color:var(--ink-soft); }
+.followStrip details{ flex-basis:100%; font-size:14px; color:var(--ink-soft); }
+.followStrip summary{ cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); }
+.feedUrlBox{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; padding:12px 14px; background:var(--paper); border:1px solid var(--hairline); border-radius:6px; }
+.feedUrlText{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; word-break:break-all; color:var(--ink-soft); }
 
 .remainingSchedule{ display:flex; flex-direction:column; gap:8px; margin:0 0 22px; padding:0; list-style:none; font-size:12.5px; }
 .remainingSchedule .watchChip{ display:block; padding:9px 12px; border:1px solid var(--brass-line); border-radius:4px; }
 .dodStreakBar{ display:flex; flex-wrap:wrap; align-items:center; gap:22px; margin:20px 0 26px; padding:14px 18px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:6px; }
 .dodStreakBar > div{ display:flex; flex-direction:column; gap:2px; }
 .dodStreakBar .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; }
-.dodStreakBar .l{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+.dodStreakBar .l{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
 .dodHistoryWrap{ flex:1; min-width:160px; }
 .dodHistory{ font-size:18px; letter-spacing:2px; line-height:1; }
 .dodPicker{ margin:0 0 22px; }
@@ -951,82 +1478,24 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .dodChoice:hover{ transform:translateY(-1px); }
 .dodChoice span{ font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:11px; letter-spacing:.04em; text-transform:none; color:var(--ink-soft); }
 .dodChoice.dodDefend:hover{ border-color:var(--good); background:var(--good-bg); }
-.dodChoice.dodDethrone:hover{ border-color:#7a2e2e; background:rgba(122,46,46,.14); }
+.dodChoice.dodDethrone:hover{ border-color:var(--bad); background:var(--bad-bg); }
 .dodPending{ margin:0 0 22px; padding:14px 18px; border:1px solid var(--brass-line); border-radius:6px; background:var(--paper-2); font-size:14px; }
 .dodShareBtn{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.04em; padding:9px 16px; border-radius:5px; border:1px solid var(--brass); background:transparent; color:var(--brass-text); cursor:pointer; }
 .dodShareBtn:hover{ background:var(--brass); color:var(--paper); }
 .birthdayPicker{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 18px; }
 .birthdayPicker input[type="date"]{ font-family:"IBM Plex Mono",monospace; font-size:13px; padding:9px 12px; border-radius:5px; border:1px solid var(--brass-line); background:var(--paper); color:var(--ink); }
-.birthdayPicker button{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.04em; padding:9px 18px; border-radius:5px; border:1px solid var(--brass); background:var(--brass); color:var(--paper); cursor:pointer; }
-.birthdayPicker button:hover{ background:var(--brass-bright); }
+.birthdayPicker button{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; min-height:44px; padding:9px 18px; border-radius:4px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; }
+.birthdayPicker button:hover{ background:var(--brass-text); border-color:var(--brass-text); color:#fff; }
 .birthdayResult{ margin:0 0 30px; padding:16px 18px; border:1px solid var(--brass-line); border-radius:6px; background:var(--paper-2); font-size:14px; line-height:1.6; }
 .birthdayResult p{ margin:0 0 8px; }
 .birthdayResult p:last-child{ margin-bottom:0; }
 .birthdayAnswer{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:19px; }
-.beltWatch{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 22px; font-size:12.5px; }
-.beltWatchLabel{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
 .watchChip{ color:var(--ink-soft); white-space:nowrap; }
 .watchChip strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:13.5px; color:var(--ink); }
-
 .heroFacts{ display:flex; gap:26px; flex-wrap:wrap; }
 .heroFacts div{ display:flex; flex-direction:column; gap:2px; }
 .heroFacts .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; }
 .heroFacts .l{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
-
-.plateWrap{ display:flex; justify-content:center; }
-.plate{
-  width:100%; max-width:400px;
-  background: linear-gradient(160deg, var(--holder) 0%, color-mix(in srgb, var(--holder) 78%, black) 100%);
-  color:var(--holder-ink);
-  border-radius: 130px 130px 18px 18px;
-  padding: 46px 30px 30px;
-  text-align:center;
-  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,.06);
-  position:relative;
-  overflow:hidden;
-}
-.plate::before{ content:""; position:absolute; inset:10px 10px auto 10px; height:1px; background: linear-gradient(90deg, transparent, var(--holder-alt), transparent); opacity:.55; }
-.plate .rim{ position:absolute; inset:7px; border-radius:124px 124px 12px 12px; border:1.5px solid color-mix(in srgb, var(--holder-alt) 65%, transparent); pointer-events:none; }
-.monogram{
-  width:78px; height:78px; margin:0 auto 14px; border-radius:50%;
-  background: color-mix(in srgb, var(--holder-alt) 22%, transparent);
-  border:2px solid var(--holder-alt);
-  display:flex; align-items:center; justify-content:center;
-  font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px;
-  color: var(--holder-alt);
-}
-.plate .eyebrow2{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color: color-mix(in srgb, var(--holder-ink) 78%, transparent); }
-.plate .holderName{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size: clamp(32px, 6vw, 44px); line-height:.95; margin:6px 0 4px; text-wrap:balance; }
-.plate .holderName a{ color:inherit; text-decoration:none; }
-.plate .holderName a:hover{ text-decoration:underline; text-decoration-color:currentColor; }
-.plate .sub{ font-size:13.5px; color: color-mix(in srgb, var(--holder-ink) 82%, transparent); margin-bottom:18px; }
-.plateStats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1px solid color-mix(in srgb, var(--holder-alt) 45%, transparent); padding-top:14px; }
-.plateStats div{ display:flex; flex-direction:column; gap:2px; }
-.plateStats .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:20px; }
-.plateStats .l{ font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; opacity:.75; }
-
-@media (prefers-reduced-motion: no-preference){
-  .plate{ animation: sheen 1.4s ease-out .1s both; }
-  @keyframes sheen{ from{ filter:brightness(1.28) saturate(.85); } to{ filter:brightness(1) saturate(1); } }
-}
-
-/* ---------- homepage: lineage chain ---------- */
-.chain{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(148px,1fr); gap:0; overflow-x:auto; padding-bottom:6px; margin: 0 -4px; scrollbar-width:thin; }
-@media (max-width:700px){ .chain{ grid-auto-flow:row; grid-auto-columns:unset; } }
-.chainLead{ display:flex; align-items:center; padding:0 14px 0 4px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
-@media (max-width:700px){ .chainLead{ padding:0 0 10px; } }
-.link{ position:relative; display:block; padding:16px 16px 14px; margin:0 4px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:6px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
-.link:hover{ border-color:var(--brass); box-shadow:0 2px 8px rgba(0,0,0,.08); transform:translateY(-1px); }
-.link:hover .team{ color:var(--brass-bright); }
-.link + .link::before{ content:""; position:absolute; left:-9px; top:50%; width:10px; height:2px; background:var(--brass-line); }
-@media (max-width:700px){ .link + .link::before{ display:none; } }
-.link .chip{ width:34px; height:34px; border-radius:50%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:12.5px; border:1.5px solid rgba(0,0,0,.15); }
-.link .team{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:17px; line-height:1.05; }
-.link .beat{ font-size:12px; color:var(--ink-soft); margin:5px 0 7px; }
-.link .meta{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); display:flex; justify-content:space-between; }
-.link.current{ border-color: var(--brass); box-shadow: inset 0 0 0 1px var(--brass-line); }
-.link.current .now{ position:absolute; top:12px; right:12px; font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); display:flex; align-items:center; gap:5px; }
-.link.current .now::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--brass-bright); box-shadow:0 0 0 3px color-mix(in srgb, var(--brass-bright) 25%, transparent); }
 
 /* ---------- homepage: ruleset teaser ---------- */
 .rules{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
@@ -1040,24 +1509,25 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 
 /* ---------- homepage: on this day ---------- */
 .otdList{ display:flex; flex-direction:column; margin-top:6px; }
+.moreLink{ margin:16px 0 0; }
+.moreLink, .moreLink a{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); text-decoration:none; }
+.moreLink:hover, .moreLink a:hover{ color:var(--ink); }
 .otdRow{ display:flex; align-items:center; gap:16px; padding:12px 4px; border-bottom:1px solid var(--hairline); text-decoration:none; color:inherit; }
 .otdList a.otdRow:hover .otdMatchup{ text-decoration:underline; text-decoration-color:var(--brass); }
 .otdRow:last-child{ border-bottom:none; }
 .otdYear{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:16px; color:var(--brass-text); width:44px; flex:none; }
 .otdMatchup{ flex:1; font-size:14.5px; }
-.otdTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
+.otdTag{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
 .otdTag.changed{ color:var(--brass-text); }
 .otdRow.hiddenRow{ display:none; }
 @media (max-width:560px){ .otdRow{ flex-wrap:wrap; } .otdTag{ order:3; width:100%; padding-left:60px; } }
 
 /* ---------- homepage: stats band ---------- */
-.band{ background:#18110c; color:#ecdfc4; margin-block:52px 0; padding-block:34px; }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .band{ background:#0c0805; } }
-:root[data-theme="dark"] .band{ background:#0c0805; }
-.bandGrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; text-align:center; }
+.band{ background:var(--band); color:var(--band-ink); margin-block:56px 0; padding-block:44px; }
+.bandGrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; text-align:center; }
 @media (max-width:700px){ .bandGrid{ grid-template-columns:repeat(2,1fr); gap:26px 18px; } }
-.bandGrid .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(30px,5vw,42px); color:#cf9f52; line-height:1; }
-.bandGrid .l{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:rgba(236,223,196,.7); margin-top:6px; }
+.bandGrid .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(40px,5vw,56px); color:#cf9f52; line-height:1; }
+.bandGrid .l{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(236,223,196,.7); margin-top:6px; }
 
 /* ---------- ruleset page ---------- */
 .pageTitle{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(30px,4.6vw,44px); line-height:1.02; margin:26px 0 10px; text-wrap:balance; }
@@ -1082,7 +1552,7 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .recordMain{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:15px; display:flex; align-items:center; }
 .recordValue{ font-size:14px; font-weight:600; color:var(--brass-text); }
 .recordSub{ grid-column:2 / 4; font-size:12px; color:var(--ink-soft); }
-.currentTag{ font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
+.currentTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
 
 /* ---------- stories (hub + article) ---------- */
 .storyGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:18px; margin:28px 0 8px; }
@@ -1105,6 +1575,13 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .storyBackLink{ margin-top:34px; font-size:13.5px; }
 
 /* ---------- team page ---------- */
+.teamPlate{ margin-top:24px; padding:30px 32px 28px; border-radius:6px; background:linear-gradient(160deg, var(--team) 0%, color-mix(in srgb, var(--team) 84%, black) 100%); color:var(--team-ink); display:flex; flex-direction:column; gap:22px; box-shadow:var(--shadow); }
+.teamPlateRow{ display:flex; align-items:center; gap:18px; }
+.teamPlate .kicker{ color:var(--team-accent); display:block; margin-bottom:6px; }
+.teamPlate .pageTitle{ margin:0; color:inherit; font-size:clamp(34px,5vw,56px); }
+.teamPlate .heroStats .n{ color:var(--team-accent); }
+.teamPlate .heroStats .l{ color:color-mix(in srgb, var(--team-ink) 65%, transparent); }
+@media (max-width:600px){ .teamPlate{ padding:22px 20px; } }
 .teamPageHead{ display:flex; align-items:center; gap:12px; border-bottom:3px solid; padding-bottom:10px; margin-top:22px; }
 .posterLink{ display:inline-block; margin-left:6px; font-size:12.5px; color:var(--brass-text); text-decoration:none; border-bottom:1px dotted var(--brass); white-space:nowrap; }
 .posterLink:hover{ border-bottom-style:solid; }
@@ -1151,7 +1628,7 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
 .sortToggle{ display:flex; border:1px solid var(--hairline); border-radius:20px; overflow:hidden; background:var(--paper-2); }
 .sortToggle button{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; white-space:nowrap; }
-.sortToggle button.active{ background:var(--brass); color:var(--paper); font-weight:600; }
+.sortToggle button.active{ background:var(--ink); color:var(--paper); font-weight:600; }
 .sortToggle button:not(.active):hover{ color:var(--ink); }
 
 /* Losers Belt scope switcher (Combined/FBS/FCS) -- same pill look as
@@ -1159,7 +1636,7 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
    it can never be picked up by .sortToggle .sortBtn's sort-order JS. */
 .scopeSwitch{ display:inline-flex; border:1px solid var(--hairline); border-radius:20px; overflow:hidden; background:var(--paper-2); }
 .scopeBtn{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; color:var(--ink-soft); text-decoration:none; white-space:nowrap; }
-.scopeBtn.active{ background:var(--brass); color:var(--paper); font-weight:600; }
+.scopeBtn.active{ background:var(--ink); color:var(--paper); font-weight:600; }
 .scopeBtn:not(.active):hover{ color:var(--ink); background:var(--paper); }
 
 .dateSelect{ display:flex; gap:8px; }
@@ -1177,7 +1654,7 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .records{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0 34px; }
 @media (max-width:820px){ .records{ grid-template-columns:1fr; } }
 .record-card{ padding:14px 16px; background:var(--paper-2); border-radius:2px 8px 8px 2px; border-left:3px solid var(--brass); }
-.record-card .l{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:5px; }
+.record-card .l{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:5px; }
 .record-card .v{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; }
 .record-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
 
@@ -1188,13 +1665,14 @@ table.reignsTable td{ padding:10px; border-bottom:1px solid var(--hairline); ver
 table.reignsTable td.num{ font-family:"IBM Plex Mono",monospace; color:var(--ink-soft); font-size:12.5px; }
 table.reignsTable td.teamCell{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:16px; white-space:nowrap; }
 table.reignsTable td.teamCell a{ text-decoration:none; }
+@media (max-width:640px){ table.reignsTable td a{ display:inline-block; padding:5px 0; } }
 table.reignsTable td.teamCell a:hover{ text-decoration:underline; text-decoration-color:var(--brass); }
 table.reignsTable td.won a, table.reignsTable td.lost a{ text-decoration:none; border-bottom:1px dotted var(--ink-soft); }
 table.reignsTable td.won a:hover, table.reignsTable td.lost a:hover{ border-bottom-color:var(--brass); color:var(--brass-bright); }
 table.reignsTable td.tabular a{ text-decoration:none; color:inherit; border-bottom:1px dotted var(--ink-soft); }
 table.reignsTable td.tabular a:hover{ border-bottom-color:var(--brass); color:var(--brass-bright); }
 table.reignsTable td.dates, table.reignsTable td.won, table.reignsTable td.lost{ font-size:12.5px; color:var(--ink-soft); }
-table.reignsTable td.tabular{ text-align:right; font-family:"IBM Plex Mono",monospace; }
+table.reignsTable td.tabular{ text-align:right; font-family:"IBM Plex Mono",monospace; white-space:nowrap; }
 table.reignsTable tr.current{ background: color-mix(in srgb, var(--brass) 10%, transparent); }
 table.reignsTable tr.current td.teamCell{ color:var(--brass-text); }
 table.reignsTable tr.hiddenRow{ display:none; }
@@ -1212,7 +1690,7 @@ table.reignsTable tr.hiddenRow{ display:none; }
 .reignsPager{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--hairline); border-radius:20px; overflow:hidden; background:var(--paper-2); }
 .pagerBtn{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; padding:8px 14px; color:var(--ink-soft); text-decoration:none; white-space:nowrap; border-left:1px solid var(--hairline); }
 .pagerBtn:first-child{ border-left:none; }
-.pagerBtn.active{ background:var(--brass); color:var(--paper); font-weight:600; }
+.pagerBtn.active{ background:var(--ink); color:var(--paper); font-weight:600; }
 .pagerBtn:not(.active):hover{ color:var(--ink); background:var(--paper); }
 .pagerBtn.ellipsis{ cursor:default; }
 .pagerBtn.ellipsis:hover{ background:transparent; color:var(--ink-soft); }
@@ -1221,7 +1699,7 @@ table.reignsTable tr.hiddenRow{ display:none; }
 .gameNav a{ text-decoration:none; color:var(--ink-soft); border:1px solid var(--hairline); border-radius:20px; padding:7px 16px; flex:1; }
 .gameNav a:hover{ color:var(--ink); border-color:var(--brass); }
 .gameNav a.next{ text-align:right; }
-.gameNav a.disabled{ opacity:.35; pointer-events:none; }
+.gameNav a.disabled, .gameNav span.disabled{ color:var(--ink-soft); border-style:dashed; pointer-events:none; }
 
 /* all-games log page */
 table.reignsTable td.matchup{ font-size:13.5px; }
@@ -1724,7 +2202,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
             arrow = "&larr; " if arrow_first else " &rarr;"
             label = "Start of the lineage" if arrow_first else "Present day"
             text = f"{arrow}{esc(label)}" if arrow_first else f"{esc(label)}{arrow}"
-            return f'<a class="disabled {cls}">{text}</a>'
+            return f'<span class="disabled {cls}">{text}</span>'
         matchup = f"{esc(game['away'])} at {esc(game['home'])}"
         arrow = "&larr; " if arrow_first else " &rarr;"
         text = f"{arrow}{matchup}" if arrow_first else f"{matchup}{arrow}"
@@ -1732,6 +2210,13 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 
     game_nav = (f'<div class="gameNav">{nav_link(prev_game, "prev", True)}'
                 f'{nav_link(next_game, "next", False)}</div>')
+
+    crumb = (f'<a href="../index.html">Belt</a> <span class="sep">/</span> '
+             f'<a href="../season-{g["season"]}.html">{g["season"]} season</a> <span class="sep">/</span> '
+             f'Reign #{g["reign_number"]} &middot; Game {g["game_number"]:,} of {total_games:,}')
+    footer_note = ("Part of the lineage since 1869. Score"
+                   + (" and line score" if g.get("line_score") else "")
+                   + " sourced from the College Football Data API.")
 
     body = f'''<!doctype html>
 <html lang="en">
@@ -1752,28 +2237,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
   :root[data-theme="dark"]{{ --emph:{emph_dark}; }}
 </style>
 
-<header class="site wrap">
-  <div class="headerRow">
-    <a class="back" href="../index.html">&larr; The College Football Belt</a>
-    <nav class="site" aria-label="Primary">
-      <a href="../lineage.html">Full History</a>
-      <a href="../all-games.html">All Games</a>
-      <a href="../records.html">Records</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="../map.html">Map</a>
-      <a href="../compare.html">Compare</a>
-      <a href="../trivia.html">Trivia</a>
-      <a href="../stories.html">Stories</a>
-      <a href="../losers-belt.html">Losers Belt</a>
-      <a href="../my-team.html">My Team</a>
-      <a href="../conferences/index.html">Conferences</a>
-      <a href="../seasons.html">Seasons</a>
-      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-  <div class="crumbTitle">Reign #{g['reign_number']} &middot; Game {g['game_number']:,} of {total_games:,}</div>
-</header>
+{site_header('../', None, crumb=crumb)}
 
 <main class="wrap">
   <div class="gameMeta">
@@ -1808,25 +2272,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 {game_nav}
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Part of the lineage since 1869. Score{" and line score" if g.get("line_score") else ""} sourced from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="../index.html">Home</a>
-      <a href="../lineage.html">Full History</a>
-      <a href="../all-games.html">All Games</a>
-      <a href="../records.html">Records</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="../map.html">Map</a>
-      <a href="../embed.html">Embed</a>
-      <a href="../api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="../privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('../', footer_note)}
 '''
     return body
 
@@ -1853,46 +2299,53 @@ def _reign_win_score(reign, change_index):
 
 def render_on_this_day(belt_games, today):
     """Belt games that happened on this exact month+day in a past year --
-    free, computed entirely from data already on hand. Most years won't
-    have one (the season only runs Aug-Jan); when none match, the section
-    just doesn't render, same as every other optional widget on this site."""
+    free, computed entirely from data already on hand. One half of the
+    homepage's two-up row, so it always renders: on a date with no belt game
+    in 150+ years it says so and points at the full On This Day page instead
+    of leaving a hole in the layout."""
     matches = [g for g in belt_games
                if date.fromisoformat(g["date"]).month == today.month
                and date.fromisoformat(g["date"]).day == today.day
                and date.fromisoformat(g["date"]) != today]
-    if not matches:
-        return ""
     matches.sort(key=lambda g: g["date"], reverse=True)
 
     rows = ""
-    for g in matches[:3]:
+    for g in matches[:4]:
         year = g["date"][:4]
         h, a = (int(x) for x in g["score"].split("-"))
         if g["outcome"] in ("changed", "established"):
-            tag = f'<span class="otdTag changed">Belt changed hands</span>'
+            tag = '<span class="otdTag changed">Changed hands</span>'
+        elif h == a:
+            tag = '<span class="otdTag">Tie, holder kept it</span>'
         else:
-            tag = f'<span class="otdTag">Title defended</span>'
+            tag = '<span class="otdTag">Defended</span>'
         loc_word = "vs." if g["neutral"] else "at"
+        winner = g["new_holder"] if h != a else None
+        away_html = f"<strong>{esc(g['away'])}</strong>" if winner == g["away"] else esc(g["away"])
+        home_html = f"<strong>{esc(g['home'])}</strong>" if winner == g["home"] else esc(g["home"])
         rows += f'''
       <a class="otdRow" href="games/{g["game_id"]}.html">
         <span class="otdYear tabular">{year}</span>
-        <span class="otdMatchup">{esc(g["away"])} {loc_word} {esc(g["home"])} <span class="tabular">{a}&ndash;{h}</span></span>
+        <span class="otdMatchup">{away_html} {loc_word} {home_html} <span class="tabular">{a}&ndash;{h}</span></span>
         {tag}
       </a>'''
 
-    plural = "s" if len(matches) != 1 else ""
+    n = len(matches)
+    count_txt = f"{n} belt game{'s' if n != 1 else ''} since 1869" if n else "Never, in 150+ years"
+    if rows:
+        body = f'<div class="otdList">{rows}\n    </div>'
+    else:
+        body = (f'<p class="lede" style="margin-top:10px">The belt has never once been on the line on '
+                f'{esc(fmt_month_day(today))}. Every other date is a click away.</p>')
     return f'''
-  <section>
+  <section id="onthisday">
     <div class="sectionHead">
       <span class="tag">{esc(fmt_month_day(today))}</span>
-      <span class="rule"></span>
-      <h2>On this day in belt history</h2>
+      <h2>On this day</h2>
+      <span class="sectionLink">{count_txt}</span>
     </div>
-    <p class="lede">{len(matches)} belt game{plural} on this date since 1869.</p>
-    <div class="otdList">{rows}
-    </div>
-    <p class="viewToggle">Curious about a different date? <a href="on-this-day.html">Browse On
-      This Day across all of belt history &rarr;</a></p>
+    {body}
+    <p class="moreLink"><a href="on-this-day.html">Browse another date &rarr;</a></p>
   </section>'''
 
 
@@ -1946,33 +2399,10 @@ def generate_on_this_day_page(belt_games, reigns):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'on-this-day')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Belt history by date</p>
   <h1 class="pageTitle">On This Day</h1>
 
   <div class="sectionHead">
@@ -2010,23 +2440,7 @@ def generate_on_this_day_page(belt_games, reigns):
     season only runs August&ndash;January, so a lot of the calendar is quiet.</p>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every belt game computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every belt game computed from the College Football Data API.')}
 
 <script type="application/json" id="birthdayReigns">{json.dumps(reigns_payload, ensure_ascii=False)}</script>
 <script>
@@ -2128,6 +2542,10 @@ def generate_on_this_day_page(belt_games, reigns):
 
 
 def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None, belt_risk=None, gameday=None):
+    """The homepage (2026-09-16 redesign): the holder's colors paint a
+    full-bleed hero with one call to action (the next belt game), the chain
+    of custody is a real timeline, and the long tail of pages lives in an
+    Explore section instead of a 15-link header."""
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
@@ -2143,94 +2561,24 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
     defenses = current["defenses"]
     team_reign_num = sum(1 for r in reigns if r["team"] == holder)
     years_span = today.year - 1869 + 1
+    holder_url = f"teams/{team_slug(holder)}.html"
 
     won_score, lost_score = _reign_win_score(current, change_index)
     won_from = current.get("won_from")
-
-    sub_line = f"Since {fmt_date(current['start_date'])}"
     if won_from and won_score is not None:
-        sub_line += f" &middot; def. {esc(won_from)}, {won_score}–{lost_score}"
-
-    if won_from and won_score is not None:
-        lede = (f"Won the belt from {esc(won_from)}, {won_score}–{lost_score}, "
+        lede = (f"Took the belt from {esc(won_from)}, {won_score}–{lost_score}, "
                 f"on {fmt_date(current['start_date'])}.")
+        share_lede = (f"Won the belt from {won_from}, {won_score}–{lost_score}, "
+                      f"on {fmt_date(current['start_date'])}.")
     else:
-        lede = f"Holds the belt since {fmt_date(current['start_date'])}."
+        lede = share_lede = f"Holds the belt since {fmt_date(current['start_date'])}."
     if defenses:
-        lede += f" {defenses} defense{'s' if defenses != 1 else ''} since."
+        words = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten"}
+        lede += f" {words.get(defenses, defenses)} defense{'s' if defenses != 1 else ''} since."
+        share_lede += f" {defenses} defense{'s' if defenses != 1 else ''} since."
 
-    # ---- up next: the current holder's next scheduled game, if CFBD's
-    # released that far ahead -- mined for free out of the same season
-    # fetch build_lineage.py already does, no extra API call ----
-    next_game_html = ""
-    if next_game and next_game.get("date"):
-        opponent = next_game["opponent"]
-        is_neutral = bool(next_game.get("neutral"))
-        loc_word = "vs." if (next_game.get("is_home") or is_neutral) else "at"
-        neutral_txt = " (neutral site)" if is_neutral else ""
-        when_txt = ""
-        try:
-            game_date = date.fromisoformat(next_game["date"])
-            days_until = (game_date - today).days
-            if days_until == 0:
-                when_txt = " &middot; Today"
-            elif days_until == 1:
-                when_txt = " &middot; Tomorrow"
-            elif days_until > 1:
-                when_txt = f" &middot; in {days_until} days"
-        except ValueError:
-            pass
-        # ---- belt-at-risk odds (wishlist #2) -- fetch_belt_odds.py's Elo/
-        # pregame-WP estimate for this exact game, folded into the same
-        # card. Optional and silent when there's no belt_risk.json yet or
-        # it doesn't cover this specific opponent (a new next_game since
-        # the last run) -- same no-op-when-unset pattern as everything
-        # else optional on this site.
-        odds_html = ""
-        if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
-            defend_prob = belt_risk["next_game"].get("defend_prob")
-            holds_prob = belt_risk.get("season", {}).get("holds_into_offseason_prob")
-            bits = []
-            if defend_prob is not None:
-                bits.append(f'{round(defend_prob * 100)}% to defend')
-            if holds_prob is not None:
-                bits.append(f'{round(holds_prob * 100)}% to hold into the offseason')
-            if bits:
-                odds_html = f'<span class="nextGameOdds">{" &middot; ".join(bits)}</span>'
-        next_game_html = f'''
-    <a class="nextGame" href="preview.html">
-      <span class="nextGameTag">Up Next</span>
-      <span class="nextGameText">{loc_word} <strong>{esc(opponent)}</strong>{neutral_txt} &middot; {fmt_date(next_game["date"])}{when_txt}</span>
-      {odds_html}
-    </a>'''
-
-    # ---- belt watch: a short lookahead past the very next game, same free
-    # schedule data -- only rendered when there's actually more than one
-    # upcoming game on file ----
-    belt_watch_html = ""
-    later_games = (upcoming_games or [])[1:3]
-    if later_games:
-        chips = ""
-        for g in later_games:
-            loc = "vs." if (g.get("is_home") or g.get("neutral")) else "at"
-            chips += (f'<span class="watchChip">{loc} <strong>{esc(g["opponent"])}</strong> '
-                      f'&middot; {fmt_date(g["date"])}</span>')
-        belt_watch_html = f'''
-    <div class="beltWatch">
-      <span class="beltWatchLabel">Belt Watch</span>
-      {chips}
-    </div>'''
-
-    # ---- game-day mode (wishlist #3) -- a live score + SAFE/IN DANGER
-    # banner when fetch_gameday_status.py found the holder's game actually
-    # in progress on CFBD's live /scoreboard. Silent (no banner) any other
-    # time -- no game today, too early in the week for /scoreboard to have
-    # it yet, or the game's already gone final (at which point the hero
-    # above already reflects the settled result -- build_lineage.py runs
-    # earlier in the same pipeline stage list and re-walks the chain the
-    # moment a final score shows up -- so a separate FINAL banner here
-    # would just be redundant with what the hero's already saying). Same
-    # no-op-when-unset pattern as everything else optional on this site.
+    # ---- game-day mode (wishlist #3): a live score + SAFE/IN DANGER banner
+    # while fetch_gameday_status.py sees the holder's game in progress ----
     gameday_html = ""
     if gameday and gameday.get("status") == "in_progress" and gameday.get("holder") == holder:
         hs = gameday.get("holder_score")
@@ -2257,50 +2605,115 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         <span class="gamedayState">{state_txt}</span>
       </a>'''
 
-    # ---- chain of custody: the last CHAIN_LEN reigns, oldest to newest ----
+    # ---- the Up Next card: the one call to action on the page ----
+    if next_game and next_game.get("date"):
+        opponent = next_game["opponent"]
+        is_neutral = bool(next_game.get("neutral"))
+        is_home = bool(next_game.get("is_home"))
+        vs_word = "vs" if (is_home or is_neutral) else "at"
+        soon = ""
+        try:
+            game_date = date.fromisoformat(next_game["date"])
+            days_until = (game_date - today).days
+            if days_until == 0:
+                soon = "Today"
+            elif days_until == 1:
+                soon = "Tomorrow"
+            elif days_until > 1:
+                soon = f"In {days_until} days"
+        except ValueError:
+            game_date = None
+        # next_game["date"] is already the venue-local calendar date (see
+        # build_lineage.py), so the weekday comes from it -- not from the UTC
+        # kickoff, which can roll a Saturday-night game into "Sun".
+        when_bits = []
+        if game_date is not None:
+            when_bits.append(f"{game_date:%a %b} {game_date.day}")
+        else:
+            when_bits.append(fmt_date(next_game["date"]))
+        where = next_game.get("venue_city") or next_game.get("venue_name")
+        if where:
+            when_bits.append(esc(where) + (" (neutral site)" if is_neutral else ""))
+        when_txt = " &middot; ".join(when_bits)
+        odds_html = ""
+        if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
+            defend_prob = belt_risk["next_game"].get("defend_prob")
+            holds_prob = belt_risk.get("season", {}).get("holds_into_offseason_prob")
+            bits = []
+            if defend_prob is not None:
+                bits.append(f'{round(defend_prob * 100)}% to defend')
+            if holds_prob is not None:
+                bits.append(f'{round(holds_prob * 100)}% to hold into the offseason')
+            if bits:
+                odds_html = f'<p class="upNextOdds">{" &middot; ".join(bits)}</p>'
+        # a short lookahead past the very next game ("Belt Watch"), same free
+        # schedule data -- only when there's more than one upcoming game
+        watch_html = ""
+        later_games = (upcoming_games or [])[1:3]
+        if later_games:
+            rows = ""
+            for g in later_games:
+                loc = "vs" if (g.get("is_home") or g.get("neutral")) else "at"
+                rows += (f'<a class="watchRow" href="season-{esc(g.get("season", today.year))}.html">'
+                         f'<span><span class="kicker">Belt watch</span>{loc} <strong>{esc(g["opponent"])}</strong></span>'
+                         f'<span class="when">{fmt_month_day(date.fromisoformat(g["date"]))}</span></a>')
+            watch_html = f'<div class="beltWatch">{rows}</div>'
+        holder_chip = logo_chip(colors, holder, 40)
+        opp_chip = logo_chip(colors, opponent, 40)
+        up_next_html = f'''
+      <aside class="upNext" aria-label="Next belt game">
+        <div class="upNextHead"><span class="kicker">Belt on the line</span>{f'<span class="soonChip">{soon}</span>' if soon else ''}</div>
+        <div class="upNextMatch">
+          {holder_chip}
+          <span class="vs">{vs_word}</span>
+          {opp_chip}
+          <div class="upNextWho"><span class="team">{esc(opponent)}</span><span class="when">{when_txt}</span></div>
+        </div>
+        {odds_html}
+        <div class="btnRow">
+          <a class="btn grow" href="preview.html">Read the preview</a>
+          <a class="btn ghost" href="preview.html#calendar">+ Calendar</a>
+        </div>
+        {watch_html}
+      </aside>'''
+    else:
+        up_next_html = '''
+      <aside class="upNext" aria-label="Next belt game">
+        <div class="upNextHead"><span class="kicker">Belt on the line</span></div>
+        <p class="lede" style="margin:0">The holder&rsquo;s next game isn&rsquo;t on the schedule yet. The belt waits.</p>
+        <div class="btnRow"><a class="btn ghost" href="seasons.html">Season by season</a><a class="btn ghost" href="my-team.html">My team&rsquo;s path</a></div>
+      </aside>'''
+
+    # ---- chain of custody: the last CHAIN_LEN reigns as a timeline ----
     chain_reigns = reigns[-CHAIN_LEN:]
     hidden_count = len(reigns) - len(chain_reigns)
-
-    links_html = ""
+    items_html = ""
     for r in chain_reigns:
         is_current = r is current
-        p, a = team_color(colors, r["team"])
-        _, chip_accent = panel_colors(p, a)
         w, l = _reign_win_score(r, change_index)
-        beat = f"def. {esc(r['won_from'])}, {w}–{l}" if (r.get("won_from") and w is not None) else "Established the belt"
-
+        beat = f"def. {esc(r['won_from'])} {w}–{l}" if (r.get("won_from") and w is not None) else "Established the belt"
         win_game = change_index.get((r["start_date"], r["team"]))
-        game_id = win_game["game_id"] if win_game else None
-
+        href = f'games/{win_game["game_id"]}.html' if win_game else f'teams/{team_slug(r["team"])}.html'
+        start = date.fromisoformat(r["start_date"])
         if is_current:
-            right_meta = f'<span class="tabular">{defenses} def.</span>'
-            now_badge = '<span class="now">Current</span>'
-            cls = " current"
+            meta = f"Holding &middot; {days_held:,} days"
         else:
-            right_meta = f"&rarr; {esc(team_chip(r['lost_to']))}" if r.get("lost_to") else ""
-            now_badge = ""
-            cls = ""
-
-        tag = "a" if game_id else "div"
-        href_attr = f' href="games/{game_id}.html"' if game_id else ""
-
-        links_html += f'''
-      <{tag} class="link{cls}"{href_attr}>
-        {now_badge}
-        <div class="chip" style="background:{p};color:{chip_accent}">{esc(team_chip(r["team"]))}</div>
-        <div class="team">{esc(r["team"])}</div>
-        <div class="beat">{beat}</div>
-        <div class="meta"><span>{esc(r["start_date"])}</span><span>{right_meta}</span></div>
-      </{tag}>'''
-
-    chain_lead = ""
+            d = r.get("defenses", 0)
+            meta = f"{fmt_month_day(start)}, {start.year} &middot; {d} def."
+        items_html += f'''
+        <a class="tlItem{" current" if is_current else ""}" href="{href}">
+          {team_dot(colors, r["team"], 40)}
+          <span class="tlText"><span class="tlRow"><span class="tlTeam">{esc(r["team"])}</span></span><span class="tlBeat">{beat}</span><span class="tlMeta">{meta}</span></span>
+        </a>'''
+    earlier_html = ""
     if hidden_count > 0:
-        chain_lead = (f'<div class="chainLead">&larr; {hidden_count:,} earlier '
-                       f'reign{"s" if hidden_count != 1 else ""}<br>since 1869</div>')
+        earlier_html = (f'<div class="tlEarlierRow"><a class="tlEarlier" href="lineage.html">&uarr; {hidden_count:,} earlier '
+                        f'reign{"s" if hidden_count != 1 else ""} since 1869</a></div>')
 
-    monogram = esc(team_chip(holder))
-
-    share_desc = esc(f"{lede} {years_span} years, {totals.get('reigns', '')} reigns.".strip())
+    share_desc = esc(f"{share_lede} {years_span} years, {totals.get('reigns', '')} reigns.".strip())
+    holder_kicker = f'Current holder &middot; {ordinal(team_reign_num)} reign'
+    thesis = ("A lineal title passed hand to hand, on the field, since Rutgers beat Princeton 6&ndash;4 on "
+              "November&nbsp;6, 1869. No committee, no poll &mdash; you have to take it from whoever&rsquo;s holding it.")
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
@@ -2323,154 +2736,131 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
   }}
 </style>
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="#lineage">Lineage</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="#numbers">By the Numbers</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-  <p class="tagline">The title that has passed hand to hand, on the field, since Rutgers beat Princeton 6&ndash;4 on November&nbsp;6, 1869. No committee, no poll &mdash; you have to take it from whoever&rsquo;s holding it.</p>
-</header>
+{site_header('', 'home')}
 
-<main class="wrap">
-
-  <section class="hero">
-    <div>
-      {gameday_html}
-      <h1>{esc(holder)} holds the belt.</h1>
-      <p class="lede">{lede}</p>
-      {next_game_html}
-      {belt_watch_html}
-      <div class="heroFacts">
-        <div><span class="n tabular">{days_held:,}</span><span class="l">Days Held</span></div>
-        <div><span class="n tabular">{defenses}</span><span class="l">Defenses</span></div>
-        <div><span class="n tabular">1869</span><span class="l">Belt Established</span></div>
-      </div>
-    </div>
-
-    <div class="plateWrap">
-      <div class="plate">
-        <div class="rim"></div>
-        <div class="monogram">{monogram}</div>
-        <div class="eyebrow2">Current Holder</div>
-        <div class="holderName"><a href="teams/{team_slug(holder)}.html">{esc(holder)}</a></div>
-        <div class="sub">{sub_line}</div>
-        <div class="plateStats">
-          <div><span class="n tabular">{days_held:,}</span><span class="l">Days</span></div>
-          <div><span class="n tabular">{defenses}</span><span class="l">Defenses</span></div>
-          <div><span class="n tabular">{ordinal(team_reign_num)}</span><span class="l">{esc(holder)} Reign</span></div>
+<main>
+  <section class="heroPlate" aria-labelledby="holderName">
+    <div class="wrap heroGrid">
+      <div class="heroCopy">
+        {gameday_html}
+        <p class="heroKicker"><a href="{holder_url}">{holder_kicker}</a></p>
+        <h1 class="heroName" id="holderName"><a href="{holder_url}">{esc(holder)}</a></h1>
+        <p class="heroLede">{lede}</p>
+        <div class="heroStats">
+          <div><span class="n tabular">{days_held:,}</span><span class="l">Days held</span></div>
+          <div><span class="n tabular">{defenses}</span><span class="l">Defense{"s" if defenses != 1 else ""}</span></div>
+          <div><span class="n tabular">{team_reign_num}</span><span class="l"><a href="{holder_url}">Career reign{"s" if team_reign_num != 1 else ""}</a></span></div>
         </div>
       </div>
+      {up_next_html}
     </div>
   </section>
 
-  <section id="lineage">
+  <div class="wrap">
+    <div class="thesis">
+      <p>{thesis}</p>
+      <a class="sectionLink" href="ruleset.html">How the belt works &rarr;</a>
+    </div>
+  </div>
+
+  <section class="wrap" id="lineage">
     <div class="sectionHead">
-      <span class="tag">Chain of Custody</span>
-      <span class="rule"></span>
-      <h2>How it got here</h2>
+      <span class="tag">Chain of custody</span>
+      <h2>How the belt got here</h2>
+      <a class="sectionLink" href="lineage.html">All {len(reigns)} reigns &rarr;</a>
     </div>
-    <div class="chain">
-      {chain_lead}
-      {links_html}
+    <div class="timeline">
+      {earlier_html}
+      <div class="timelineGrid">{items_html}
+      </div>
     </div>
-    <p class="rulesFoot"><a href="lineage.html">View the full history &mdash; all {len(reigns)} reigns &rarr;</a></p>
   </section>
+
+  <div class="wrap twoUp">
 {render_on_this_day(belt_games, today)}
-  <section id="ruleset">
-    <div class="sectionHead">
-      <span class="tag">The Ruleset</span>
-      <span class="rule"></span>
-      <h2>How the belt works</h2>
-    </div>
-    <div class="rules">
-      <div class="rule-card">
-        <h3>Won on the field</h3>
-        <p>Beat the holder, take the belt. Every other result leaves it exactly where it was.</p>
+    <section id="ruleset">
+      <div class="sectionHead">
+        <span class="tag">The ruleset</span>
+        <h2>Four rules. No asterisks.</h2>
       </div>
-      <div class="rule-card">
-        <h3>Ties: holder retains</h3>
-        <p>Standard lineal convention. A tie isn&rsquo;t a loss, so it isn&rsquo;t treated like one.</p>
-      </div>
-      <div class="rule-card">
-        <h3>Idle holder, belt carries</h3>
-        <p>A bye, a canceled season, a bowl opt-out &mdash; the belt just waits for the next game.</p>
-      </div>
-      <div class="rule-card">
-        <h3>Computed, not researched</h3>
-        <p>Every reign is derived mechanically from the full game record &mdash; no editorial judgment per game.</p>
-      </div>
-    </div>
-    <p class="rulesFoot"><a href="ruleset.html">Read the full ruleset, with sourcing notes &rarr;</a></p>
-  </section>
+      <ul class="rulesList">
+        <li><h3>Won on the field</h3><p>Beat the holder, take the belt. Every other result leaves it exactly where it was.</p></li>
+        <li><h3>Ties: holder retains</h3><p>Standard lineal convention. A tie isn&rsquo;t a loss, so it isn&rsquo;t treated like one.</p></li>
+        <li><h3>Idle holder, belt carries</h3><p>A bye, a canceled season, a bowl opt-out &mdash; the belt just waits for the next game.</p></li>
+        <li><h3>Computed, not researched</h3><p>Every reign is derived mechanically from the full game record &mdash; no editorial judgment per game.</p></li>
+      </ul>
+      <p class="moreLink"><a href="ruleset.html">Full ruleset, with sourcing notes &rarr;</a></p>
+    </section>
+  </div>
 
-  <section id="numbers" class="band" style="margin-inline:calc(50% - 50vw)">
+  <section id="numbers" class="band">
     <div class="wrap">
       <div class="bandGrid">
-        <div><div class="n tabular">{totals["belt_games"]:,}</div><div class="l">Belt Games</div></div>
+        <div><div class="n tabular">{totals["belt_games"]:,}</div><div class="l">Belt games</div></div>
         <div><div class="n tabular">{totals["reigns"]:,}</div><div class="l">Reigns</div></div>
         <div><div class="n tabular">{totals["distinct_teams"]:,}</div><div class="l">Programs</div></div>
-        <div><div class="n tabular">{years_span}</div><div class="l">Years, 1869&ndash;Present</div></div>
+        <div><div class="n tabular">{years_span}</div><div class="l">Years, 1869&ndash;present</div></div>
       </div>
     </div>
   </section>
 
-  <section id="alerts">
+  <section class="wrap" id="explore">
     <div class="sectionHead">
-      <span class="tag">Stay Posted</span>
-      <span class="rule"></span>
-      <h2>Get belt changes by email</h2>
+      <span class="tag">Go deeper</span>
+      <h2>Explore the belt</h2>
     </div>
-    <p class="lede">Every time the belt changes hands it hits the feed below the moment the
-      site rebuilds. Paste that link into a free reader like
-      <a href="https://blogtrottr.com/" target="_blank" rel="noopener">Blogtrottr</a> and it&rsquo;ll
-      email you when it happens &mdash; nothing to sign up for here, no account needed on this end.</p>
-    <div class="feedUrlBox">
-      <code class="feedUrlText">{SITE_URL}/feed.xml</code>
-      <a class="calBtn" href="feed.xml">View Feed</a>
+    <div class="explore">
+      <a class="exploreCard" href="map.html">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 18 C7 18 7 6 12 6 C17 6 17 18 21 18"/><circle cx="3" cy="18" r="1.5"/><circle cx="21" cy="18" r="1.5"/></svg>
+        <h3>Animated map</h3><p>Scrub through {years_span} years of the belt&rsquo;s journey, state by state.</p>
+      </a>
+      <a class="exploreCard" href="records.html">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20 V10 M10 20 V4 M16 20 V13 M22 20 V8"/></svg>
+        <h3>Records</h3><p>Longest reigns, most defenses, total days held, longest droughts.</p>
+      </a>
+      <a class="exploreCard" href="my-team.html">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/><path d="M17 15l3 3 4-5" transform="translate(-4 -1)"/></svg>
+        <h3>My Team</h3><p>Pick your program and see when you could get a shot at the belt.</p>
+      </a>
+      <a class="exploreCard" href="stories.html">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6 H14 M4 12 H20 M4 18 H11"/></svg>
+        <h3>Stories</h3><p>Long-form pieces computed live from the lineage &mdash; they can&rsquo;t go stale.</p>
+      </a>
+    </div>
+    <div class="chipRow">
+      <a class="chipLink" href="all-games.html">All {totals["belt_games"]:,} games</a>
+      <a class="chipLink" href="seasons.html">Season by season</a>
+      <a class="chipLink" href="conferences/index.html">Conference belts</a>
+      <a class="chipLink" href="compare.html">Compare teams</a>
+      <a class="chipLink" href="trivia.html">Trivia</a>
+      <a class="chipLink" href="defend-or-dethrone.html">Defend or Dethrone</a>
+      <a class="chipLink" href="losers-belt.html">The Losers Belt</a>
+      <a class="chipLink" href="api.html">API</a>
     </div>
   </section>
 
+  <div class="wrap">
+    <div class="followStrip" id="alerts">
+      <div>
+        <h2>Know the moment it changes hands</h2>
+        <p>Title changes only &mdash; no weekly noise.</p>
+      </div>
+      <div class="btnRow">
+        <a class="btn" href="https://blogtrottr.com/?subscribe={SITE_URL}/feed.xml" target="_blank" rel="noopener">Email alerts</a>
+        <a class="btn ghost" href="feed.xml">RSS</a>
+        <a class="btn ghost" href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">@CollegeFBBelt</a>
+      </div>
+      <details>
+        <summary>How email alerts work</summary>
+        <p style="margin-top:10px">Every time the belt changes hands it hits the feed below the moment the site rebuilds.
+          Blogtrottr (or any RSS-to-email service) emails you when it happens &mdash; nothing to sign up for here, no account needed on this end.</p>
+        <div class="feedUrlBox"><code class="feedUrlText">{SITE_URL}/feed.xml</code><a class="btn ghost" style="min-height:36px" href="feed.xml">View feed</a></div>
+      </details>
+    </div>
+  </div>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every belt game sourced from the College Football Data API. Colors shown are the current holder&rsquo;s &mdash; the plate above recolors itself with every change of hands.</span>
-    <nav aria-label="Footer">
-      <a href="#lineage">Lineage</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Colors on this page are the current holder&rsquo;s &mdash; the site recolors itself with every change of hands.')}
 '''
 
 
@@ -2600,36 +2990,14 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
 <html lang="en">
 <meta charset="UTF-8">
 <title>Full History{title_suffix} — The College Football Belt</title>
+<meta name="description" content="Every reign of the College Football Belt{title_suffix}, the lineal college football championship, from Rutgers in 1869 to today: who won it, who they beat and how long they held it.">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="index.html#numbers">By the Numbers</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'history')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Full history</p>
   <h1 class="pageTitle">The Full History{title_suffix}</h1>
   <p class="lede">Every reign since Rutgers beat Princeton on November&nbsp;6, 1869 &mdash;
     {totals["reigns"]:,} of them, computed from {totals["belt_games"]:,} belt games across
@@ -2650,7 +3018,7 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
       </div>
       <div class="searchBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+        <input id="teamSearch" type="search" placeholder="Filter by team&hellip;" aria-label="Filter by team" autocomplete="off">
       </div>
     </div>
   </div>
@@ -2675,24 +3043,7 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
     not just who won each reign? <a href="{all_games_href}">See the full game log &rarr;</a></p>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every reign computed from the College Football Data API.')}
 
 <script>
 (function(){{
@@ -2985,6 +3336,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     <div class="pagerInfo">Reigns {range_start:,}&ndash;{range_end:,} of {total_reigns:,} &middot; page {page} of {total_pages}{jump_html}</div>
     {pager_nav}
   </div>'''
+    pager_html_bottom = pager_html.replace('aria-label="Reign history pages"', 'aria-label="Reign history pages (bottom)"')
 
     records_html = f'''
     <div class="record-card">
@@ -3018,33 +3370,10 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; A Companion Lineage</span>
-      <span class="wordmark">The Losers Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'losers')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">A companion lineage</p>
   <h1 class="pageTitle">The Losers Belt{title_suffix}</h1>
   <p class="lede">The real belt passes to whoever BEATS the holder. This one is its
     mirror image: it passes to whoever LOSES to the holder &mdash; you catch it the way
@@ -3055,6 +3384,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     Rutgers on November&nbsp;6, 1869. {SCOPE_INTRO[scope]}</p>
 {switcher_html}
 
+  <h2 class="srOnly">How the Losers Belt works</h2>
   <div class="rules">
     <div class="rule-card">
       <h3>Lost to the holder? It's yours.</h3>
@@ -3105,7 +3435,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       </div>
       <div class="searchBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+        <input id="teamSearch" type="search" placeholder="Filter by team&hellip;" aria-label="Filter by team" autocomplete="off">
       </div>
       <span class="pagerInfo" id="dataStatus" aria-live="polite"></span>
     </div>
@@ -3128,27 +3458,10 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     </table>
     <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
-{pager_html}
+{pager_html_bottom}
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign computed from the College Football Data API, same source as the real belt.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every reign computed from the College Football Data API, same source as the real belt.')}
 
 <script>
 (function(){{
@@ -3274,7 +3587,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     }}
 
     var fullHtml = '<div class="pagerInfo">' + infoHtml + '</div>' + navHtml;
-    pagerRows.forEach(function(el){{ el.innerHTML = fullHtml; }});
+    pagerRows.forEach(function(el, idx){{ el.innerHTML = idx ? fullHtml.replace('aria-label="Reign history pages"', 'aria-label="Reign history pages (bottom)"') : fullHtml; }});
   }}
 
   // Pager/jump links are rebuilt fresh on every render(), so bind the click
@@ -3422,37 +3735,14 @@ def generate_conference_belt_page(lineage, slug):
 <html lang="en">
 <meta charset="UTF-8">
 <title>The {esc(conference)} Belt — The College Football Belt</title>
-<meta name="description" content="The lineal {esc(conference)} championship: passes to whoever beats the holder, restricted to games between two {esc(conference)} members at the time they played. Currently held by {esc(current["team"])}.">
+<meta name="description" content="The {esc(conference)} Belt: a lineal conference title that passes to whoever beats the holder in a game between two {esc(conference)} members. Held by {esc(current["team"])}.">
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
-{head_extras()}
+{head_extras('../')}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">{classification.upper()} Conference Belt</span>
-      <span class="wordmark">The {esc(conference)} Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="../index.html">Home</a>
-      <a href="../lineage.html">Full History</a>
-      <a href="../all-games.html">All Games</a>
-      <a href="../records.html">Records</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="../map.html">Map</a>
-      <a href="../compare.html">Compare</a>
-      <a href="../trivia.html">Trivia</a>
-      <a href="../stories.html">Stories</a>
-      <a href="../losers-belt.html">Losers Belt</a>
-      <a href="../my-team.html">My Team</a>
-      <a href="index.html">Conferences</a>
-      <a href="../seasons.html">Seasons</a>
-      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('../', 'conferences')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">{classification.upper()} conference belt</p>
   <h1 class="pageTitle">The {esc(conference)} Belt</h1>
   <p class="lede">A companion lineage restricted to {esc(conference)}: the belt passes to
     whoever beats the holder, exactly like the real belt, but only games between two
@@ -3467,7 +3757,7 @@ def generate_conference_belt_page(lineage, slug):
     </div>
     <div class="searchBox">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-      <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+      <input id="teamSearch" type="search" placeholder="Filter by team&hellip;" aria-label="Filter by team" autocomplete="off">
     </div>
   </div>
 
@@ -3490,20 +3780,7 @@ def generate_conference_belt_page(lineage, slug):
   <p class="viewToggle"><a href="index.html">&larr; See every conference belt</a></p>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="../index.html">Home</a>
-      <a href="index.html">Conferences</a>
-      <a href="../seasons.html">Seasons</a>
-      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="../privacy.html">Privacy</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('../', 'Every reign computed from the College Football Data API.')}
 
 <script>
 (function(){{
@@ -3592,34 +3869,14 @@ def generate_conferences_index_page(conference_lineages):
 <html lang="en">
 <meta charset="UTF-8">
 <title>Conference Belts — The College Football Belt</title>
-<meta name="description" content="A lineal championship belt for every FBS and FCS conference -- the same beat-the-holder rule as the real belt, restricted to games between two members of that one conference.">
+<meta name="description" content="A lineal championship belt for every FBS and FCS conference: the same beat-the-holder rule as the real belt, counting only games between two members of that conference.">
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
-{head_extras()}
+{head_extras('../')}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; One Per Conference</span>
-      <span class="wordmark">Conference Belts</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="../index.html">Home</a>
-      <a href="../lineage.html">Full History</a>
-      <a href="../all-games.html">All Games</a>
-      <a href="../records.html">Records</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="../map.html">Map</a>
-      <a href="../compare.html">Compare</a>
-      <a href="../trivia.html">Trivia</a>
-      <a href="../stories.html">Stories</a>
-      <a href="../losers-belt.html">Losers Belt</a>
-      <a href="../my-team.html">My Team</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('../', 'conferences')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">One per conference</p>
   <h1 class="pageTitle">Conference Belts</h1>
   <p class="lede">The same lineal rule as the real belt &mdash; you catch it by beating the
     holder &mdash; run separately for every FBS and FCS conference, counting only games
@@ -3633,17 +3890,7 @@ def generate_conferences_index_page(conference_lineages):
   {fcs_html}
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="../index.html">Home</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="../privacy.html">Privacy</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('../', 'Every reign computed from the College Football Data API.')}
 '''
 
 
@@ -3720,36 +3967,14 @@ def generate_all_games_page(lineage, colors, belt_games, scope="combined", avail
 <html lang="en">
 <meta charset="UTF-8">
 <title>All Games{title_suffix} — The College Football Belt</title>
+<meta name="description" content="Searchable list of every game played for the College Football Belt{title_suffix} since 1869: dates, scores, title changes, defenses and ties.">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="index.html#numbers">By the Numbers</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'all-games')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Every belt game</p>
   <h1 class="pageTitle">Every Belt Game{title_suffix}</h1>
   <p class="lede">Every game with the belt on the line since Rutgers beat Princeton on
     November&nbsp;6, 1869 &mdash; {len(belt_games):,} of them: {title_changes:,} title changes
@@ -3770,7 +3995,7 @@ def generate_all_games_page(lineage, colors, belt_games, scope="combined", avail
       </div>
       <div class="searchBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-        <input id="teamSearch" type="text" placeholder="Filter by team&hellip;" autocomplete="off">
+        <input id="teamSearch" type="search" placeholder="Filter by team&hellip;" aria-label="Filter by team" autocomplete="off">
       </div>
     </div>
   </div>
@@ -3791,24 +4016,7 @@ def generate_all_games_page(lineage, colors, belt_games, scope="combined", avail
     <a href="{lineage_href}">See the Full History page &rarr;</a></p>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every game computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every game computed from the College Football Data API.')}
 
 <script>
 (function(){{
@@ -3953,52 +4161,37 @@ def render_weather(weather):
   <p class="emptyNote">Forecast as of {weather.get("fetched", "recently")} &mdash; weather this far out can change; treat it as a rough guide, not a promise.</p>'''
 
 
-def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk=None):
-    nav = '''
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>'''
-    header = f'''<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>{nav}
-  </div>
-</header>'''
-    footer = f'''<footer class="wrap">
-  <div class="footRow">
-    <span>Recent form and head-to-head from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>'''
+def belt_meetings(belt_games, team_a, team_b):
+    """Every belt game these two programs have played against each other,
+    newest first -- straight out of the lineage, no extra data."""
+    out = []
+    for g in belt_games:
+        if {g["home"], g["away"]} == {team_a, team_b}:
+            out.append(g)
+    out.sort(key=lambda g: g["date"], reverse=True)
+    return out
+
+
+def team_belt_summary(reigns, team, today):
+    """(reigns, total days held, last held year or None) for one program."""
+    mine = [r for r in reigns if r["team"] == team]
+    if not mine:
+        return 0, 0, None
+    days = sum(reign_duration_days(r, today) for r in mine)
+    last = mine[-1]
+    last_year = None if last.get("end_date") is None else last["end_date"][:4]
+    return len(mine), days, last_year
+
+
+def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk=None,
+                          lineage=None, belt_games=None):
+    """The next-belt-game preview (2026-09-16 redesign): a split header in
+    both teams' colors, a stakes strip that answers "what happens if each
+    side wins" before any prose, the AI-written preview as a column with the
+    prediction boxed and labeled, and a sidebar of the belt history between
+    the two programs."""
+    header = site_header('', 'preview')
+    footer = site_footer('', 'Recent form and head-to-head from the College Football Data API; belt history from the lineage itself.')
 
     if not next_game:
         return f'''<!doctype html>
@@ -4011,9 +4204,12 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 {header}
 
 <main class="wrap">
-  <h1 class="pageTitle">No Upcoming Game Yet</h1>
-  <p class="lede">The current holder&rsquo;s next game hasn&rsquo;t shown up in CollegeFootballData&rsquo;s
-    records yet &mdash; check back soon.</p>
+  <div class="pageIntro">
+    <span class="kicker">Up next</span>
+    <h1 class="pageTitle">No upcoming game yet</h1>
+    <p class="lede">The current holder&rsquo;s next game hasn&rsquo;t shown up in CollegeFootballData&rsquo;s
+      records yet &mdash; check back soon.</p>
+  </div>
 </main>
 
 {footer}
@@ -4021,79 +4217,91 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 
     holder = next_game["team"]
     opponent = next_game["opponent"]
+    today = date.today()
+    reigns = (lineage or {}).get("reigns") or []
+    belt_games = belt_games or []
+    current = reigns[-1] if reigns else None
     if next_game.get("neutral"):
         side_word, side_full = "vs.", "faces (neutral site)"
     elif next_game.get("is_home"):
         side_word, side_full = "vs.", "hosts"
     else:
         side_word, side_full = "at", "travels to"
-
     title = f"{esc(holder)} {side_word} {esc(opponent)}"
 
+    # ---- colors for the split header (contrast-checked, like game pages) ----
+    h_primary, h_alt = team_color(colors, holder)
+    o_primary, o_alt = team_color(colors, opponent)
+    h_ink, h_accent = panel_colors(h_primary, h_alt)
+    o_ink, o_accent = panel_colors(o_primary, o_alt)
+
+    # ---- matchup data (fetch_matchup_preview.py) ----
     matchup = matchup or {}
     recent = matchup.get("recent_form") or {}
-    holder_form_html = render_recent_form(holder, recent.get(holder, []))
-    opp_form_html = render_recent_form(opponent, recent.get(opponent, []))
+    h_form = recent.get(holder, [])
+    o_form = recent.get(opponent, [])
+
+    def record(form):
+        w = sum(1 for g in form if g.get("won") and not g.get("tied"))
+        l = sum(1 for g in form if not g.get("won") and not g.get("tied"))
+        t = sum(1 for g in form if g.get("tied"))
+        if not form:
+            return ""
+        return f"{w}&ndash;{l}" + (f"&ndash;{t}" if t else "") + " in the last " + str(len(form))
+
+    def last_result(form):
+        if not form:
+            return ""
+        g = form[0]
+        verb = "tied" if g.get("tied") else ("def." if g["won"] else "lost to")
+        return f'Last: {verb} {esc(g["opponent"])} {g["score_for"]}&ndash;{g["score_against"]}'
+
+    holder_form_html = render_recent_form(holder, h_form)
+    opp_form_html = render_recent_form(opponent, o_form)
     h2h_html = render_head_to_head(holder, opponent, matchup.get("head_to_head"))
 
-    ai_preview = ai_preview or {}
-    overview = ai_preview.get("overview") or ""
-    key_matchups = ai_preview.get("key_matchups") or []
-    betting = ai_preview.get("betting_angles") or ""
-    predicted_winner = ai_preview.get("predicted_winner") or ""
-    predicted_score = ai_preview.get("predicted_score") or ""
-    prediction_writeup = ai_preview.get("prediction_writeup") or ""
+    # ---- stakes (all from the lineage) ----
+    defenses = current["defenses"] if current else 0
+    days_held = reign_duration_days(current, today) if current else 0
+    game_date = date.fromisoformat(next_game["date"])
+    days_at_kick = (game_date - date.fromisoformat(current["start_date"])).days if current else 0
+    holder_reign_num = sum(1 for r in reigns if r["team"] == holder)
+    opp_reigns, opp_days, opp_last = team_belt_summary(reigns, opponent, today)
+    meetings = belt_meetings(belt_games, holder, opponent)
+    h_wins = sum(1 for g in meetings if g["new_holder"] == holder and g["outcome"] != "retained (tie)")
+    o_wins = sum(1 for g in meetings if g["new_holder"] == opponent and g["outcome"] != "retained (tie)")
+    if meetings:
+        lead = (f"{esc(holder)} leads {h_wins}&ndash;{o_wins}" if h_wins > o_wins else
+                f"{esc(opponent)} leads {o_wins}&ndash;{h_wins}" if o_wins > h_wins else f"Even at {h_wins}&ndash;{o_wins}")
+        h2h_belt = f'{lead} &middot; last met {meetings[0]["date"][:4]}'
+    else:
+        h2h_belt = "First belt game between these two"
+    if opp_reigns:
+        if_opp = f"Belt changes hands &middot; {esc(opponent)}&rsquo;s {ordinal(opp_reigns + 1)} reign"
+        opp_kicker = f"Challenger &middot; last held {opp_last}" if opp_last else "Challenger"
+    else:
+        if_opp = f"Belt changes hands &middot; {esc(opponent)}&rsquo;s first reign ever"
+        opp_kicker = "Challenger &middot; has never held it"
+    if_holder = f"{ordinal(defenses + 1)} defense &middot; reign reaches {days_at_kick:,} days"
 
-    ai_html = ""
-    if overview or key_matchups or betting or predicted_winner or prediction_writeup:
-        matchups_html = "".join(f"<li>{esc(m)}</li>" for m in key_matchups)
-        betting_html = f'<p class="bettingHead">Betting Angles</p><p>{esc(betting)}</p>' if betting else ""
-        matchups_block = f'<ul class="keyMatchups">{matchups_html}</ul>' if matchups_html else ""
+    weather_cell = ""
+    if weather and weather.get("temp_f") is not None:
+        bits = [f"{round(weather['temp_f'])}&deg;F"]
+        if weather.get("condition"):
+            bits.append(esc(weather["condition"]).lower())
+        if weather.get("wind_mph") is not None:
+            bits.append(f"wind {round(weather['wind_mph'])} mph")
+        if weather.get("precip_chance"):
+            bits.append(f"{round(weather['precip_chance'])}% rain")
+        fetched = weather.get("fetched")
+        as_of = f' <span class="stakeSub">forecast as of {esc(fetched)}</span>' if fetched else ""
+        weather_cell = f'''
+      <div class="stakeCell"><span class="kicker">Kickoff weather</span><span class="stakeVal">{" &middot; ".join(bits)}{as_of}</span></div>'''
+    else:
+        weather_cell = '''
+      <div class="stakeCell"><span class="kicker">Kickoff weather</span><span class="stakeVal">Forecast arrives closer to kickoff</span></div>'''
 
-        preview_block = ""
-        if overview or matchups_block or betting_html:
-            preview_block = f'''
-  <div class="sectionHead withTag">
-    <span class="tag">AI-Written</span>
-    <span class="rule"></span>
-    <h2>Game Preview</h2>
-  </div>
-  <div class="aiPreviewBody">
-    <p>{esc(overview)}</p>
-    {matchups_block}
-    {betting_html}
-  </div>'''
-
-        prediction_block = ""
-        if predicted_winner or prediction_writeup:
-            if predicted_score:
-                call_line = f'<span class="tabular">{esc(predicted_score)}</span>'
-            elif predicted_winner:
-                call_line = f'{esc(predicted_winner)} to win'
-            else:
-                call_line = "No clear pick"
-            prediction_block = f'''
-  <div class="sectionHead withTag">
-    <span class="tag">AI-Written</span>
-    <span class="rule"></span>
-    <h2>Prediction</h2>
-  </div>
-  <div class="aiPreviewBody predictionBody">
-    <p class="predictionCall">{call_line}</p>
-    <p>{esc(prediction_writeup)}</p>
-  </div>'''
-
-        ai_html = f'''{preview_block}{prediction_block}
-  <p class="noteBox">Written by Claude from the stats (and forecast, when available) on this page
-    &mdash; a for-fun editorial call, not betting advice or a guarantee. If it stops being fun, the
-    National Problem Gambling Helpline is 1-800-522-4700.</p>'''
-
-    weather_html = render_weather(weather)
-    calendar_html = build_calendar_links(next_game)
-
-    # ---- belt-at-risk odds (wishlist #2) -- same staleness-guarded pattern
-    # as the homepage's Up Next card: only shown when belt_risk.json exists
-    # and still covers this exact opponent.
+    # ---- odds (fetch_belt_odds.py), staleness-guarded to this opponent ----
     odds_html = ""
     if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
         defend_prob = belt_risk["next_game"].get("defend_prob")
@@ -4101,12 +4309,86 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
         bits = []
         if defend_prob is not None:
             source = belt_risk["next_game"].get("source")
-            source_txt = "CFBD's pregame model" if source == "cfbd_pregame_wp" else "our Elo estimate"
-            bits.append(f'{esc(holder)} is a {round(defend_prob * 100)}% favorite to defend, per {source_txt}')
+            source_txt = "CFBD&rsquo;s pregame model" if source == "cfbd_pregame_wp" else "our Elo estimate"
+            bits.append(f'<strong>{round(defend_prob * 100)}%</strong> to defend, per {source_txt}')
         if holds_prob is not None:
-            bits.append(f'{round(holds_prob * 100)}% to hold the belt into the offseason across the remaining schedule')
+            bits.append(f'<strong>{round(holds_prob * 100)}%</strong> to hold the belt into the offseason')
         if bits:
             odds_html = f'<p class="previewOdds">{" &middot; ".join(bits)}</p>'
+
+    # ---- AI-written preview (generate_ai_preview.py) ----
+    ai_preview = ai_preview or {}
+    overview = ai_preview.get("overview") or ""
+    key_matchups = ai_preview.get("key_matchups") or []
+    betting = ai_preview.get("betting_angles") or ""
+    predicted_winner = ai_preview.get("predicted_winner") or ""
+    predicted_score = ai_preview.get("predicted_score") or ""
+    prediction_writeup = ai_preview.get("prediction_writeup") or ""
+    preview_html = ""
+    if overview or key_matchups or betting:
+        matchups_html = "".join(f"<li>{esc(m)}</li>" for m in key_matchups)
+        matchups_block = f'<p class="kicker" style="margin:22px 0 6px">Worth watching</p><ul class="keyMatchups">{matchups_html}</ul>' if matchups_html else ""
+        betting_html = f'<p class="kicker" style="margin:22px 0 6px">The numbers</p><p>{esc(betting)}</p>' if betting else ""
+        preview_html = f'''
+      <div class="sectionHead">
+        <span class="tag">The preview &middot; AI-written</span>
+        <h2>{esc(holder)} {side_full} {esc(opponent)} with the belt on the line</h2>
+      </div>
+      <div class="editorial">
+        <p>{esc(overview)}</p>
+        {matchups_block}
+        {betting_html}
+      </div>'''
+    lean_html = ""
+    if predicted_winner or prediction_writeup:
+        call_line = esc(predicted_score) if predicted_score else (f"{esc(predicted_winner)} to win" if predicted_winner else "No clear pick")
+        lean_html = f'''
+      <div class="leanBox">
+        <span class="kicker">The lean</span>
+        <p class="leanCall">{call_line}</p>
+        <p>{esc(prediction_writeup)}</p>
+        <p class="leanNote">Written by Claude from the stats and forecast on this page &mdash; a for-fun editorial call, not betting advice or a guarantee. If it stops being fun, the National Problem Gambling Helpline is 1-800-522-4700.</p>
+      </div>'''
+    if not preview_html and not lean_html:
+        preview_html = '''
+      <div class="sectionHead">
+        <span class="tag">The preview</span>
+        <h2>The belt is on the line</h2>
+      </div>
+      <p class="lede">A written preview lands here once the pipeline&rsquo;s next run has the matchup stats in hand.</p>'''
+
+    calendar_html = build_calendar_links(next_game)
+
+    meetings_rows = ""
+    for g in meetings[:6]:
+        h_s, a_s = (int(x) for x in g["score"].split("-"))
+        winner = g["new_holder"]
+        w_s, l_s = (h_s, a_s) if winner == g["home"] else (a_s, h_s)
+        if g["outcome"] in ("changed", "established"):
+            tag = "Changed hands"
+        elif h_s == a_s:
+            tag = "Tie"
+        else:
+            tag = "Defended"
+        meetings_rows += (f'<a class="miniRow" href="games/{g["game_id"]}.html"><span>{g["date"][:4]} &middot; '
+                          f'<strong>{esc(winner)}</strong> {w_s}&ndash;{l_s}</span><span class="miniTag">{tag}</span></a>')
+    meetings_html = (f'<div class="miniList">{meetings_rows}</div>' if meetings_rows else
+                     f'<p class="emptyNote">These two have never met with the belt on the line.</p>')
+    opp_stats = f'''
+        <div class="miniStats">
+          <div><span class="n tabular">{opp_reigns}</span><span class="l">Reign{"s" if opp_reigns != 1 else ""}</span></div>
+          <div><span class="n tabular">{opp_days:,}</span><span class="l">Days held</span></div>
+          <div><span class="n">{opp_last or "&mdash;"}</span><span class="l">Last held</span></div>
+        </div>'''
+    opp_link = (f'<a class="moreLink" href="teams/{team_slug(opponent)}.html">Team page &amp; poster &rarr;</a>'
+                if opp_reigns else f'<a class="moreLink" href="all-games.html?q={quote(opponent)}">Every {esc(opponent)} belt game &rarr;</a>')
+
+    kickoff_local = ""
+    day_abbr = game_date.strftime("%a").upper()
+    when_line = fmt_date(next_game["date"])
+    raw = next_game.get("raw_date") or ""
+    venue_bits = [b for b in (next_game.get("venue_name"), next_game.get("venue_city"), next_game.get("venue_state")) if b]
+    venue_txt = esc(", ".join(venue_bits[:2])) if venue_bits else ("Neutral site" if next_game.get("neutral") else "")
 
     return f'''<!doctype html>
 <html lang="en">
@@ -4114,14 +4396,43 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 <title>{title} Preview — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
+<style>
+  :root{{
+    --home:{h_primary}; --home-ink:{h_ink}; --home-accent:{h_accent};
+    --away:{o_primary}; --away-ink:{o_ink}; --away-accent:{o_accent};
+  }}
+</style>
 
 {header}
 
 <main class="wrap">
-  <h1 class="pageTitle">Up Next: {title}</h1>
-  <p class="previewMeta">{esc(holder)} {esc(side_full)} {esc(opponent)} &middot; {fmt_date(next_game["date"])} &middot; the belt is on the line</p>
+  <div class="crumbRow" style="padding-inline:0"><a href="index.html">Belt</a> <span class="sep">/</span> <a href="season-{next_game.get("season", game_date.year)}.html">{next_game.get("season", game_date.year)} season</a> <span class="sep">/</span> Up next</div>
+  <h1 class="srOnly">Up next: {title}, {when_line} &mdash; the belt is on the line</h1>
+
+  <div class="matchHead">
+    <div class="matchSide home">
+      <span class="kicker">Holder &middot; {ordinal(holder_reign_num)} reign &middot; {defenses} defense{"s" if defenses != 1 else ""}</span>
+      <div class="matchTeam">{logo_chip(colors, holder, 56)}<span class="matchName"><a href="teams/{team_slug(holder)}.html">{esc(holder)}</a></span></div>
+      <span class="matchRecord">{record(h_form)}{" &middot; " if record(h_form) and last_result(h_form) else ""}{last_result(h_form)}</span>
+    </div>
+    <div class="matchCenter">
+      <span class="kicker">Belt on the line</span>
+      <span class="matchDay">{day_abbr}</span>
+      <span class="matchWhen">{when_line}<br>{venue_txt}</span>
+      <span class="matchLocal" id="kickoffLocal" data-utc="{esc(raw)}" hidden></span>
+    </div>
+    <div class="matchSide away">
+      <span class="kicker">{opp_kicker}</span>
+      <div class="matchTeam">{logo_chip(colors, opponent, 56)}<span class="matchName">{f'<a href="teams/{team_slug(opponent)}.html">{esc(opponent)}</a>' if opp_reigns else esc(opponent)}</span></div>
+      <span class="matchRecord">{record(o_form)}{" &middot; " if record(o_form) and last_result(o_form) else ""}{last_result(o_form)}</span>
+    </div>
+  </div>
+  <div class="stakes">
+    <div class="stakeCell"><span class="kicker">If {esc(holder)} wins</span><span class="stakeVal">{if_holder}</span></div>
+    <div class="stakeCell"><span class="kicker">If {esc(opponent)} wins</span><span class="stakeVal">{if_opp}</span></div>
+    <div class="stakeCell"><span class="kicker">Head to head, belt games</span><span class="stakeVal">{h2h_belt}</span></div>{weather_cell}
+  </div>
   {odds_html}
-  <p class="kickoffLocal" id="kickoffLocal" data-utc="{esc(next_game.get('raw_date') or '')}" hidden></p>
   <script>
   (function(){{
     var el = document.getElementById('kickoffLocal');
@@ -4130,40 +4441,55 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
     var d = new Date(raw);
     if (isNaN(d.getTime())) return;
     try {{
-      var fmt = new Intl.DateTimeFormat(undefined, {{
-        weekday: 'short', month: 'short', day: 'numeric',
-        hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
-      }});
-      el.textContent = 'Kickoff: ' + fmt.format(d) + ' your time';
+      var fmt = new Intl.DateTimeFormat(undefined, {{ hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }});
+      el.textContent = fmt.format(d) + ' your time';
       el.hidden = false;
     }} catch (e) {{}}
   }})();
   </script>
-{calendar_html}
-{weather_html}
-  <div class="sectionHead withTag">
-    <span class="tag">Recent Form</span>
-    <span class="rule"></span>
-    <h2>Last 5 Games</h2>
-  </div>
-  <div class="formGrid">
-    <div class="formCol">
-      <h3>{logo_img(colors, holder, "teamLogo", 22)}{esc(holder)}</h3>
-      {holder_form_html}
-    </div>
-    <div class="formCol">
-      <h3>{logo_img(colors, opponent, "teamLogo", 22)}{esc(opponent)}</h3>
-      {opp_form_html}
-    </div>
-  </div>
 
-  <div class="sectionHead withTag">
-    <span class="tag">Head-to-Head</span>
-    <span class="rule"></span>
-    <h2>All-Time Series</h2>
+  <div class="previewGrid">
+    <div class="previewMain">
+      {preview_html}
+      {lean_html}
+      <div class="sectionHead">
+        <span class="tag">Recent form</span>
+        <h2>Last {max(len(h_form), len(o_form)) or 5} games</h2>
+      </div>
+      <div class="formGrid">
+        <div class="formCol">
+          <h3>{logo_img(colors, holder, "teamLogo", 22)}{esc(holder)}</h3>
+          {holder_form_html}
+        </div>
+        <div class="formCol">
+          <h3>{logo_img(colors, opponent, "teamLogo", 22)}{esc(opponent)}</h3>
+          {opp_form_html}
+        </div>
+      </div>
+      <div class="sectionHead">
+        <span class="tag">Head-to-head</span>
+        <h2>All-time series</h2>
+      </div>
+      {h2h_html}
+    </div>
+    <aside class="previewSide">
+      <div class="sideCard" id="calendar">
+        <span class="kicker">Don&rsquo;t miss it</span>
+        {calendar_html if calendar_html else '<p class="emptyNote">Kickoff time to be announced.</p>'}
+        <a class="btn ghost" href="index.html#alerts">Email me if it changes hands</a>
+      </div>
+      <div class="sideCard">
+        <span class="kicker">Belt history between these two</span>
+        {meetings_html}
+        <a class="moreLink" href="compare.html">Full comparison &rarr;</a>
+      </div>
+      <div class="sideCard">
+        <span class="kicker">{esc(opponent)} &amp; the belt</span>
+        {opp_stats}
+        {opp_link}
+      </div>
+    </aside>
   </div>
-  {h2h_html}
-{ai_html}
 </main>
 
 {footer}
@@ -4285,58 +4611,16 @@ def generate_ruleset_page(md_text):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="index.html#lineage">Lineage</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="index.html#numbers">By the Numbers</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'ruleset')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">The ruleset</p>
   <h1 class="pageTitle">The Ruleset</h1>
   <div class="proseBlock">{intro_html}</div>
 {sections_html}
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every belt game sourced from the College Football Data API and computed against the rules on this page &mdash; no editorial judgment per game.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="index.html#lineage">Lineage</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every belt game sourced from the College Football Data API and computed against the rules on this page &mdash; no editorial judgment per game.')}
 '''
 
 
@@ -4549,32 +4833,10 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'records')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Leaderboards</p>
   <h1 class="pageTitle">Records</h1>
   <p class="lede">Superlatives computed straight from the lineage &mdash; no editorial
     judgment, same as everything else on this site. Ties aren&rsquo;t broken; a
@@ -4584,73 +4846,16 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
   </div>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Computed from the full belt lineage &mdash; recalculated fresh every run.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Computed from the full belt lineage &mdash; recalculated fresh every run.')}
 '''
 
 
 # --------------------------------------------------------------------- stories
 
 def _story_nav_footer(active_href=None):
-    """Shared header/footer chrome for the stories hub + article pages --
-    same shell as records.html/compare.html, just factored out since three
-    pages need it here instead of one."""
-    nav = '''
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>'''
-    header = f'''<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>{nav}
-  </div>
-</header>'''
-    footer = '''<footer class="wrap">
-  <div class="footRow">
-    <span>Every fact on this page is computed from the belt lineage, recalculated fresh every run.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="records.html">Records</a>
-      <a href="stories.html">Stories</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>'''
+    """Shared header/footer chrome for the stories hub + article pages."""
+    header = site_header('', 'stories')
+    footer = site_footer('', 'Every fact on this page is computed from the belt lineage, recalculated fresh every run.')
     return header, footer
 
 
@@ -4885,6 +5090,7 @@ def generate_stories_hub(lineage, belt_games):
 {header}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Data-driven longreads</p>
   <h1 class="pageTitle">Stories</h1>
   <p class="lede">The reference tables tell you what happened. These dig into a few of the more
     interesting stretches of belt history in more depth &mdash; still computed from the same data,
@@ -4974,6 +5180,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
         n = len(team_reigns_sorted)
         holder_line = (f'{esc(team)} currently holds the belt.' if is_holder_now else
                         f'{esc(team)} last held the belt {fmt_date(team_reigns_sorted[-1]["end_date"])}.')
+        team_reign_sorted_last_year = "" if is_holder_now else team_reigns_sorted[-1]["end_date"][:4]
 
         team_share_desc = esc(f"{n} reign{'s' if n != 1 else ''}, {total_days:,} total days held, "
                                f"{total_defenses} total defense{'s' if total_defenses != 1 else ''}.")
@@ -5001,60 +5208,36 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
   :root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}
 </style>
 
-<header class="site wrap">
-  <div class="headerRow">
-    <a class="back" href="../index.html">&larr; The College Football Belt</a>
-    <nav class="site" aria-label="Primary">
-      <a href="../lineage.html">Full History</a>
-      <a href="../all-games.html">All Games</a>
-      <a href="../records.html">Records</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="../map.html">Map</a>
-      <a href="../compare.html">Compare</a>
-      <a href="../trivia.html">Trivia</a>
-      <a href="../stories.html">Stories</a>
-      <a href="../losers-belt.html">Losers Belt</a>
-      <a href="../my-team.html">My Team</a>
-      <a href="../conferences/index.html">Conferences</a>
-      <a href="../seasons.html">Seasons</a>
-      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('../', None)}
 
 <main class="wrap">
-  <div class="teamPageHead" style="border-color:{primary}">
-    {logo_img(colors, team, "teamLogo", 48)}
-    <span class="swatch" style="background:{primary};width:14px;height:14px;"></span>
-    <h1 class="pageTitle" style="margin:0">{esc(team)}</h1>
-  </div>
-  <p class="lede">{holder_line} {n} reign{"s" if n != 1 else ""} in belt history,
-    {total_days:,} total day{"s" if total_days != 1 else ""} held,
-    {total_defenses} total defense{"s" if total_defenses != 1 else ""}.
-    <a class="posterLink" href="../posters/{team_slug(team)}.png">Download a poster of this
-      history &darr;</a></p>
+  <section class="teamPlate">
+    <div class="teamPlateRow">
+      {logo_chip(colors, team, 56)}
+      <div>
+        <p class="kicker">Program &middot; {"holds the belt now" if is_holder_now else "last held it " + team_reign_sorted_last_year}</p>
+        <h1 class="pageTitle">{esc(team)}</h1>
+      </div>
+    </div>
+    <div class="heroStats">
+      <div><span class="n tabular">{n}</span><span class="l">Reign{"s" if n != 1 else ""}</span></div>
+      <div><span class="n tabular">{total_days:,}</span><span class="l">Days held</span></div>
+      <div><span class="n tabular">{total_defenses}</span><span class="l">Defense{"s" if total_defenses != 1 else ""}</span></div>
+    </div>
+  </section>
+  <p class="lede" style="margin-top:18px">{holder_line}
+    <a class="posterLink" href="../posters/{team_slug(team)}.png">Download a poster of this history &darr;</a></p>
 
+  <div class="sectionHead">
+    <span class="tag">Every reign</span>
+    <h2>{esc(team)}&rsquo;s belt history</h2>
+    <a class="sectionLink" href="../compare.html">Compare with another team &rarr;</a>
+  </div>
   <div class="teamReignList">{rows_html}
   </div>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="../index.html">Home</a>
-      <a href="../lineage.html">Full History</a>
-      <a href="../records.html">Records</a>
-      <a href="../embed.html">Embed</a>
-      <a href="../api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="../privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('../', 'Every reign computed from the College Football Data API.')}
 '''
         with open(os.path.join(teams_dir, f"{team_slug(team)}.html"), "w", encoding="utf-8") as f:
             f.write(page)
@@ -5143,29 +5326,10 @@ def generate_player_pages(belt_games, details, players_dir):
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <a class="back" href="../index.html">&larr; The College Football Belt</a>
-    <nav class="site" aria-label="Primary">
-      <a href="../lineage.html">Full History</a>
-      <a href="../all-games.html">All Games</a>
-      <a href="../records.html">Records</a>
-      <a href="../ruleset.html">Ruleset</a>
-      <a href="../map.html">Map</a>
-      <a href="../compare.html">Compare</a>
-      <a href="../trivia.html">Trivia</a>
-      <a href="../stories.html">Stories</a>
-      <a href="../losers-belt.html">Losers Belt</a>
-      <a href="../my-team.html">My Team</a>
-      <a href="../conferences/index.html">Conferences</a>
-      <a href="../seasons.html">Seasons</a>
-      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('../', None)}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Player</p>
   <h1 class="pageTitle">{esc(p["name"])}</h1>
   <p class="lede">{esc(teams_bit)} &middot; a recorded stat line in {n} belt game{"s" if n != 1 else ""} on file.</p>
 
@@ -5177,22 +5341,7 @@ def generate_player_pages(belt_games, details, players_dir):
   <p class="noteBox">Only covers belt games from 2003 onward, and only the stat categories CFBD recorded for this player in each one &mdash; see a game&rsquo;s own page for its full box score.</p>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="../index.html">Home</a>
-      <a href="../lineage.html">Full History</a>
-      <a href="../records.html">Records</a>
-      <a href="../embed.html">Embed</a>
-      <a href="../api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="../privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('../', 'Every reign computed from the College Football Data API.')}
 '''
         with open(os.path.join(players_dir, f"{slug}.html"), "w", encoding="utf-8") as f:
             f.write(page)
@@ -5389,32 +5538,10 @@ def generate_map_page(lineage, colors):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'map')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Everywhere the belt has lived</p>
   <h1 class="pageTitle">Everywhere the Belt Has Lived</h1>
   <p class="lede">{n_states} state{"s" if n_states != 1 else ""} ha{"ve" if n_states != 1 else "s"} produced
     a College Football Belt holder since 1869. Shading shows how many separate reigns
@@ -5507,24 +5634,7 @@ def generate_map_page(lineage, colors):
   </div>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every reign's state comes from the belt-holding team's CFBD-listed home state.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', "Every reign's state comes from the belt-holding team's CFBD-listed home state.")}
 '''
 
 
@@ -5580,33 +5690,10 @@ def generate_embed_page(lineage, colors):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'embed')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Free badge</p>
   <h1 class="pageTitle">Embed the Belt</h1>
   <p class="lede">Run a fan site, blog, or forum signature? Drop this badge in and it&rsquo;ll always
     show who currently holds the belt &mdash; it&rsquo;s a live image, regenerated every time the
@@ -5617,32 +5704,16 @@ def generate_embed_page(lineage, colors):
   </div>
 
   <p class="embedLabel">HTML</p>
-  <textarea class="embedCode" rows="2" readonly onclick="this.select()">{esc(html_snippet)}</textarea>
+  <textarea class="embedCode" rows="2" readonly aria-label="HTML embed code" onclick="this.select()">{esc(html_snippet)}</textarea>
 
   <p class="embedLabel">Markdown</p>
-  <textarea class="embedCode" rows="2" readonly onclick="this.select()">{esc(md_snippet)}</textarea>
+  <textarea class="embedCode" rows="2" readonly aria-label="Markdown embed code" onclick="this.select()">{esc(md_snippet)}</textarea>
 
   <p class="embedLabel">Direct badge URL</p>
-  <textarea class="embedCode" rows="1" readonly onclick="this.select()">{SITE_URL}/badge.svg</textarea>
+  <textarea class="embedCode" rows="1" readonly aria-label="Badge image URL" onclick="this.select()">{SITE_URL}/badge.svg</textarea>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>The badge is a plain SVG, rebuilt from live data on every deploy &mdash; no tracking, no script tag required.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="compare.html">Compare</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'The badge is a plain SVG, rebuilt from live data on every deploy &mdash; no tracking, no script tag required.')}
 '''
 
 
@@ -5677,33 +5748,10 @@ def generate_privacy_page():
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', None)}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Legal</p>
   <h1 class="pageTitle">Privacy Policy</h1>
   <p class="lede">This site is a hobby project with no accounts, no logins, and nothing to sign up
     for &mdash; there isn&rsquo;t much data to collect in the first place. Here&rsquo;s exactly
@@ -5792,22 +5840,7 @@ def generate_privacy_page():
   </section>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>The College Football Belt &mdash; lineal championship, since 1869.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'The College Football Belt &mdash; lineal championship, since 1869.')}
 '''
 
 
@@ -5871,32 +5904,10 @@ def generate_compare_page(lineage, colors, belt_games):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'compare')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Head to head</p>
   <h1 class="pageTitle">Compare Two Belt Holders</h1>
   <p class="lede">Pick any two programs that have ever held the belt &mdash; see their combined
     reign stats and every belt game the two have played against each other. This is BELT
@@ -5908,6 +5919,7 @@ def generate_compare_page(lineage, colors, belt_games):
     <select id="compareB" aria-label="Second team">{options_html}</select>
   </div>
 
+  <h2 class="srOnly">Belt history side by side</h2>
   <div class="compareStats" id="compareStats"></div>
   <div class="compareGamesHead" id="compareGamesHead"></div>
   <p class="compareRecord" id="compareRecord"></p>
@@ -5988,23 +6000,7 @@ def generate_compare_page(lineage, colors, belt_games):
   </script>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Belt-game results only &mdash; computed straight from belt_data/lineage.json, no extra API call.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Belt-game results only &mdash; computed straight from belt_data/lineage.json, no extra API call.')}
 '''
 
 
@@ -6040,33 +6036,10 @@ def generate_my_team_page(team_paths, colors):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'my-team')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Path to the belt</p>
   <h1 class="pageTitle">My Team and the Path to the Belt</h1>
   <p class="lede" id="myTeamLede">Pick your team once &mdash; we'll remember it on this device &mdash; and we'll tell you
     exactly how {esc(holder)}'s remaining schedule could put the belt in front of you this season.</p>
@@ -6180,23 +6153,7 @@ def generate_my_team_page(team_paths, colors):
   </script>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Your team choice is saved only in this browser &mdash; no account, nothing sent to us.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Your team choice is saved only in this browser &mdash; no account, nothing sent to us.')}
 '''
 
 
@@ -6357,36 +6314,14 @@ def generate_season_page(season_year, season_games, reign_by_start, all_seasons,
 <html lang="en">
 <meta charset="UTF-8">
 <title>The {season_year} Belt Season — The College Football Belt</title>
+<meta name="description" content="Every College Football Belt game of the {season_year} season: who held the lineal title, each defense and title change, and who carried the belt out of {season_year}.">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'seasons')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Season by season</p>
   <h1 class="pageTitle">{title_word}: {season_year}</h1>
   <p class="lede">{summary} {len(season_games)} belt game{'s' if len(season_games) != 1 else ''} this season:
     {title_changes} title change{'s' if title_changes != 1 else ''} and {defenses_total} defense{'s' if defenses_total != 1 else ''}.</p>
@@ -6405,23 +6340,7 @@ def generate_season_page(season_year, season_games, reign_by_start, all_seasons,
   {prev_next_html}
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every game computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every game computed from the College Football Data API.')}
 '''
 
 
@@ -6448,36 +6367,14 @@ def generate_seasons_index_page(seasons_summary):
 <html lang="en">
 <meta charset="UTF-8">
 <title>Every Belt Season — The College Football Belt</title>
+<meta name="description" content="Season-by-season history of the College Football Belt since 1869: belt games per year, how often the title changed hands, and who held it at season&rsquo;s end.">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'seasons')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Season by season</p>
   <h1 class="pageTitle">Every Belt Season</h1>
   <p class="lede">Everything else on this site is all-time or right-now &mdash; this is the season-by-season
     archive, {len(seasons_summary)} of them back to 1869. Tap any season for its full game-by-game story.</p>
@@ -6493,21 +6390,7 @@ def generate_seasons_index_page(seasons_summary):
   </div>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every season computed from the College Football Data API.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every season computed from the College Football Data API.')}
 '''
 
 
@@ -6560,33 +6443,10 @@ def generate_defend_or_dethrone_page(next_game, recent_belt_games):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'dod')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Weekly pick</p>
   <h1 class="pageTitle">Defend or Dethrone</h1>
   <p class="lede">Every week the belt&rsquo;s on the line, make the call before kickoff: does the holder
     survive, or does the belt change hands? Right or wrong, we&rsquo;ll remember your streak on this device.</p>
@@ -6738,21 +6598,7 @@ def generate_defend_or_dethrone_page(next_game, recent_belt_games):
   </script>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Your picks and streak are saved only in this browser &mdash; no account, nothing sent to us.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Your picks and streak are saved only in this browser &mdash; no account, nothing sent to us.')}
 '''
 
 
@@ -6868,32 +6714,10 @@ def generate_trivia_page(pool):
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'trivia')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Quiz</p>
   <h1 class="pageTitle">Belt Trivia</h1>
   <p class="lede">{QUIZ_LEN} questions pulled straight from 150+ years of real belt history &mdash;
     every question and every wrong answer is an actual fact from the lineage, not hand-written.
@@ -6975,7 +6799,7 @@ def generate_trivia_page(pool):
         '<div class="triviaResults">' +
         '<div class="triviaScore tabular">' + score + ' / ' + quiz.length + '</div>' +
         '<p>' + msg + '</p>' +
-        '<textarea class="embedCode" rows="2" readonly onclick="this.select()">' + shareText + '</textarea>' +
+        '<textarea class="embedCode" rows="2" readonly aria-label="Share text" onclick="this.select()">' + shareText + '</textarea>' +
         '<button class="calBtn" id="triviaReplay" style="margin-top:14px">Play Again</button>' +
         '</div>';
       document.getElementById('triviaReplay').addEventListener('click', function(){{
@@ -6990,22 +6814,7 @@ def generate_trivia_page(pool):
   </script>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Every question computed from belt_data/lineage.json &mdash; nothing here is hand-written.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Every question computed from belt_data/lineage.json &mdash; nothing here is hand-written.')}
 '''
 
 
@@ -7048,33 +6857,10 @@ def generate_api_docs_page():
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
-    <nav class="site" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>
-  </div>
-</header>
+{site_header('', 'api')}
 
 <main class="wrap">
+  <p class="kicker pageKicker">Developers</p>
   <h1 class="pageTitle">Data API</h1>
   <p class="lede">Three plain, unauthenticated JSON files, regenerated on every site update &mdash;
     the same data this site itself is built from. Free to build on; a link back to
@@ -7083,7 +6869,7 @@ def generate_api_docs_page():
   <p class="embedLabel">GET {SITE_URL}/api/current.json</p>
   <p class="lede" style="margin-top:0">The current holder, since when, days held, defenses,
     that team&rsquo;s own reign number, and the next scheduled belt game (or <code class="mono">null</code>).</p>
-  <textarea class="embedCode" rows="3" readonly onclick="this.select()">{{
+  <textarea class="embedCode" rows="3" readonly aria-label="Example JSON response" onclick="this.select()">{{
   "holder": "Notre Dame", "since": "2025-11-29", "days_held": 660,
   "defenses": 2, "team_reign_number": 9, "next_game": {{ ... }} | null,
   "generated_at": "2026-01-01T00:00:00Z", "site": "{SITE_URL}"
@@ -7105,27 +6891,38 @@ def generate_api_docs_page():
     browser-based cross-origin widget may need a small proxy on your end.</p>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>Sourced from the College Football Data API; this site&rsquo;s own derived data is free to reuse.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('', 'Sourced from the College Football Data API; this site&rsquo;s own derived data is free to reuse.')}
 '''
 
 
 # -------------------------------------------------------------------- main
 
 # --------------------------------------------------- sitemap / robots / feed / 404
+
+def generate_search_index(lineage, belt_games, team_slugs, seasons, conference_lineages):
+    """The header search box's data: every program in belt history (its own
+    page if it ever held the belt, otherwise the All Games filter), every
+    season, every conference belt, and the section pages -- fetched once,
+    lazily, the first time a visitor focuses the box (see head_extras())."""
+    holders = set(team_slugs)
+    entries = []
+    for name in sorted({t for g in belt_games for t in (g["home"], g["away"])}):
+        slug = team_slug(name)
+        if slug in holders:
+            entries.append({"n": name, "u": f"teams/{slug}.html", "t": "Team"})
+        else:
+            entries.append({"n": name, "u": f"all-games.html?q={quote(name)}", "t": "Belt games", "k": "challenger"})
+    for y in seasons:
+        entries.append({"n": f"{y} season", "u": f"season-{y}.html", "t": "Season", "k": str(y)})
+    for slug, conf in sorted(conference_lineages.items()):
+        entries.append({"n": f"{conf.get('conference', slug)} belt", "u": f"conferences/{slug}.html",
+                        "t": "Conference belt", "k": conf.get("classification", "")})
+    for key, href, label in NAV_PRIMARY[1:] + [x for _, items in NAV_MORE for x in items]:
+        if href.startswith(("http", "mailto:")):
+            continue
+        entries.append({"n": label, "u": href, "t": "Page"})
+    return entries
+
 
 def generate_sitemap(urls):
     """A plain sitemap.xml -- every URL, one <lastmod> for all of them
@@ -7158,63 +6955,36 @@ def generate_ads_txt(publisher_id):
 
 
 def generate_404_page():
-    nav = '''
-    <nav class="site" aria-label="Primary">
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="records.html">Records</a>
-      <a href="ruleset.html">Ruleset</a>
-      <a href="map.html">Map</a>
-      <a href="compare.html">Compare</a>
-      <a href="trivia.html">Trivia</a>
-      <a href="stories.html">Stories</a>
-      <a href="losers-belt.html">Losers Belt</a>
-      <a href="my-team.html">My Team</a>
-      <a href="conferences/index.html">Conferences</a>
-      <a href="seasons.html">Seasons</a>
-      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
-      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
-    </nav>'''
+    # GitHub Pages serves this one file for EVERY missing URL, nested paths
+    # included (/games/nope.html, /conferences/x), so everything here has to
+    # be root-absolute -- a relative styles.css would 404 too from a subfolder.
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
 <title>Page Not Found — The College Football Belt</title>
-<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
-{head_extras()}
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/styles.css?v={STYLES_VERSION}">
+{head_extras('/')}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <a class="back" href="index.html">&larr; The College Football Belt</a>{nav}
-  </div>
-</header>
+{site_header('/', None)}
 
 <main class="wrap">
-  <h1 class="pageTitle">404 &mdash; Fumbled</h1>
-  <p class="lede">Whatever you were looking for isn&rsquo;t here &mdash; might&rsquo;ve moved,
-    might never have existed. Either way, no need to punt.</p>
-  <p><a href="index.html">&larr; Back to the current belt holder</a></p>
+  <div class="pageIntro">
+    <span class="kicker">404</span>
+    <h1 class="pageTitle">Fumbled.</h1>
+    <p class="lede">Whatever you were looking for isn&rsquo;t here &mdash; it might have moved,
+      or it might never have existed. Either way, no need to punt.</p>
+  </div>
+  <div class="btnRow" style="margin-top:18px">
+    <a class="btn" href="/">Current belt holder</a>
+    <a class="btn ghost" href="/lineage.html">Full history</a>
+    <a class="btn ghost" href="/all-games.html">Every belt game</a>
+  </div>
 </main>
 
-<footer class="wrap">
-  <div class="footRow">
-    <span>The College Football Belt &mdash; lineal championship, since 1869.</span>
-    <nav aria-label="Footer">
-      <a href="index.html">Home</a>
-      <a href="lineage.html">Full History</a>
-      <a href="all-games.html">All Games</a>
-      <a href="embed.html">Embed</a>
-      <a href="api.html">API</a>
-      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
-      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
-    </nav>
-  </div>
-</footer>
+{site_footer('/', 'The College Football Belt &mdash; lineal championship, since 1869.')}
 '''
 
-
-# ------------------------------------------------------------------- PWA
 
 def generate_manifest_json():
     """Web app manifest -- lets a mobile (or desktop) visitor "Add to Home
@@ -7292,27 +7062,32 @@ self.addEventListener("fetch", (event) => {{
 
 
 def generate_offline_page():
+    # Served by the service worker for any un-cached page while offline,
+    # from whatever path was requested -- so links are root-absolute here
+    # too, and the header is a plain brand line (no search/menu, since
+    # nothing they point at is reachable offline anyway).
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
 <title>Offline — The College Football Belt</title>
-<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
-{head_extras()}
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/styles.css?v={STYLES_VERSION}">
+{head_extras('/')}
 
-<header class="site wrap">
-  <div class="headerRow">
-    <div class="brandBlock">
-      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
-      <span class="wordmark">The College Football Belt</span>
-    </div>
+<header class="siteHead">
+  <div class="wrap siteHeadRow">
+    <a class="brand" href="/">{BELT_MARK_SVG}<span class="brandName">The College Football Belt</span></a>
   </div>
 </header>
 
 <main class="wrap">
-  <h1 class="pageTitle">You&rsquo;re Offline</h1>
-  <p class="lede">This page hasn&rsquo;t been saved for offline viewing yet &mdash; reconnect and
-    try again, or open a page you&rsquo;ve already visited on this device; those stay
-    available without a connection.</p>
+  <div class="pageIntro">
+    <span class="kicker">No connection</span>
+    <h1 class="pageTitle">You&rsquo;re offline.</h1>
+    <p class="lede">This page hasn&rsquo;t been saved for offline viewing yet &mdash; reconnect and
+      try again, or open a page you&rsquo;ve already visited on this device; those stay
+      available without a connection.</p>
+  </div>
 </main>
 '''
 
@@ -7504,7 +7279,8 @@ def main():
                          f"bootstrap to enable them; the nav's \"Conferences\" link will 404 "
                          f"until at least one exists)")
 
-    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk)
+    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk,
+                                         lineage=lineage, belt_games=belt_games)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
 
@@ -7635,6 +7411,11 @@ def main():
     api_docs_html = generate_api_docs_page()
     with open(os.path.join(OUT_DIR, "api.html"), "w", encoding="utf-8") as f:
         f.write(api_docs_html)
+
+    search_index = generate_search_index(lineage, belt_games, team_slugs,
+                                         [s["year"] for s in seasons_summary], conference_lineages)
+    with open(os.path.join(OUT_DIR, "search-index.json"), "w", encoding="utf-8") as f:
+        json.dump(search_index, f, ensure_ascii=False, separators=(",", ":"))
 
     sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
                      f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html",
