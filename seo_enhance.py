@@ -67,17 +67,16 @@ STATIC_PAGES = {
     "lineage.html": (
         "Full College Football Belt History: Every Reign Since 1869",
         "Every reign of the College Football Belt, the lineal college football "
-        "championship, from Rutgers in 1869 to today: who won it, who they beat, "
-        "how long they held it and how many times they defended it."),
+        "championship, from Rutgers in 1869 to today: who won it, who they beat "
+        "and how long they held it."),
     "all-games.html": (
         "Every College Football Belt Game Since 1869 — Scores & Results",
         "Searchable list of every game played for the College Football Belt since "
         "1869: dates, scores, title changes, defenses and ties."),
     "records.html": (
         "College Football Belt Records — Longest Reigns, Most Defenses",
-        "All-time College Football Belt records: longest reigns, most total days "
-        "held, most defenses, biggest blowouts and closest calls in lineal "
-        "college football championship history."),
+        "All-time College Football Belt records: longest reigns, most days held, "
+        "most defenses, longest droughts and belt held by coach."),
     "ruleset.html": (
         "How the College Football Belt Works — Official Ruleset",
         "The rules of the College Football Belt: how the lineal title passes on "
@@ -224,8 +223,9 @@ def game_meta(g, total):
     title = f"{away} at {home} {year}: {short}, {score}"
     if len(title) > 62:
         title = f"{away} at {home} {year}: {score} belt game"
-    desc = (f"{when}: {result}. {stake} Belt game #{n:,} of {total:,} in the lineal "
-            f"college football championship since 1869.")
+    desc = f"{when}: {result}. {stake} College Football Belt game #{n:,} of {total:,} since 1869."
+    if len(desc) > 158:  # Google truncates around 155-160 characters
+        desc = f"{when}: {result}. {stake} Belt game #{n:,} of {total:,}."
     return title, desc
 
 
@@ -323,11 +323,16 @@ def process_pages(lineage):
                 base = get_meta(doc, "description") or ""
                 if "college football belt" not in base.lower():
                     lead = (f"{holder} holds the College Football Belt, the lineal college "
-                            f"football championship passed on the field since {first_year}. "
+                            f"football title passed on the field since {first_year}. "
                             if holder else
                             f"The lineal college football championship, passed on the field "
                             f"since {first_year}. ")
                     desc = (lead + base).strip()
+                    if len(desc) > 158:  # keep it inside what Google shows
+                        first_sentence = base.split(". ")[0].rstrip(".") + "."
+                        desc = (lead + first_sentence).strip()
+                    if len(desc) > 158:
+                        desc = lead.strip()
                 extra.append(json_ld({
                     "@context": "https://schema.org",
                     "@graph": [
