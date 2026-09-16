@@ -430,5 +430,149 @@
     "effective_date": "1995-12-19",
     "detected_on": "2026-09-16",
     "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Arkansas",
+    "reign_started": "1996-01-12",
+    "last_activity_date": "1996-01-12",
+    "effective_date": "1996-01-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas"
+  },
+  {
+    "team": "Texas",
+    "reign_started": "1996-01-13",
+    "last_activity_date": "1996-01-13",
+    "effective_date": "1996-01-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1996-01-14",
+    "last_activity_date": "1996-01-14",
+    "effective_date": "1996-01-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas A&M"
+  },
+  {
+    "team": "Texas A&M",
+    "reign_started": "1996-01-15",
+    "last_activity_date": "1996-01-15",
+    "effective_date": "1996-01-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1996-01-16",
+    "last_activity_date": "1996-01-16",
+    "effective_date": "1996-01-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Baylor"
+  },
+  {
+    "team": "Baylor",
+    "reign_started": "1996-01-17",
+    "last_activity_date": "1996-01-17",
+    "effective_date": "1996-01-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arkansas"
+  },
+  {
+    "team": "Arkansas",
+    "reign_started": "1996-01-18",
+    "last_activity_date": "1996-01-18",
+    "effective_date": "1996-01-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Houston"
+  },
+  {
+    "team": "Houston",
+    "reign_started": "1996-01-19",
+    "last_activity_date": "1996-01-19",
+    "effective_date": "1996-01-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1996-01-20",
+    "last_activity_date": "1996-01-20",
+    "effective_date": "1996-01-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "SMU"
+  },
+  {
+    "team": "SMU",
+    "reign_started": "1996-01-21",
+    "last_activity_date": "1996-01-21",
+    "effective_date": "1996-01-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arkansas"
+  },
+  {
+    "team": "Arkansas",
+    "reign_started": "1996-01-22",
+    "last_activity_date": "1996-01-22",
+    "effective_date": "1996-01-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "TCU"
+  },
+  {
+    "team": "TCU",
+    "reign_started": "1996-01-23",
+    "last_activity_date": "1996-01-23",
+    "effective_date": "1996-01-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas"
+  },
+  {
+    "team": "Texas",
+    "reign_started": "1996-01-24",
+    "last_activity_date": "1996-01-24",
+    "effective_date": "1996-01-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "1996-01-25",
+    "last_activity_date": "1996-01-25",
+    "effective_date": "1996-01-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "TCU"
+  },
+  {
+    "team": "TCU",
+    "reign_started": "1996-01-26",
+    "last_activity_date": "1996-01-26",
+    "effective_date": "1996-01-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1996-01-27",
+    "last_activity_date": "1996-01-27",
+    "effective_date": "1996-01-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas"
+  },
+  {
+    "team": "Texas",
+    "reign_started": "1996-01-28",
+    "last_activity_date": "1996-01-28",
+    "effective_date": "1996-01-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma State"
+  },
+  {
+    "team": "Oklahoma State",
+    "reign_started": "1996-01-29",
+    "last_activity_date": "1996-01-29",
+    "effective_date": "1996-01-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
   }
 ]
