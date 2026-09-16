@@ -976,15 +976,99 @@
       "end_date": "2007-12-21",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Illinois State",
+      "start_date": "2007-12-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Western Illinois",
+      "predecessor": "Southern Illinois",
+      "end_date": "2007-12-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Southern Illinois",
+      "start_date": "2007-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Illinois State",
+      "predecessor": "Youngstown State",
+      "end_date": "2007-12-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Youngstown State",
+      "start_date": "2007-12-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Southern Illinois",
+      "predecessor": "Illinois State",
+      "end_date": "2007-12-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Illinois State",
+      "start_date": "2007-12-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Youngstown State",
+      "predecessor": "Southern Illinois",
+      "end_date": "2007-12-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Western Illinois",
+      "start_date": "2007-12-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Illinois State",
+      "predecessor": "Illinois State",
+      "end_date": "2007-12-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Illinois State",
+      "start_date": "2007-12-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Western Illinois",
+      "predecessor": "Southern Illinois",
+      "end_date": "2007-12-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Northern Iowa",
+      "start_date": "2007-12-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Illinois State",
+      "predecessor": "Southern Illinois",
+      "end_date": "2007-12-28",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Illinois State",
-    "start_date": "2007-12-22",
+    "team": "Southern Illinois",
+    "start_date": "2007-12-29",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Western Illinois",
-    "predecessor": "Southern Illinois"
+    "reclaimed_after": "Northern Iowa",
+    "predecessor": "Youngstown State"
   }
 }

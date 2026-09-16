@@ -817,15 +817,99 @@
       "end_date": "2007-12-21",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Iona",
+      "start_date": "2007-12-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Duquesne",
+      "predecessor": "La Salle",
+      "end_date": "2007-12-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "La Salle",
+      "start_date": "2007-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iona",
+      "predecessor": "St. Peter's",
+      "end_date": "2007-12-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "St. Peter's",
+      "start_date": "2007-12-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "La Salle",
+      "predecessor": "Iona",
+      "end_date": "2007-12-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iona",
+      "start_date": "2007-12-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "St. Peter's",
+      "predecessor": "La Salle",
+      "end_date": "2007-12-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Duquesne",
+      "start_date": "2007-12-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iona",
+      "predecessor": "Iona",
+      "end_date": "2007-12-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iona",
+      "start_date": "2007-12-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Duquesne",
+      "predecessor": "La Salle",
+      "end_date": "2007-12-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Marist",
+      "start_date": "2007-12-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iona",
+      "predecessor": "Iona",
+      "end_date": "2007-12-28",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Iona",
-    "start_date": "2007-12-22",
+    "start_date": "2007-12-29",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Duquesne",
+    "reclaimed_after": "Marist",
     "predecessor": "La Salle"
   }
 }
