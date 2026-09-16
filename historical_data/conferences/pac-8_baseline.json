@@ -2281,15 +2281,99 @@
       "end_date": "1978-03-01",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "USC",
+      "start_date": "1978-03-02",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stanford",
+      "predecessor": "Oregon State",
+      "end_date": "1978-03-02",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "1978-03-03",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "USC",
+      "predecessor": "California",
+      "end_date": "1978-03-03",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "1978-03-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "USC",
+      "end_date": "1978-03-04",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "USC",
+      "start_date": "1978-03-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "Oregon State",
+      "end_date": "1978-03-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Stanford",
+      "start_date": "1978-03-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "USC",
+      "predecessor": "USC",
+      "end_date": "1978-03-06",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "USC",
+      "start_date": "1978-03-07",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stanford",
+      "predecessor": "Oregon State",
+      "end_date": "1978-03-07",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Washington",
+      "start_date": "1978-03-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "USC",
+      "predecessor": "California",
+      "end_date": "1978-03-08",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "USC",
-    "start_date": "1978-03-02",
+    "team": "California",
+    "start_date": "1978-03-09",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Stanford",
-    "predecessor": "Oregon State"
+    "reclaimed_after": "Washington",
+    "predecessor": "USC"
   }
 }
