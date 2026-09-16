@@ -29,8 +29,11 @@ Site-wide:
      pages that really change (section pages, recent games, the current
      holder's page) carry today's date; settled history carries none.
   8. Redirect stubs for URLs from the pre-2018 site that Google still has
-     indexed (/Seasons.htm, /index.htm, /author/admin/, /2018/10/), so they
-     pass their value to the homepage instead of 404ing.
+     indexed -- the WordPress leftovers (/Seasons.htm, /index.htm,
+     /author/admin/, /2018/10/, /blog, /about, /team/<Name>) and the whole
+     old static scheme (/<year>/<year> Game Summaries/<Away> at <Home>.htm,
+     /Schools/<Name> Stats.htm), generated from the lineage so every old
+     URL lands on the page that replaced it (see legacy_redirect_map).
 
 Idempotent: running it twice changes nothing the second time.
 """
@@ -41,6 +44,7 @@ import os
 import re
 import sys
 from datetime import date, timedelta
+from urllib.parse import quote
 
 import build_site as bs
 
@@ -334,7 +338,7 @@ def process_pages(lineage):
                 continue
             path = os.path.join(root, fn)
             rel = os.path.relpath(path, OUT_DIR).replace(os.sep, "/")
-            if rel in LEGACY_REDIRECTS:
+            if rel in LEGACY_REDIRECTS or rel in LEGACY_EXACT or "Game Summaries/" in rel or rel.startswith(("Schools/", "team/", "Logos/")):
                 continue
             with open(path, encoding="utf-8") as f:
                 doc = f.read()
@@ -534,14 +538,110 @@ REDIRECT_TEMPLATE = """<!doctype html>
 """
 
 
-def write_legacy_redirects():
-    for rel, target in LEGACY_REDIRECTS.items():
+# The pre-2018 site was a hand-built static site with its own URL scheme
+# (per-game pages under "<year>/<year> Game Summaries/", per-program pages
+# under "Schools/", later a WordPress layer with "/team/<Name>", "/blog",
+# "/about"). Search Console (2026-09-16) still lists 29 of those as 404s,
+# and there are surely more links to them around the web. Rather than fix
+# the 29 one by one, generate a stub for every URL the old scheme could
+# have produced from the current lineage, plus the exact ones Google
+# reported, and point each at the page that replaced it.
+
+# Old site's spellings for programs CFBD names differently.
+OLD_NAME_ALIASES = {
+    "USC": ["Southern Cal", "Southern California"],
+    "Ole Miss": ["Mississippi"],
+    "Pittsburgh": ["Pitt"],
+    "Miami": ["Miami (FL)", "Miami-FL"],
+    "LSU": ["Louisiana State"],
+    "BYU": ["Brigham Young"],
+    "TCU": ["Texas Christian"],
+    "SMU": ["Southern Methodist"],
+    "UCF": ["Central Florida"],
+    "UTEP": ["Texas-El Paso"],
+    "Hawai'i": ["Hawaii"],
+}
+
+# Exactly what Search Console reported (paths relative to the site root),
+# for the ones the generated patterns can't reproduce from the lineage --
+# a game the old site counted that ours doesn't, a program with no page.
+# Each maps to the closest thing we have.
+LEGACY_EXACT = {
+    "blog.html": "/stories.html",          # served at /blog (GitHub Pages resolves the extension; /about already is about.html)
+    "Logos/index.html": "/data.html",
+    "2018/10/05/hello-world/feed/index.html": "/",
+    "team/Florida.html": "/teams/florida.html",
+    "team/South Florida.html": "/teams/south-florida.html",
+    "team/Baylor.html": "/teams/baylor.html",
+}
+
+
+def _old_names(team):
+    return [team] + OLD_NAME_ALIASES.get(team, [])
+
+
+def legacy_redirect_map(lineage):
+    """{relative path under site/: target path} for every old-scheme URL."""
+    belt_games = lineage["belt_games"]
+    holders = {r["team"] for r in lineage["reigns"]}
+    programs = {t for g in belt_games for t in (g["home"], g["away"])}
+    out = dict(LEGACY_REDIRECTS)
+    out.update(LEGACY_EXACT)
+
+    def team_target(team):
+        return f"/teams/{bs.team_slug(team)}.html" if team in programs else f"/all-games.html?q={quote(team)}"
+
+    # per-program pages, both eras
+    for team in sorted(programs):
+        for name in _old_names(team):
+            out[f"Schools/{name} Stats.htm"] = team_target(team)
+            out[f"team/{name}.html"] = team_target(team)
+    # the programs Search Console reported that have no belt game in our lineage
+    for name, team in (("Troy", "Troy"), ("Southern Cal", "USC"), ("Maryland", "Maryland"),
+                       ("Arizona State", "Arizona State"), ("Mississippi State", "Mississippi State")):
+        out.setdefault(f"Schools/{name} Stats.htm", team_target(team))
+
+    # per-game pages: "<year>/<year> Game Summaries/<Away> at <Home>.htm",
+    # neutral-site games as "<A> vs <B>.htm" in either order
+    by_key = {}
+    for g in belt_games:
+        year = g["date"][:4]
+        target = f"/games/{g['game_id']}.html"
+        homes, aways = _old_names(g["home"]), _old_names(g["away"])
+        names = []
+        if g.get("neutral"):
+            for a in aways:
+                for h in homes:
+                    names += [f"{a} vs {h}", f"{h} vs {a}"]
+        for a in aways:
+            for h in homes:
+                names.append(f"{a} at {h}")
+        for n in names:
+            out[f"{year}/{year} Game Summaries/{n}.htm"] = target
+        by_key[(year, g["home"], g["away"])] = target
+    # the ones Google reported by name; the season page when the old site
+    # counted a game ours doesn't
+    reported = [
+        ("2008", "Missouri vs Illinois"), ("1974", "Purdue at Duke"), ("1974", "Army at Duke"),
+        ("1983", "Florida at Auburn"), ("1986", "Alabama vs Ohio State"), ("1975", "Tennessee at UCLA"),
+        ("1983", "Auburn at Georgia"), ("1994", "Utah at Colorado State"), ("2007", "Auburn at Florida"),
+        ("1978", "Alabama at Missouri"), ("1975", "Indiana at Ohio State"), ("1991", "Texas Tech at Houston"),
+    ]
+    seasons = {g["date"][:4] for g in belt_games}
+    for year, name in reported:
+        out.setdefault(f"{year}/{year} Game Summaries/{name}.htm", f"/season-{year}.html" if year in seasons else "/lineage.html")
+    return out
+
+
+def write_legacy_redirects(lineage=None):
+    redirects = legacy_redirect_map(lineage) if lineage else dict(LEGACY_REDIRECTS)
+    for rel, target in redirects.items():
         url = SITE_URL + target
         path = os.path.join(OUT_DIR, *rel.split("/"))
         os.makedirs(os.path.dirname(path) or OUT_DIR, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             f.write(REDIRECT_TEMPLATE.format(url=attr(url), url_js=json.dumps(url)))
-    return len(LEGACY_REDIRECTS)
+    return len(redirects)
 
 
 def main():
@@ -551,7 +651,7 @@ def main():
         lineage = json.load(f)
     pages = process_pages(lineage)
     stripped = process_sitemap(lineage)
-    redirects = write_legacy_redirects()
+    redirects = write_legacy_redirects(lineage)
     patch_styles()
     print(f"SEO: updated {pages} pages, trimmed stale <lastmod> from {stripped} sitemap URLs, "
           f"wrote {redirects} legacy redirect stubs.")

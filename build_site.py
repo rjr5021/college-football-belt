@@ -1574,6 +1574,8 @@ details.moreStats .statCategory{ margin-top:18px; }
 .faqList h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; margin:0; line-height:1.05; }
 .faqList p{ margin:0; font-size:15px; line-height:1.55; color:var(--ink-soft); text-wrap:pretty; }
 .faqList p a{ color:var(--ink); text-decoration-color:var(--brass); text-underline-offset:2px; }
+.beltContext .aiPreviewBody p{ margin:0 0 10px; }
+.beltContext .aiPreviewBody p:last-child{ margin-bottom:0; }
 .explore{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
 @media (max-width:900px){ .explore{ grid-template-columns:1fr 1fr; } }
 @media (max-width:480px){ .explore{ grid-template-columns:1fr; } }
@@ -2706,6 +2708,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     </div>
   </div>
 {poll_note}
+{render_game_context(g, HOLDER_PROGRAMS)}
 {render_recap(g)}
 {render_line_score(g)}
 {render_team_stats(g)}
@@ -2718,6 +2721,230 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 {site_footer('../', footer_note)}
 '''
     return body
+
+
+
+# ------------------------------------------------ belt context on game pages
+
+GAME_CONTEXT = {}   # game_id -> facts for render_game_context(); kept off the game dicts, which get exported as-is
+
+
+def compute_game_context(belt_games, reigns, today):
+    """Per-game facts for the 'Belt context' block (2026-09-16): where the
+    game sat in the holder's reign, the challenger's history with the belt
+    to that point, the two programs' belt-game series before and after,
+    and what happened next. One pass over the lineage, into GAME_CONTEXT,
+    so render_page() can write a paragraph or two that is unique to that
+    game -- the difference between 1,600 near-identical
+    template pages and 1,600 pages that each say something."""
+    GAME_CONTEXT.clear()
+    by_reign = reign_games(belt_games)
+    reign_end = {}   # reign number -> a slim copy of the game that ended it, or None
+    for i, r in enumerate(reigns):
+        nxt = by_reign.get(i + 2)
+        reign_end[i + 1] = ({k: nxt[0][k] for k in ("game_id", "date", "home", "away", "score", "new_holder", "holder", "outcome")}
+                            if nxt else None)
+    attempts = Counter()          # program -> belt games as challenger so far
+    held_before = {}              # program -> number of reigns started before this game
+    series = {}                   # pair -> [wins_a, wins_b, ties] so far (a < b)
+    series_total = {}
+    for g in belt_games:
+        key = tuple(sorted((g["home"], g["away"])))
+        series_total[key] = series_total.get(key, 0) + 1
+    seen_reigns = Counter()
+    for g in belt_games:
+        rn = g["reign_number"]
+        games_in_reign = by_reign[rn]
+        idx = games_in_reign.index(g)
+        r = reigns[rn - 1]
+        holder = g["holder"]
+        chal = g["opponent"] if holder else None
+        key = tuple(sorted((g["home"], g["away"])))
+        rec = series.setdefault(key, [0, 0, 0])
+        ctx = {
+            "idx_in_reign": idx,                       # 0 = the game that won it
+            "reign_games": len(games_in_reign),
+            "defenses_before": max(0, idx - 1) if idx else 0,
+            "days_in": (date.fromisoformat(g["date"]) - date.fromisoformat(r["start_date"])).days if idx else 0,
+            "reign_defenses": r.get("defenses", 0),
+            "reign_days": reign_duration_days(r, today),
+            "reign_ongoing": not r.get("end_date"),
+            "ended_by": reign_end.get(rn),
+            "won_from": r.get("won_from"),
+            "chal_attempts_before": attempts[chal] if chal else 0,
+            "chal_reigns_before": held_before.get(chal, 0) if chal else 0,
+            "series_before": list(rec),
+            "series_total": series_total[key],
+            "series_key": key,
+            # for the game that started this reign: what it ended
+            "prev_reign_days": reign_duration_days(reigns[rn - 2], today) if (idx == 0 and rn >= 2) else None,
+            "prev_reign_defenses": reigns[rn - 2].get("defenses", 0) if (idx == 0 and rn >= 2) else None,
+        }
+        GAME_CONTEXT[g["game_id"]] = ctx
+        # advance the running counts
+        h, a = (int(x) for x in g["score"].split("-"))
+        if h == a:
+            rec[2] += 1
+        elif (h > a) == (g["home"] == key[0]):
+            rec[0] += 1
+        else:
+            rec[1] += 1
+        if chal:
+            attempts[chal] += 1
+        if idx == 0:
+            held_before[g["new_holder"]] = held_before.get(g["new_holder"], 0) + 1
+    # attempts to date and whether the challenger ever held it, for the closing sentence
+    total_attempts = dict(attempts)
+    ever_held = {r["team"] for r in reigns}
+    for g in belt_games:
+        c = GAME_CONTEXT[g["game_id"]]
+        chal = g["opponent"] if g["holder"] else None
+        c["chal_attempts_total"] = total_attempts.get(chal, 0) if chal else 0
+        c["chal_ever_held"] = chal in ever_held if chal else False
+        c["series_final"] = None
+    # final series records
+    final = {}
+    for g in belt_games:
+        key = GAME_CONTEXT[g["game_id"]]["series_key"]
+        rec = final.setdefault(key, [0, 0, 0])
+        h, a = (int(x) for x in g["score"].split("-"))
+        if h == a:
+            rec[2] += 1
+        elif (h > a) == (g["home"] == key[0]):
+            rec[0] += 1
+        else:
+            rec[1] += 1
+    for g in belt_games:
+        GAME_CONTEXT[g["game_id"]]["series_final"] = final[GAME_CONTEXT[g["game_id"]]["series_key"]]
+
+
+def render_game_context(g, holders):
+    """The 'Belt context' section for one game page, from compute_game_context()."""
+    c = GAME_CONTEXT.get(g["game_id"])
+    if not c:
+        return ""
+    holder, chal = g["holder"], g["opponent"] if g["holder"] else None
+    rn = g["reign_number"]
+    h, a = (int(x) for x in g["score"].split("-"))
+    tie = h == a
+    changed = g["outcome"] == "changed"
+    paras = []
+
+    # 1. the reign
+    if g["outcome"] == "established":
+        paras.append(f'This is where the lineage starts: the first college football game ever played, and the game that established the belt. '
+                     f'{team_link(g["new_holder"], "../", holders)} held it for {c["reign_days"]:,} {_plural(c["reign_days"], "day")}'
+                     + (f' before {team_link(c["ended_by"]["new_holder"], "../", holders)} took it, {_game_link_rel(c["ended_by"], _score_wf(c["ended_by"]))}.' if c["ended_by"] else '.'))
+    elif holder:
+        if c["idx_in_reign"] == 0:
+            # the game that started the reign
+            ended_run = (f' of {c["prev_reign_days"]:,} {_plural(c["prev_reign_days"], "day")} and {c["prev_reign_defenses"]} '
+                         f'{_plural(c["prev_reign_defenses"], "defense")} (<a href="../reigns/{rn - 1}.html">reign #{rn - 1}</a>)'
+                         if c.get("prev_reign_days") is not None else '')
+            start_txt = (f'{team_link(g["new_holder"], "../", holders)} took the belt here, ending {possessive(holder)} run{ended_run}'
+                         f' and starting <a href="../reigns/{rn}.html">reign #{rn}</a>.')
+            if c["reign_ongoing"]:
+                rest = f' The reign is still going: {c["reign_defenses"]} {_plural(c["reign_defenses"], "defense")} and {c["reign_days"]:,} days so far.'
+            elif c["ended_by"]:
+                e = c["ended_by"]
+                rest = (f' It lasted {c["reign_days"]:,} {_plural(c["reign_days"], "day")} and {c["reign_defenses"]} {_plural(c["reign_defenses"], "defense")}, '
+                        f'until {team_link(e["new_holder"], "../", holders)} took it {_game_link_rel(e, "on " + fmt_date(e["date"]))}.')
+            else:
+                rest = f' It lasted {c["reign_days"]:,} {_plural(c["reign_days"], "day")} and {c["reign_defenses"]} {_plural(c["reign_defenses"], "defense")}.'
+            paras.append(start_txt + rest)
+        else:
+            nth = {1: "first", 2: "second", 3: "third"}.get(c["idx_in_reign"], ordinal(c["idx_in_reign"]))
+            prior = c["defenses_before"]
+            prior_txt = {0: "no defenses yet", 1: "one defense already behind it"}.get(prior, f"{prior} defenses already behind it")
+            came_in = (f'{team_link(holder, "../", holders)} came in {c["days_in"]:,} {_plural(c["days_in"], "day")} into '
+                       f'<a href="../reigns/{rn}.html">reign #{rn}</a>'
+                       + (f', which began with a win over {team_link(c["won_from"], "../", holders)}' if c["won_from"] else '')
+                       + f', with {prior_txt}; this was {"the game that ended it" if changed else f"its {nth} defense"}.')
+            if changed:
+                outcome = (f' {team_link(chal, "../", holders)} took the belt after {c["reign_days"]:,} {_plural(c["reign_days"], "day")} '
+                           f'and {c["reign_defenses"]} {_plural(c["reign_defenses"], "defense")}, and <a href="../reigns/{rn + 1}.html">reign #{rn + 1}</a> began.')
+            else:
+                remaining = c["reign_defenses"] - c["defenses_before"] - 1
+                if c["reign_ongoing"]:
+                    outcome = f' The reign is still going &mdash; {c["reign_defenses"]} {_plural(c["reign_defenses"], "defense")} and {c["reign_days"]:,} days so far.'
+                elif c["ended_by"]:
+                    e = c["ended_by"]
+                    outcome = (f' {esc(holder)} went on to defend it {remaining} more {_plural(remaining, "time")} before '
+                               f'{team_link(e["new_holder"], "../", holders)} took it {_game_link_rel(e, "on " + fmt_date(e["date"]))}, '
+                               f'{c["reign_days"]:,} days after the reign began.') if remaining > 0 else (
+                               f' It was the last defense: {team_link(e["new_holder"], "../", holders)} took the belt in the very next belt game, '
+                               f'{_game_link_rel(e, "on " + fmt_date(e["date"]))}.')
+                else:
+                    outcome = f' The reign ended after {c["reign_days"]:,} days without another belt game.'
+            paras.append(came_in + outcome)
+
+    # 2. the challenger
+    if chal:
+        n_before = c["chal_attempts_before"]
+        shot = "first shot at the belt" if n_before == 0 else f'{ordinal(n_before + 1)} shot at the belt'
+        if c["chal_reigns_before"]:
+            times = {1: "once", 2: "twice"}.get(c["chal_reigns_before"], f'{c["chal_reigns_before"]} times')
+            hist = f'it had held the belt {times} before'
+        else:
+            hist = 'it had never held the belt'
+        if changed:
+            tail = ' &mdash; and this was the day it took it.' if c["chal_reigns_before"] == 0 else ' &mdash; and it took it back here.'
+        elif tie:
+            tail = '. A tie leaves the belt with the holder, so it went home empty-handed.'
+        else:
+            if c["chal_ever_held"]:
+                tail = '.'
+            else:
+                total = c["chal_attempts_total"]
+                tail = (f'. It still hasn&rsquo;t: {total} {_plural(total, "attempt")} in all, every one of them a loss or a tie'
+                        if total > 1 else '. It still hasn&rsquo;t; this remains its only belt game') + '.'
+        paras.append(f'For {team_link(chal, "../", holders)} this was its {shot}; {hist}{tail}')
+
+    # 3. the series
+    key = c["series_key"]
+    a_name, b_name = key
+    before = c["series_before"]
+    total_meet = c["series_total"]
+    final = c["series_final"]
+    if total_meet > 1:
+        n_before = sum(before)
+        if n_before == 0:
+            lead_in = f'It was the first of {total_meet} meetings between the two with the belt on the line'
+        else:
+            wa, wb, t = before
+            if wa == wb:
+                stand = f'the series stood {wa}&ndash;{wb}' + (f'&ndash;{t}' if t else '')
+            else:
+                leader, lw, ll = (a_name, wa, wb) if wa > wb else (b_name, wb, wa)
+                stand = f'{esc(leader)} led the belt series {lw}&ndash;{ll}' + (f'&ndash;{t}' if t else '')
+            lead_in = f'It was the {ordinal(n_before + 1)} of {total_meet} belt games between the two; going in, {stand}'
+        fa, fb, ft = final
+        if fa == fb:
+            fin = f'all-time it is {fa}&ndash;{fb}' + (f'&ndash;{ft}' if ft else '')
+        else:
+            leader, lw, ll = (a_name, fa, fb) if fa > fb else (b_name, fb, fa)
+            fin = f'all-time {esc(leader)} leads {lw}&ndash;{ll}' + (f'&ndash;{ft}' if ft else '')
+        link = (f' <a href="../rivalries/{rivalry_slug(a_name, b_name)}.html">Every meeting &rarr;</a>'
+                if total_meet >= RIVALRY_MIN_GAMES else '')
+        paras.append(f'{lead_in}; {fin}.{link}')
+    else:
+        paras.append(f'This is the only time {esc(a_name)} and {esc(b_name)} have met with the belt on the line.')
+
+    body = "".join(f"<p>{p}</p>" for p in paras)
+    return f'''
+  <section class="beltContext">
+    <div class="sectionHead withTag">
+      <span class="tag">Belt context</span>
+      <span class="rule"></span>
+      <h2>Where this game sits in the lineage</h2>
+    </div>
+    <div class="aiPreviewBody">{body}</div>
+  </section>'''
+
+
+def _game_link_rel(g, text):
+    return f'<a href="../games/{g["game_id"]}.html">{text}</a>'
+
 
 
 # --------------------------------------------------------------- homepage
@@ -5890,6 +6117,8 @@ def _team_reign_row(r, today, change_index, loss_index, is_current, reign_no=Non
 # Programs with a team page that have never held the belt (filled by
 # generate_challenger_pages); team_link() links these too.
 CHALLENGER_PAGES = set()
+# Programs that have held the belt (filled by main() from the lineage).
+HOLDER_PROGRAMS = set()
 
 
 def challenger_stats(belt_games, holders):
@@ -6416,11 +6645,21 @@ def collect_players(belt_games, details):
     return players
 
 
+# A player page is worth putting in front of Google only when it says more
+# than the game page already does: from PLAYER_INDEX_MIN_GAMES belt games
+# up it is indexable and in the sitemap; below that it is noindex (still
+# linked from the game pages, still served) so ~6,000 one-line pages stop
+# crowding the crawl (Search Console, 2026-09-16: two-thirds of the sitemap
+# was player pages, and Google was declining to index them).
+PLAYER_INDEX_MIN_GAMES = 2
+
+
 def generate_player_pages(belt_games, details, players_dir):
     """One page per player CFBD gave a stable athlete id to in a belt
     game's box score (2003 onward -- see render_player_stats()) -- their
     full recorded stat line in every belt game they've appeared in, newest
-    first (see collect_players for the keying). Returns (written, slugs)."""
+    first (see collect_players for the keying). Returns (written, slugs of
+    the indexable pages -- the ones the sitemap lists)."""
     os.makedirs(players_dir, exist_ok=True)
     players = collect_players(belt_games, details)
     PLAYER_SLUG_BY_ID.update({pid: player_slug(pid, p["name"]) for pid, p in players.items()})
@@ -6429,17 +6668,25 @@ def generate_player_pages(belt_games, details, players_dir):
     slugs = []
     for pid, p in players.items():
         slug = player_slug(pid, p["name"])
-        slugs.append(slug)
         games_sorted = sorted(p["games"], key=lambda t: t[0]["date"], reverse=True)
         n = len(games_sorted)
+        indexable = n >= PLAYER_INDEX_MIN_GAMES
+        if indexable:
+            slugs.append(slug)
         teams_bit = " / ".join(sorted(p["teams"]))
         rows_html = "".join(_player_game_row(g, team, cats) for g, team, cats in games_sorted)
+        years = sorted({g["date"][:4] for g, _t, _c in games_sorted})
+        span = years[0] if len(years) == 1 else f"{years[0]}–{years[-1]}"
+        title = f"{p['name']} — {teams_bit} Belt Game Stats" if len(f"{p['name']} — {teams_bit} Belt Game Stats") <= 62 else f"{p['name']} — Belt Game Stats"
+        desc = (f"{p['name']}'s stat line in {n} College Football Belt game{'s' if n != 1 else ''} for {teams_bit}, {span}: "
+                f"every belt game on file, with the score and what it meant for the belt.")
+        robots = '' if indexable else '\n<meta name="robots" content="noindex,follow">'
 
         page = f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
-<title>{esc(p["name"])} — The College Football Belt</title>
-<meta name="description" content="{esc(p['name'])}&#8217;s recorded stat line in every College Football Belt game on file.">
+<title>{esc(title)}</title>
+<meta name="description" content="{esc(desc)}">{robots}
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
 
@@ -12967,6 +13214,9 @@ def main():
      team_paths, belt_risk, gameday, coaches) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
+    HOLDER_PROGRAMS.update(r["team"] for r in lineage["reigns"])
+    CHALLENGER_PAGES.update(challenger_stats(belt_games, HOLDER_PROGRAMS))   # so team_link() links them everywhere
+    compute_game_context(belt_games, lineage["reigns"], date.today())         # the "Belt context" block on game pages
     rankings = load_optional_json("rankings.json")          # fetch_rankings.py (optional)
     poll_model = compute_poll_model(rankings, lineage, belt_games) if rankings else None
     if poll_model is None:
