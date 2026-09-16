@@ -6205,15 +6205,147 @@
       "end_date": "1996-04-16",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1996-04-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-04-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1996-04-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Nebraska",
+      "end_date": "1996-04-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1996-04-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Colorado",
+      "end_date": "1996-04-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Colorado",
+      "start_date": "1996-04-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Iowa State",
+      "end_date": "1996-04-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iowa State",
+      "start_date": "1996-04-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Colorado",
+      "predecessor": "Nebraska",
+      "end_date": "1996-04-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1996-04-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iowa State",
+      "predecessor": "Colorado",
+      "end_date": "1996-04-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas",
+      "start_date": "1996-04-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Missouri",
+      "end_date": "1996-04-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1996-04-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-04-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma State",
+      "start_date": "1996-04-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Missouri",
+      "end_date": "1996-04-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1996-04-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma State",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-04-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas State",
+      "start_date": "1996-04-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-04-27",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Missouri",
-    "start_date": "1996-04-17",
+    "team": "Oklahoma",
+    "start_date": "1996-04-28",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Kansas",
-    "predecessor": "Oklahoma"
+    "reclaimed_after": "Kansas State",
+    "predecessor": "Nebraska"
   }
 }

@@ -1398,5 +1398,109 @@
     "effective_date": "1953-05-11",
     "detected_on": "2026-09-16",
     "reverted_to": "Iowa"
+  },
+  {
+    "team": "Iowa",
+    "reign_started": "1953-05-11",
+    "last_activity_date": "1953-05-11",
+    "effective_date": "1953-05-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Ohio State"
+  },
+  {
+    "team": "Ohio State",
+    "reign_started": "1953-05-12",
+    "last_activity_date": "1953-05-12",
+    "effective_date": "1953-05-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wisconsin"
+  },
+  {
+    "team": "Wisconsin",
+    "reign_started": "1953-05-13",
+    "last_activity_date": "1953-05-13",
+    "effective_date": "1953-05-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Northwestern"
+  },
+  {
+    "team": "Northwestern",
+    "reign_started": "1953-05-14",
+    "last_activity_date": "1953-05-14",
+    "effective_date": "1953-05-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Illinois"
+  },
+  {
+    "team": "Illinois",
+    "reign_started": "1953-05-15",
+    "last_activity_date": "1953-05-15",
+    "effective_date": "1953-05-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Michigan"
+  },
+  {
+    "team": "Michigan",
+    "reign_started": "1953-05-16",
+    "last_activity_date": "1953-05-16",
+    "effective_date": "1953-05-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Minnesota"
+  },
+  {
+    "team": "Minnesota",
+    "reign_started": "1953-05-17",
+    "last_activity_date": "1953-05-17",
+    "effective_date": "1953-05-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa"
+  },
+  {
+    "team": "Iowa",
+    "reign_started": "1953-05-18",
+    "last_activity_date": "1953-05-18",
+    "effective_date": "1953-05-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Indiana"
+  },
+  {
+    "team": "Indiana",
+    "reign_started": "1953-05-19",
+    "last_activity_date": "1953-05-19",
+    "effective_date": "1953-05-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa"
+  },
+  {
+    "team": "Iowa",
+    "reign_started": "1953-05-20",
+    "last_activity_date": "1953-05-20",
+    "effective_date": "1953-05-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Purdue"
+  },
+  {
+    "team": "Purdue",
+    "reign_started": "1953-05-21",
+    "last_activity_date": "1953-05-21",
+    "effective_date": "1953-05-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Illinois"
+  },
+  {
+    "team": "Illinois",
+    "reign_started": "1953-05-22",
+    "last_activity_date": "1953-05-22",
+    "effective_date": "1953-05-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Chicago"
+  },
+  {
+    "team": "Chicago",
+    "reign_started": "1953-05-23",
+    "last_activity_date": "1953-05-23",
+    "effective_date": "1953-05-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wisconsin"
   }
 ]
