@@ -1830,5 +1830,101 @@
     "effective_date": "2012-06-17",
     "detected_on": "2026-09-16",
     "reverted_to": "North Dakota State"
+  },
+  {
+    "team": "North Dakota State",
+    "reign_started": "2012-06-17",
+    "last_activity_date": "2012-06-17",
+    "effective_date": "2012-06-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UC Davis"
+  },
+  {
+    "team": "UC Davis",
+    "reign_started": "2012-06-18",
+    "last_activity_date": "2012-06-18",
+    "effective_date": "2012-06-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cal Poly"
+  },
+  {
+    "team": "Cal Poly",
+    "reign_started": "2012-06-19",
+    "last_activity_date": "2012-06-19",
+    "effective_date": "2012-06-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Dakota"
+  },
+  {
+    "team": "North Dakota",
+    "reign_started": "2012-06-20",
+    "last_activity_date": "2012-06-20",
+    "effective_date": "2012-06-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UC Davis"
+  },
+  {
+    "team": "UC Davis",
+    "reign_started": "2012-06-21",
+    "last_activity_date": "2012-06-21",
+    "effective_date": "2012-06-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "South Dakota State"
+  },
+  {
+    "team": "South Dakota State",
+    "reign_started": "2012-06-22",
+    "last_activity_date": "2012-06-22",
+    "effective_date": "2012-06-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Dakota State"
+  },
+  {
+    "team": "North Dakota State",
+    "reign_started": "2012-06-23",
+    "last_activity_date": "2012-06-23",
+    "effective_date": "2012-06-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Utah"
+  },
+  {
+    "team": "Southern Utah",
+    "reign_started": "2012-06-24",
+    "last_activity_date": "2012-06-24",
+    "effective_date": "2012-06-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UC Davis"
+  },
+  {
+    "team": "UC Davis",
+    "reign_started": "2012-06-25",
+    "last_activity_date": "2012-06-25",
+    "effective_date": "2012-06-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Northern Colorado"
+  },
+  {
+    "team": "Northern Colorado",
+    "reign_started": "2012-06-26",
+    "last_activity_date": "2012-06-26",
+    "effective_date": "2012-06-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Utah"
+  },
+  {
+    "team": "Southern Utah",
+    "reign_started": "2012-06-27",
+    "last_activity_date": "2012-06-27",
+    "effective_date": "2012-06-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "South Dakota"
+  },
+  {
+    "team": "South Dakota",
+    "reign_started": "2012-06-28",
+    "last_activity_date": "2012-06-28",
+    "effective_date": "2012-06-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Utah"
   }
 ]
