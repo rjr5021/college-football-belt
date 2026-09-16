@@ -4525,11 +4525,47 @@
       "end_date": "1995-11-26",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1995-11-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iowa State",
+      "predecessor": "Colorado",
+      "end_date": "1995-11-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Colorado",
+      "start_date": "1995-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Iowa State",
+      "end_date": "1995-11-28",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iowa State",
+      "start_date": "1995-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Colorado",
+      "predecessor": "Nebraska",
+      "end_date": "1995-11-29",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Nebraska",
-    "start_date": "1995-11-27",
+    "start_date": "1995-11-30",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

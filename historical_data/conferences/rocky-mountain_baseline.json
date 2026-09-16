@@ -2911,11 +2911,71 @@
       "end_date": "1937-11-29",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Colorado",
+      "start_date": "1937-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Wyoming",
+      "predecessor": "Utah State",
+      "end_date": "1937-11-30",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah State",
+      "start_date": "1937-12-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Colorado",
+      "predecessor": "BYU",
+      "end_date": "1937-12-01",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "BYU",
+      "start_date": "1937-12-02",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah State",
+      "predecessor": "Northern Colorado",
+      "end_date": "1937-12-02",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Northern Colorado",
+      "start_date": "1937-12-03",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "BYU",
+      "predecessor": "Wyoming",
+      "end_date": "1937-12-03",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Wyoming",
+      "start_date": "1937-12-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Northern Colorado",
+      "predecessor": "Colorado",
+      "end_date": "1937-12-04",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Colorado",
-    "start_date": "1937-11-30",
+    "start_date": "1937-12-05",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

@@ -148,11 +148,35 @@
       "end_date": "1961-10-22",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Rutgers",
+      "start_date": "1961-10-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Bucknell",
+      "predecessor": "Bucknell",
+      "end_date": "1961-10-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Bucknell",
+      "start_date": "1961-10-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Rutgers",
+      "predecessor": "Rutgers",
+      "end_date": "1961-10-24",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Rutgers",
-    "start_date": "1961-10-23",
+    "start_date": "1961-10-25",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

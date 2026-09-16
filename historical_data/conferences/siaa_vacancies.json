@@ -38,5 +38,29 @@
     "effective_date": "1921-11-29",
     "detected_on": "2026-09-16",
     "reverted_to": "Auburn"
+  },
+  {
+    "team": "Auburn",
+    "reign_started": "1921-11-29",
+    "last_activity_date": "1921-11-29",
+    "effective_date": "1921-11-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "1921-11-30",
+    "last_activity_date": "1921-11-30",
+    "effective_date": "1921-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Vanderbilt"
+  },
+  {
+    "team": "Vanderbilt",
+    "reign_started": "1921-12-01",
+    "last_activity_date": "1921-12-01",
+    "effective_date": "1921-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Auburn"
   }
 ]

@@ -54,5 +54,21 @@
     "effective_date": "2022-12-06",
     "detected_on": "2026-09-16",
     "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2022-12-06",
+    "last_activity_date": "2022-12-06",
+    "effective_date": "2022-12-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UAB"
+  },
+  {
+    "team": "UAB",
+    "reign_started": "2022-12-07",
+    "last_activity_date": "2022-12-07",
+    "effective_date": "2022-12-08",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rice"
   }
 ]

@@ -3781,11 +3781,35 @@
       "end_date": "1967-11-19",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "West Virginia",
+      "start_date": "1967-11-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Virginia Tech",
+      "predecessor": "Virginia Tech",
+      "end_date": "1967-11-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Virginia Tech",
+      "start_date": "1967-11-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "West Virginia",
+      "predecessor": "West Virginia",
+      "end_date": "1967-11-21",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "West Virginia",
-    "start_date": "1967-11-20",
+    "start_date": "1967-11-22",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

@@ -2581,11 +2581,59 @@
       "end_date": "2022-11-22",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Southeast Missouri State",
+      "start_date": "2022-11-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Tennessee Tech",
+      "predecessor": "UT Martin",
+      "end_date": "2022-11-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UT Martin",
+      "start_date": "2022-11-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Southeast Missouri State",
+      "predecessor": "Tennessee State",
+      "end_date": "2022-11-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Tennessee State",
+      "start_date": "2022-11-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UT Martin",
+      "predecessor": "Tennessee Tech",
+      "end_date": "2022-11-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Tennessee Tech",
+      "start_date": "2022-11-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Tennessee State",
+      "predecessor": "Southeast Missouri State",
+      "end_date": "2022-11-26",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Southeast Missouri State",
-    "start_date": "2022-11-23",
+    "start_date": "2022-11-27",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

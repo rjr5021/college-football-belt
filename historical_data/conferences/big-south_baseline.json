@@ -715,11 +715,35 @@
       "end_date": "2011-11-20",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Stony Brook",
+      "start_date": "2011-11-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2011-11-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2011-11-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stony Brook",
+      "predecessor": "Stony Brook",
+      "end_date": "2011-11-22",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Stony Brook",
-    "start_date": "2011-11-21",
+    "start_date": "2011-11-23",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

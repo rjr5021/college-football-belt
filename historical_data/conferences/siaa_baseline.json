@@ -1258,11 +1258,47 @@
       "end_date": "1921-11-28",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Auburn",
+      "start_date": "1921-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Vanderbilt",
+      "predecessor": "Georgia Tech",
+      "end_date": "1921-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Georgia Tech",
+      "start_date": "1921-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Auburn",
+      "predecessor": "Vanderbilt",
+      "end_date": "1921-11-30",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Vanderbilt",
+      "start_date": "1921-12-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Georgia Tech",
+      "predecessor": "Auburn",
+      "end_date": "1921-12-01",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Auburn",
-    "start_date": "1921-11-29",
+    "start_date": "1921-12-02",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

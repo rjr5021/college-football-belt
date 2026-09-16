@@ -1891,11 +1891,35 @@
       "end_date": "1987-11-23",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Pacific",
+      "start_date": "1987-11-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UNLV",
+      "predecessor": "UNLV",
+      "end_date": "1987-11-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UNLV",
+      "start_date": "1987-11-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Pacific",
+      "predecessor": "Pacific",
+      "end_date": "1987-11-25",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Pacific",
-    "start_date": "1987-11-24",
+    "start_date": "1987-11-26",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

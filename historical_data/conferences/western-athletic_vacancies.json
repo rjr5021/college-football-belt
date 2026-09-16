@@ -54,5 +54,29 @@
     "effective_date": "2012-11-30",
     "detected_on": "2026-09-16",
     "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "2012-11-30",
+    "last_activity_date": "2012-11-30",
+    "effective_date": "2012-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2012-12-01",
+    "last_activity_date": "2012-12-01",
+    "effective_date": "2012-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Hawai'i"
+  },
+  {
+    "team": "Hawai'i",
+    "reign_started": "2012-12-02",
+    "last_activity_date": "2012-12-02",
+    "effective_date": "2012-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boise State"
   }
 ]

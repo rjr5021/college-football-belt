@@ -22,5 +22,21 @@
     "effective_date": "1995-12-05",
     "detected_on": "2026-09-16",
     "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1995-12-05",
+    "last_activity_date": "1995-12-05",
+    "effective_date": "1995-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas A&M"
+  },
+  {
+    "team": "Texas A&M",
+    "reign_started": "1995-12-06",
+    "last_activity_date": "1995-12-06",
+    "effective_date": "1995-12-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas Tech"
   }
 ]

@@ -54,5 +54,21 @@
     "effective_date": "2000-11-24",
     "detected_on": "2026-09-16",
     "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "2000-11-24",
+    "last_activity_date": "2000-11-24",
+    "effective_date": "2000-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2000-11-25",
+    "last_activity_date": "2000-11-25",
+    "effective_date": "2000-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
   }
 ]

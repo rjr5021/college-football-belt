@@ -6532,11 +6532,47 @@
       "end_date": "2012-11-29",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Boise State",
+      "start_date": "2012-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Hawai'i",
+      "predecessor": "San Jos\u00e9 State",
+      "end_date": "2012-11-30",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "San Jos\u00e9 State",
+      "start_date": "2012-12-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Boise State",
+      "predecessor": "Hawai'i",
+      "end_date": "2012-12-01",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Hawai'i",
+      "start_date": "2012-12-02",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "San Jos\u00e9 State",
+      "predecessor": "Boise State",
+      "end_date": "2012-12-02",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Boise State",
-    "start_date": "2012-11-30",
+    "start_date": "2012-12-03",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

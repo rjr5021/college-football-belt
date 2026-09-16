@@ -46,5 +46,21 @@
     "effective_date": "1967-11-20",
     "detected_on": "2026-09-16",
     "reverted_to": "West Virginia"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "1967-11-20",
+    "last_activity_date": "1967-11-20",
+    "effective_date": "1967-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Virginia Tech",
+    "reign_started": "1967-11-21",
+    "last_activity_date": "1967-11-21",
+    "effective_date": "1967-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
   }
 ]

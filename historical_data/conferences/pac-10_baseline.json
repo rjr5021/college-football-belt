@@ -4960,11 +4960,71 @@
       "end_date": "2010-12-08",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Washington",
+      "start_date": "2010-12-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Arizona State",
+      "predecessor": "UCLA",
+      "end_date": "2010-12-09",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UCLA",
+      "start_date": "2010-12-10",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Washington",
+      "predecessor": "Oregon State",
+      "end_date": "2010-12-10",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "2010-12-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UCLA",
+      "predecessor": "California",
+      "end_date": "2010-12-11",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "2010-12-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "Arizona State",
+      "end_date": "2010-12-12",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Arizona State",
+      "start_date": "2010-12-13",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "Washington",
+      "end_date": "2010-12-13",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Washington",
-    "start_date": "2010-12-09",
+    "start_date": "2010-12-14",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

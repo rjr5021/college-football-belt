@@ -2410,11 +2410,47 @@
       "end_date": "2019-11-25",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Bethune-Cookman",
+      "start_date": "2019-11-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "North Carolina A&T",
+      "predecessor": "Florida A&M",
+      "end_date": "2019-11-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Florida A&M",
+      "start_date": "2019-11-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Bethune-Cookman",
+      "predecessor": "North Carolina A&T",
+      "end_date": "2019-11-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "North Carolina A&T",
+      "start_date": "2019-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Florida A&M",
+      "predecessor": "Bethune-Cookman",
+      "end_date": "2019-11-28",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Bethune-Cookman",
-    "start_date": "2019-11-26",
+    "start_date": "2019-11-29",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

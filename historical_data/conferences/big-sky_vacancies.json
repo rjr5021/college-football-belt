@@ -14,5 +14,21 @@
     "effective_date": "1974-11-25",
     "detected_on": "2026-09-16",
     "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "1974-11-25",
+    "last_activity_date": "1974-11-25",
+    "effective_date": "1974-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Idaho"
+  },
+  {
+    "team": "Idaho",
+    "reign_started": "1974-11-26",
+    "last_activity_date": "1974-11-26",
+    "effective_date": "1974-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boise State"
   }
 ]

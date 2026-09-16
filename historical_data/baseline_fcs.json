@@ -11805,13 +11805,145 @@
       "defenses": 0,
       "end_date": "2023-12-15",
       "lost_to": "South Dakota State"
+    },
+    {
+      "team": "South Dakota State",
+      "start_date": "2023-12-15",
+      "won_from": "UAlbany",
+      "won_score": "59-0",
+      "defenses": 0,
+      "end_date": "2023-12-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UAlbany",
+      "start_date": "2023-12-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "South Dakota State",
+      "predecessor": "Idaho",
+      "end_date": "2023-12-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Idaho",
+      "start_date": "2023-12-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UAlbany",
+      "predecessor": "Southern Illinois",
+      "end_date": "2023-12-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Southern Illinois",
+      "start_date": "2023-12-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Idaho",
+      "predecessor": "Nicholls",
+      "end_date": "2023-12-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nicholls",
+      "start_date": "2023-12-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Southern Illinois",
+      "predecessor": "Incarnate Word",
+      "end_date": "2023-12-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Incarnate Word",
+      "start_date": "2023-12-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nicholls",
+      "predecessor": "Furman",
+      "end_date": "2023-12-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Furman",
+      "start_date": "2023-12-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Incarnate Word",
+      "predecessor": "Chattanooga",
+      "end_date": "2023-12-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Chattanooga",
+      "start_date": "2023-12-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Furman",
+      "predecessor": "Mercer",
+      "end_date": "2023-12-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Mercer",
+      "start_date": "2023-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Chattanooga",
+      "predecessor": "The Citadel",
+      "end_date": "2023-12-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "The Citadel",
+      "start_date": "2023-12-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Mercer",
+      "predecessor": "East Tennessee State",
+      "end_date": "2023-12-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "East Tennessee State",
+      "start_date": "2023-12-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "The Citadel",
+      "predecessor": "Mercer",
+      "end_date": "2023-12-25",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "South Dakota State",
-    "start_date": "2023-12-15",
-    "won_from": "UAlbany",
-    "won_score": "59-0",
-    "defenses": 11
+    "team": "Mercer",
+    "start_date": "2023-12-26",
+    "won_from": null,
+    "won_score": null,
+    "defenses": 11,
+    "reclaimed_after": "East Tennessee State",
+    "predecessor": "The Citadel"
   }
 }

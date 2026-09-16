@@ -46,5 +46,45 @@
     "effective_date": "1937-11-30",
     "detected_on": "2026-09-16",
     "reverted_to": "Colorado"
+  },
+  {
+    "team": "Colorado",
+    "reign_started": "1937-11-30",
+    "last_activity_date": "1937-11-30",
+    "effective_date": "1937-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1937-12-01",
+    "last_activity_date": "1937-12-01",
+    "effective_date": "1937-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1937-12-02",
+    "last_activity_date": "1937-12-02",
+    "effective_date": "1937-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Northern Colorado"
+  },
+  {
+    "team": "Northern Colorado",
+    "reign_started": "1937-12-03",
+    "last_activity_date": "1937-12-03",
+    "effective_date": "1937-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1937-12-04",
+    "last_activity_date": "1937-12-04",
+    "effective_date": "1937-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colorado"
   }
 ]

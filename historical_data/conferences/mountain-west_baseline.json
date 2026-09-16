@@ -1678,11 +1678,35 @@
       "end_date": "2011-12-04",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "TCU",
+      "start_date": "2011-12-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "Utah",
+      "end_date": "2011-12-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "2011-12-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "TCU",
+      "predecessor": "TCU",
+      "end_date": "2011-12-06",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "TCU",
-    "start_date": "2011-12-05",
+    "start_date": "2011-12-07",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

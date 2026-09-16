@@ -862,11 +862,71 @@
       "end_date": "1981-11-25",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Texas-Arlington",
+      "start_date": "1981-11-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Arkansas State",
+      "predecessor": "McNeese",
+      "end_date": "1981-11-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "McNeese",
+      "start_date": "1981-11-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Texas-Arlington",
+      "predecessor": "Lamar",
+      "end_date": "1981-11-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Lamar",
+      "start_date": "1981-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "McNeese",
+      "predecessor": "Louisiana Tech",
+      "end_date": "1981-11-28",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Louisiana Tech",
+      "start_date": "1981-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Lamar",
+      "predecessor": "Arkansas State",
+      "end_date": "1981-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Arkansas State",
+      "start_date": "1981-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Louisiana Tech",
+      "predecessor": "Texas-Arlington",
+      "end_date": "1981-11-30",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Texas-Arlington",
-    "start_date": "1981-11-26",
+    "start_date": "1981-12-01",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

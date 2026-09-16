@@ -2239,11 +2239,71 @@
       "end_date": "2022-11-23",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "William & Mary",
+      "start_date": "2022-11-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Delaware",
+      "predecessor": "Rhode Island",
+      "end_date": "2022-11-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Rhode Island",
+      "start_date": "2022-11-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "William & Mary",
+      "predecessor": "Elon",
+      "end_date": "2022-11-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Elon",
+      "start_date": "2022-11-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Rhode Island",
+      "predecessor": "Richmond",
+      "end_date": "2022-11-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Richmond",
+      "start_date": "2022-11-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Elon",
+      "predecessor": "Delaware",
+      "end_date": "2022-11-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Delaware",
+      "start_date": "2022-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Richmond",
+      "predecessor": "William & Mary",
+      "end_date": "2022-11-28",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "William & Mary",
-    "start_date": "2022-11-24",
+    "start_date": "2022-11-29",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

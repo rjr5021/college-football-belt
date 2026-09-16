@@ -11161,11 +11161,35 @@
       "end_date": "2014-12-14",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Navy",
+      "start_date": "2014-12-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Notre Dame",
+      "predecessor": "Notre Dame",
+      "end_date": "2014-12-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Notre Dame",
+      "start_date": "2014-12-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Navy",
+      "predecessor": "Navy",
+      "end_date": "2014-12-16",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Navy",
-    "start_date": "2014-12-15",
+    "start_date": "2014-12-17",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

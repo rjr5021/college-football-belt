@@ -898,11 +898,47 @@
       "end_date": "1967-11-28",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Washington",
+      "start_date": "1967-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "USC",
+      "predecessor": "Oregon State",
+      "end_date": "1967-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "1967-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Washington",
+      "predecessor": "USC",
+      "end_date": "1967-11-30",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "USC",
+      "start_date": "1967-12-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "Washington",
+      "end_date": "1967-12-01",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Washington",
-    "start_date": "1967-11-29",
+    "start_date": "1967-12-02",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

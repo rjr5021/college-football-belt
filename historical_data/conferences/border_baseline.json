@@ -1918,11 +1918,47 @@
       "end_date": "1961-11-28",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Hardin Simmons",
+      "start_date": "1961-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Texas Tech",
+      "predecessor": "UTEP",
+      "end_date": "1961-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UTEP",
+      "start_date": "1961-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Hardin Simmons",
+      "predecessor": "Texas Tech",
+      "end_date": "1961-11-30",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Texas Tech",
+      "start_date": "1961-12-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UTEP",
+      "predecessor": "Hardin Simmons",
+      "end_date": "1961-12-01",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Hardin Simmons",
-    "start_date": "1961-11-29",
+    "start_date": "1961-12-02",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

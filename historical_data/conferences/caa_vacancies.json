@@ -38,5 +38,45 @@
     "effective_date": "2022-11-24",
     "detected_on": "2026-09-16",
     "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2022-11-24",
+    "last_activity_date": "2022-11-24",
+    "effective_date": "2022-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rhode Island"
+  },
+  {
+    "team": "Rhode Island",
+    "reign_started": "2022-11-25",
+    "last_activity_date": "2022-11-25",
+    "effective_date": "2022-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Elon"
+  },
+  {
+    "team": "Elon",
+    "reign_started": "2022-11-26",
+    "last_activity_date": "2022-11-26",
+    "effective_date": "2022-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2022-11-27",
+    "last_activity_date": "2022-11-27",
+    "effective_date": "2022-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Delaware"
+  },
+  {
+    "team": "Delaware",
+    "reign_started": "2022-11-28",
+    "last_activity_date": "2022-11-28",
+    "effective_date": "2022-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
   }
 ]

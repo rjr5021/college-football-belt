@@ -1669,11 +1669,35 @@
       "end_date": "1947-11-23",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1947-11-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Missouri",
+      "end_date": "1947-11-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1947-11-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Oklahoma",
+      "end_date": "1947-11-25",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Oklahoma",
-    "start_date": "1947-11-24",
+    "start_date": "1947-11-26",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

@@ -62,5 +62,45 @@
     "effective_date": "2006-12-08",
     "detected_on": "2026-09-16",
     "reverted_to": "New Hampshire"
+  },
+  {
+    "team": "New Hampshire",
+    "reign_started": "2006-12-08",
+    "last_activity_date": "2006-12-08",
+    "effective_date": "2006-12-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2006-12-09",
+    "last_activity_date": "2006-12-09",
+    "effective_date": "2006-12-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Towson"
+  },
+  {
+    "team": "Towson",
+    "reign_started": "2006-12-10",
+    "last_activity_date": "2006-12-10",
+    "effective_date": "2006-12-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Villanova"
+  },
+  {
+    "team": "Villanova",
+    "reign_started": "2006-12-11",
+    "last_activity_date": "2006-12-11",
+    "effective_date": "2006-12-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "James Madison"
+  },
+  {
+    "team": "James Madison",
+    "reign_started": "2006-12-12",
+    "last_activity_date": "2006-12-12",
+    "effective_date": "2006-12-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New Hampshire"
   }
 ]

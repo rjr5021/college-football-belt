@@ -30,5 +30,29 @@
     "effective_date": "1958-11-25",
     "detected_on": "2026-09-16",
     "reverted_to": "Washington State"
+  },
+  {
+    "team": "Washington State",
+    "reign_started": "1958-11-25",
+    "last_activity_date": "1958-11-25",
+    "effective_date": "1958-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "1958-11-26",
+    "last_activity_date": "1958-11-26",
+    "effective_date": "1958-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1958-11-27",
+    "last_activity_date": "1958-11-27",
+    "effective_date": "1958-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington State"
   }
 ]

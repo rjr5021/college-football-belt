@@ -1477,11 +1477,59 @@
       "end_date": "1927-11-27",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1927-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas",
+      "predecessor": "Nebraska",
+      "end_date": "1927-11-28",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Kansas State",
+      "end_date": "1927-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas State",
+      "start_date": "1927-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Kansas",
+      "end_date": "1927-11-30",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas",
+      "start_date": "1927-12-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas State",
+      "predecessor": "Missouri",
+      "end_date": "1927-12-01",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Missouri",
-    "start_date": "1927-11-28",
+    "start_date": "1927-12-02",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

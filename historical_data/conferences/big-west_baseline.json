@@ -1501,11 +1501,35 @@
       "end_date": "2000-11-23",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Utah State",
+      "start_date": "2000-11-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nevada",
+      "predecessor": "Nevada",
+      "end_date": "2000-11-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nevada",
+      "start_date": "2000-11-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah State",
+      "predecessor": "Utah State",
+      "end_date": "2000-11-25",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Utah State",
-    "start_date": "2000-11-24",
+    "start_date": "2000-11-26",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

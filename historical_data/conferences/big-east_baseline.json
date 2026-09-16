@@ -2917,11 +2917,47 @@
       "end_date": "2012-12-03",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Cincinnati",
+      "start_date": "2012-12-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Louisville",
+      "predecessor": "UConn",
+      "end_date": "2012-12-04",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UConn",
+      "start_date": "2012-12-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Cincinnati",
+      "predecessor": "Louisville",
+      "end_date": "2012-12-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Louisville",
+      "start_date": "2012-12-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UConn",
+      "predecessor": "Cincinnati",
+      "end_date": "2012-12-06",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Cincinnati",
-    "start_date": "2012-12-04",
+    "start_date": "2012-12-07",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

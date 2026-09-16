@@ -14,5 +14,21 @@
     "effective_date": "1947-11-24",
     "detected_on": "2026-09-16",
     "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1947-11-24",
+    "last_activity_date": "1947-11-24",
+    "effective_date": "1947-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1947-11-25",
+    "last_activity_date": "1947-11-25",
+    "effective_date": "1947-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
   }
 ]
