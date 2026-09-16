@@ -584,7 +584,13 @@ def generate_favicon(primary, accent, ink):
     icon_192.save(os.path.join(OUT_DIR, "icon-192.png"), "PNG")
     icon_512 = draw_belt_icon(512, primary, accent, ink)
     icon_512.save(os.path.join(OUT_DIR, "icon-512.png"), "PNG")
-    print(f"Wrote {OUT_DIR}/favicon.png (32x32), "
+    # /favicon.ico at the site root: browsers, link previews and favicon
+    # services (the ones that still show this domain's old WordPress "W"
+    # from its pre-2018 life) ask for it by that exact path before they
+    # read any <link rel="icon">, so it has to exist
+    ico = draw_belt_icon(48, primary, accent, ink)
+    ico.save(os.path.join(OUT_DIR, "favicon.ico"), format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+    print(f"Wrote {OUT_DIR}/favicon.png (32x32), {OUT_DIR}/favicon.ico (16/32/48), "
           f"{OUT_DIR}/apple-touch-icon.png (180x180), and "
           f"{OUT_DIR}/icon-192.png / icon-512.png (PWA manifest icons)")
 

@@ -141,6 +141,7 @@ def head_extras(rel=""):
         '<link rel="preconnect" href="https://fonts.googleapis.com">',
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
         f'<link rel="stylesheet" href="{FONTS_URL}">',
+        f'<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">',
         f'<link rel="icon" type="image/png" href="{rel}favicon.png">',
         f'<link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">',
         f'<link rel="manifest" href="{rel}manifest.json">',
