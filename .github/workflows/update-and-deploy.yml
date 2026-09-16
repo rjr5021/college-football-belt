@@ -149,6 +149,20 @@ on:
         required: false
         type: boolean
         default: false
+      bootstrap_alternate_universes:
+        description: >-
+          One-time archive of every game since 1869 (all divisions) into
+          historical_data/all_games.json.gz, which build_alternate_lineages.py
+          needs to rerun the belt under alternate rules (ties pass the belt,
+          bowls don't count, a 1936 or 1998 start) for universes/ on the
+          site. Every run after this one recomputes those lineages for
+          free from the archive. Uses far more CFBD API calls (~316) than
+          a normal run -- don't tick this in the same run/month as any
+          other bootstrap checkbox on this form without checking your
+          CFBD usage first. Leave unchecked for an ordinary manual run.
+        required: false
+        type: boolean
+        default: false
       bootstrap_conference_belts:
         description: >-
           One-time historical build of every FBS/FCS conference belt, all
@@ -227,6 +241,10 @@ jobs:
           # historical bootstrap -- see the input above and
           # update_all.py's own docstring/BOOTSTRAP_CONFERENCE_BELTS.
           BOOTSTRAP_CONFERENCE_BELTS: ${{ github.event.inputs.bootstrap_conference_belts }}
+          # Same idea, for the alternate-rule lineages' one-time archive
+          # of every game since 1869 -- see the input above and
+          # update_all.py's own docstring/BOOTSTRAP_ALTERNATE_UNIVERSES.
+          BOOTSTRAP_ALTERNATE_UNIVERSES: ${{ github.event.inputs.bootstrap_alternate_universes }}
         run: python update_all.py
 
       - name: Commit historical_data/, ai_preview_cache/, recap_cache/ and social_cache/ if any changed
