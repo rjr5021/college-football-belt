@@ -109,10 +109,44 @@ ADSENSE_PUBLISHER_ID = "pub-4807241949046212"
 # platform, not a Fourthwall-specific limitation) -- this gets everything
 # up to that last click, browsing and all, living natively on the site
 # instead of linking out to a separate marketplace.
-FOURTHWALL_STORE_DOMAIN = ""
+FOURTHWALL_STORE_DOMAIN = "college-football-belt-shop.fourthwall.com"
 FOURTHWALL_PRODUCTS = [
-    # {"slug": "belt-championship-tee", "title": "Championship Belt Tee",
-    #  "price": "$28", "image": "https://cdn.fourthwall.com/.../front.png"},
+    {"slug": "championship-belt-tee", "title": "Championship Belt Tee",
+     "price": "$32.00",
+     "image": "https://imgproxy.fourthwall.dev/kdFh5xMB3WU87ZZRUvGj6ObCrsXnxaGL9-QH1Oo_AaA/w:720/sm:1/enc/Fdd-36OTORTLaYp-/o-JhmmpQAD3HMbTo/ePyS7Fqa8-b_ry0E/wqrwM561mdCIcPit/HGfSvSF9xaELk-yd/f_FrK9-Y84yd37Al/pq16Of9JD9nC3Tdt/-rMMf2RGOA67Asws/7fB5lXbC7wFR78zH/TN0JxXyRzkzlyvRh/BsGjrilnwera0jvv/Hhpz_uf7wMoiBjcr/IDg5uvEBMwUtP61r/7iNDq3eMNRuSicnJ/5cypZq0h4LI.jpg"},
+    {"slug": "championship-belt-hoodie", "title": "Championship Belt Hoodie",
+     "price": "$44.00",
+     "image": "https://imgproxy.fourthwall.dev/SVlWjiJY_qVqU_XAfFpEbsfB0iek19i5ZTCNud_sHiQ/w:720/sm:1/enc/nMysomXslORnpo6l/gG4iA8thB9j5nWhR/_AW_AIzOBKJzSjgO/emNxHmS2CC6ezPnG/cJFwQ9_m-2RUF2oZ/sDjESslKWDgmy5-m/PqKJAjwx8bAOK05R/k21fpH_B5aVlSfVJ/mwxmARC2XZgmJy7E/ayjOYkDG3Oih6iu6/liZLAbpJ-Q7Kut9c/tNcZMFb1JuGVJnrj/BGvzgJfivxnUJbY5/a0SuTs4mHdFEh1tB/soxo7sFHY40.jpg"},
+    {"slug": "championship-belt-dad-hat", "title": "Championship Belt Dad Hat",
+     "price": "$26.00",
+     "image": "https://imgproxy.fourthwall.dev/w7CG6rzrsPFjvCmGUsTydrndEvk3CClWSbEBiHm-Qw4/w:720/sm:1/enc/ZKfN66JcRxFZ61p3/6f8IxD3UrxXlWp-l/cCUQuqNBbGOHZx34/aEFuYkhYreEw5aJs/x9T_HAXAwBLhAu0M/cC-AUX_rCs7jEZuB/LsR2c0n7V4IKl6eV/bU20e8VPTfUM7Wqb/AqPwS4qliILY4dqC/fhWehWbAKIM0f59L/NxPgTRDC4Ax6VnCh/x3LRN_oxgHc-z3iY/P6URuPvC096dKg4Y/M1OAdmz3n7lp3HM9/0M6vp8rktwU.jpg"},
+    {"slug": "championship-belt-mug", "title": "Championship Belt Mug",
+     "price": "$14.00",
+     "image": "https://imgproxy.fourthwall.dev/lYbLQXgP77R5z74Vvvr2XKhi5GuTQjFH2zo4HhzqrlU/w:720/sm:1/enc/gIlE6CsTS4EX-FXf/rkWdjcy30vwJJzep/2mMWbtudaKQWaNR-/ONN5gwgUHregZziY/v7LDhWtHuaSfdw7z/GJ6ePX2bTByRyLmD/_Oo8fEoVerYiJn23/5vz1eQ_L2ceWL9OP/Y3KV8e5wdQJOcUxX/O7CKMwXGzbQX-bFj/6c-cZj-k4gLm59q0/gibbic9c4fUdCu7u/Au_yUmk_mmasbQT7/KpKf7ABZfXb3TtF0/6TGIoDZdPT0.jpg"},
+    {"slug": "championship-belt-sticker", "title": "Championship Belt Sticker",
+     "price": "$5.29",
+     "image": "https://imgproxy.fourthwall.dev/jpftJVzNgvNuFVT8Ci8zVnOmb79qG8SNtFQpDAGLMKE/w:720/sm:1/enc/rI7916bsnkd9SQ6d/GVIvnS2MXkNZW39s/ik45oAP69HUDakOC/h-OhxWYfbjA28j51/kJG3y1bCxRGqThVS/ewJsBTHgxWOizNZV/XHo-AEGOGu8zwkAn/y4IySgqCSvD5JJTU/stbe9OdK2343DmFw/4xSbMwNbEzrA1b0d/8jiLtfOn2JoJghEA/I4rpHEnE6Bmz1HuT/UqEMBDPBhXWg305k/asJwetA1MPP0cGyf/oPQmczNB_EU.jpg"},
+    {"slug": "championship-belt-tote", "title": "Championship Belt Tote",
+     "price": "$18.56",
+     "image": "https://imgproxy.fourthwall.dev/9PXujXvM8gBDmxpMjIfjuUiJCRFDFd8vF3SJk_6zJv4/w:720/sm:1/enc/-rjESfKGFCRNiO3x/85G0UM_DmbgU2JUt/VtGYbJOpvuvln5Sq/HiLr2CWx9E7zp8bP/4bWVFeegJrmP0mSC/tW23INS966WraDXf/C8WwYJ62O8WsX_7s/jFtNDrO9iZ8pg-YQ/KtqZkUz-V1vdKqWg/l6-vT1mtQqVlWFUV/436Bk1EHn6dOW5lF/8fM4AZn10rtgpw5P/bYxcB9yBhFCl8xGk/D29wO6ly9BfdqGKz/HnceC924E98.jpg"},
+    {"slug": "championship-belt-long-sleeve-tee", "title": "Championship Belt Long Sleeve Tee",
+     "price": "$17.79",
+     "image": "https://imgproxy.fourthwall.dev/z1Ou1P8bkweGjaZEPatJFLWJ5UiquMuIKeNO-QThOwQ/w:720/sm:1/enc/J_kvB4M6iyKQdvPv/f3Bmv-FOVz_JMPOF/yl6FJJfx38qjierP/vTRQYWjPmiVLKzAX/SaPT9KG2LCN0ufkh/i4uYMoNW8p3Cn-pX/fAGR4p_YMlCpaQZu/1X6eCpJ43XsTGy2k/JRkDt5lWqHXDWRa7/wv-qk9dqNgbJkCKe/jhFg06fA_s4-mdxg/Sr0sMwp9UdLM6p3m/p-6VM6xs0cEGJlSG/8S0D6TtRVuUAzFtp/sxhfJSF_PoU.jpg"},
+    {"slug": "championship-belt-crewneck", "title": "Championship Belt Crewneck",
+     "price": "$21.79",
+     "image": "https://imgproxy.fourthwall.dev/8-TS3v_T_YFKLOnUmVeBo_DnLxTf2spI0hJuWPUQyMQ/w:720/sm:1/enc/rSGDmLkufzMkfPA-/CNhJw1Moyz4a208h/mEk_XGdvGhHovS2j/1XnANQ3DBD9dXgjd/hkIX2kl5E0o4zWOh/YWnCOWKTkaltpvJW/Zijz0zG3Zdp3hd1j/DxTRCELEOimj9AaQ/fYteWttzxbJZDWJD/iERLIJOetkEL6Xag/NNCIIrIgA9bQEhNN/KEhjRIDyGJ-NoGgG/XPxNN74tG3QNrKka/auev3MalH6VGP1Ir/yjNRXEmSoZE.jpg"},
+    {"slug": "championship-belt-beanie", "title": "Championship Belt Beanie",
+     "price": "$16.79",
+     "image": "https://imgproxy.fourthwall.dev/GGc0QvdgdDGmjkgP8VMD_VVMQtukCowmUsnvPus5muU/w:720/sm:1/enc/FHSHHnNyW3RwvAJQ/A8tPDldhz3HzjYRH/enpeLDwZVLRy_OuA/PLCFLu0vweq1uuNB/yN_jDj9sqHEJ5tm-/VZhGtmcXuFqz--mc/mnOPYRdJOgRqRUUs/mFuinFHaWm71YTbL/JBZa5h-XGoiBfnud/llzMRP6OHtPNEcT-/Fq5XVUs0lKszlUYx/kOICZwvOJHW20rAQ/v7Aabk3S8F1aT1OM/QcNgSC7bSn383voy/mdTRiP5jjeo.jpg"},
+    {"slug": "championship-belt-water-bottle", "title": "Championship Belt Water Bottle",
+     "price": "$23.35",
+     "image": "https://imgproxy.fourthwall.dev/nsanIQdJFUqmFEpIYyAjHWrWI9K2Ez2oy8ZAyWD-eRE/w:720/sm:1/enc/q59a1LGeVqkpZWax/6NjGdGdXJ-QpYQ8o/mpY-DMdC0yz26aF6/ljLranbW3UH8iPIg/pmiJYAXMRlrFSXmI/WUe_lQVkarKjfkrX/13wMmsGuETM_jH20/uNTh2M1pTIZCSp5V/LF0fNAl3R1cR6cug/YBP8rnwCRp9lChs8/QP1IHuzu3ttmJrFb/_c99RdiRXkvyyXoC/S-uFCFT0C2Vu5uv2/S0vCFJkzXXZ3lqPa/-A7g_Z638bA.jpg"},
+    {"slug": "championship-belt-notebook", "title": "Championship Belt Notebook",
+     "price": "$13.95",
+     "image": "https://imgproxy.fourthwall.dev/m28KEzpjhl08QhWkSPWA5TGyqo_3jJunX4CL5uF4g54/w:720/sm:1/enc/5dqZKnKRgLU9e4J-/TJIc3484sUk_iP6a/DW9WT8A63HjTwZ9J/Iwe2FsWFkzS8pCkd/KfuEFRBDkAtxGy1N/HFygFiocmfya8Hwh/1oW2SBP8xY80y350/pNaX0VO7Zcua2hSP/-y8lzSgM-vrUgspw/oKD7TCoJ7PI7otfL/Mu4cw45V-BkWiU-6/ZvgPVbYlbjDMgf0Z/u4fZCgjn8zJJmZiv/cBAipHFIsgI8wPgP/0yqMe2gWp84.jpg"},
+    {"slug": "championship-belt-poster", "title": "Championship Belt Poster",
+     "price": "$8.50",
+     "image": "https://imgproxy.fourthwall.dev/R9Ev11gYC_B8cVnkeugfk4dxdQAUZglVgr9Vx8riH7c/w:720/sm:1/enc/zNGKF1RewvvoJ7II/a4s-yCIN8SyyCdVc/LCLhztS8dbOIgaC4/ZQ4Ls-NrqRRCxW58/WC3PYT--H2FLZvBT/caEYcFpER1DQCSrU/iA-ObtxNBTaYmrux/jLdUKOX-EfTGVXWM/iDjWJNzBYi0Yck6g/Hap5AAXnSwHedfVf/pOmkmjVf-pwbDGTc/7JwXUB_7sB2LTqr5/hY883xDZedyDR50K/8PRbwHNDQnf47DIa/xUzZzIQJp_g.jpg"},
 ]
 
 PAPER_LIGHT = "#e7e2d5"
@@ -438,7 +472,7 @@ FOOTER_COLUMNS = [
                  ("web.html", "Web of the belt"), ("coaches/index.html", "Coaches")]),
     ("Tools", [("outlook.html", "Season outlook"), ("polls.html", "Belt vs. the polls"), ("my-team.html", "My Team"),
                ("compare.html", "Compare teams"), ("preview.html", "Next belt game"), ("daily.html", "The Daily Belt"),
-               ("embed.html", "Embed badge"), ("api.html", "API"), ("data.html", "Data &amp; press"), ("feed.xml", "RSS feed")]),
+               ("embed.html", "Embed badge"), ("api.html", "API"), ("data.html", "Data &amp; press"), ("feed.xml", "RSS feed"), ("belt.ics", "Calendar feed")]),
     ("About", [("about.html", "About"), ("ruleset.html", "Ruleset"), ("stories.html", "Stories"), ("records.html", "Records"),
                ("losers-belt.html", "Losers Belt"), ("shop.html", "Shop"), ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
                ("https://x.com/CollegeFBBelt", "X · @CollegeFBBelt"), ("https://www.instagram.com/collegefbbelt/", "Instagram")]),
@@ -1297,6 +1331,8 @@ details.moreStats .statCategory{ margin-top:18px; }
 
 /* ---------- add to calendar ---------- */
 .calendarLinks{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 26px; }
+.calSubscribe{ margin:-8px 0 20px; font-size:13px; line-height:1.5; }
+.calSubscribe .muted{ color:var(--ink-soft); }
 .calBtn{
   display:inline-flex; align-items:center; justify-content:center; min-height:44px;
   font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
@@ -1354,6 +1390,19 @@ details.moreStats .statCategory{ margin-top:18px; }
 .myTeamCard .kicker{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); margin:0 0 8px; }
 .myTeamCard p{ margin:0; font-size:16px; line-height:1.6; }
 .myTeamCard p + p{ margin-top:10px; }
+.statCards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:0 0 34px; }
+.statCard{ background:var(--paper-2); padding:16px 18px; display:flex; flex-direction:column; gap:4px; min-width:0; }
+.statCard .kicker{ margin:0 0 2px; }
+.statCard .big{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:30px; line-height:1; letter-spacing:.01em; }
+.statCard p{ margin:4px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft); text-wrap:pretty; }
+.myTeamCards{ margin:0 0 34px; }
+.teamLog{ margin-top:34px; }
+.teamLog summary{ cursor:pointer; list-style:none; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:24px; padding:12px 0; border-bottom:1px solid var(--hairline); }
+.teamLog summary .tag{ font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); }
+.teamLog summary::-webkit-details-marker{ display:none; }
+.teamLog summary::after{ content:"+"; margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:18px; color:var(--brass-text); }
+.teamLog[open] summary::after{ content:"\\2212"; }
+.teamLog .miniList{ margin-top:12px; }
 .myTeamEmpty{ color:var(--ink-soft); font-size:14.5px; padding:8px 0 0; }
 
 /* ---------- embed page ---------- */
@@ -1510,6 +1559,12 @@ details.moreStats .statCategory{ margin-top:18px; }
 .rulesList li{ background:var(--paper-2); padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
 .rulesList h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:20px; margin:0; line-height:1.05; }
 .rulesList p{ margin:0; font-size:14px; line-height:1.5; color:var(--ink-soft); }
+.faqList{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:1000px){ .faqList{ grid-template-columns:1fr; } }
+.faqList li{ background:var(--paper-2); padding:18px 20px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+.faqList h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; margin:0; line-height:1.05; }
+.faqList p{ margin:0; font-size:15px; line-height:1.55; color:var(--ink-soft); text-wrap:pretty; }
+.faqList p a{ color:var(--ink); text-decoration-color:var(--brass); text-underline-offset:2px; }
 .explore{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
 @media (max-width:900px){ .explore{ grid-template-columns:1fr 1fr; } }
 @media (max-width:480px){ .explore{ grid-template-columns:1fr; } }
@@ -2115,6 +2170,97 @@ def build_calendar_links(next_game):
     <a class="calBtn" href="{esc(gcal_url)}" target="_blank" rel="noopener">+ Google Calendar</a>
     <a class="calBtn" href="{ics_data_uri}" download="belt-game-{team_slug(holder)}-vs-{team_slug(opponent)}.ics">&darr; Download .ics (Apple / Outlook)</a>
   </div>'''
+
+
+
+def generate_belt_calendar(next_game, upcoming_games, holder):
+    """belt.ics -- a SUBSCRIBABLE calendar (2026-09-16), as opposed to the
+    one-shot .ics download on the preview page: subscribe once
+    (webcal://collegefootballbelt.com/belt.ics) and the calendar app
+    refetches it on its own, so it always shows the current holder's belt
+    games -- including after the belt changes hands, when the whole
+    schedule on it swaps to the new holder's. One event per remaining game
+    on the holder's schedule: the next one is a confirmed belt game; the
+    later ones are "belt watch" (they're belt games only if the holder
+    still has it by then). Only the next game gets a kickoff time -- the
+    rest of the season's times are placeholders until TV picks them, so
+    those are all-day events on the venue-local date. Returns the file
+    text, or "" when there's nothing scheduled."""
+    games = list(upcoming_games or [])
+    if not games and next_game and next_game.get("date"):
+        games = [next_game]
+    if not games:
+        return ""
+
+    def fmt_utc(dt):
+        return dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+    stamp = fmt_utc(datetime.now(timezone.utc))
+    lines = [
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//College Football Belt//collegefootballbelt.com//EN",
+        "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+        "X-WR-CALNAME:The College Football Belt",
+        f"X-WR-CALDESC:{ics_escape('Every game the College Football Belt is on the line, updated automatically. ' + SITE_URL)}",
+        "REFRESH-INTERVAL;VALUE=DURATION:PT6H", "X-PUBLISHED-TTL:PT6H",
+    ]
+    for i, g in enumerate(games):
+        opp = g.get("opponent")
+        if not opp or not g.get("date"):
+            continue
+        team = g.get("team") or holder
+        if g.get("neutral"):
+            matchup = f"{team} vs. {opp}"
+        elif g.get("is_home"):
+            matchup = f"{opp} at {team}"
+        else:
+            matchup = f"{team} at {opp}"
+        if i == 0:
+            title = f"Belt game: {matchup}"
+            desc = (f"The College Football Belt is on the line: {team} defends against {opp}. "
+                    f"Preview: {SITE_URL}/preview.html")
+        else:
+            title = f"Belt watch: {matchup}"
+            desc = (f"A belt game if {team} still holds the belt by then. Who has it now, and the path to it: "
+                    f"{SITE_URL}/my-team.html")
+        uid = f"{g['date']}-{team_slug(team)}-{team_slug(opp)}@collegefootballbelt.com"
+        start = None
+        if i == 0 and g.get("raw_date"):
+            try:
+                start = datetime.fromisoformat(g["raw_date"].replace("Z", "+00:00"))
+                if start.tzinfo is None:
+                    start = start.replace(tzinfo=timezone.utc)
+            except ValueError:
+                start = None
+        lines += ["BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{stamp}"]
+        if start is not None:
+            lines += [f"DTSTART:{fmt_utc(start)}", f"DTEND:{fmt_utc(start + timedelta(hours=3, minutes=30))}"]
+        else:
+            day = date.fromisoformat(g["date"])
+            lines += [f"DTSTART;VALUE=DATE:{day:%Y%m%d}", f"DTEND;VALUE=DATE:{day + timedelta(days=1):%Y%m%d}"]
+        lines += [f"SUMMARY:{ics_escape(title)}", f"DESCRIPTION:{ics_escape(desc)}", f"URL:{SITE_URL}/preview.html"]
+        loc = ", ".join(b for b in (g.get("venue_name"), g.get("venue_city"), g.get("venue_state")) if b)
+        if loc:
+            lines.append(f"LOCATION:{ics_escape(loc)}")
+        lines.append("END:VEVENT")
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(_ics_fold(line) for line in lines) + "\r\n"
+
+
+def _ics_fold(line):
+    """RFC 5545 line folding: content lines are at most 75 octets, continued
+    on the next line after a single space. Measured in UTF-8 bytes so an
+    accented name never gets split mid-character."""
+    out, cur, size = [], "", 0
+    for ch in line:
+        b = len(ch.encode("utf-8"))
+        if size + b > 74:
+            out.append(cur)
+            cur, size = " " + ch, 1 + b
+        else:
+            cur, size = cur + ch, size + b
+    out.append(cur)
+    return "\r\n".join(out)
+
 
 
 # ---------------------------------------------------------------- headline
@@ -2818,6 +2964,149 @@ def generate_on_this_day_page(belt_games, reigns):
 '''
 
 
+# ------------------------------------------------------------- homepage FAQ
+
+def _plain(html_text):
+    """Plain text out of a rendered snippet, for JSON-LD answers."""
+    return html.unescape(re.sub(r"<[^>]+>", "", html_text)).replace(" ", " ").strip()
+
+
+def render_belt_faq(lineage, reigns, current, belt_games, next_game, belt_risk, today, change_index):
+    """A short, crawlable FAQ for the homepage (2026-09-16): the questions
+    people actually type into a search box -- "who holds the college
+    football belt", "when is the next belt game", "what is it" -- answered
+    in one or two plain sentences each, recomputed from the lineage on
+    every build so the answer is never stale. Returns (section html,
+    FAQPage JSON-LD); the visible text and the structured data carry the
+    same words, which is what the schema.org guidelines ask for."""
+    holder = current["team"]
+    totals = lineage["totals"]
+    holder_url = f"teams/{team_slug(holder)}.html"
+    reign_url = f"reigns/{len(reigns)}.html"
+    since = date.fromisoformat(current["start_date"])
+    days_held = (today - since).days
+    defenses = current.get("defenses", 0)
+    won_from = current.get("won_from")
+    w, l = _reign_win_score(current, change_index)
+    win_game = change_index.get((current["start_date"], holder))
+    holder_reign_n = sum(1 for r in reigns if r["team"] == holder)
+
+    # 1. who holds it
+    if won_from and w is not None:
+        took_word = f'<a href="games/{win_game["game_id"]}.html">took it</a>' if win_game else "took it"
+        took = (f'{took_word} from <a href="teams/{team_slug(won_from)}.html">{esc(won_from)}</a>, {w}&ndash;{l}, '
+                f'on {fmt_date(current["start_date"])}')
+    else:
+        took = f'has held it since {fmt_date(current["start_date"])}'
+    if defenses:
+        times = {1: "once", 2: "twice"}.get(defenses, f"{defenses} times")
+        kept = (f' and has defended it {times} since '
+                f'({days_held:,} day{"s" if days_held != 1 else ""} and counting)')
+    else:
+        kept = f' and has held it for {days_held:,} day{"s" if days_held != 1 else ""} so far'
+    a_who = (f'<a href="{holder_url}"><strong>{esc(holder)}</strong></a> holds the College Football Belt. '
+             f'{esc(holder)} {took}{kept}. It is {possessive(holder)} '
+             f'<a href="{reign_url}">{ordinal(holder_reign_n)} reign</a>.')
+
+    # 2. the next belt game
+    if next_game and next_game.get("date"):
+        opp = next_game["opponent"]
+        vs_word = "hosts" if next_game.get("is_home") else ("meets" if next_game.get("neutral") else "visits")
+        gd = date.fromisoformat(next_game["date"])
+        when = f"{gd:%A}, {fmt_month_day(gd)}, {gd.year}"
+        where = next_game.get("venue_name") or next_game.get("venue_city")
+        a_next = (f'The next belt game is <strong>{esc(holder)} {vs_word} '
+                  f'<a href="teams/{team_slug(opp)}.html">{esc(opp)}</a></strong> on {when}'
+                  f'{f" at {esc(where)}" if where else ""}. If {esc(opp)} wins, the belt changes hands; '
+                  f'a tie or a {esc(holder)} win keeps it where it is.')
+        risk_next = (belt_risk or {}).get("next_game") or {}
+        if risk_next.get("opponent") == opp and risk_next.get("defend_prob") is not None:
+            pct = round(risk_next["defend_prob"] * 100)
+            article = "an" if str(pct).startswith(("8", "11", "18")) else "a"
+            a_next += (f' The model gives {esc(holder)} {article} {pct}% chance to defend '
+                       f'(<a href="preview.html">full preview</a>).')
+        else:
+            a_next += ' <a href="preview.html">Read the preview.</a>'
+    else:
+        a_next = (f'{possessive(holder)} next game isn&rsquo;t on the schedule yet, so there is no belt game to point to; '
+                  f'the belt simply waits with {esc(holder)} until they play again. '
+                  f'<a href="seasons.html">Season by season</a> has every belt game to date.')
+
+    # 3. what it is
+    first = belt_games[0] if belt_games else None
+    if first:
+        origin = (f'It started with the first college football game ever played, {esc(first["away"])} at '
+                  f'{esc(first["home"])} on {fmt_date(first["date"])}')
+    else:
+        origin = 'It started with the first college football game ever played, in 1869'
+    a_what = (f'The College Football Belt is college football&rsquo;s lineal championship: one title, held by one '
+              f'program, that can only be taken by beating the holder on the field &mdash; the same idea as '
+              f'boxing&rsquo;s lineal champion. {origin}, and it has passed through {totals["reigns"]:,} reigns and '
+              f'{totals["distinct_teams"]} programs across {totals["belt_games"]:,} belt games since. Nothing is '
+              f'voted on. <a href="about.html">More about the belt.</a>')
+
+    # 4. how it changes hands
+    a_how = ('Beat the holder and the belt is yours; every other result leaves it where it is. Ties stay with the '
+             'holder, bowl and playoff games count like any other, and if the holder is idle (a bye, a canceled '
+             'season) the belt waits for its next game. Every reign is computed mechanically from the full game '
+             'record, with no editorial calls. <a href="ruleset.html">The full ruleset.</a>')
+
+    # 5. the records
+    def reign_len(r):
+        end = date.fromisoformat(r["end_date"]) if r.get("end_date") else today
+        return (end - date.fromisoformat(r["start_date"])).days
+    longest = max(reigns, key=reign_len)
+    longest_days = reign_len(longest)
+    longest_idx = reigns.index(longest) + 1
+    most_team, most_n = Counter(r["team"] for r in reigns).most_common(1)[0]
+    days_by_team = Counter()
+    for r in reigns:
+        days_by_team[r["team"]] += reign_len(r)
+    days_team, days_total = days_by_team.most_common(1)[0]
+    longest_end = fmt_date(longest["end_date"]) if longest.get("end_date") else "today"
+    a_records = (f'The longest single reign is <a href="reigns/{longest_idx}.html">{possessive(longest["team"])}</a>, '
+                 f'{fmt_date(longest["start_date"])} to {longest_end} ({longest_days:,} days, '
+                 f'{longest.get("defenses", 0)} defenses). <a href="teams/{team_slug(most_team)}.html">{esc(most_team)}</a> '
+                 f'has had the most reigns ({most_n}), and <a href="teams/{team_slug(days_team)}.html">{esc(days_team)}</a> '
+                 f'has held it for the most days in total ({days_total:,}). <a href="records.html">All the records.</a>')
+
+    # 6. official?
+    a_official = ('No. It is an independent fan project &mdash; no school, conference or the NCAA has anything to do '
+                  'with it, and it awards nothing but bragging rights. The lineage is rebuilt automatically from the '
+                  'College Football Data API every few hours during the season, and the whole thing is '
+                  '<a href="data.html">free to download</a>.')
+
+    qa = [
+        ("Who holds the College Football Belt?", a_who),
+        ("When is the next belt game?", a_next),
+        ("What is the College Football Belt?", a_what),
+        ("How does the belt change hands?", a_how),
+        ("Who has held the belt the longest?", a_records),
+        ("Is the College Football Belt official?", a_official),
+    ]
+    items = "".join(f"\n      <li><h3>{esc(q)}</h3><p>{a}</p></li>" for q, a in qa)
+    section = (
+        '\n  <section class="wrap" id="faq" aria-labelledby="faqTitle">'
+        '\n    <div class="sectionHead">'
+        '\n      <span class="tag">Straight answers</span>'
+        '\n      <h2 id="faqTitle">Belt FAQ</h2>'
+        '\n    </div>'
+        f'\n    <ul class="faqList">{items}'
+        '\n    </ul>'
+        '\n  </section>'
+    )
+    ld = json_ld({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": _plain(a)}}
+            for q, a in qa
+        ],
+    })
+    return section, ld
+
+
 def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None, belt_risk=None, gameday=None):
     """The homepage (2026-09-16 redesign): the holder's colors paint a
     full-bleed hero with one call to action (the next belt game), the chain
@@ -2989,6 +3278,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         earlier_html = (f'<div class="tlEarlierRow"><a class="tlEarlier" href="lineage.html">&uarr; {hidden_count:,} earlier '
                         f'reign{"s" if hidden_count != 1 else ""} since 1869</a></div>')
 
+    faq_html, faq_ld = render_belt_faq(lineage, reigns, current, belt_games, next_game, belt_risk, today, change_index)
     share_desc = esc(f"{share_lede} {years_span} years, {totals.get('reigns', '')} reigns.".strip())
     holder_kicker = f'Current holder &middot; {ordinal(team_reign_num)} reign'
     thesis = ("A lineal title passed hand to hand, on the field, since Rutgers beat Princeton 6&ndash;4 on "
@@ -3009,6 +3299,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
 <meta name="twitter:image" content="{SITE_URL}/share.png">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
+{faq_ld}
 <style>
   :root{{
     --holder:{primary}; --holder-alt:{accent}; --holder-ink:{ink};
@@ -3140,6 +3431,8 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a class="chipLink" href="api.html">API</a>
     </div>
   </section>
+
+{faq_html}
 
   <div class="wrap">
     <div class="followStrip" id="alerts">
@@ -4689,6 +4982,13 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
       <p class="lede">A written preview lands here once the pipeline&rsquo;s next run has the matchup stats in hand.</p>'''
 
     calendar_html = build_calendar_links(next_game)
+    # the subscribable feed (belt.ics) is written by main() from the same
+    # schedule; webcal:// opens straight in Apple/Outlook/Thunderbird,
+    # Google Calendar takes the https URL under "From URL"
+    webcal = SITE_URL.replace("https://", "webcal://", 1) + "/belt.ics"
+    subscribe_html = (f'<p class="calSubscribe"><a href="{esc(webcal)}">Subscribe to the belt calendar</a> '
+                      f'<span class="muted">&mdash; auto-updates, follows the belt when it changes hands '
+                      f'(<a href="belt.ics">plain URL</a> for Google Calendar)</span></p>')
 
     meetings_rows = ""
     for g in meetings[:6]:
@@ -4834,6 +5134,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
       <div class="sideCard" id="calendar">
         <span class="kicker">Don&rsquo;t miss it</span>
         {calendar_html if calendar_html else '<p class="emptyNote">Kickoff time to be announced.</p>'}
+        {subscribe_html}
         <a class="btn ghost" href="index.html#alerts">Email me if it changes hands</a>
       </div>
       <div class="sideCard">
@@ -5554,7 +5855,191 @@ def _team_reign_row(r, today, change_index, loss_index, is_current, reign_no=Non
     </div>'''
 
 
-def generate_team_pages(lineage, colors, belt_games, teams_dir):
+
+# ------------------------------------------------- team page extras (2026-09-16)
+
+def _program_totals(reigns, today):
+    """{team: (days, reigns, defenses)} for every program that has held the
+    belt -- the basis for the all-time ranks on team pages."""
+    out = {}
+    for r in reigns:
+        d, n, df = out.get(r["team"], (0, 0, 0))
+        out[r["team"]] = (d + reign_duration_days(r, today), n + 1, df + r.get("defenses", 0))
+    return out
+
+
+def _rank_of(value, values):
+    """1-based rank of `value` among `values` (ties share the higher rank)."""
+    return 1 + sum(1 for v in values if v > value)
+
+
+def render_team_extras(team, belt_games, reigns, today, holders, totals, team_paths=None,
+                       belt_risk=None, next_game=None, rel="../"):
+    """The three sections added to every team page on 2026-09-16, all from
+    data build_site.py already has: "By the numbers" (belt-game record by
+    role, takeovers, biggest win and worst loss, most frequent opponents,
+    all-time ranks, the current hold or drought), "This season" (the
+    holder's next defense, or the program's path to the belt from
+    team_paths.json plus its end-of-season odds from belt_risk.json), and
+    a collapsed log of every belt game the program has played."""
+    games = [g for g in belt_games if team in (g["home"], g["away"])]
+    if not games:
+        return "", ""
+    rec = {"holder": [0, 0, 0], "challenger": [0, 0, 0]}   # w, l, t
+    takeovers = 0
+    biggest = worst = None
+    opps = Counter()
+    for g in games:
+        role = "holder" if g["holder"] == team else "challenger"
+        h, a = (int(x) for x in g["score"].split("-"))
+        mine, theirs = (h, a) if g["home"] == team else (a, h)
+        opp = g["away"] if g["home"] == team else g["home"]
+        opps[opp] += 1
+        if mine == theirs:
+            rec[role][2] += 1
+        elif mine > theirs:
+            rec[role][0] += 1
+            if biggest is None or (mine - theirs) > biggest[0]:
+                biggest = (mine - theirs, g, opp, mine, theirs)
+        else:
+            rec[role][1] += 1
+            if worst is None or (theirs - mine) > worst[0]:
+                worst = (theirs - mine, g, opp, mine, theirs)
+        if g["new_holder"] == team and g["holder"] != team:
+            takeovers += 1
+
+    def rec_txt(w, l, t):
+        return f"{w}&ndash;{l}" + (f"&ndash;{t}" if t else "")
+
+    hw, hl, ht = rec["holder"]
+    cw, cl, ct = rec["challenger"]
+    all_rec = rec_txt(hw + cw, hl + cl, ht + ct)
+    days, n_reigns, defenses = totals.get(team, (0, 0, 0))
+    programs = len(totals)
+    rank_days = _rank_of(days, [v[0] for v in totals.values()])
+    rank_reigns = _rank_of(n_reigns, [v[1] for v in totals.values()])
+    rank_def = _rank_of(defenses, [v[2] for v in totals.values()])
+    team_reigns = sorted((r for r in reigns if r["team"] == team), key=lambda r: r["start_date"])
+    current = reigns[-1]
+    is_holder = bool(team_reigns) and team_reigns[-1] is current
+
+    def game_link(g, opp, mine, theirs):
+        loc = "vs." if (g["neutral"] or g["home"] == team) else "at"
+        return (f'<a href="{rel}games/{g["game_id"]}.html">{mine}&ndash;{theirs} {loc} {esc(opp)}</a>, '
+                f'{fmt_date(g["date"])}')
+
+    # ---- by the numbers
+    cards = []
+    cards.append(f'<div class="statCard"><span class="kicker">Belt-game record</span><span class="big tabular">{all_rec}</span>'
+                 f'<p>{rec_txt(hw, hl, ht)} defending it &middot; {rec_txt(cw, cl, ct)} challenging for it &middot; '
+                 f'{len(games)} belt {_plural(len(games), "game")} since {games[0]["date"][:4]}</p></div>')
+    if biggest:
+        cards.append(f'<div class="statCard"><span class="kicker">Biggest belt win</span><span class="big tabular">by {biggest[0]}</span>'
+                     f'<p>{game_link(biggest[1], biggest[2], biggest[3], biggest[4])}</p></div>')
+    if worst:
+        cards.append(f'<div class="statCard"><span class="kicker">Worst belt loss</span><span class="big tabular">by {worst[0]}</span>'
+                     f'<p>{game_link(worst[1], worst[2], worst[3], worst[4])}</p></div>')
+    top = opps.most_common(3)
+    if top:
+        bits = []
+        for opp, c in top:
+            if c >= RIVALRY_MIN_GAMES:
+                a, b = sorted((team, opp))
+                bits.append(f'<a href="{rel}rivalries/{rivalry_slug(a, b)}.html">{esc(opp)}</a> ({c})')
+            else:
+                bits.append(f'{team_link(opp, rel, holders)} ({c})')
+        cards.append(f'<div class="statCard"><span class="kicker">Most belt games against</span><span class="big">{esc(top[0][0])}</span>'
+                     f'<p>{" &middot; ".join(bits)}</p></div>')
+    cards.append(f'<div class="statCard"><span class="kicker">Took the belt</span><span class="big tabular">{takeovers}</span>'
+                 f'<p>{_plural(takeovers, "time")} &middot; {n_reigns} {_plural(n_reigns, "reign")} in all &middot; '
+                 f'first belt game {fmt_date(games[0]["date"])}</p></div>')
+    cards.append(f'<div class="statCard"><span class="kicker">All-time rank of {programs} programs</span>'
+                 f'<span class="big tabular">{ordinal(rank_days)}</span>'
+                 f'<p>in days held ({days:,}) &middot; {ordinal(rank_reigns)} in reigns &middot; {ordinal(rank_def)} in defenses ({defenses}) &middot; '
+                 f'<a href="{rel}records.html">records</a></p></div>')
+    if is_holder:
+        held = (today - date.fromisoformat(current["start_date"])).days
+        cards.append(f'<div class="statCard"><span class="kicker">Right now</span><span class="big tabular">{held:,} days</span>'
+                     f'<p>holding the belt since {fmt_date(current["start_date"])} &middot; '
+                     f'<a href="{rel}reigns/{len(reigns)}.html">this reign</a></p></div>')
+    elif team_reigns:
+        last = team_reigns[-1]
+        drought = (today - date.fromisoformat(last["end_date"])).days
+        cards.append(f'<div class="statCard"><span class="kicker">Without it for</span><span class="big tabular">{drought:,} days</span>'
+                     f'<p>since {fmt_date(last["end_date"])}'
+                     f'{", lost to " + team_link(last["lost_to"], rel, holders) if last.get("lost_to") else ""} &middot; '
+                     f'<a href="{rel}records.html">longest droughts</a></p></div>')
+    numbers_html = (f'\n  <div class="sectionHead"><span class="tag">By the numbers</span><h2>{esc(team)} and the belt</h2>'
+                    f'<a class="sectionLink" href="{rel}embed.html#{team_slug(team)}">Embed the badge &rarr;</a></div>\n'
+                    f'  <div class="statCards">{"".join(cards)}</div>')
+
+    # ---- this season
+    season_html = ""
+    season_cards = []
+    risk_season = (belt_risk or {}).get("season") or {}
+    eos = {e["team"]: e["prob"] for e in (risk_season.get("end_of_season") or [])}
+    if is_holder:
+        if next_game and next_game.get("date"):
+            opp = next_game["opponent"]
+            loc = "at home" if next_game.get("is_home") else ("at a neutral site" if next_game.get("neutral") else "on the road")
+            gd = date.fromisoformat(next_game["date"])
+            season_cards.append(f'<div class="myTeamCard holder"><div class="kicker">Next defense</div><p>{team_link(opp, rel, holders)} {loc} on '
+                                f'{gd:%A}, {fmt_month_day(gd)}. <a href="{rel}preview.html">The preview</a>.</p></div>')
+        prob = risk_season.get("holds_into_offseason_prob")
+        if prob is not None:
+            season_cards.append(f'<div class="myTeamCard"><div class="kicker">Season outlook</div><p>{round(prob * 100)}% to still hold the belt when the '
+                                f'season&rsquo;s games run out, per the <a href="{rel}outlook.html">season outlook</a>.</p></div>')
+    elif team_paths and team in (team_paths.get("teams") or {}):
+        entry = team_paths["teams"][team]
+        holder = team_paths.get("holder", "")
+        for g in entry.get("direct", [])[:3]:
+            gd = date.fromisoformat(g["date"])
+            season_cards.append(f'<div class="myTeamCard"><div class="kicker">A shot at it</div><p>{esc(team)} plays {team_link(holder, rel, holders)} '
+                                f'{"at home" if g.get("is_home") else "on the road"} on {gd:%A}, {fmt_month_day(gd)}. Win, and the belt is {possessive(team)}.</p></div>')
+        if not entry.get("direct"):
+            for p in entry.get("indirect", [])[:3]:
+                vd, yd = date.fromisoformat(p["via_date"]), date.fromisoformat(p["your_date"])
+                season_cards.append(f'<div class="myTeamCard"><div class="kicker">If the belt moves</div><p>If {team_link(p["via"], rel, holders)} beats '
+                                    f'{team_link(holder, rel, holders)} on {fmt_month_day(vd)} and holds on, {esc(team)} plays them '
+                                    f'{"at home" if p.get("your_is_home") else "on the road"} on {fmt_month_day(yd)} &mdash; that&rsquo;s the game.</p></div>')
+        if not entry.get("direct") and not entry.get("indirect") and eos:   # in-season only; offseason has no schedule to speak of
+            season_cards.append(f'<div class="myTeamCard"><div class="kicker">No path yet</div><p>Nothing on {possessive(team)} schedule runs through '
+                                f'{team_link(holder, rel, holders)} or anyone who could take the belt from them first. Bowl pairings can change that.</p></div>')
+        if eos:
+            prob = eos.get(team, 0.0)
+            pct = f"{round(prob * 100)}%" if prob >= 0.005 else "under 1%"
+            season_cards.append(f'<div class="myTeamCard"><div class="kicker">Season outlook</div><p>{pct} to hold the belt when the season&rsquo;s '
+                                f'games run out, per the <a href="{rel}outlook.html">season outlook</a>.</p></div>')
+    if season_cards:
+        season_html = (f'\n  <div class="sectionHead"><span class="tag">This season</span><h2>The belt and {esc(team)} right now</h2>'
+                       f'<a class="sectionLink" href="{rel}my-team.html">Every path &rarr;</a></div>\n'
+                       f'  <div class="myTeamCards">{"".join(season_cards)}</div>')
+
+    # ---- every belt game
+    rows = ""
+    for g in sorted(games, key=lambda g: g["date"], reverse=True):
+        h, a = (int(x) for x in g["score"].split("-"))
+        mine, theirs = (h, a) if g["home"] == team else (a, h)
+        opp = g["away"] if g["home"] == team else g["home"]
+        role = "holder" if g["holder"] == team else "challenger"
+        if mine == theirs:
+            tag = "tie, holder kept it"
+        elif role == "holder":
+            tag = "defended" if mine > theirs else "lost the belt"
+        else:
+            tag = "took the belt" if mine > theirs else "lost"
+        if g["outcome"] == "established":
+            tag = "belt established"
+        loc = "vs." if (g["neutral"] or g["home"] == team) else "at"
+        rows += (f'<a class="miniRow" href="{rel}games/{g["game_id"]}.html"><span>{fmt_date(g["date"])} &middot; '
+                 f'<strong>{esc(team)}</strong> {loc} {esc(opp)} {mine}&ndash;{theirs}'
+                 f' <span class="mono" style="color:var(--ink-soft)">as {role}</span></span><span class="miniTag">{tag}</span></a>')
+    log_html = (f'\n  <details class="teamLog"><summary><span class="tag">Every belt game</span> {len(games)} {_plural(len(games), "game")}, newest first</summary>'
+                f'<div class="miniList">{rows}</div></details>')
+    return numbers_html + season_html, log_html
+
+
+def generate_team_pages(lineage, colors, belt_games, teams_dir, team_paths=None, belt_risk=None, next_game=None):
     """One page per program that has ever held the belt -- every reign it
     ever had, newest first, how each one started and (if it's over) ended.
     Every team that's ever HELD the belt gets a page here; a team that's
@@ -5570,11 +6055,15 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
     by_team = {}
     for r in reigns:
         by_team.setdefault(r["team"], []).append(r)
+    program_totals = _program_totals(reigns, today)
+    holders = set(by_team)
 
     os.makedirs(teams_dir, exist_ok=True)
     written = 0
     for team, team_reigns in by_team.items():
         team_reigns_sorted = sorted(team_reigns, key=lambda r: r["start_date"])
+        extras_top, extras_log = render_team_extras(team, belt_games, reigns, today, holders, program_totals,
+                                                    team_paths, belt_risk, next_game)
         total_days = sum(reign_duration_days(r, today) for r in team_reigns_sorted)
         total_defenses = sum(r.get("defenses", 0) for r in team_reigns_sorted)
         is_holder_now = team_reigns_sorted[-1] is current_reign
@@ -5636,15 +6125,18 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
     </div>
   </section>
   <p class="lede" style="margin-top:18px">{holder_line}
-    <a class="posterLink" href="../posters/{team_slug(team)}.png">Download a poster of this history &darr;</a></p>
+    <a class="posterLink" href="../posters/{team_slug(team)}.png">Download a poster of this history &darr;</a>
+    <a class="posterLink" href="../embed.html#{team_slug(team)}">Embed the {esc(team)} belt badge &rarr;</a></p>
+{extras_top}
 
   <div class="sectionHead">
     <span class="tag">Every reign</span>
-    <h2>{esc(team)}&rsquo;s belt history</h2>
+    <h2>{possessive(team)} belt history</h2>
     <a class="sectionLink" href="../compare.html">Compare with another team &rarr;</a>
   </div>
   <div class="teamReignList">{rows_html}
   </div>
+{extras_log}
 </main>
 
 {site_footer('../', 'Every reign computed from the College Football Data API.')}
@@ -6085,7 +6577,68 @@ role="img" aria-label="College Football Belt: {esc(holder)}">
 </svg>'''
 
 
-def generate_embed_page(lineage, colors):
+
+def _badge_svg(left, right, left_fill, left_ink, right_fill, right_ink, aria):
+    """One shields.io-style two-tone pill (same drawing as badge.svg)."""
+    left_w = 20 + len(left) * 7
+    right_w = 20 + len(right) * 7
+    total_w = left_w + right_w
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{total_w}" height="24" \
+role="img" aria-label="{esc(aria)}">
+  <linearGradient id="sheen" x2="0" y2="100%">
+    <stop offset="0" stop-color="#fff" stop-opacity=".09"/>
+    <stop offset="1" stop-opacity=".09"/>
+  </linearGradient>
+  <clipPath id="round"><rect width="{total_w}" height="24" rx="4" fill="#fff"/></clipPath>
+  <g clip-path="url(#round)">
+    <rect width="{left_w}" height="24" fill="{left_fill}"/>
+    <rect x="{left_w}" width="{right_w}" height="24" fill="{right_fill}"/>
+    <rect width="{total_w}" height="24" fill="url(#sheen)"/>
+  </g>
+  <g text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
+    <text x="{left_w / 2:.0f}" y="16" fill="{left_ink}" font-weight="bold">{esc(left)}</text>
+    <text x="{left_w + right_w / 2:.0f}" y="16" fill="{right_ink}">{esc(right)}</text>
+  </g>
+</svg>'''
+
+
+def generate_team_badges(lineage, colors, badge_dir):
+    """badge/<team>.svg -- one live badge per program that has ever held
+    the belt (2026-09-16): the program's name in its own colors, then its
+    standing with the belt -- "HOLDS THE BELT · 291 DAYS" while it has it,
+    "9 REIGNS · LAST HELD 2023" otherwise. Rebuilt every run like
+    badge.svg, so a fan site or forum signature that embeds it is always
+    right without anyone touching it. Returns {team: (slug, right text)}
+    for embed.html's picker."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    current = reigns[-1]
+    by_team = {}
+    for r in reigns:
+        by_team.setdefault(r["team"], []).append(r)
+    os.makedirs(badge_dir, exist_ok=True)
+    out = {}
+    for team, team_reigns in by_team.items():
+        last = max(team_reigns, key=lambda r: r["start_date"])
+        n = len(team_reigns)
+        if last is current:
+            days = (today - date.fromisoformat(current["start_date"])).days
+            right = f"HOLDS THE BELT · {days:,} DAY{'S' if days != 1 else ''}"
+            aria = f"{team} holds the College Football Belt, {days:,} days and counting"
+        else:
+            right = f"{n} REIGN{'S' if n != 1 else ''} · LAST HELD {last['end_date'][:4]}"
+            aria = f"{team} and the College Football Belt: {n} reign{'s' if n != 1 else ''}, last held {last['end_date'][:4]}"
+        primary, alt = team_color(colors, team)
+        ink, _accent = panel_colors(primary, alt)
+        svg = _badge_svg(team.upper(), right, primary, ink, "#211a12", "#e7e2d5", aria)
+        slug = team_slug(team)
+        with open(os.path.join(badge_dir, f"{slug}.svg"), "w", encoding="utf-8") as f:
+            f.write(svg)
+        out[team] = (slug, right)
+    return out
+
+
+def generate_embed_page(lineage, colors, team_badges=None):
     """A page for other sites to grab a copy-pasteable 'current belt
     holder' badge -- plain HTML and Markdown snippets in read-only text
     boxes (select-all-and-copy; no clipboard JS/permissions needed). Free
@@ -6096,6 +6649,55 @@ def generate_embed_page(lineage, colors):
     html_snippet = (f'<a href="{SITE_URL}/"><img src="{SITE_URL}/badge.svg" '
                      f'alt="College Football Belt: current holder"></a>')
     md_snippet = f'[![College Football Belt]({SITE_URL}/badge.svg)]({SITE_URL}/)'
+
+    # per-program badges (badge/<team>.svg, see generate_team_badges): a
+    # picker that rewrites the preview and snippets client-side; the page
+    # hash preselects a program so team pages can deep-link to their own
+    team_section = ""
+    if team_badges:
+        holder_slug = team_slug(holder)
+        options = "".join(
+            f'<option value="{esc(slug)}"{" selected" if slug == holder_slug else ""}>{esc(team)}</option>'
+            for team, (slug, _right) in sorted(team_badges.items()))
+        team_section = f'''
+  <div class="sectionHead" style="margin-top:40px">
+    <span class="tag">Your program</span>
+    <h2>Your team&rsquo;s badge</h2>
+  </div>
+  <p class="lede">Every program that has ever held the belt has its own live badge: the name in its colors, then
+    where it stands &mdash; <em>holds the belt &middot; N days</em> while it has it, <em>N reigns &middot; last held YYYY</em>
+    the rest of the time. Same deal: a plain image, rebuilt on every update.</p>
+  <div class="myTeamPicker">
+    <select id="badgeTeam" aria-label="Choose a program">{options}</select>
+  </div>
+  <div class="embedPreview">
+    <img id="badgeImg" src="badge/{esc(holder_slug)}.svg" alt="{esc(holder)} and the College Football Belt" height="24">
+  </div>
+  <p class="embedLabel">HTML</p>
+  <textarea class="embedCode" id="badgeHtml" rows="2" readonly aria-label="HTML embed code for the team badge" onclick="this.select()"></textarea>
+  <p class="embedLabel">Markdown</p>
+  <textarea class="embedCode" id="badgeMd" rows="2" readonly aria-label="Markdown embed code for the team badge" onclick="this.select()"></textarea>
+  <p class="embedLabel">Direct badge URL</p>
+  <textarea class="embedCode" id="badgeUrl" rows="1" readonly aria-label="Team badge image URL" onclick="this.select()"></textarea>
+  <script>
+  (function(){{
+    var sel = document.getElementById('badgeTeam'), img = document.getElementById('badgeImg');
+    var site = {json.dumps(SITE_URL)};
+    function paint(){{
+      var slug = sel.value, name = sel.options[sel.selectedIndex].text;
+      var url = site + '/badge/' + slug + '.svg', page = site + '/teams/' + slug + '.html';
+      img.src = 'badge/' + slug + '.svg'; img.alt = name + ' and the College Football Belt';
+      document.getElementById('badgeHtml').value = '<a href="' + page + '"><img src="' + url + '" alt="' + name + ' and the College Football Belt"></a>';
+      document.getElementById('badgeMd').value = '[![' + name + ' and the College Football Belt](' + url + ')](' + page + ')';
+      document.getElementById('badgeUrl').value = url;
+      if (history.replaceState) history.replaceState(null, '', '#' + slug);
+    }}
+    var want = location.hash.replace('#', '');
+    if (want) for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value === want) sel.selectedIndex = i;
+    sel.addEventListener('change', paint);
+    paint();
+  }})();
+  </script>'''
 
     return f'''<!doctype html>
 <html lang="en">
@@ -6125,6 +6727,7 @@ def generate_embed_page(lineage, colors):
 
   <p class="embedLabel">Direct badge URL</p>
   <textarea class="embedCode" rows="1" readonly aria-label="Badge image URL" onclick="this.select()">{SITE_URL}/badge.svg</textarea>
+{team_section}
 </main>
 
 {site_footer('', 'The badge is a plain SVG, rebuilt from live data on every deploy &mdash; no tracking, no script tag required.')}
@@ -11002,15 +11605,43 @@ def generate_data_page(lineage, belt_games, files):
               "lineage.json": "The full structured lineage the site itself builds from (reigns + belt games + totals)."}
     for name, size, rows in files:
         file_rows += (f'<a class="miniRow" href="data/{name}" download><span><strong class="mono">{name}</strong> &middot; {esc(labels.get(name, ""))}</span>'
-                      f'<span class="miniTag">{rows:,} rows &middot; {size_txt(size)}</span></a>')
+                      f'<span class="miniTag">{rows:,} {"records" if name.endswith(".json") else "rows"} &middot; {size_txt(size)}</span></a>')
     with open(os.path.join(OUT_DIR, "press", "belt-mark.svg"), "w", encoding="utf-8") as f:
         f.write(PRESS_MARK_SVG)
     cite_txt = f"The College Football Belt. collegefootballbelt.com. Lineage data through {fmt_date(belt_games[-1]['date'])}, accessed {fmt_date(today.isoformat())}."
     bibtex = (f"@misc{{collegefootballbelt,\n  title = {{The College Football Belt}},\n  howpublished = {{\\url{{https://collegefootballbelt.com}}}},\n"
               f"  note = {{Lineal college football championship lineage, {first_year}--{belt_games[-1]['date'][:4]}. Game results from the College Football Data API.}},\n"
               f"  year = {{{today.year}}}\n}}")
+    # schema.org Dataset markup: what Google Dataset Search indexes. One
+    # Dataset with a DataDownload per file, the license, the time span
+    # and the freshness date -- all from the same numbers the page shows.
+    mime = {"csv": "text/csv", "json": "application/json"}
+    dataset_ld = json_ld({
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": f"The College Football Belt: every reign and belt game since {first_year}",
+        "description": (f"Every game played for the College Football Belt, college football's lineal championship, "
+                        f"from the first game in {first_year} to the present: {totals['belt_games']:,} belt games "
+                        f"(date, teams, score, outcome) and {totals['reigns']} reigns (program, dates, days held, "
+                        f"defenses, won from, lost to). Rebuilt from the College Football Data API with every site update."),
+        "url": f"{SITE_URL}/data.html",
+        "sameAs": f"{SITE_URL}/api.html",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "isAccessibleForFree": True,
+        "creator": {"@type": "Organization", "name": "The College Football Belt", "url": f"{SITE_URL}/"},
+        "keywords": ["college football", "lineal championship", "college football belt", "football history",
+                     "sports data", "NCAA football"],
+        "temporalCoverage": f"{belt_games[0]['date']}/{belt_games[-1]['date']}",
+        "spatialCoverage": "United States",
+        "dateModified": today.isoformat(),
+        "distribution": [
+            {"@type": "DataDownload", "name": name, "encodingFormat": mime.get(name.rsplit(".", 1)[-1], "text/plain"),
+             "contentUrl": f"{SITE_URL}/data/{name}", "contentSize": f"{size} B"}
+            for name, size, rows in files
+        ],
+    })
     return f'''{page_head("Data & Press — Download the Belt Dataset, Cite It, Press Kit",
-                     f"Download the College Football Belt dataset ({totals['belt_games']:,} belt games and {totals['reigns']} reigns since {first_year}) as CSV or JSON, how to cite it, and the press kit: logo, description and contact.", "", share_meta("data", "Take the belt with you", "Data & press", f"{totals['belt_games']:,} belt games and {totals['reigns']} reigns as CSV and JSON, free with attribution"))}
+                     f"Download the College Football Belt dataset ({totals['belt_games']:,} belt games and {totals['reigns']} reigns since {first_year}) as CSV or JSON, how to cite it, and the press kit: logo, description and contact.", "", share_meta("data", "Take the belt with you", "Data & press", f"{totals['belt_games']:,} belt games and {totals['reigns']} reigns as CSV and JSON, free with attribution") + dataset_ld)}
 
 {site_header('', 'data')}
 
@@ -11028,7 +11659,7 @@ def generate_data_page(lineage, belt_games, files):
       <p class="editorial">The belt lineage (reigns, belt games and every computed field) is published under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">{DATASET_LICENSE}</a>: use it, chart it, write about it, build on it &mdash; just credit <strong>collegefootballbelt.com</strong> and link back. The underlying game results belong to the College Football Data project; credit them too when you republish scores.</p>
       <div class="sectionHead"><span class="tag">Cite it</span><h2>Suggested citation</h2></div>
       <p class="editorial"><span class="mono" style="font-size:13px">{esc(cite_txt)}</span></p>
-      <pre class="citeBlock">{esc(bibtex)}</pre>
+      <pre class="citeBlock" tabindex="0" aria-label="BibTeX entry">{esc(bibtex)}</pre>
     </section>
     <section>
       <div class="sectionHead"><span class="tag">Press kit</span><h2>Writing about the belt</h2></div>
@@ -11060,6 +11691,68 @@ def generate_sitemap(urls):
 
 def generate_robots_txt():
     return f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n"
+
+
+def generate_llms_txt(lineage, belt_games):
+    """llms.txt (2026-09-16): the llmstxt.org convention -- a short plain-
+    Markdown brief at the site root for AI crawlers and answer engines,
+    so "who holds the college football belt" gets answered from the
+    source instead of a stale scrape. Same facts as the homepage FAQ and
+    data.html, regenerated every build."""
+    reigns = lineage["reigns"]
+    totals = lineage["totals"]
+    current = reigns[-1]
+    holder = current["team"]
+    today = date.today()
+    days = (today - date.fromisoformat(current["start_date"])).days
+    defenses = current.get("defenses", 0)
+    won_from = current.get("won_from")
+    took = f" It took the belt from {won_from} on {fmt_date(current['start_date'])}." if won_from else ""
+    last_game = belt_games[-1] if belt_games else None
+    en_dash = "\u2013"
+    outcome_words = {"changed": "title change", "retained": "holder defended", "established": "belt established",
+                     "retained (tie)": "tie, holder kept it"}
+    last_line = (f"Most recent belt game: {last_game['away']} at {last_game['home']} on {fmt_date(last_game['date'])}, "
+                 f"{last_game['score'].replace('-', en_dash)} ({outcome_words.get(last_game['outcome'], last_game['outcome'])})."
+                 if last_game else "")
+    return f"""# The College Football Belt
+
+> College football's lineal championship: one title, passed on the field to whoever beats the holder, traced through every game since the first one (Princeton at Rutgers, November 6, 1869). Nothing is voted on. Independent fan project, no affiliation with any school, conference or the NCAA.
+
+## Right now (as of {fmt_date(today.isoformat())})
+
+- Current holder: **{holder}**, {days:,} days and {defenses} defense{"s" if defenses != 1 else ""} into its reign.{took}
+- {last_line}
+- Next belt game and the model's odds: {SITE_URL}/preview.html
+- Live JSON of the current holder: {SITE_URL}/api/current.json
+
+## The rules
+
+Beat the holder and the belt is yours; every other result leaves it where it is. Ties stay with the holder, bowl and playoff games count, an idle holder (bye, canceled season) keeps the belt until its next game. Every reign is computed mechanically from the College Football Data API's game record. Full ruleset: {SITE_URL}/ruleset.html
+
+## The numbers
+
+{totals['belt_games']:,} belt games, {totals['reigns']:,} reigns, {totals['distinct_teams']} programs, {belt_games[0]['date'][:4] if belt_games else 1869}{en_dash}{today.year}.
+
+## Key pages
+
+- [Homepage, with a Belt FAQ]({SITE_URL}/): who holds it, next game, how it works
+- [Full history]({SITE_URL}/lineage.html): every reign since 1869
+- [All games]({SITE_URL}/all-games.html): every belt game with scores
+- [Records]({SITE_URL}/records.html): longest reigns, most defenses, most days held, droughts
+- [Season outlook]({SITE_URL}/outlook.html): every program's odds of holding the belt when the season ends
+- [The belt vs. the polls]({SITE_URL}/polls.html): how the holder looked to AP voters, week by week since 1936
+- [Coaches]({SITE_URL}/coaches/index.html), [rivalries]({SITE_URL}/rivalries/index.html), [states]({SITE_URL}/states/index.html), [decades]({SITE_URL}/decades/index.html), [stories]({SITE_URL}/stories.html)
+- [About]({SITE_URL}/about.html): what is and isn't written by software on this site
+
+## Data
+
+- [Dataset (CSV/JSON, CC BY 4.0)]({SITE_URL}/data.html): every belt game and reign, plus a citation and press kit
+- [JSON API]({SITE_URL}/api.html): current holder, reigns, games
+- [RSS feed of title changes]({SITE_URL}/feed.xml) and a [calendar feed of belt games]({SITE_URL}/belt.ics)
+
+Contact: hello@collegefootballbelt.com \u00b7 X: @CollegeFBBelt
+"""
 
 
 def generate_ads_txt(publisher_id):
@@ -11318,6 +12011,15 @@ def main():
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 
+    # belt.ics: the subscribable calendar (see generate_belt_calendar)
+    ics_text = generate_belt_calendar(next_game, upcoming_games, lineage["reigns"][-1]["team"])
+    ics_path = os.path.join(OUT_DIR, "belt.ics")
+    if ics_text:
+        with open(ics_path, "w", encoding="utf-8", newline="") as f:
+            f.write(ics_text)
+    elif os.path.exists(ics_path):
+        os.remove(ics_path)
+
     # Championship belt Full History / All Games, in each available scope
     # (build_lineage.py's own SCOPES -- Combined/FBS-only/FCS-only, see
     # that module's docstring). "combined" is always available (it's
@@ -11454,7 +12156,8 @@ def main():
         f.write(on_this_day_html)
 
     teams_dir = os.path.join(OUT_DIR, "teams")
-    teams_written, team_slugs = generate_team_pages(lineage, colors, belt_games, teams_dir)
+    teams_written, team_slugs = generate_team_pages(lineage, colors, belt_games, teams_dir,
+                                                    team_paths, belt_risk, next_game)
 
     # ---- the 2026-09-16 batch: reigns, rivalries, states, decades, and the
     # single pages (outlook, timeline, leaders, heartbreak, lean, daily, about)
@@ -11519,7 +12222,8 @@ def main():
     with open(os.path.join(OUT_DIR, "badge.svg"), "w", encoding="utf-8") as f:
         f.write(badge_svg)
 
-    embed_html = generate_embed_page(lineage, colors)
+    team_badges = generate_team_badges(lineage, colors, os.path.join(OUT_DIR, "badge"))
+    embed_html = generate_embed_page(lineage, colors, team_badges)
     with open(os.path.join(OUT_DIR, "embed.html"), "w", encoding="utf-8") as f:
         f.write(embed_html)
 
@@ -11672,6 +12376,8 @@ def main():
 
     with open(os.path.join(OUT_DIR, "robots.txt"), "w", encoding="utf-8") as f:
         f.write(generate_robots_txt())
+    with open(os.path.join(OUT_DIR, "llms.txt"), "w", encoding="utf-8") as f:
+        f.write(generate_llms_txt(lineage, belt_games))
 
     with open(os.path.join(OUT_DIR, "404.html"), "w", encoding="utf-8") as f:
         f.write(generate_404_page())

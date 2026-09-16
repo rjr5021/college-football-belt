@@ -67,8 +67,8 @@ STATIC_PAGES = {
     "lineage.html": (
         "Full College Football Belt History: Every Reign Since 1869",
         "Every reign of the College Football Belt, the lineal college football "
-        "championship, from Rutgers in 1869 to today: who won it, who they beat "
-        "and how long they held it."),
+        "championship, from Rutgers in 1869 to today: who won it, from whom, "
+        "and for how long."),
     "all-games.html": (
         "Every College Football Belt Game Since 1869 — Scores & Results",
         "Searchable list of every game played for the College Football Belt since "
@@ -81,7 +81,7 @@ STATIC_PAGES = {
         "How the College Football Belt Works — Official Ruleset",
         "The rules of the College Football Belt: how the lineal title passes on "
         "the field, how ties, vacancies and non-FBS games are handled, and where "
-        "the lineage starts."),
+        "it all starts."),
     "map.html": (
         "College Football Belt Map — Every State the Title Has Lived In",
         "Interactive map of every state that has held the College Football Belt, "
@@ -264,10 +264,11 @@ def enhance_head(doc, rel_path, extra_head=(), title=None, desc=None):
     cur_title = get_title(doc)
 
     if desc:
+        desc = trim_description(desc)   # a page with no description of its own gets the trimmed one queued
         doc, ins = set_meta(doc, "description", desc)
         if ins:
             inserts.append(ins)
-    cur_desc = get_meta(doc, "description")
+    cur_desc = get_meta(doc, "description") or desc
     # Keep every description inside what search results actually show: a
     # template that runs long is cut at a sentence end when that leaves a
     # real sentence, otherwise at a word boundary.
@@ -344,7 +345,11 @@ def process_pages(lineage):
 
             if rel == "index.html":
                 if holder:
-                    title = f"College Football Belt: {holder} Holds the Lineal Title"
+                    # the head query, verbatim, then the answer -- "who holds
+                    # the college football belt" is what people type
+                    title = f"Who Holds the College Football Belt? {holder} | CFB Belt"
+                    if len(title) > 62:
+                        title = f"Who Holds the College Football Belt? {holder}"
                 else:
                     title = "College Football Belt — The Lineal Title Since 1869"
                 base = get_meta(doc, "description") or ""
