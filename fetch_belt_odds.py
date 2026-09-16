@@ -32,6 +32,12 @@ different kinds of prediction:
 Two API calls total, regardless of how many games are left (Elo covers
 the whole season in one call; pregame WP is one call for one game).
 
+Season outlook (2026-09-16, outlook.html): the same Elo numbers, but the
+Monte Carlo walks the REST of the season for every team -- when the holder
+loses, the belt moves to the winner and the trial continues down that
+team's schedule -- so every program gets a probability of holding the belt
+when the games run out (season.end_of_season). No extra API calls.
+
 Run this AFTER build_lineage.py in the pipeline -- reads
 belt_data/next_game.json and belt_data/games_raw.json, both written by
 that script. Safe to run when there's no current holder/upcoming game:
@@ -47,6 +53,8 @@ import os
 import random
 import sys
 import time
+from bisect import bisect_right
+from collections import Counter, defaultdict
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -180,6 +188,68 @@ def holder_win_prob(game, holder, elo):
     return elo_win_prob(elo_holder_adj, elo_opp_adj)
 
 
+def find_all_remaining(games_raw):
+    """Every unplayed game in the fetched window, for EVERY team,
+    chronological -- the season outlook below walks the belt through
+    these the same way build_lineage.py walks it through played games."""
+    out = []
+    for g in games_raw:
+        home = pick(g, "home_team", "homeTeam")
+        away = pick(g, "away_team", "awayTeam")
+        if not home or not away:
+            continue
+        hp = pick(g, "home_points", "homePoints")
+        ap = pick(g, "away_points", "awayPoints")
+        if hp is not None and ap is not None:
+            continue  # already played
+        gdate = pick(g, "start_date", "startDate")
+        if not gdate:
+            continue
+        out.append({
+            "date": gdate,
+            "home": home,
+            "away": away,
+            "neutral": bool(pick(g, "neutral_site", "neutralSite", default=False)),
+        })
+    out.sort(key=lambda g: g["date"])
+    return out
+
+
+def monte_carlo_season(remaining_all, holder, elo, trials=MONTE_CARLO_TRIALS, rng=None):
+    """The season outlook (2026-09-16): simulate the REST of the belt's
+    season, not just the holder's own schedule. Each trial walks the
+    unplayed games in date order the way the real lineage does -- the
+    current holder plays its next game, an Elo draw decides it, a loss
+    hands the belt to the winner and the walk continues down THAT team's
+    schedule -- until the games run out. Returns (end-of-season holder
+    counts, trials actually run). "Who's most likely to hold the belt on
+    New Year's Day?" is this Counter divided by trials; note it can give
+    the current holder a way back (lose it in October, win it back in
+    November), which the simpler wins-every-game number can't."""
+    rng = rng or random.Random(RNG_SEED)
+    by_team = defaultdict(list)
+    for i, g in enumerate(remaining_all):
+        by_team[g["home"]].append(i)
+        by_team[g["away"]].append(i)
+    end_counts = Counter()
+    for _ in range(trials):
+        cur, pos = holder, -1
+        while True:
+            lst = by_team.get(cur)
+            if not lst:
+                break
+            j = bisect_right(lst, pos)
+            if j >= len(lst):
+                break
+            gi = lst[j]
+            g = remaining_all[gi]
+            pos = gi
+            if rng.random() >= holder_win_prob(g, cur, elo):
+                cur = g["away"] if g["home"] == cur else g["home"]
+        end_counts[cur] += 1
+    return end_counts, trials
+
+
 def monte_carlo_survive(remaining, holder, elo, trials=MONTE_CARLO_TRIALS, rng=None):
     """Fraction of `trials` simulated seasons where the holder wins EVERY
     remaining game -- i.e. still holds the belt once the games run out.
@@ -246,7 +316,15 @@ def main():
     else:
         defend_prob, defend_source = None, None
 
-    holds_prob = monte_carlo_survive(remaining, holder, elo)
+    wins_out_prob = monte_carlo_survive(remaining, holder, elo)
+
+    # Season outlook: walk the whole rest of the season (every team's
+    # unplayed games), so every program gets an end-of-season probability.
+    remaining_all = find_all_remaining(games_raw)
+    end_counts, trials_run = monte_carlo_season(remaining_all, holder, elo)
+    outlook = [{"team": t, "prob": round(n / trials_run, 4)}
+               for t, n in end_counts.most_common() if n / trials_run >= 0.0005]
+    holds_prob = end_counts[holder] / trials_run
 
     risk = {
         "generated": time.strftime("%Y-%m-%d"),
@@ -258,10 +336,17 @@ def main():
             "source": defend_source,
         },
         "season": {
+            # ends the season holding the belt (a lost-and-regained belt
+            # counts, so this is >= wins_out_prob)
             "holds_into_offseason_prob": round(holds_prob, 4),
+            # wins every remaining game outright (the original, stricter number)
+            "wins_out_prob": round(wins_out_prob, 4),
             "games_modeled": len(remaining),
+            "season_games_modeled": len(remaining_all),
             "trials": MONTE_CARLO_TRIALS,
             "source": "elo_monte_carlo",
+            "end_of_season": outlook,
+            "teams_with_a_chance": len(end_counts),
         },
     }
     with open(out_path, "w") as f:
@@ -270,7 +355,9 @@ def main():
     defend_pct = f"{defend_prob * 100:.0f}%" if defend_prob is not None else "n/a"
     print(f"Wrote {out_path}: {holder} {defend_pct} to defend vs {next_game['opponent']} "
           f"({defend_source}), {holds_prob * 100:.0f}% to hold the belt into the offseason "
-          f"across {len(remaining)} remaining game(s) ({MONTE_CARLO_TRIALS} trials)")
+          f"(wins out: {wins_out_prob * 100:.0f}%) across {len(remaining)} remaining game(s); "
+          f"season outlook walked {len(remaining_all)} unplayed games, {len(end_counts)} programs "
+          f"finish with the belt in at least one of {trials_run} trials")
 
 
 if __name__ == "__main__":

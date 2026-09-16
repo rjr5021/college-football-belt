@@ -38,6 +38,37 @@ import urllib.request
 OUT_DIR = "belt_data"
 CACHE_DIR = "ai_preview_cache"
 CACHE_PATH = os.path.join(CACHE_DIR, "cache.json")
+# The lean's ledger (2026-09-16, lean.html): one line per prediction ever
+# made, kept forever (this folder is committed back by the workflow, same
+# as cache.json), so the site can grade the picks against real results.
+LEDGER_PATH = os.path.join(CACHE_DIR, "ledger.json")
+
+
+def record_in_ledger(key, next_game, preview, generated):
+    """Append this game's pick to the ledger unless it's already there
+    (one entry per holder|opponent|date key -- a regenerated preview for
+    the same game keeps the ORIGINAL pick, so the record can't be quietly
+    revised after the fact)."""
+    if not preview or not (preview.get("predicted_winner") or preview.get("predicted_score")):
+        return
+    ledger = load_json(LEDGER_PATH) or []
+    if any(e.get("key") == key for e in ledger):
+        return
+    ledger.append({
+        "key": key,
+        "holder": next_game["team"],
+        "opponent": next_game["opponent"],
+        "date": next_game["date"],
+        "is_home": bool(next_game.get("is_home")),
+        "neutral": bool(next_game.get("neutral")),
+        "predicted_winner": preview.get("predicted_winner") or "",
+        "predicted_score": preview.get("predicted_score") or "",
+        "generated": generated,
+    })
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    with open(LEDGER_PATH, "w") as f:
+        json.dump(ledger, f, indent=2)
+    print(f"Logged the pick for {key} to {LEDGER_PATH} ({len(ledger)} entries).")
 API_URL = "https://api.anthropic.com/v1/messages"
 MODEL = "claude-haiku-4-5-20251001"  # cheap + fast; change here to use a different model
 MAX_TOKENS = 700
@@ -217,6 +248,7 @@ def main():
         print(f"Cached AI preview already covers {key} -- reusing it (no API call).")
         with open(ai_preview_path, "w") as f:
             json.dump(cached_preview, f, indent=2)
+        record_in_ledger(key, next_game, cached_preview, cached.get("generated") or time.strftime("%Y-%m-%d"))
         return
 
     if not api_key:
@@ -254,6 +286,7 @@ def main():
     with open(ai_preview_path, "w") as f:
         json.dump(preview, f, indent=2)
     print(f"Wrote a fresh AI preview for {key} and cached it to {CACHE_PATH}.")
+    record_in_ledger(key, next_game, preview, time.strftime("%Y-%m-%d"))
 
 
 if __name__ == "__main__":

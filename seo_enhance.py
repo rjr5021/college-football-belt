@@ -154,6 +154,24 @@ def get_meta(doc, key, kind="name"):
     return html.unescape(m.group(1)) if m else None
 
 
+DESC_MAX = 160
+
+
+def trim_description(text, limit=DESC_MAX):
+    """Shorten a meta description to `limit` characters: at the last
+    sentence end if that keeps at least half the budget, else at a word
+    boundary with an ellipsis."""
+    text = " ".join(text.split())
+    if len(text) <= limit:
+        return text
+    head = text[:limit]
+    cut = max(head.rfind(". "), head.rfind("; "), head.rfind(": "))
+    if cut >= limit // 2:
+        return head[:cut + 1].rstrip(";:").rstrip() + ("" if head[cut] == "." else ".")
+    words = head[:limit - 1].rsplit(" ", 1)[0].rstrip(",;:—-")
+    return words + "…"
+
+
 def set_meta(doc, key, value, kind="name"):
     """Replace an existing <meta> content or queue it for insertion."""
     pat = rf'(<meta {kind}="{re.escape(key)}" content=")[^"]*(")'
@@ -250,6 +268,15 @@ def enhance_head(doc, rel_path, extra_head=(), title=None, desc=None):
         if ins:
             inserts.append(ins)
     cur_desc = get_meta(doc, "description")
+    # Keep every description inside what search results actually show: a
+    # template that runs long is cut at a sentence end when that leaves a
+    # real sentence, otherwise at a word boundary.
+    if cur_desc and len(html.unescape(cur_desc)) > DESC_MAX:
+        trimmed = trim_description(html.unescape(cur_desc))
+        doc, _ = set_meta(doc, "description", trimmed)
+        cur_desc = get_meta(doc, "description")
+        if not desc:
+            desc = trimmed
 
     name = os.path.basename(rel_path)
     if name in NOINDEX_PAGES:
@@ -373,6 +400,44 @@ def process_pages(lineage):
                     ("Home", f"{SITE_URL}/"),
                     ("Full History", f"{SITE_URL}/lineage.html"),
                     (team or fn, canonical_url(rel))))
+
+            elif rel.startswith(("reigns/", "rivalries/", "states/", "decades/")) and fn != "index.html":
+                # the 2026-09 batch: one breadcrumb trail per family, the
+                # page's own <title> (minus any site-name suffix) as the leaf
+                family = rel.split("/", 1)[0]
+                parent_name, parent_href = {
+                    "reigns": ("Full History", "lineage.html"),
+                    "rivalries": ("Rivalries", "rivalries/index.html"),
+                    "states": ("States", "states/index.html"),
+                    "decades": ("Decades", "decades/index.html"),
+                }[family]
+                leaf = re.sub(r"\s+—\s+.*$", "", html.unescape(get_title(doc) or "")) or fn[:-5]
+                extra.append(breadcrumbs(
+                    ("Home", f"{SITE_URL}/"),
+                    (parent_name, f"{SITE_URL}/{parent_href}"),
+                    (leaf, canonical_url(rel))))
+
+            elif rel.startswith("story-") and "/" not in rel:
+                # data-driven longreads: Article markup so they can surface
+                # as articles, dated to this build since the numbers are live
+                headline = re.sub(r"\s+—\s+The College Football Belt$", "", html.unescape(get_title(doc) or ""))
+                extra.append(json_ld({
+                    "@context": "https://schema.org",
+                    "@type": "Article",
+                    "headline": headline,
+                    "description": html.unescape(get_meta(doc, "description") or ""),
+                    "url": canonical_url(rel),
+                    "dateModified": date.today().isoformat(),
+                    "image": SHARE_IMG,
+                    "author": {"@type": "Organization", "name": SITE_NAME, "url": f"{SITE_URL}/"},
+                    "publisher": {"@id": f"{SITE_URL}/#org"},
+                    "isPartOf": {"@type": "WebSite", "@id": f"{SITE_URL}/#website"},
+                    "mainEntityOfPage": canonical_url(rel),
+                }))
+                extra.append(breadcrumbs(
+                    ("Home", f"{SITE_URL}/"),
+                    ("Stories", f"{SITE_URL}/stories.html"),
+                    (headline, canonical_url(rel))))
 
             elif rel in STATIC_PAGES:
                 title, desc = STATIC_PAGES[rel]
