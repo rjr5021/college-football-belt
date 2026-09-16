@@ -1,0 +1,85 @@
+name: Post On This Day to X
+
+# Posts one "On this day" tweet a day during football season, spotlighting
+# a belt game from this exact month+day in a past year -- see
+# post_on_this_day_to_x.py's own docstring for why this is deliberately a
+# separate script/workflow from update-and-deploy.yml's post_to_x.py: that
+# one posts about NEW results and only runs when the main pipeline runs
+# (a handful of times a week, timed around kickoffs); this one wants to
+# post every single day of the season regardless of whether today has a
+# game, and reads the site's own public API (api/games.json) instead of
+# needing belt_data/lineage.json or another CFBD fetch.
+#
+# One-time setup this workflow depends on:
+#   Same four X_* repository secrets as update-and-deploy.yml's optional X
+#   posting step (X_API_KEY, X_API_KEY_SECRET, X_ACCESS_TOKEN,
+#   X_ACCESS_TOKEN_SECRET) -- Settings -> Secrets and variables -> Actions.
+#   If they're not set, post_on_this_day_to_x.py just no-ops (prints a
+#   note, exits 0) -- same pattern as post_to_x.py/follow_batch.py.
+#
+# social_cache/x_otd_last_posted.json (which calendar date's post already
+# went out) is a plain file in the repo -- this workflow commits it back
+# the same way update-and-deploy.yml/follow-accounts.yml commit their own
+# social_cache/ files, so a same-day retry doesn't double-post.
+
+on:
+  schedule:
+    # Daily at 9am US/Eastern, Aug 20 - Jan 20 -- kickoff week through the
+    # National Championship, with a few days of buffer on each end. Split
+    # into three cron lines because a single line can't express "day 20
+    # of one month through day 20 of a month three months later":
+    #   - Aug 20-31
+    - cron: '0 14 20-31 8 *'
+    #   - all of Sep / Oct / Nov / Dec
+    - cron: '0 14 * 9,10,11,12 *'
+    #   - Jan 1-20
+    - cron: '0 14 1-20 1 *'
+    # Written for EST (UTC-5, winter clock), same as update-and-deploy.yml.
+    # During EDT (UTC-4, in effect for the Aug 20 - ~Nov 1 part of this
+    # window) these actually fire at 10am ET, one hour later -- GitHub
+    # Actions cron has no timezone/DST awareness at all, so there's no
+    # fixed UTC time that stays correct across the whole window. Same
+    # documented limitation as update-and-deploy.yml, same one-hour gap.
+  workflow_dispatch: {}   # lets you trigger today's post manually from the Actions tab, any time of year
+
+permissions:
+  contents: write   # needed to commit social_cache/x_otd_last_posted.json back to main
+
+concurrency:
+  group: post-on-this-day
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Post today's On This Day tweet
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python post_on_this_day_to_x.py
+
+      - name: Commit the On This Day post marker if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -d social_cache ]; then
+            git add social_cache/
+          fi
+          if git diff --cached --quiet; then
+            echo "No change to social_cache/ -- nothing to commit."
+          else
+            git commit -m "Advance On This Day post marker [skip ci]"
+            git push
+          fi
