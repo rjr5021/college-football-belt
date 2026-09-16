@@ -2557,11 +2557,59 @@
       "end_date": "2023-12-22",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "2023-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "Utah",
+      "end_date": "2023-12-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "2023-12-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "Arizona",
+      "end_date": "2023-12-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Arizona",
+      "start_date": "2023-12-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "California",
+      "end_date": "2023-12-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "2023-12-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Arizona",
+      "predecessor": "Oregon State",
+      "end_date": "2023-12-26",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Oregon State",
-    "start_date": "2023-12-23",
+    "start_date": "2023-12-27",
     "won_from": null,
     "won_score": null,
     "defenses": 1,

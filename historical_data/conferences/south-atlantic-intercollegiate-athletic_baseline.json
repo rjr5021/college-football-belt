@@ -679,11 +679,71 @@
       "end_date": "1921-12-15",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Virginia Tech",
+      "start_date": "1921-12-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Maryland",
+      "predecessor": "NC State",
+      "end_date": "1921-12-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "NC State",
+      "start_date": "1921-12-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Virginia Tech",
+      "predecessor": "Georgetown",
+      "end_date": "1921-12-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Georgetown",
+      "start_date": "1921-12-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "NC State",
+      "predecessor": "Virginia Tech",
+      "end_date": "1921-12-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Virginia Tech",
+      "start_date": "1921-12-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Georgetown",
+      "predecessor": "NC State",
+      "end_date": "1921-12-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Maryland",
+      "start_date": "1921-12-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Virginia Tech",
+      "predecessor": "Virginia Tech",
+      "end_date": "1921-12-20",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Virginia Tech",
-    "start_date": "1921-12-16",
+    "start_date": "1921-12-21",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

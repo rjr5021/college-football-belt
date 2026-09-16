@@ -294,5 +294,69 @@
     "effective_date": "1947-12-23",
     "detected_on": "2026-09-16",
     "reverted_to": "Kansas State"
+  },
+  {
+    "team": "Kansas State",
+    "reign_started": "1947-12-23",
+    "last_activity_date": "1947-12-23",
+    "effective_date": "1947-12-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1947-12-24",
+    "last_activity_date": "1947-12-24",
+    "effective_date": "1947-12-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1947-12-25",
+    "last_activity_date": "1947-12-25",
+    "effective_date": "1947-12-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1947-12-26",
+    "last_activity_date": "1947-12-26",
+    "effective_date": "1947-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1947-12-27",
+    "last_activity_date": "1947-12-27",
+    "effective_date": "1947-12-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas"
+  },
+  {
+    "team": "Kansas",
+    "reign_started": "1947-12-28",
+    "last_activity_date": "1947-12-28",
+    "effective_date": "1947-12-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas State"
+  },
+  {
+    "team": "Kansas State",
+    "reign_started": "1947-12-29",
+    "last_activity_date": "1947-12-29",
+    "effective_date": "1947-12-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa State"
+  },
+  {
+    "team": "Iowa State",
+    "reign_started": "1947-12-30",
+    "last_activity_date": "1947-12-30",
+    "effective_date": "1947-12-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
   }
 ]
