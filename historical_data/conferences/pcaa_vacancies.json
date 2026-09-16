@@ -1534,5 +1534,101 @@
     "effective_date": "1988-05-21",
     "detected_on": "2026-09-16",
     "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "1988-05-21",
+    "last_activity_date": "1988-05-21",
+    "effective_date": "1988-05-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fresno State"
+  },
+  {
+    "team": "Fresno State",
+    "reign_started": "1988-05-22",
+    "last_activity_date": "1988-05-22",
+    "effective_date": "1988-05-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pacific"
+  },
+  {
+    "team": "Pacific",
+    "reign_started": "1988-05-23",
+    "last_activity_date": "1988-05-23",
+    "effective_date": "1988-05-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "1988-05-24",
+    "last_activity_date": "1988-05-24",
+    "effective_date": "1988-05-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pacific"
+  },
+  {
+    "team": "Pacific",
+    "reign_started": "1988-05-25",
+    "last_activity_date": "1988-05-25",
+    "effective_date": "1988-05-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1988-05-26",
+    "last_activity_date": "1988-05-26",
+    "effective_date": "1988-05-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "1988-05-27",
+    "last_activity_date": "1988-05-27",
+    "effective_date": "1988-05-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Long Beach State"
+  },
+  {
+    "team": "Long Beach State",
+    "reign_started": "1988-05-28",
+    "last_activity_date": "1988-05-28",
+    "effective_date": "1988-05-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "1988-05-29",
+    "last_activity_date": "1988-05-29",
+    "effective_date": "1988-05-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cal State Fullerton"
+  },
+  {
+    "team": "Cal State Fullerton",
+    "reign_started": "1988-05-30",
+    "last_activity_date": "1988-05-30",
+    "effective_date": "1988-05-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Long Beach State"
+  },
+  {
+    "team": "Long Beach State",
+    "reign_started": "1988-05-31",
+    "last_activity_date": "1988-05-31",
+    "effective_date": "1988-06-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Diego State"
+  },
+  {
+    "team": "San Diego State",
+    "reign_started": "1988-06-01",
+    "last_activity_date": "1988-06-01",
+    "effective_date": "1988-06-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pacific"
   }
 ]

@@ -1822,5 +1822,117 @@
     "effective_date": "2023-06-19",
     "detected_on": "2026-09-16",
     "reverted_to": "Murray State"
+  },
+  {
+    "team": "Murray State",
+    "reign_started": "2023-06-19",
+    "last_activity_date": "2023-06-19",
+    "effective_date": "2023-06-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southeast Missouri State"
+  },
+  {
+    "team": "Southeast Missouri State",
+    "reign_started": "2023-06-20",
+    "last_activity_date": "2023-06-20",
+    "effective_date": "2023-06-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UT Martin"
+  },
+  {
+    "team": "UT Martin",
+    "reign_started": "2023-06-21",
+    "last_activity_date": "2023-06-21",
+    "effective_date": "2023-06-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee State"
+  },
+  {
+    "team": "Tennessee State",
+    "reign_started": "2023-06-22",
+    "last_activity_date": "2023-06-22",
+    "effective_date": "2023-06-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee Tech"
+  },
+  {
+    "team": "Tennessee Tech",
+    "reign_started": "2023-06-23",
+    "last_activity_date": "2023-06-23",
+    "effective_date": "2023-06-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southeast Missouri State"
+  },
+  {
+    "team": "Southeast Missouri State",
+    "reign_started": "2023-06-24",
+    "last_activity_date": "2023-06-24",
+    "effective_date": "2023-06-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Austin Peay"
+  },
+  {
+    "team": "Austin Peay",
+    "reign_started": "2023-06-25",
+    "last_activity_date": "2023-06-25",
+    "effective_date": "2023-06-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Murray State"
+  },
+  {
+    "team": "Murray State",
+    "reign_started": "2023-06-26",
+    "last_activity_date": "2023-06-26",
+    "effective_date": "2023-06-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Eastern Kentucky"
+  },
+  {
+    "team": "Eastern Kentucky",
+    "reign_started": "2023-06-27",
+    "last_activity_date": "2023-06-27",
+    "effective_date": "2023-06-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Jacksonville State"
+  },
+  {
+    "team": "Jacksonville State",
+    "reign_started": "2023-06-28",
+    "last_activity_date": "2023-06-28",
+    "effective_date": "2023-06-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee State"
+  },
+  {
+    "team": "Tennessee State",
+    "reign_started": "2023-06-29",
+    "last_activity_date": "2023-06-29",
+    "effective_date": "2023-06-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Eastern Illinois"
+  },
+  {
+    "team": "Eastern Illinois",
+    "reign_started": "2023-06-30",
+    "last_activity_date": "2023-06-30",
+    "effective_date": "2023-07-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Eastern Kentucky"
+  },
+  {
+    "team": "Eastern Kentucky",
+    "reign_started": "2023-07-01",
+    "last_activity_date": "2023-07-01",
+    "effective_date": "2023-07-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Samford"
+  },
+  {
+    "team": "Samford",
+    "reign_started": "2023-07-02",
+    "last_activity_date": "2023-07-02",
+    "effective_date": "2023-07-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee Tech"
   }
 ]
