@@ -1,0 +1,42 @@
+[
+  {
+    "team": "Princeton",
+    "reign_started": "1869-11-13",
+    "last_activity_date": "1870-11-12",
+    "effective_date": "1870-11-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "1990-12-28",
+    "last_activity_date": "1991-11-09",
+    "effective_date": "1991-11-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2011-10-29",
+    "last_activity_date": "2014-11-01",
+    "effective_date": "2014-11-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2014-11-02",
+    "last_activity_date": "2014-12-13",
+    "effective_date": "2014-12-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2014-12-14",
+    "last_activity_date": "2014-12-14",
+    "effective_date": "2014-12-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  }
+]

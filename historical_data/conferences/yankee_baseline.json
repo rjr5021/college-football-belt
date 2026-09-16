@@ -1,0 +1,74 @@
+{
+  "live_start_year": 2025,
+  "historical_belt_games": [
+    {
+      "date": "1979-10-06",
+      "season": 1979,
+      "week": 6,
+      "season_type": "regular",
+      "holder": null,
+      "opponent": "New Hampshire",
+      "home": "New Hampshire",
+      "away": "UConn",
+      "score": "3-3",
+      "neutral": false,
+      "outcome": "established",
+      "new_holder": "UConn",
+      "game_id": 49148
+    },
+    {
+      "date": "1979-10-20",
+      "season": 1979,
+      "week": 8,
+      "season_type": "regular",
+      "holder": "UConn",
+      "opponent": "Maine",
+      "home": "Maine",
+      "away": "UConn",
+      "score": "7-19",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "UConn",
+      "game_id": 49271
+    },
+    {
+      "date": "1979-10-27",
+      "season": 1979,
+      "week": 9,
+      "season_type": "regular",
+      "holder": "UConn",
+      "opponent": "Massachusetts",
+      "home": "UConn",
+      "away": "Massachusetts",
+      "score": "24-0",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "UConn",
+      "game_id": 49341
+    },
+    {
+      "date": "1979-11-17",
+      "season": 1979,
+      "week": 12,
+      "season_type": "regular",
+      "holder": "UConn",
+      "opponent": "Rhode Island",
+      "home": "Rhode Island",
+      "away": "UConn",
+      "score": "9-10",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "UConn",
+      "game_id": 49553
+    }
+  ],
+  "historical_reigns": [],
+  "open_reign": {
+    "team": "UConn",
+    "start_date": "1979-10-06",
+    "won_from": null,
+    "won_score": "3-3",
+    "defenses": 3,
+    "predecessor": null
+  }
+}

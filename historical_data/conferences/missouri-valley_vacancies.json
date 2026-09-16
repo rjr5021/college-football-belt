@@ -1,0 +1,42 @@
+[
+  {
+    "team": "Kansas",
+    "reign_started": "1927-11-19",
+    "last_activity_date": "1927-11-19",
+    "effective_date": "1927-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1927-11-20",
+    "last_activity_date": "1927-11-24",
+    "effective_date": "1927-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1927-11-25",
+    "last_activity_date": "1927-11-25",
+    "effective_date": "1927-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas State"
+  },
+  {
+    "team": "Kansas State",
+    "reign_started": "1927-11-26",
+    "last_activity_date": "1927-11-26",
+    "effective_date": "1927-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Kansas"
+  },
+  {
+    "team": "Kansas",
+    "reign_started": "1927-11-27",
+    "last_activity_date": "1927-11-27",
+    "effective_date": "1927-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Missouri"
+  }
+]

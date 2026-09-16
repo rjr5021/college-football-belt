@@ -1,0 +1,58 @@
+[
+  {
+    "team": "Minnesota",
+    "reign_started": "1952-11-01",
+    "last_activity_date": "1952-11-22",
+    "effective_date": "1952-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa"
+  },
+  {
+    "team": "Iowa",
+    "reign_started": "1952-11-23",
+    "last_activity_date": "1952-11-23",
+    "effective_date": "1952-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Ohio State"
+  },
+  {
+    "team": "Ohio State",
+    "reign_started": "1952-11-24",
+    "last_activity_date": "1952-11-24",
+    "effective_date": "1952-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wisconsin"
+  },
+  {
+    "team": "Wisconsin",
+    "reign_started": "1952-11-25",
+    "last_activity_date": "1952-11-25",
+    "effective_date": "1952-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Northwestern"
+  },
+  {
+    "team": "Northwestern",
+    "reign_started": "1952-11-26",
+    "last_activity_date": "1952-11-26",
+    "effective_date": "1952-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Illinois"
+  },
+  {
+    "team": "Illinois",
+    "reign_started": "1952-11-27",
+    "last_activity_date": "1952-11-27",
+    "effective_date": "1952-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Michigan"
+  },
+  {
+    "team": "Michigan",
+    "reign_started": "1952-11-28",
+    "last_activity_date": "1952-11-28",
+    "effective_date": "1952-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Minnesota"
+  }
+]

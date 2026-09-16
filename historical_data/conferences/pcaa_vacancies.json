@@ -1,0 +1,34 @@
+[
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "1987-10-17",
+    "last_activity_date": "1987-11-14",
+    "effective_date": "1987-11-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fresno State"
+  },
+  {
+    "team": "Fresno State",
+    "reign_started": "1987-11-15",
+    "last_activity_date": "1987-11-21",
+    "effective_date": "1987-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pacific"
+  },
+  {
+    "team": "Pacific",
+    "reign_started": "1987-11-22",
+    "last_activity_date": "1987-11-22",
+    "effective_date": "1987-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "1987-11-23",
+    "last_activity_date": "1987-11-23",
+    "effective_date": "1987-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pacific"
+  }
+]

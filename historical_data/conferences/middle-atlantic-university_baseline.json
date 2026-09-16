@@ -1,0 +1,162 @@
+{
+  "live_start_year": 2025,
+  "historical_belt_games": [
+    {
+      "date": "1958-10-18",
+      "season": 1958,
+      "week": 6,
+      "season_type": "regular",
+      "holder": null,
+      "opponent": "Bucknell",
+      "home": "Rutgers",
+      "away": "Bucknell",
+      "score": "57-12",
+      "neutral": false,
+      "outcome": "established",
+      "new_holder": "Rutgers",
+      "game_id": 34585
+    },
+    {
+      "date": "1958-10-25",
+      "season": 1958,
+      "week": 7,
+      "season_type": "regular",
+      "holder": "Rutgers",
+      "opponent": "Lehigh",
+      "home": "Lehigh",
+      "away": "Rutgers",
+      "score": "13-44",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Rutgers",
+      "game_id": 34645
+    },
+    {
+      "date": "1959-10-17",
+      "season": 1959,
+      "week": 6,
+      "season_type": "regular",
+      "holder": "Rutgers",
+      "opponent": "Bucknell",
+      "home": "Bucknell",
+      "away": "Rutgers",
+      "score": "15-8",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "Bucknell",
+      "game_id": 35145
+    },
+    {
+      "date": "1960-10-15",
+      "season": 1960,
+      "week": 6,
+      "season_type": "regular",
+      "holder": "Bucknell",
+      "opponent": "Rutgers",
+      "home": "Rutgers",
+      "away": "Bucknell",
+      "score": "23-19",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "Rutgers",
+      "game_id": 35772
+    },
+    {
+      "date": "1960-10-22",
+      "season": 1960,
+      "week": 7,
+      "season_type": "regular",
+      "holder": "Rutgers",
+      "opponent": "Lehigh",
+      "home": "Lehigh",
+      "away": "Rutgers",
+      "score": "0-8",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Rutgers",
+      "game_id": 35830
+    },
+    {
+      "date": "1961-10-14",
+      "season": 1961,
+      "week": 5,
+      "season_type": "regular",
+      "holder": "Rutgers",
+      "opponent": "Bucknell",
+      "home": "Bucknell",
+      "away": "Rutgers",
+      "score": "6-21",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Rutgers",
+      "game_id": 36336
+    },
+    {
+      "date": "1961-10-21",
+      "season": 1961,
+      "week": 6,
+      "season_type": "regular",
+      "holder": "Rutgers",
+      "opponent": "Lehigh",
+      "home": "Rutgers",
+      "away": "Lehigh",
+      "score": "32-15",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Rutgers",
+      "game_id": 36397
+    }
+  ],
+  "historical_reigns": [
+    {
+      "team": "Rutgers",
+      "start_date": "1958-10-18",
+      "won_from": null,
+      "won_score": "57-12",
+      "defenses": 1,
+      "predecessor": null,
+      "end_date": "1959-10-17",
+      "lost_to": "Bucknell"
+    },
+    {
+      "team": "Bucknell",
+      "start_date": "1959-10-17",
+      "won_from": "Rutgers",
+      "won_score": "15-8",
+      "defenses": 0,
+      "end_date": "1960-10-15",
+      "lost_to": "Rutgers"
+    },
+    {
+      "team": "Rutgers",
+      "start_date": "1960-10-15",
+      "won_from": "Bucknell",
+      "won_score": "23-19",
+      "defenses": 3,
+      "end_date": "1961-10-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Bucknell",
+      "start_date": "1961-10-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Rutgers",
+      "predecessor": "Rutgers",
+      "end_date": "1961-10-22",
+      "lost_to": null,
+      "vacated": true
+    }
+  ],
+  "open_reign": {
+    "team": "Rutgers",
+    "start_date": "1961-10-23",
+    "won_from": null,
+    "won_score": null,
+    "defenses": 0,
+    "reclaimed_after": "Bucknell",
+    "predecessor": "Bucknell"
+  }
+}

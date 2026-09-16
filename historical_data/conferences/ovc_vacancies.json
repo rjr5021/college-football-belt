@@ -1,0 +1,82 @@
+[
+  {
+    "team": "Austin Peay",
+    "reign_started": "2012-11-17",
+    "last_activity_date": "2012-11-17",
+    "effective_date": "2012-11-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee Tech"
+  },
+  {
+    "team": "Tennessee Tech",
+    "reign_started": "2012-11-18",
+    "last_activity_date": "2012-11-18",
+    "effective_date": "2012-11-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UT Martin"
+  },
+  {
+    "team": "UT Martin",
+    "reign_started": "2012-11-19",
+    "last_activity_date": "2012-11-19",
+    "effective_date": "2012-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Jacksonville State"
+  },
+  {
+    "team": "Jacksonville State",
+    "reign_started": "2012-11-20",
+    "last_activity_date": "2012-11-20",
+    "effective_date": "2012-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee State"
+  },
+  {
+    "team": "Tennessee State",
+    "reign_started": "2012-11-21",
+    "last_activity_date": "2012-11-21",
+    "effective_date": "2012-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Eastern Kentucky"
+  },
+  {
+    "team": "Eastern Kentucky",
+    "reign_started": "2012-11-22",
+    "last_activity_date": "2012-11-22",
+    "effective_date": "2012-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Jacksonville State"
+  },
+  {
+    "team": "Southeast Missouri State",
+    "reign_started": "2021-11-20",
+    "last_activity_date": "2022-11-19",
+    "effective_date": "2022-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UT Martin"
+  },
+  {
+    "team": "UT Martin",
+    "reign_started": "2022-11-20",
+    "last_activity_date": "2022-11-20",
+    "effective_date": "2022-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee State"
+  },
+  {
+    "team": "Tennessee State",
+    "reign_started": "2022-11-21",
+    "last_activity_date": "2022-11-21",
+    "effective_date": "2022-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tennessee Tech"
+  },
+  {
+    "team": "Tennessee Tech",
+    "reign_started": "2022-11-22",
+    "last_activity_date": "2022-11-22",
+    "effective_date": "2022-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southeast Missouri State"
+  }
+]

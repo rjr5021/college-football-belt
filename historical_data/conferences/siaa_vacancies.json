@@ -1,0 +1,42 @@
+[
+  {
+    "team": "Tennessee",
+    "reign_started": "1916-11-11",
+    "last_activity_date": "1916-11-30",
+    "effective_date": "1916-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Vanderbilt"
+  },
+  {
+    "team": "Georgia",
+    "reign_started": "1920-10-30",
+    "last_activity_date": "1921-11-25",
+    "effective_date": "1921-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Auburn"
+  },
+  {
+    "team": "Auburn",
+    "reign_started": "1921-11-26",
+    "last_activity_date": "1921-11-26",
+    "effective_date": "1921-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "1921-11-27",
+    "last_activity_date": "1921-11-27",
+    "effective_date": "1921-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Vanderbilt"
+  },
+  {
+    "team": "Vanderbilt",
+    "reign_started": "1921-11-28",
+    "last_activity_date": "1921-11-28",
+    "effective_date": "1921-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Auburn"
+  }
+]

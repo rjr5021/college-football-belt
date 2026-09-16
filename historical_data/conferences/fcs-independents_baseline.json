@@ -1,0 +1,81 @@
+{
+  "live_start_year": 2025,
+  "historical_belt_games": [
+    {
+      "date": "1982-10-23",
+      "season": 1982,
+      "week": 8,
+      "season_type": "regular",
+      "holder": null,
+      "opponent": "William & Mary",
+      "home": "James Madison",
+      "away": "William & Mary",
+      "score": "24-18",
+      "neutral": false,
+      "outcome": "established",
+      "new_holder": "James Madison",
+      "game_id": 51670
+    },
+    {
+      "date": "1983-10-15",
+      "season": 1983,
+      "week": 8,
+      "season_type": "regular",
+      "holder": "James Madison",
+      "opponent": "William & Mary",
+      "home": "William & Mary",
+      "away": "James Madison",
+      "score": "24-21",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "William & Mary",
+      "game_id": 52352
+    },
+    {
+      "date": "1983-11-19",
+      "season": 1983,
+      "week": 13,
+      "season_type": "regular",
+      "holder": "William & Mary",
+      "opponent": "Richmond",
+      "home": "William & Mary",
+      "away": "Richmond",
+      "score": "24-15",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "William & Mary",
+      "game_id": 52622
+    }
+  ],
+  "historical_reigns": [
+    {
+      "team": "James Madison",
+      "start_date": "1982-10-23",
+      "won_from": null,
+      "won_score": "24-18",
+      "defenses": 0,
+      "predecessor": null,
+      "end_date": "1983-10-15",
+      "lost_to": "William & Mary"
+    },
+    {
+      "team": "William & Mary",
+      "start_date": "1983-10-15",
+      "won_from": "James Madison",
+      "won_score": "24-21",
+      "defenses": 1,
+      "end_date": "1983-11-19",
+      "lost_to": null,
+      "vacated": true
+    }
+  ],
+  "open_reign": {
+    "team": "James Madison",
+    "start_date": "1983-11-20",
+    "won_from": null,
+    "won_score": null,
+    "defenses": 0,
+    "reclaimed_after": "William & Mary",
+    "predecessor": null
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "team": "West Virginia",
+    "reign_started": "2011-11-25",
+    "last_activity_date": "2011-12-01",
+    "effective_date": "2011-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2012-11-10",
+    "last_activity_date": "2012-11-23",
+    "effective_date": "2012-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisville"
+  },
+  {
+    "team": "Cincinnati",
+    "reign_started": "2012-12-01",
+    "last_activity_date": "2012-12-01",
+    "effective_date": "2012-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UConn"
+  },
+  {
+    "team": "UConn",
+    "reign_started": "2012-12-02",
+    "last_activity_date": "2012-12-02",
+    "effective_date": "2012-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisville"
+  },
+  {
+    "team": "Louisville",
+    "reign_started": "2012-12-03",
+    "last_activity_date": "2012-12-03",
+    "effective_date": "2012-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cincinnati"
+  }
+]

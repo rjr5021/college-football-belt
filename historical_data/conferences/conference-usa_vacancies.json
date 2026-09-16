@@ -1,0 +1,58 @@
+[
+  {
+    "team": "Louisville",
+    "reign_started": "2004-11-27",
+    "last_activity_date": "2004-12-04",
+    "effective_date": "2004-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cincinnati"
+  },
+  {
+    "team": "Cincinnati",
+    "reign_started": "2004-12-05",
+    "last_activity_date": "2004-12-05",
+    "effective_date": "2004-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Miss"
+  },
+  {
+    "team": "SMU",
+    "reign_started": "2012-11-24",
+    "last_activity_date": "2012-11-24",
+    "effective_date": "2012-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tulsa"
+  },
+  {
+    "team": "UTSA",
+    "reign_started": "2022-10-22",
+    "last_activity_date": "2022-12-02",
+    "effective_date": "2022-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "2022-12-03",
+    "last_activity_date": "2022-12-03",
+    "effective_date": "2022-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2022-12-04",
+    "last_activity_date": "2022-12-04",
+    "effective_date": "2022-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UAB"
+  },
+  {
+    "team": "UAB",
+    "reign_started": "2022-12-05",
+    "last_activity_date": "2022-12-05",
+    "effective_date": "2022-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rice"
+  }
+]

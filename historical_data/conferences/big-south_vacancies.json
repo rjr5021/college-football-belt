@@ -1,0 +1,18 @@
+[
+  {
+    "team": "Stony Brook",
+    "reign_started": "2011-11-19",
+    "last_activity_date": "2011-11-19",
+    "effective_date": "2011-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Liberty"
+  },
+  {
+    "team": "Liberty",
+    "reign_started": "2011-11-20",
+    "last_activity_date": "2011-11-20",
+    "effective_date": "2011-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Stony Brook"
+  }
+]

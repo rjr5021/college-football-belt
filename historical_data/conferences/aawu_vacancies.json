@@ -1,0 +1,50 @@
+[
+  {
+    "team": "Oregon State",
+    "reign_started": "1967-11-11",
+    "last_activity_date": "1967-11-18",
+    "effective_date": "1967-11-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "1967-11-19",
+    "last_activity_date": "1967-11-19",
+    "effective_date": "1967-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington State",
+    "reign_started": "1967-11-25",
+    "last_activity_date": "1967-11-25",
+    "effective_date": "1967-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1967-11-26",
+    "last_activity_date": "1967-11-26",
+    "effective_date": "1967-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "1967-11-27",
+    "last_activity_date": "1967-11-27",
+    "effective_date": "1967-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "1967-11-28",
+    "last_activity_date": "1967-11-28",
+    "effective_date": "1967-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  }
+]

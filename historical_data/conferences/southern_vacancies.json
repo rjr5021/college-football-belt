@@ -1,0 +1,50 @@
+[
+  {
+    "team": "Tennessee",
+    "reign_started": "1931-10-17",
+    "last_activity_date": "1932-12-03",
+    "effective_date": "1932-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Alabama"
+  },
+  {
+    "team": "Alabama",
+    "reign_started": "1932-12-04",
+    "last_activity_date": "1932-12-04",
+    "effective_date": "1932-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida"
+  },
+  {
+    "team": "Florida",
+    "reign_started": "1932-12-05",
+    "last_activity_date": "1932-12-05",
+    "effective_date": "1932-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia"
+  },
+  {
+    "team": "Georgia",
+    "reign_started": "1932-12-06",
+    "last_activity_date": "1932-12-06",
+    "effective_date": "1932-12-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "1964-10-17",
+    "last_activity_date": "1967-11-18",
+    "effective_date": "1967-11-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Virginia Tech",
+    "reign_started": "1967-11-19",
+    "last_activity_date": "1967-11-19",
+    "effective_date": "1967-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
+  }
+]

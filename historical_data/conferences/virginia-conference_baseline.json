@@ -1,0 +1,117 @@
+{
+  "live_start_year": 2025,
+  "historical_belt_games": [
+    {
+      "date": "1932-11-24",
+      "season": 1932,
+      "week": 11,
+      "season_type": "regular",
+      "holder": null,
+      "opponent": "William & Mary",
+      "home": "Richmond",
+      "away": "William & Mary",
+      "score": "18-7",
+      "neutral": false,
+      "outcome": "established",
+      "new_holder": "Richmond",
+      "game_id": 18713
+    },
+    {
+      "date": "1933-11-26",
+      "season": 1933,
+      "week": 11,
+      "season_type": "regular",
+      "holder": "Richmond",
+      "opponent": "William & Mary",
+      "home": "Richmond",
+      "away": "William & Mary",
+      "score": "0-6",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "William & Mary",
+      "game_id": 19401
+    },
+    {
+      "date": "1934-11-29",
+      "season": 1934,
+      "week": 12,
+      "season_type": "regular",
+      "holder": "William & Mary",
+      "opponent": "Richmond",
+      "home": "Richmond",
+      "away": "William & Mary",
+      "score": "6-0",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "Richmond",
+      "game_id": 20095
+    },
+    {
+      "date": "1935-11-28",
+      "season": 1935,
+      "week": 11,
+      "season_type": "regular",
+      "holder": "Richmond",
+      "opponent": "William & Mary",
+      "home": "William & Mary",
+      "away": "Richmond",
+      "score": "6-6",
+      "neutral": false,
+      "outcome": "retained (tie)",
+      "new_holder": "Richmond",
+      "game_id": 20810
+    }
+  ],
+  "historical_reigns": [
+    {
+      "team": "Richmond",
+      "start_date": "1932-11-24",
+      "won_from": null,
+      "won_score": "18-7",
+      "defenses": 0,
+      "predecessor": null,
+      "end_date": "1933-11-26",
+      "lost_to": "William & Mary"
+    },
+    {
+      "team": "William & Mary",
+      "start_date": "1933-11-26",
+      "won_from": "Richmond",
+      "won_score": "0-6",
+      "defenses": 0,
+      "end_date": "1934-11-29",
+      "lost_to": "Richmond"
+    },
+    {
+      "team": "Richmond",
+      "start_date": "1934-11-29",
+      "won_from": "William & Mary",
+      "won_score": "6-0",
+      "defenses": 1,
+      "end_date": "1935-11-28",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "William & Mary",
+      "start_date": "1935-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Richmond",
+      "predecessor": "Richmond",
+      "end_date": "1935-11-29",
+      "lost_to": null,
+      "vacated": true
+    }
+  ],
+  "open_reign": {
+    "team": "Richmond",
+    "start_date": "1935-11-30",
+    "won_from": null,
+    "won_score": null,
+    "defenses": 0,
+    "reclaimed_after": "William & Mary",
+    "predecessor": "William & Mary"
+  }
+}

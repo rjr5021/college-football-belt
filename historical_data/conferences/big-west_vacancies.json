@@ -1,0 +1,58 @@
+[
+  {
+    "team": "Fresno State",
+    "reign_started": "1991-11-23",
+    "last_activity_date": "1991-11-23",
+    "effective_date": "1991-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "1999-11-13",
+    "last_activity_date": "2000-11-18",
+    "effective_date": "2000-11-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New Mexico State"
+  },
+  {
+    "team": "New Mexico State",
+    "reign_started": "2000-11-19",
+    "last_activity_date": "2000-11-19",
+    "effective_date": "2000-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Idaho"
+  },
+  {
+    "team": "Idaho",
+    "reign_started": "2000-11-20",
+    "last_activity_date": "2000-11-20",
+    "effective_date": "2000-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "2000-11-21",
+    "last_activity_date": "2000-11-21",
+    "effective_date": "2000-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "2000-11-22",
+    "last_activity_date": "2000-11-22",
+    "effective_date": "2000-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2000-11-23",
+    "last_activity_date": "2000-11-23",
+    "effective_date": "2000-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
+  }
+]

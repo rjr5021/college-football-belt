@@ -1,0 +1,18 @@
+[
+  {
+    "team": "Colorado",
+    "reign_started": "1902-10-18",
+    "last_activity_date": "1904-11-19",
+    "effective_date": "1904-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado",
+    "reign_started": "1907-10-19",
+    "last_activity_date": "1908-10-24",
+    "effective_date": "1908-10-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colorado State"
+  }
+]

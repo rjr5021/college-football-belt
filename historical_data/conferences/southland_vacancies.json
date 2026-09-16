@@ -1,0 +1,42 @@
+[
+  {
+    "team": "Texas-Arlington",
+    "reign_started": "1981-11-14",
+    "last_activity_date": "1981-11-21",
+    "effective_date": "1981-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "McNeese"
+  },
+  {
+    "team": "McNeese",
+    "reign_started": "1981-11-22",
+    "last_activity_date": "1981-11-22",
+    "effective_date": "1981-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Lamar"
+  },
+  {
+    "team": "Lamar",
+    "reign_started": "1981-11-23",
+    "last_activity_date": "1981-11-23",
+    "effective_date": "1981-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana Tech",
+    "reign_started": "1981-11-24",
+    "last_activity_date": "1981-11-24",
+    "effective_date": "1981-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arkansas State"
+  },
+  {
+    "team": "Arkansas State",
+    "reign_started": "1981-11-25",
+    "last_activity_date": "1981-11-25",
+    "effective_date": "1981-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Texas-Arlington"
+  }
+]

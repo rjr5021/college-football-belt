@@ -1,0 +1,58 @@
+[
+  {
+    "team": "Air Force",
+    "reign_started": "1998-10-31",
+    "last_activity_date": "1998-12-05",
+    "effective_date": "1998-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "SMU"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "2012-11-17",
+    "last_activity_date": "2012-11-24",
+    "effective_date": "2012-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana Tech",
+    "reign_started": "2012-11-25",
+    "last_activity_date": "2012-11-25",
+    "effective_date": "2012-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2012-11-26",
+    "last_activity_date": "2012-11-26",
+    "effective_date": "2012-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "2012-11-27",
+    "last_activity_date": "2012-11-27",
+    "effective_date": "2012-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2012-11-28",
+    "last_activity_date": "2012-11-28",
+    "effective_date": "2012-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Hawai'i"
+  },
+  {
+    "team": "Hawai'i",
+    "reign_started": "2012-11-29",
+    "last_activity_date": "2012-11-29",
+    "effective_date": "2012-11-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boise State"
+  }
+]

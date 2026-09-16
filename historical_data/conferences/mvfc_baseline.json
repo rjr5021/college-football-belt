@@ -1,0 +1,74 @@
+{
+  "live_start_year": 2025,
+  "historical_belt_games": [
+    {
+      "date": "2003-10-11",
+      "season": 2003,
+      "week": 8,
+      "season_type": "regular",
+      "holder": null,
+      "opponent": "Missouri State",
+      "home": "Western Kentucky",
+      "away": "Missouri State",
+      "score": "9-6",
+      "neutral": false,
+      "outcome": "established",
+      "new_holder": "Western Kentucky",
+      "game_id": 232840098
+    },
+    {
+      "date": "2004-11-06",
+      "season": 2004,
+      "week": 11,
+      "season_type": "regular",
+      "holder": "Western Kentucky",
+      "opponent": "Missouri State",
+      "home": "Missouri State",
+      "away": "Western Kentucky",
+      "score": "24-28",
+      "neutral": true,
+      "outcome": "retained",
+      "new_holder": "Western Kentucky",
+      "game_id": 243112623
+    },
+    {
+      "date": "2005-10-15",
+      "season": 2005,
+      "week": 7,
+      "season_type": "regular",
+      "holder": "Western Kentucky",
+      "opponent": "Missouri State",
+      "home": "Western Kentucky",
+      "away": "Missouri State",
+      "score": "37-28",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Western Kentucky",
+      "game_id": 252880098
+    },
+    {
+      "date": "2006-10-14",
+      "season": 2006,
+      "week": 7,
+      "season_type": "regular",
+      "holder": "Western Kentucky",
+      "opponent": "Missouri State",
+      "home": "Missouri State",
+      "away": "Western Kentucky",
+      "score": "14-17",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Western Kentucky",
+      "game_id": 262872623
+    }
+  ],
+  "historical_reigns": [],
+  "open_reign": {
+    "team": "Western Kentucky",
+    "start_date": "2003-10-11",
+    "won_from": null,
+    "won_score": "9-6",
+    "defenses": 3,
+    "predecessor": null
+  }
+}

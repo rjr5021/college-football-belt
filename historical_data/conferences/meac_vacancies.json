@@ -1,0 +1,26 @@
+[
+  {
+    "team": "Bethune-Cookman",
+    "reign_started": "2019-11-23",
+    "last_activity_date": "2019-11-23",
+    "effective_date": "2019-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida A&M"
+  },
+  {
+    "team": "Florida A&M",
+    "reign_started": "2019-11-24",
+    "last_activity_date": "2019-11-24",
+    "effective_date": "2019-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Carolina A&T"
+  },
+  {
+    "team": "North Carolina A&T",
+    "reign_started": "2019-11-25",
+    "last_activity_date": "2019-11-25",
+    "effective_date": "2019-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Bethune-Cookman"
+  }
+]

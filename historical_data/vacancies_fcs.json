@@ -1,0 +1,98 @@
+[
+  {
+    "team": "Lehigh",
+    "reign_started": "1923-12-01",
+    "last_activity_date": "1924-10-11",
+    "effective_date": "1924-10-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Brown"
+  },
+  {
+    "team": "Villanova",
+    "reign_started": "1961-09-23",
+    "last_activity_date": "1964-10-03",
+    "effective_date": "1964-10-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "VMI"
+  },
+  {
+    "team": "Colgate",
+    "reign_started": "1980-11-15",
+    "last_activity_date": "1981-11-14",
+    "effective_date": "1981-11-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Bucknell"
+  },
+  {
+    "team": "Bucknell",
+    "reign_started": "1981-11-15",
+    "last_activity_date": "1981-11-15",
+    "effective_date": "1981-11-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cornell"
+  },
+  {
+    "team": "Princeton",
+    "reign_started": "1981-11-21",
+    "last_activity_date": "1981-11-21",
+    "effective_date": "1981-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cornell"
+  },
+  {
+    "team": "Cornell",
+    "reign_started": "1981-11-22",
+    "last_activity_date": "1981-11-22",
+    "effective_date": "1981-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Dartmouth"
+  },
+  {
+    "team": "Brown",
+    "reign_started": "1982-11-06",
+    "last_activity_date": "1982-11-06",
+    "effective_date": "1982-11-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "1982-11-07",
+    "last_activity_date": "1983-11-19",
+    "effective_date": "1983-11-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Dartmouth"
+  },
+  {
+    "team": "Dartmouth",
+    "reign_started": "1983-11-20",
+    "last_activity_date": "1983-11-20",
+    "effective_date": "1983-11-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Harvard"
+  },
+  {
+    "team": "Harvard",
+    "reign_started": "1983-11-21",
+    "last_activity_date": "1983-11-21",
+    "effective_date": "1983-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Holy Cross"
+  },
+  {
+    "team": "Holy Cross",
+    "reign_started": "1983-11-22",
+    "last_activity_date": "1983-11-22",
+    "effective_date": "1983-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Brown"
+  },
+  {
+    "team": "Brown",
+    "reign_started": "1983-11-23",
+    "last_activity_date": "1983-11-23",
+    "effective_date": "1983-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  }
+]

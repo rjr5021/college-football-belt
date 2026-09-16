@@ -1,0 +1,34 @@
+[
+  {
+    "team": "Northern Iowa",
+    "reign_started": "2007-10-13",
+    "last_activity_date": "2007-11-10",
+    "effective_date": "2007-11-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Illinois"
+  },
+  {
+    "team": "Southern Illinois",
+    "reign_started": "2007-11-11",
+    "last_activity_date": "2007-11-11",
+    "effective_date": "2007-11-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Youngstown State"
+  },
+  {
+    "team": "Youngstown State",
+    "reign_started": "2007-11-12",
+    "last_activity_date": "2007-11-12",
+    "effective_date": "2007-11-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Illinois State"
+  },
+  {
+    "team": "Illinois State",
+    "reign_started": "2007-11-13",
+    "last_activity_date": "2007-11-13",
+    "effective_date": "2007-11-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Illinois"
+  }
+]
