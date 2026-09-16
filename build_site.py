@@ -109,6 +109,10 @@ ADSENSE_PUBLISHER_ID = "pub-4807241949046212"
 # platform, not a Fourthwall-specific limitation) -- this gets everything
 # up to that last click, browsing and all, living natively on the site
 # instead of linking out to a separate marketplace.
+# Master switch for the shop (2026-09-16): False keeps shop.html out of the
+# build, the nav, the footer, search and the sitemap until the merch is
+# ready. Flip to True to publish it -- nothing else needs to change.
+SHOP_ENABLED = False
 FOURTHWALL_STORE_DOMAIN = "college-football-belt-shop.fourthwall.com"
 FOURTHWALL_PRODUCTS = [
     {"slug": "championship-belt-tee", "title": "Championship Belt Tee",
@@ -444,6 +448,8 @@ def site_header(rel="", active=None, crumb=""):
     groups = ""
     for title, items in NAV_MORE:
         links = "".join(_nav_a(rel, k, h, l, active) for k, h, l in items if h not in PAGES_ABSENT)
+        if not links:
+            continue   # a group whose every page is absent (the shop while it's switched off)
         groups += f'<div class="moreGroup"><span class="moreKicker">{title}</span>{links}</div>'
     more = (f'<details class="moreMenu"{" data-active" if more_active else ""}>'
             f'<summary>More <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5 L5 6.5 L8 3.5"/></svg></summary>'
@@ -12971,6 +12977,8 @@ def main():
         PAGES_ABSENT.add("universes/index.html")
     if not coaches:
         PAGES_ABSENT.add("coaches/index.html")
+    if not SHOP_ENABLED:
+        PAGES_ABSENT.add("shop.html")
     conf_membership = load_optional_json("conference_membership.json")   # build_alternate_lineages.py (schema 2)
     belt_venues = load_optional_json("belt_venues.json")
     if not conf_membership or conf_membership.get("note") or not conf_membership.get("seasons"):
@@ -13261,9 +13269,10 @@ def main():
     with open(os.path.join(OUT_DIR, "privacy.html"), "w", encoding="utf-8") as f:
         f.write(privacy_html)
 
-    shop_html = generate_shop_page()
-    with open(os.path.join(OUT_DIR, "shop.html"), "w", encoding="utf-8") as f:
-        f.write(shop_html)
+    if SHOP_ENABLED:
+        shop_html = generate_shop_page()
+        with open(os.path.join(OUT_DIR, "shop.html"), "w", encoding="utf-8") as f:
+            f.write(shop_html)
 
     if ADSENSE_PUBLISHER_ID:
         with open(os.path.join(OUT_DIR, "ads.txt"), "w", encoding="utf-8") as f:
@@ -13360,7 +13369,9 @@ def main():
                      f"{SITE_URL}/on-this-day.html", f"{SITE_URL}/embed.html",
                      f"{SITE_URL}/compare.html", f"{SITE_URL}/trivia.html", f"{SITE_URL}/api.html",
                      f"{SITE_URL}/stories.html", f"{SITE_URL}/story-longest-reigns.html",
-                     f"{SITE_URL}/story-most-defended.html", f"{SITE_URL}/privacy.html", f"{SITE_URL}/shop.html"]
+                     f"{SITE_URL}/story-most-defended.html", f"{SITE_URL}/privacy.html"]
+    if SHOP_ENABLED:
+        sitemap_urls.append(f"{SITE_URL}/shop.html")
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -13452,7 +13463,7 @@ def main():
         print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
-    print(f"Wrote badge.svg, embed.html, privacy.html, shop.html, and compare.html to {OUT_DIR}/")
+    print(f"Wrote badge.svg, embed.html, privacy.html, {'shop.html, ' if SHOP_ENABLED else ''}and compare.html to {OUT_DIR}/")
     if ADSENSE_PUBLISHER_ID:
         print(f"Wrote ads.txt to {OUT_DIR}/ (AdSense publisher {ADSENSE_PUBLISHER_ID})")
     print(f"Wrote trivia.html ({len(trivia_pool)} question(s) in the pool) to {OUT_DIR}/")
