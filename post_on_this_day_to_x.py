@@ -339,6 +339,7 @@ def upload_media(api_v1, image_path):
 # ----------------------------------------------------------------- main
 
 def main():
+    print(f"[debug] OTD_FORCE_DATE env = {os.environ.get('OTD_FORCE_DATE')!r}")  # TEMP -- remove after diagnosing the override not taking effect
     missing = [k for k in REQUIRED_ENV if not os.environ.get(k)]
     if missing:
         print(f"Skipping On This Day post -- missing env var(s): {', '.join(missing)} "
@@ -352,6 +353,15 @@ def main():
                   "(pip install tweepy) and rerun.")
 
     today = eastern_today()
+    force_date = os.environ.get("OTD_FORCE_DATE")
+    if force_date:
+        try:
+            today = date.fromisoformat(force_date)
+            print(f"OTD_FORCE_DATE={force_date} set -- testing against this date instead of the real "
+                  f"one (only meant for a manual workflow_dispatch test run; leave unset for real days).")
+        except ValueError:
+            print(f"OTD_FORCE_DATE={force_date!r} isn't a valid YYYY-MM-DD date -- ignoring, using the real date.")
+
     cache = load_cache()
     if cache.get("last_posted_date") == otd_cache_key(today):
         print(f"Already posted (or checked) the On This Day tweet for {today} -- skipping.")
