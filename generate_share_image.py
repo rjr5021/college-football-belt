@@ -141,6 +141,14 @@ def team_color(colors, name):
     return entry.get("color") or "#5b5b5b", entry.get("alternate_color") or "#ffffff"
 
 
+def team_logo(colors, name):
+    """CFBD's own logo URL for this team, or None -- same field build_site.py's
+    team_logo() reads, duplicated here rather than imported (this file runs
+    standalone, same as every other script in this project)."""
+    entry = colors.get(name) or {}
+    return entry.get("logo") or None
+
+
 def fit_font(draw, text, candidates, max_width, start_size, min_size=40):
     """Shrink a font size until `text` fits max_width, never below min_size."""
     size = start_size
@@ -163,25 +171,71 @@ def draw_tracked_text(draw, xy, text, font, fill, tracking=0):
         x += w + tracking
 
 
+def _belt_mark_hex_points(cx, cy, th):
+    """The 6 points of the hexagonal center shield -- same proportions as
+    BELT_MARK_SVG's path in build_site.py (a 34x22 viewBox: tip-to-center
+    11, shoulder corners 7 up/down and 7 either side of center), so every
+    belt glyph in this file traces the SAME shape as the real site mark
+    instead of a generic round buckle. `th` is the tip-to-center distance;
+    the shoulder offset scales off it at that same 7:11 ratio."""
+    shoulder = th * (7 / 11)
+    return [
+        (cx, cy - th),
+        (cx + shoulder, cy - shoulder),
+        (cx + shoulder, cy + shoulder),
+        (cx, cy + th),
+        (cx - shoulder, cy + shoulder),
+        (cx - shoulder, cy - shoulder),
+    ]
+
+
+def _draw_belt_mark(draw, cx, cy, th, strap_color, plate_color, plate_edge, stud_color, strap_span):
+    """Draws the actual mark -- a strap band, two brass side plates, a
+    hexagonal center shield, and a dark center stud -- centered at
+    (cx, cy). Every ratio here is lifted straight from BELT_MARK_SVG's own
+    34x22 path (see _belt_mark_hex_points), scaled by `th` (the hexagon's
+    tip-to-center distance, matching the original's 11 units) so every
+    caller in this file draws the identical shape, just recolored and
+    resized -- the favicon, the PWA icons, and the "on this day" share
+    badge all trace the same mark as the site's own nav logo.
+    `strap_span` is how far the strap extends from center on each side
+    (edge-to-edge for the square icon glyphs; inset to stay inside the
+    circle for the round badge)."""
+    strap_h = th * (6 / 11)
+    draw.rectangle([cx - strap_span, cy - strap_h / 2, cx + strap_span, cy + strap_h / 2], fill=strap_color)
+
+    plate_w = th * (6 / 11)
+    plate_h = th * (10 / 11)
+    plate_offset = th
+    edge_w = max(1, round(th * 0.09))
+    for sign in (-1, 1):
+        px = cx + sign * plate_offset
+        draw.rectangle([px - plate_w / 2, cy - plate_h / 2, px + plate_w / 2, cy + plate_h / 2],
+                        fill=plate_color, outline=plate_edge, width=edge_w)
+
+    hex_pts = _belt_mark_hex_points(cx, cy, th)
+    draw.polygon(hex_pts, fill=plate_color)
+    for i in range(6):
+        draw.line([hex_pts[i], hex_pts[(i + 1) % 6]], fill=plate_edge, width=edge_w)
+
+    stud_r = th * (3.5 / 11)
+    draw.ellipse([cx - stud_r, cy - stud_r, cx + stud_r, cy + stud_r], fill=stud_color)
+
+
 def draw_belt_icon(size, primary, accent, ink):
-    """A tiny belt-and-buckle glyph: solid background in the holder's
-    primary color, a horizontal "strap" band in the accent color, and an
-    outlined "buckle" rectangle in the middle -- legible even at 16x16."""
+    """The site's favicon / PWA icon glyph -- the SAME mark as
+    BELT_MARK_SVG (build_site.py's nav logo): a strap across, two brass
+    side plates, and a hexagonal center shield with a dark stud, recolored
+    to the current holder's own primary/accent/ink so the browser-tab icon
+    always matches whoever holds the belt. Legible down to 16x16 the same
+    way the real SVG mark is at similar on-page sizes."""
     from PIL import Image, ImageDraw
     img = Image.new("RGB", (size, size), hex_to_rgb(primary))
     draw = ImageDraw.Draw(img)
-
-    strap_h = round(size * 0.34)
-    strap_y0 = (size - strap_h) // 2
-    strap_y1 = strap_y0 + strap_h
-    draw.rectangle([0, strap_y0, size, strap_y1], fill=hex_to_rgb(accent))
-
-    buckle_w = round(size * 0.30)
-    buckle_h = strap_h + round(size * 0.10)
-    bx0 = (size - buckle_w) // 2
-    by0 = (size - buckle_h) // 2
-    draw.rectangle([bx0, by0, bx0 + buckle_w, by0 + buckle_h],
-                    outline=hex_to_rgb(ink), width=max(2, round(size * 0.035)))
+    cx = cy = size / 2
+    th = size * 0.30
+    _draw_belt_mark(draw, cx, cy, th, strap_color=hex_to_rgb(ink), plate_color=hex_to_rgb(accent),
+                     plate_edge=hex_to_rgb(ink), stud_color=hex_to_rgb(ink), strap_span=size / 2)
     return img
 
 
@@ -428,6 +482,263 @@ def generate_team_posters(lineage, colors):
         generate_team_poster(team, reigns, primary, alt, out_path)
 
     print(f"Wrote {len(by_team)} team poster(s) to {posters_dir}/")
+
+
+OTD_OUTCOME_LABELS = {
+    # No emoji here on purpose -- unlike the tweet text (rendered by X's own
+    # font stack), this pill is drawn with a plain TrueType font via Pillow,
+    # which has no color-emoji glyphs and would render a broken tofu box
+    # instead (confirmed by an actual test render).
+    "established": "THE BELT WAS BORN",
+    "changed": "BELT CHANGED HANDS",
+    "retained (tie)": "TIE — BELT RETAINED",
+    "retained": "SUCCESSFULLY DEFENDED",
+}
+
+
+def _otd_team_score(game, team):
+    """Same lookup as post_on_this_day_to_x.py's team_score() -- game['score']
+    is always "home-away", not "winner-loser", so this matches against
+    game['home']/game['away'] rather than assuming an order."""
+    if not team or "-" not in (game.get("score") or ""):
+        return None
+    home_pts, away_pts = game["score"].split("-", 1)
+    if team == game.get("home"):
+        return home_pts
+    if team == game.get("away"):
+        return away_pts
+    return None
+
+
+def _fetch_logo_chip(url, size):
+    """A team's logo (if CFBD has one on file) centered on a white circular
+    backdrop, ready to paste onto any colored panel -- same fix as
+    build_site.py's logo_chip(): a logo dominated by its own team's color
+    (Penn State's navy crest on a navy panel, say) would otherwise nearly
+    disappear. Returns None on ANY failure (no logo URL, network error,
+    unrecognized format) -- callers just render the panel without a logo
+    rather than letting an image-fetch hiccup break the whole post."""
+    if not url:
+        return None
+    try:
+        import io
+        import requests
+        from PIL import Image, ImageDraw
+        resp = requests.get(url, timeout=8)
+        resp.raise_for_status()
+        logo = Image.open(io.BytesIO(resp.content)).convert("RGBA")
+
+        chip = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        d = ImageDraw.Draw(chip)
+        d.ellipse([0, 0, size, size], fill=(255, 255, 255, 255))
+
+        inner = round(size * 0.76)
+        logo.thumbnail((inner, inner))
+        chip.paste(logo, ((size - logo.width) // 2, (size - logo.height) // 2), logo)
+        return chip
+    except Exception:
+        return None
+
+
+# A fixed metallic gold (plus a matching leather strap brown), not derived
+# from either team's colors -- this is what actually makes it read as "the
+# belt" (a real championship belt is a gold buckle on a leather strap) no
+# matter which two teams are playing, so it's the one constant across
+# every image this function ever produces.
+BADGE_GOLD = "#D4AF37"
+BADGE_GOLD_DARK = "#8a6c17"
+BADGE_STRAP = "#3d2812"
+
+
+def _belt_badge(size, ink_bg, gold, paper):
+    """The championship-belt badge that sits on the seam between the two
+    panels -- a circular medallion drawing the SAME mark as
+    BELT_MARK_SVG (build_site.py's nav logo) and draw_belt_icon() above: a
+    leather strap, two brass side plates, and a hexagonal brass shield
+    with a dark center stud -- not a generic round buckle. Built on its
+    own transparent canvas so it can be dropped onto the seam (with a
+    shadow) regardless of what's behind it, same paste-with-alpha-mask
+    trick as _fetch_logo_chip."""
+    from PIL import Image, ImageDraw
+    badge = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(badge)
+    d.ellipse([0, 0, size - 1, size - 1], fill=hex_to_rgb(ink_bg) + (255,))
+
+    cx = cy = size / 2
+    th = size * 0.30
+    _draw_belt_mark(d, cx, cy, th,
+                     strap_color=hex_to_rgb(BADGE_STRAP) + (255,),
+                     plate_color=hex_to_rgb(gold) + (255,),
+                     plate_edge=hex_to_rgb(BADGE_GOLD_DARK) + (255,),
+                     stud_color=hex_to_rgb(ink_bg) + (255,),
+                     strap_span=size * 0.46)
+
+    # Circular clip, then a bright ring drawn on top of the clipped edge.
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).ellipse([0, 0, size - 1, size - 1], fill=255)
+    badge.putalpha(mask)
+    ImageDraw.Draw(badge).ellipse([1, 1, size - 2, size - 2], outline=hex_to_rgb(gold) + (255,),
+                                   width=max(3, round(size * 0.04)))
+    return badge
+
+
+def _diagonal_stripe(size_wh, p1, p2, width, color_rgba):
+    """One soft diagonal gloss stripe on its own transparent layer -- a
+    thin parallelogram from p1 to p2, `width` px wide, low-alpha `color_rgba`
+    -- meant to be alpha_composite'd over a panel for a bit of shine instead
+    of a flat, static-looking gradient fill."""
+    from PIL import Image, ImageDraw
+    layer = Image.new("RGBA", size_wh, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    (x1, y1), (x2, y2) = p1, p2
+    dx, dy = x2 - x1, y2 - y1
+    length = max((dx ** 2 + dy ** 2) ** 0.5, 1)
+    # perpendicular unit vector, to offset the centerline into a band
+    ox, oy = -dy / length * width / 2, dx / length * width / 2
+    d.polygon([(x1 + ox, y1 + oy), (x2 + ox, y2 + oy), (x2 - ox, y2 - oy), (x1 - ox, y1 - oy)], fill=color_rgba)
+    return layer
+
+
+def generate_otd_share_image(game, colors, out_path):
+    """A 1200x630 share image for one "on this day" belt game -- built for
+    post_on_this_day_to_x.py to attach to the daily X post instead of a bare
+    wall of text (images/media get a real reach boost on X; a link-only
+    text post doesn't). Same underlying color math as every other image in
+    this file (vertical_gradient/panel_colors) and the same "each team in
+    its own color, its own score in its own accent color" language as the
+    live game page's scoreboard (build_site.py's .teamPanel.home/.away) --
+    but with real graphic punch on top of that base: a diagonal seam
+    between the two panels instead of a flat vertical split, a gold
+    belt-buckle badge sitting on that seam (the one constant across every
+    matchup, since this is a picture of a BELT game), diagonal gloss
+    stripes, drop-shadowed score numbers, and a filled pill badge for the
+    outcome instead of bare text -- meant to read as a real sports-graphic,
+    not a colored rectangle with words on it.
+
+    Zero new data: `game` is one row from belt_games (already has both
+    teams, score, outcome, date), `colors` is the same team_colors.json-
+    shaped dict every other generator here takes. Logo lookups/fetches
+    fail soft (see _fetch_logo_chip) -- a team CFBD doesn't have a logo
+    for, or a network hiccup, still produces a clean image rather than no
+    image at all."""
+    from PIL import Image, ImageDraw
+
+    away, home = game["away"], game["home"]
+    away_primary, away_alt = team_color(colors, away)
+    home_primary, home_alt = team_color(colors, home)
+    away_ink, away_accent, away_dark = panel_colors(away_primary, away_alt)
+    home_ink, home_accent, home_dark = panel_colors(home_primary, home_alt)
+
+    BAR_H = 70
+    half_w = W // 2
+    panel_h = H - 2 * BAR_H
+    INK_BAR = "#171310"
+    PAPER = "#f4ede0"
+    SEAM_SHIFT = 72  # total horizontal travel of the seam from top to bottom of the panel band
+
+    img = Image.new("RGB", (W, H), hex_to_rgb(INK_BAR))
+
+    # ---- diagonal seam: home fills the whole panel band, away is cut in
+    # on top of it with a slanted polygon mask, so the boundary between
+    # them is a clean chevron instead of a dead-center vertical line.
+    top_x = half_w - SEAM_SHIFT // 2
+    bottom_x = half_w + SEAM_SHIFT // 2
+    img.paste(vertical_gradient(W, panel_h, home_primary, home_dark), (0, BAR_H))
+    away_mask = Image.new("L", (W, panel_h), 0)
+    ImageDraw.Draw(away_mask).polygon([(0, 0), (top_x, 0), (bottom_x, panel_h), (0, panel_h)], fill=255)
+    img.paste(vertical_gradient(W, panel_h, away_primary, away_dark), (0, BAR_H), away_mask)
+
+    # ---- diagonal gloss stripes, one per side, same slant as the seam --
+    # a subtle lightening band rather than a flat static gradient, so the
+    # panels catch a bit of "light".
+    shine = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    away_stripe = _diagonal_stripe((W, H), (top_x - 210, BAR_H), (bottom_x - 210, H - BAR_H), 130, (255, 255, 255, 22))
+    home_stripe = _diagonal_stripe((W, H), (top_x + 260, BAR_H), (bottom_x + 260, H - BAR_H), 130, (255, 255, 255, 22))
+    shine.alpha_composite(away_stripe)
+    shine.alpha_composite(home_stripe)
+    img = Image.alpha_composite(img.convert("RGBA"), shine).convert("RGB")
+    draw = ImageDraw.Draw(img)
+
+    mono_sm = _font(_MONO_CANDIDATES, 20)
+    side_font = _font(_MONO_CANDIDATES, 17)
+    score_font = _font(_DISPLAY_CANDIDATES, 96)
+    pill_font = _font(_MONO_CANDIDATES, 21)
+
+    # Top bar: "ON THIS DAY" left, the full date right -- draw_tracked_text
+    # adds `tracking` px after EVERY character (including the last), so a
+    # plain textbbox() on the untracked string under-measures the actual
+    # rendered width by about tracking*len(text); compensated for below so
+    # the right-aligned date doesn't creep past the margin.
+    draw_tracked_text(draw, (PAD, BAR_H // 2 - 9), "ON THIS DAY", mono_sm, PAPER, tracking=3)
+    date_text = fmt_date(game["date"]).upper()
+    date_w = draw.textbbox((0, 0), date_text, font=mono_sm)[2] + 2 * len(date_text)
+    draw_tracked_text(draw, (W - PAD - date_w, BAR_H // 2 - 9), date_text, mono_sm, PAPER, tracking=2)
+
+    def render_panel(team, score, x0, ink, accent, label, logo_url):
+        # x0 is the left edge of this team's half (0 for away, half_w for
+        # home) -- both panels render identically, left-aligned from their
+        # own PAD margin. Safe against the diagonal seam above: at its most
+        # extreme the seam is only SEAM_SHIFT/2 (36px) from center, well
+        # inside the PAD (72px) margin either side of it.
+        lx = x0 + PAD
+        y = BAR_H + PAD
+        chip = _fetch_logo_chip(logo_url, 60)
+        if chip:
+            img.paste(chip, (lx, y), chip)
+            draw_tracked_text(draw, (lx + 60 + 16, y + 20), label, side_font, ink, tracking=3)
+            name_y = y + 60 + 26
+        else:
+            draw_tracked_text(draw, (lx, y), label, side_font, ink, tracking=3)
+            name_y = y + 30
+        name_font = fit_font(draw, team, _DISPLAY_CANDIDATES, half_w - 2 * PAD, start_size=68, min_size=32)
+        draw.text((lx, name_y), team, font=name_font, fill=ink)
+        name_bbox = draw.textbbox((0, 0), "Xg", font=name_font)
+        # A short accent-colored underline beneath the name -- a small
+        # scoreboard-style detail that also visually separates name from
+        # score without extra vertical space.
+        name_w = draw.textbbox((0, 0), team, font=name_font)[2]
+        rule_y = name_y + (name_bbox[3] - name_bbox[1]) + 6
+        draw.rectangle([lx, rule_y, lx + min(name_w, 120), rule_y + 5], fill=hex_to_rgb(accent))
+        score_y = rule_y + 20
+        score_text = str(score) if score is not None else "-"
+        # Drop shadow behind the score for some depth/punch, then the real
+        # (accent-colored) score on top, offset a few px up-left.
+        draw.text((lx + 4, score_y + 4), score_text, font=score_font, fill=INK_BAR)
+        draw.text((lx, score_y), score_text, font=score_font, fill=accent)
+
+    render_panel(away, _otd_team_score(game, away), 0, away_ink, away_accent, "AWAY", team_logo(colors, away))
+    render_panel(home, _otd_team_score(game, home), half_w, home_ink, home_accent, "HOME", team_logo(colors, home))
+
+    # ---- the belt-buckle badge, right on the seam, with a solid shadow
+    # behind it for lift. Gold regardless of either team's colors -- see
+    # BADGE_GOLD's own comment.
+    badge_size = 116
+    badge_cx, badge_cy = half_w, BAR_H + panel_h // 2
+    shadow_off = 7
+    draw.ellipse([badge_cx - badge_size // 2 - 3 + shadow_off, badge_cy - badge_size // 2 - 3 + shadow_off,
+                  badge_cx + badge_size // 2 + 3 + shadow_off, badge_cy + badge_size // 2 + 3 + shadow_off],
+                 fill=(0, 0, 0))
+    badge = _belt_badge(badge_size, INK_BAR, BADGE_GOLD, PAPER)
+    img.paste(badge, (badge_cx - badge_size // 2, badge_cy - badge_size // 2), badge)
+
+    # Bottom bar: outcome as a filled pill badge (gold), url bottom-right.
+    outcome_text = OTD_OUTCOME_LABELS.get(game["outcome"], "BELT GAME")
+    ob_bbox = draw.textbbox((0, 0), outcome_text, font=pill_font)
+    ob_w, ob_h = ob_bbox[2] - ob_bbox[0], ob_bbox[3] - ob_bbox[1]
+    pill_pad_x, pill_pad_y = 22, 12
+    pill_w, pill_h = ob_w + 2 * pill_pad_x, ob_h + 2 * pill_pad_y
+    pill_x0 = (W - pill_w) // 2
+    pill_y0 = H - BAR_H // 2 - pill_h // 2 - 2
+    draw.rounded_rectangle([pill_x0, pill_y0, pill_x0 + pill_w, pill_y0 + pill_h], radius=pill_h // 2,
+                            fill=hex_to_rgb(BADGE_GOLD))
+    draw.text((pill_x0 + pill_pad_x, pill_y0 + pill_pad_y - ob_bbox[1]), outcome_text, font=pill_font, fill=hex_to_rgb(INK_BAR))
+
+    url_text = "collegefootballbelt.com"
+    url_w = draw.textbbox((0, 0), url_text, font=mono_sm)[2]
+    draw.text((W - PAD - url_w, H - BAR_H // 2 - 10), url_text, font=mono_sm, fill="#c9c2b3")
+
+    img.save(out_path, "PNG")
+    return out_path
 
 
 def generate_favicon(primary, accent, ink):
