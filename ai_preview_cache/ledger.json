@@ -1,0 +1,13 @@
+[
+  {
+    "key": "Notre Dame|Michigan State|2026-09-19",
+    "holder": "Notre Dame",
+    "opponent": "Michigan State",
+    "date": "2026-09-19",
+    "is_home": true,
+    "neutral": false,
+    "predicted_winner": "Notre Dame",
+    "predicted_score": "Notre Dame 42, Michigan State 17",
+    "generated": "2026-09-14"
+  }
+]
