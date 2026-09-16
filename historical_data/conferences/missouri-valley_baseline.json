@@ -1525,15 +1525,135 @@
       "end_date": "1927-12-01",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1927-12-02",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-02",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-12-03",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Kansas State",
+      "end_date": "1927-12-03",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas State",
+      "start_date": "1927-12-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Kansas",
+      "end_date": "1927-12-04",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas",
+      "start_date": "1927-12-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas State",
+      "predecessor": "Missouri",
+      "end_date": "1927-12-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1927-12-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-06",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iowa State",
+      "start_date": "1927-12-07",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Drake",
+      "end_date": "1927-12-07",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Drake",
+      "start_date": "1927-12-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iowa State",
+      "predecessor": "Oklahoma",
+      "end_date": "1927-12-08",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1927-12-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Drake",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-09",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1927-12-10",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Kansas State",
+      "end_date": "1927-12-10",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Washington St. Louis",
+      "start_date": "1927-12-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Nebraska",
+      "end_date": "1927-12-11",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Missouri",
-    "start_date": "1927-12-02",
+    "team": "Nebraska",
+    "start_date": "1927-12-12",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Kansas",
-    "predecessor": "Nebraska"
+    "reclaimed_after": "Washington St. Louis",
+    "predecessor": "Kansas State"
   }
 }

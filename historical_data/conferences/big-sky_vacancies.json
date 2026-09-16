@@ -30,5 +30,37 @@
     "effective_date": "1974-11-27",
     "detected_on": "2026-09-16",
     "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "1974-11-27",
+    "last_activity_date": "1974-11-27",
+    "effective_date": "1974-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Idaho"
+  },
+  {
+    "team": "Idaho",
+    "reign_started": "1974-11-28",
+    "last_activity_date": "1974-11-28",
+    "effective_date": "1974-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "1974-11-29",
+    "last_activity_date": "1974-11-29",
+    "effective_date": "1974-11-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Weber State"
+  },
+  {
+    "team": "Weber State",
+    "reign_started": "1974-11-30",
+    "last_activity_date": "1974-11-30",
+    "effective_date": "1974-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Idaho"
   }
 ]

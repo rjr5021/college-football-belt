@@ -102,5 +102,117 @@
     "effective_date": "2006-12-13",
     "detected_on": "2026-09-16",
     "reverted_to": "New Hampshire"
+  },
+  {
+    "team": "New Hampshire",
+    "reign_started": "2006-12-13",
+    "last_activity_date": "2006-12-13",
+    "effective_date": "2006-12-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2006-12-14",
+    "last_activity_date": "2006-12-14",
+    "effective_date": "2006-12-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Towson"
+  },
+  {
+    "team": "Towson",
+    "reign_started": "2006-12-15",
+    "last_activity_date": "2006-12-15",
+    "effective_date": "2006-12-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Villanova"
+  },
+  {
+    "team": "Villanova",
+    "reign_started": "2006-12-16",
+    "last_activity_date": "2006-12-16",
+    "effective_date": "2006-12-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "James Madison"
+  },
+  {
+    "team": "James Madison",
+    "reign_started": "2006-12-17",
+    "last_activity_date": "2006-12-17",
+    "effective_date": "2006-12-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New Hampshire"
+  },
+  {
+    "team": "New Hampshire",
+    "reign_started": "2006-12-18",
+    "last_activity_date": "2006-12-18",
+    "effective_date": "2006-12-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Massachusetts"
+  },
+  {
+    "team": "Massachusetts",
+    "reign_started": "2006-12-19",
+    "last_activity_date": "2006-12-19",
+    "effective_date": "2006-12-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New Hampshire"
+  },
+  {
+    "team": "New Hampshire",
+    "reign_started": "2006-12-20",
+    "last_activity_date": "2006-12-20",
+    "effective_date": "2006-12-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2006-12-21",
+    "last_activity_date": "2006-12-21",
+    "effective_date": "2006-12-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Towson"
+  },
+  {
+    "team": "Towson",
+    "reign_started": "2006-12-22",
+    "last_activity_date": "2006-12-22",
+    "effective_date": "2006-12-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rhode Island"
+  },
+  {
+    "team": "Rhode Island",
+    "reign_started": "2006-12-23",
+    "last_activity_date": "2006-12-23",
+    "effective_date": "2006-12-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2006-12-24",
+    "last_activity_date": "2006-12-24",
+    "effective_date": "2006-12-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Delaware"
+  },
+  {
+    "team": "Delaware",
+    "reign_started": "2006-12-25",
+    "last_activity_date": "2006-12-25",
+    "effective_date": "2006-12-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2006-12-26",
+    "last_activity_date": "2006-12-26",
+    "effective_date": "2006-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Maine"
   }
 ]

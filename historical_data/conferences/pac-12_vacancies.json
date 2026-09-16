@@ -78,5 +78,37 @@
     "effective_date": "2023-12-11",
     "detected_on": "2026-09-16",
     "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "2023-12-11",
+    "last_activity_date": "2023-12-11",
+    "effective_date": "2023-12-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "2023-12-12",
+    "last_activity_date": "2023-12-12",
+    "effective_date": "2023-12-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arizona"
+  },
+  {
+    "team": "Arizona",
+    "reign_started": "2023-12-13",
+    "last_activity_date": "2023-12-13",
+    "effective_date": "2023-12-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "2023-12-14",
+    "last_activity_date": "2023-12-14",
+    "effective_date": "2023-12-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
   }
 ]

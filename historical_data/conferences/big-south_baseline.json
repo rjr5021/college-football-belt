@@ -739,15 +739,111 @@
       "end_date": "2011-11-22",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Stony Brook",
+      "start_date": "2011-11-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2011-11-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2011-11-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stony Brook",
+      "predecessor": "Stony Brook",
+      "end_date": "2011-11-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Stony Brook",
+      "start_date": "2011-11-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2011-11-25",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Gardner-Webb",
+      "start_date": "2011-11-26",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stony Brook",
+      "predecessor": "Charleston Southern",
+      "end_date": "2011-11-26",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Charleston Southern",
+      "start_date": "2011-11-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Gardner-Webb",
+      "predecessor": "Presbyterian",
+      "end_date": "2011-11-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Presbyterian",
+      "start_date": "2011-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Charleston Southern",
+      "predecessor": "Liberty",
+      "end_date": "2011-11-28",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2011-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Presbyterian",
+      "predecessor": "Stony Brook",
+      "end_date": "2011-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Coastal Carolina",
+      "start_date": "2011-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2011-11-30",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Stony Brook",
-    "start_date": "2011-11-23",
+    "team": "Liberty",
+    "start_date": "2011-12-01",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Liberty",
-    "predecessor": "Liberty"
+    "reclaimed_after": "Coastal Carolina",
+    "predecessor": "Stony Brook"
   }
 }

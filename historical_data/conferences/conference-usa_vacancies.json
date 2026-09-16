@@ -70,5 +70,157 @@
     "effective_date": "2022-12-08",
     "detected_on": "2026-09-16",
     "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2022-12-08",
+    "last_activity_date": "2022-12-08",
+    "effective_date": "2022-12-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UAB"
+  },
+  {
+    "team": "UAB",
+    "reign_started": "2022-12-09",
+    "last_activity_date": "2022-12-09",
+    "effective_date": "2022-12-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2022-12-10",
+    "last_activity_date": "2022-12-10",
+    "effective_date": "2022-12-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "2022-12-11",
+    "last_activity_date": "2022-12-11",
+    "effective_date": "2022-12-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2022-12-12",
+    "last_activity_date": "2022-12-12",
+    "effective_date": "2022-12-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UTSA"
+  },
+  {
+    "team": "UTSA",
+    "reign_started": "2022-12-13",
+    "last_activity_date": "2022-12-13",
+    "effective_date": "2022-12-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "2022-12-14",
+    "last_activity_date": "2022-12-14",
+    "effective_date": "2022-12-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Marshall"
+  },
+  {
+    "team": "Marshall",
+    "reign_started": "2022-12-15",
+    "last_activity_date": "2022-12-15",
+    "effective_date": "2022-12-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida Atlantic"
+  },
+  {
+    "team": "Florida Atlantic",
+    "reign_started": "2022-12-16",
+    "last_activity_date": "2022-12-16",
+    "effective_date": "2022-12-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Charlotte"
+  },
+  {
+    "team": "Charlotte",
+    "reign_started": "2022-12-17",
+    "last_activity_date": "2022-12-17",
+    "effective_date": "2022-12-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Marshall"
+  },
+  {
+    "team": "Marshall",
+    "reign_started": "2022-12-18",
+    "last_activity_date": "2022-12-18",
+    "effective_date": "2022-12-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana Tech",
+    "reign_started": "2022-12-19",
+    "last_activity_date": "2022-12-19",
+    "effective_date": "2022-12-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Southern Miss"
+  },
+  {
+    "team": "Southern Miss",
+    "reign_started": "2022-12-20",
+    "last_activity_date": "2022-12-20",
+    "effective_date": "2022-12-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "2022-12-21",
+    "last_activity_date": "2022-12-21",
+    "effective_date": "2022-12-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida International"
+  },
+  {
+    "team": "Florida International",
+    "reign_started": "2022-12-22",
+    "last_activity_date": "2022-12-22",
+    "effective_date": "2022-12-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Middle Tennessee"
+  },
+  {
+    "team": "Middle Tennessee",
+    "reign_started": "2022-12-23",
+    "last_activity_date": "2022-12-23",
+    "effective_date": "2022-12-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Old Dominion"
+  },
+  {
+    "team": "Old Dominion",
+    "reign_started": "2022-12-24",
+    "last_activity_date": "2022-12-24",
+    "effective_date": "2022-12-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Charlotte"
+  },
+  {
+    "team": "Charlotte",
+    "reign_started": "2022-12-25",
+    "last_activity_date": "2022-12-25",
+    "effective_date": "2022-12-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Western Kentucky"
+  },
+  {
+    "team": "Western Kentucky",
+    "reign_started": "2022-12-26",
+    "last_activity_date": "2022-12-26",
+    "effective_date": "2022-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Middle Tennessee"
   }
 ]

@@ -325,15 +325,63 @@
       "end_date": "1974-11-26",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Boise State",
+      "start_date": "1974-11-27",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Idaho",
+      "predecessor": "Idaho",
+      "end_date": "1974-11-27",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Idaho",
+      "start_date": "1974-11-28",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Boise State",
+      "predecessor": "Boise State",
+      "end_date": "1974-11-28",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Boise State",
+      "start_date": "1974-11-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Idaho",
+      "predecessor": "Idaho",
+      "end_date": "1974-11-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Weber State",
+      "start_date": "1974-11-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Boise State",
+      "predecessor": "Idaho",
+      "end_date": "1974-11-30",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Boise State",
-    "start_date": "1974-11-27",
+    "team": "Idaho",
+    "start_date": "1974-12-01",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Idaho",
-    "predecessor": "Idaho"
+    "reclaimed_after": "Weber State",
+    "predecessor": "Boise State"
   }
 }

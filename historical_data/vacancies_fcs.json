@@ -182,5 +182,29 @@
     "effective_date": "2023-12-26",
     "detected_on": "2026-09-16",
     "reverted_to": "Mercer"
+  },
+  {
+    "team": "Mercer",
+    "reign_started": "2023-12-26",
+    "last_activity_date": "2023-12-26",
+    "effective_date": "2023-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "The Citadel"
+  },
+  {
+    "team": "The Citadel",
+    "reign_started": "2023-12-27",
+    "last_activity_date": "2023-12-27",
+    "effective_date": "2023-12-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "East Tennessee State"
+  },
+  {
+    "team": "East Tennessee State",
+    "reign_started": "2023-12-28",
+    "last_activity_date": "2023-12-28",
+    "effective_date": "2023-12-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Mercer"
   }
 ]
