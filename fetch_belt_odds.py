@@ -281,6 +281,7 @@ def monte_carlo_season(remaining_all, holder, elo, trials=MONTE_CARLO_TRIALS, rn
         by_team[g["home"]].append(i)
         by_team[g["away"]].append(i)
     end_counts = Counter()
+    belt_game_counts = Counter()   # game index -> trials in which the belt was on the line there
     for _ in range(trials):
         cur, pos = holder, -1
         while True:
@@ -293,10 +294,34 @@ def monte_carlo_season(remaining_all, holder, elo, trials=MONTE_CARLO_TRIALS, rn
             gi = lst[j]
             g = remaining_all[gi]
             pos = gi
+            belt_game_counts[gi] += 1
             if rng.random() >= holder_win_prob(g, cur, elo):
                 cur = g["away"] if g["home"] == cur else g["home"]
         end_counts[cur] += 1
+    monte_carlo_season.belt_game_counts = belt_game_counts
     return end_counts, trials
+
+
+def belt_game_odds(remaining_all, belt_game_counts, trials, holder, elo, min_prob=0.005):
+    """Every unplayed game with a real chance of being a belt game (the
+    schedule page, 2026-09-16): the share of simulated seasons in which the
+    belt was on the line in that game, plus who would be defending it most
+    often. The holder's own next game is 1.0 by construction; its later
+    games decay by its win probabilities; everyone else's games light up
+    only through a title change upstream."""
+    out = []
+    for gi, n in belt_game_counts.items():
+        p = n / trials
+        if p < min_prob:
+            continue
+        g = remaining_all[gi]
+        entry = {"date": g["date"][:10], "raw_date": g["date"], "home": g["home"], "away": g["away"],
+                 "neutral": g["neutral"], "p_belt_game": round(p, 4)}
+        # who is favored, from the same Elo the walk used -- as the home side's win probability
+        entry["p_home_win"] = round(holder_win_prob(g, g["home"], elo), 4)
+        out.append(entry)
+    out.sort(key=lambda e: (e["date"], -e["p_belt_game"]))
+    return out
 
 
 def monte_carlo_survive(remaining, holder, elo, trials=MONTE_CARLO_TRIALS, rng=None):
@@ -380,6 +405,7 @@ def main():
     # unplayed games), so every program gets an end-of-season probability.
     remaining_all = find_all_remaining(games_raw)
     end_counts, trials_run = monte_carlo_season(remaining_all, holder, elo)
+    schedule_odds = belt_game_odds(remaining_all, monte_carlo_season.belt_game_counts, trials_run, holder, elo)
     outlook = [{"team": t, "prob": round(n / trials_run, 4)}
                for t, n in end_counts.most_common() if n / trials_run >= 0.0005]
     holds_prob = end_counts[holder] / trials_run
@@ -407,6 +433,9 @@ def main():
             "source": "elo_monte_carlo",
             "end_of_season": outlook,
             "teams_with_a_chance": len(end_counts),
+            # every unplayed game with >= 0.5% chance of being a belt game
+            # (schedule.html), chronological
+            "belt_game_odds": schedule_odds,
         },
     }
     with open(out_path, "w") as f:

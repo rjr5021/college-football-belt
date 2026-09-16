@@ -406,7 +406,7 @@ def process_pages(lineage):
                     ("Full History", f"{SITE_URL}/lineage.html"),
                     (team or fn, canonical_url(rel))))
 
-            elif rel.startswith(("reigns/", "rivalries/", "states/", "decades/", "universes/", "coaches/")) and fn != "index.html":
+            elif rel.startswith(("reigns/", "rivalries/", "states/", "decades/", "universes/", "coaches/", "venues/")) and fn != "index.html":
                 # the 2026-09 batch: one breadcrumb trail per family, the
                 # page's own <title> (minus any site-name suffix) as the leaf
                 family = rel.split("/", 1)[0]
@@ -417,6 +417,7 @@ def process_pages(lineage):
                     "decades": ("Decades", "decades/index.html"),
                     "universes": ("Alternate universes", "universes/index.html"),
                     "coaches": ("Coaches", "coaches/index.html"),
+                    "venues": ("Venues", "venues/index.html"),
                 }[family]
                 leaf = re.sub(r"\s+—\s+.*$", "", html.unescape(get_title(doc) or "")) or fn[:-5]
                 extra.append(breadcrumbs(

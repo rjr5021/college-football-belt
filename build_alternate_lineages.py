@@ -38,6 +38,11 @@ archive from that same games_raw.json -- no API call.
 Without the archive (before the bootstrap has been run) this stage prints
 a note and exits 0 -- universes/ just doesn't appear on the site yet.
 
+Also written every run (2026-09-16), from the same archive once it's
+schema 2: belt_data/conference_membership.json (each belt program's
+conference, season by season) and belt_data/belt_venues.json (venue per
+belt game + venue details) -- see write_belt_context().
+
 Outputs (into ./belt_data/universes/, regenerated every run):
     <slug>.json     {name, slug, rule, description, current_holder, reigns,
                      belt_games, totals} -- same shape as lineage.json's
@@ -82,8 +87,20 @@ UNIVERSES = [
      "start_season": 1998, "origin": "ap1"},
 ]
 
+# Archive row layout. Schema 2 (2026-09-16) added the conference each side
+# was in AS OF THAT GAME (CFBD reports it per game, which is what
+# realignment demands) and the venue id -- the belt-by-conference page and
+# the venue pages read those. A schema-1 archive still expands fine (the
+# missing fields come back as None) but carries neither; --bootstrap on a
+# schema-1 archive starts over so every season is refetched with them.
+ARCHIVE_SCHEMA = 2
 FIELDS = ("id", "date", "season", "week", "season_type", "home", "away",
-          "home_points", "away_points", "neutral")
+          "home_points", "away_points", "neutral",
+          "home_conference", "away_conference", "venue_id")
+CONFERENCES_PATH = os.path.join(DATA_DIR, "conference_membership.json")
+VENUES_PATH = os.path.join(DATA_DIR, "belt_venues.json")
+LINEAGE_PATH = os.path.join(DATA_DIR, "lineage.json")
+VENUES_RAW_PATH = os.path.join(DATA_DIR, "venues_raw.json")
 
 
 # ------------------------------------------------------------- archive I/O
@@ -112,6 +129,19 @@ def expand(rows):
     return [dict(zip(FIELDS, row)) for row in rows]
 
 
+def attach_venue_ids(games, raw):
+    """normalize() uses the venue id for the local date but doesn't keep
+    it; put it back on each normalized game from the raw CFBD rows."""
+    by_id = {}
+    for g in raw or []:
+        gid = g.get("id")
+        if gid is not None:
+            by_id[gid] = g.get("venue_id", g.get("venueId"))
+    for g in games:
+        g["venue_id"] = by_id.get(g.get("id"))
+    return games
+
+
 def archived_seasons(archive):
     return sorted(int(s) for s in archive.get("seasons", {}))
 
@@ -137,7 +167,7 @@ def normalized_live_games(venue_tz=None):
     from build_lineage import normalize
     with open(path) as f:
         raw = json.load(f)
-    return normalize(raw, venue_tz)
+    return attach_venue_ids(normalize(raw, venue_tz), raw)
 
 
 def bootstrap_archive(api_key, through_season):
@@ -147,7 +177,12 @@ def bootstrap_archive(api_key, through_season):
     from build_lineage import collect_venues, fetch_year, normalize
     print("Fetching venue timezones from CFBD...")
     venue_tz, _ = collect_venues(api_key)
-    archive = load_archive() or {"schema": 1, "seasons": {}}
+    archive = load_archive()
+    if archive is None or int(archive.get("schema") or 1) < ARCHIVE_SCHEMA:
+        if archive is not None:
+            print(f"Existing archive is schema {archive.get('schema')}; rebuilding it as schema {ARCHIVE_SCHEMA} "
+                  f"(conferences + venues) -- every season is refetched.")
+        archive = {"schema": ARCHIVE_SCHEMA, "seasons": {}}
     seasons = archive["seasons"]
     todo = [s for s in range(FIRST_SEASON, through_season + 1) if str(s) not in seasons]
     print(f"Archiving {len(todo)} season(s) ({len(seasons)} already archived): ~{2 * len(todo)} CFBD calls")
@@ -156,7 +191,7 @@ def bootstrap_archive(api_key, through_season):
         for st in ("regular", "postseason"):
             raw.extend(fetch_year(s, api_key, st) or [])
             time.sleep(0.15)
-        games = normalize(raw, venue_tz)
+        games = attach_venue_ids(normalize(raw, venue_tz), raw)
         seasons[str(s)] = compact(games)
         print(f"  {s}: {len(games)} completed games")
         if n % 10 == 0 or n == len(todo):
@@ -257,6 +292,72 @@ def write_universe(u, belt_games, reigns, vacancies, origin_note, coverage, toda
     return out
 
 
+# ------------------------------------------------- belt-game context (2026-09-16)
+
+def write_belt_context(games, archive, today):
+    """Two small files for build_site.py, from the same archive:
+
+    conference_membership.json  {season: {team: conference}} for every
+        program that has played a belt game -- the conference each was in
+        that season, as CFBD reported it on its games (so realignment is
+        handled season by season). The belt-by-conference page allocates
+        every reign's days to the holder's conference at the time.
+    belt_venues.json  {games: {belt game id: venue id}, venues: {venue id:
+        {name, city, state, lat, lon}}} for the venue pages; venue details
+        come from belt_data/venues_raw.json, which build_lineage.py's
+        venue fetch writes every run (no extra call).
+
+    Both are empty, with a note, while the archive is still schema 1 --
+    the pages show a 'pending' line until the archive is rebuilt."""
+    has_context = int(archive.get("schema") or 1) >= ARCHIVE_SCHEMA
+    lineage = None
+    if os.path.exists(LINEAGE_PATH):
+        with open(LINEAGE_PATH) as f:
+            lineage = json.load(f)
+    belt_games = (lineage or {}).get("belt_games") or []
+    belt_teams = {t for g in belt_games for t in (g["home"], g["away"])}
+    belt_ids = {g["game_id"] for g in belt_games}
+
+    membership = {}
+    venues_by_game = {}
+    if has_context or any(g.get("home_conference") for g in games[-2000:]):
+        for g in games:
+            s = str(g["season"])
+            for side in ("home", "away"):
+                team = g.get(side)
+                conf = g.get(f"{side}_conference")
+                if team in belt_teams and conf:
+                    membership.setdefault(s, {}).setdefault(team, conf)
+            gid = g.get("id")
+            if gid in belt_ids and g.get("venue_id") is not None:
+                venues_by_game[str(gid)] = g["venue_id"]
+
+    venue_info = {}
+    if os.path.exists(VENUES_RAW_PATH):
+        with open(VENUES_RAW_PATH) as f:
+            raw_venues = json.load(f)
+        wanted = set(venues_by_game.values())
+        for v in raw_venues or []:
+            vid = v.get("id")
+            if vid in wanted:
+                venue_info[str(vid)] = {
+                    "name": v.get("name"), "city": v.get("city"), "state": v.get("state"),
+                    "lat": v.get("latitude", v.get("lat")), "lon": v.get("longitude", v.get("lng", v.get("lon"))),
+                    "capacity": v.get("capacity"),
+                }
+
+    note = "" if has_context else (f"archive is schema {archive.get('schema') or 1}; rebuild it with --bootstrap "
+                                   f"(the bootstrap_alternate_universes checkbox) to get conferences and venues")
+    with open(CONFERENCES_PATH, "w") as f:
+        json.dump({"schema": 1, "generated": today.isoformat(), "note": note, "seasons": membership}, f, separators=(",", ":"))
+    with open(VENUES_PATH, "w") as f:
+        json.dump({"schema": 1, "generated": today.isoformat(), "note": note,
+                   "games": venues_by_game, "venues": venue_info}, f, separators=(",", ":"))
+    print(f"Wrote {CONFERENCES_PATH} ({len(membership)} seasons of membership for {len(belt_teams)} belt programs) "
+          f"and {VENUES_PATH} ({len(venues_by_game)} belt games with a venue, {len(venue_info)} venues)"
+          + (f" -- {note}" if note else ""))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstrap", action="store_true",
@@ -304,6 +405,8 @@ def main():
         print(f"WARNING: the archive is missing {len(missing)} season(s) ({missing[:5]}...); the universes "
               f"below are walked over an incomplete record. Re-run with --bootstrap to fill the gaps.")
     print(f"{len(games):,} games on hand (archived through {coverage['archived_through']}, live {live_seasons}).")
+
+    write_belt_context(games, archive, today)
 
     index = {"generated": today.isoformat(), "coverage": coverage, "universes": []}
     for u in UNIVERSES:
