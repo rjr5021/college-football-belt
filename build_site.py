@@ -12303,20 +12303,34 @@ def _season_of(d):
     return d.year if d.month >= 7 else d.year - 1
 
 
+# CFBD's per-season labels, folded where the label changed but the league
+# didn't: the Big Ten's early decades are recorded as "Western", the Pac-8
+# and Pac-10 are the Pac-12 under earlier names, and independents come in
+# three flavours. Everything else (Pacific Coast, Big 8, Southwest, Big
+# East...) stays as recorded -- those were different leagues.
+CONF_ALIASES = {"Western": "Big Ten", "Pac-8": "Pac-12", "Pac-10": "Pac-12"}
+
+
+def _conference_label(c):
+    if not c or "independent" in c.lower():
+        return "Independents"
+    return CONF_ALIASES.get(c, c)
+
+
 def _conference_of(membership, team, season, span=6):
     """A program's conference in `season` from the membership map, falling
     back to the nearest season on record within `span` years (a holder
     that carries the belt through an offseason, or a season the record
-    lacks), then to 'Independent'."""
+    lacks), then to independents."""
     row = membership.get(str(season)) or {}
     if row.get(team):
-        return row[team]
+        return _conference_label(row[team])
     for k in range(1, span + 1):
         for s in (season - k, season + k):
             c = (membership.get(str(s)) or {}).get(team)
             if c:
-                return c
-    return "Independent"
+                return _conference_label(c)
+    return "Independents"
 
 
 def conference_days(lineage, membership, today):
@@ -12502,8 +12516,10 @@ def generate_by_conference_page(lineage, colors, belt_games, membership_file, to
     </table>
   </div>
   <p class="noteBox">Every day of every reign is credited to the holder&rsquo;s conference in that season, as the College Football Data API
-    records it game by game &mdash; so realignment is handled season by season, and a league that changed its name (Pac-10, Pac-12)
-    shows up under each name for the years it used it. Programs with no conference on record for a season count as independents.
+    records it game by game &mdash; so realignment is handled season by season. Three labels are folded where only the name changed:
+    the Big Ten&rsquo;s early decades (recorded as the Western Conference), the Pac-8 and Pac-10 (the Pac-12 under earlier names), and
+    the record&rsquo;s several flavours of independent. Different leagues that happened to share members (the Pacific Coast Conference,
+    the Big 8, the Southwest) stay separate. Programs with no conference on record for a season count as independents.
     The <a href="conferences/index.html">conference belts</a> are something else entirely: separate lineages that never leave their league.</p>
 </main>
 
