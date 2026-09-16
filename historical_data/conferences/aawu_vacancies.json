@@ -53,7 +53,7 @@
     "last_activity_date": "1967-11-29",
     "effective_date": "1967-11-30",
     "detected_on": "2026-09-16",
-    "reverted_to": "Oregon State"
+    "reverted_to": "UCLA"
   },
   {
     "team": "Oregon State",
@@ -69,7 +69,7 @@
     "last_activity_date": "1967-12-01",
     "effective_date": "1967-12-02",
     "detected_on": "2026-09-16",
-    "reverted_to": "Washington"
+    "reverted_to": "Stanford"
   },
   {
     "team": "Washington",
@@ -244,6 +244,38 @@
     "reign_started": "1967-12-23",
     "last_activity_date": "1967-12-23",
     "effective_date": "1967-12-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "1967-11-30",
+    "last_activity_date": "1967-11-30",
+    "effective_date": "1967-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "Stanford",
+    "reign_started": "1967-12-02",
+    "last_activity_date": "1967-12-02",
+    "effective_date": "1967-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UCLA"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "1967-12-03",
+    "last_activity_date": "1967-12-03",
+    "effective_date": "1967-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1967-12-04",
+    "last_activity_date": "1967-12-04",
+    "effective_date": "1967-12-05",
     "detected_on": "2026-09-16",
     "reverted_to": "Washington"
   }

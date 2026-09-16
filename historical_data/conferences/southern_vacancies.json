@@ -53,7 +53,7 @@
     "last_activity_date": "1967-11-20",
     "effective_date": "1967-11-21",
     "detected_on": "2026-09-16",
-    "reverted_to": "Virginia Tech"
+    "reverted_to": "VMI"
   },
   {
     "team": "Virginia Tech",
@@ -534,5 +534,37 @@
     "effective_date": "1968-01-20",
     "detected_on": "2026-09-16",
     "reverted_to": "Virginia Tech"
+  },
+  {
+    "team": "Western Carolina",
+    "reign_started": "1981-10-24",
+    "last_activity_date": "1981-11-21",
+    "effective_date": "1981-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Chattanooga"
+  },
+  {
+    "team": "Chattanooga",
+    "reign_started": "1981-11-22",
+    "last_activity_date": "1981-11-22",
+    "effective_date": "1981-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Furman"
+  },
+  {
+    "team": "Furman",
+    "reign_started": "1981-11-23",
+    "last_activity_date": "1981-11-23",
+    "effective_date": "1981-11-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "The Citadel"
+  },
+  {
+    "team": "The Citadel",
+    "reign_started": "1981-11-24",
+    "last_activity_date": "1981-11-24",
+    "effective_date": "1981-11-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Chattanooga"
   }
 ]

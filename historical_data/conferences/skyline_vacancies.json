@@ -29,7 +29,7 @@
     "last_activity_date": "1961-11-20",
     "effective_date": "1961-11-21",
     "detected_on": "2026-09-16",
-    "reverted_to": "Utah"
+    "reverted_to": "Wyoming"
   },
   {
     "team": "Utah",
@@ -206,5 +206,109 @@
     "effective_date": "1961-12-13",
     "detected_on": "2026-09-16",
     "reverted_to": "BYU"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1961-11-21",
+    "last_activity_date": "1961-11-21",
+    "effective_date": "1961-11-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1961-11-22",
+    "last_activity_date": "1961-11-22",
+    "effective_date": "1961-11-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1961-11-25",
+    "last_activity_date": "1961-11-25",
+    "effective_date": "1961-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1961-11-26",
+    "last_activity_date": "1961-11-26",
+    "effective_date": "1961-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1961-11-27",
+    "last_activity_date": "1961-11-27",
+    "effective_date": "1961-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1961-11-28",
+    "last_activity_date": "1961-11-28",
+    "effective_date": "1961-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1961-11-29",
+    "last_activity_date": "1961-11-29",
+    "effective_date": "1961-11-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1961-11-30",
+    "last_activity_date": "1961-11-30",
+    "effective_date": "1961-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1961-12-01",
+    "last_activity_date": "1961-12-01",
+    "effective_date": "1961-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1961-12-02",
+    "last_activity_date": "1961-12-02",
+    "effective_date": "1961-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado State",
+    "reign_started": "1961-12-03",
+    "last_activity_date": "1961-12-03",
+    "effective_date": "1961-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1961-12-04",
+    "last_activity_date": "1961-12-04",
+    "effective_date": "1961-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Denver"
+  },
+  {
+    "team": "Denver",
+    "reign_started": "1961-12-05",
+    "last_activity_date": "1961-12-05",
+    "effective_date": "1961-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
   }
 ]

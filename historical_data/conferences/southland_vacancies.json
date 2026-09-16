@@ -45,7 +45,7 @@
     "last_activity_date": "1981-11-26",
     "effective_date": "1981-11-27",
     "detected_on": "2026-09-16",
-    "reverted_to": "McNeese"
+    "reverted_to": "Louisiana"
   },
   {
     "team": "McNeese",
@@ -188,6 +188,14 @@
     "reign_started": "1981-12-14",
     "last_activity_date": "1981-12-14",
     "effective_date": "1981-12-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana",
+    "reign_started": "1981-11-27",
+    "last_activity_date": "1981-11-27",
+    "effective_date": "1981-11-28",
     "detected_on": "2026-09-16",
     "reverted_to": "Louisiana Tech"
   }

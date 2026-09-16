@@ -37,7 +37,7 @@
     "last_activity_date": "1987-11-24",
     "effective_date": "1987-11-25",
     "detected_on": "2026-09-16",
-    "reverted_to": "UNLV"
+    "reverted_to": "San Jos\u00e9 State"
   },
   {
     "team": "UNLV",
@@ -262,5 +262,77 @@
     "effective_date": "1987-12-23",
     "detected_on": "2026-09-16",
     "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "1987-11-25",
+    "last_activity_date": "1987-11-25",
+    "effective_date": "1987-11-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fresno State"
+  },
+  {
+    "team": "Fresno State",
+    "reign_started": "1987-11-26",
+    "last_activity_date": "1987-11-26",
+    "effective_date": "1987-11-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1987-11-27",
+    "last_activity_date": "1987-11-27",
+    "effective_date": "1987-11-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "1987-11-28",
+    "last_activity_date": "1987-11-28",
+    "effective_date": "1987-11-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Long Beach State"
+  },
+  {
+    "team": "Long Beach State",
+    "reign_started": "1987-11-29",
+    "last_activity_date": "1987-11-29",
+    "effective_date": "1987-11-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "1987-11-30",
+    "last_activity_date": "1987-11-30",
+    "effective_date": "1987-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cal State Fullerton"
+  },
+  {
+    "team": "Cal State Fullerton",
+    "reign_started": "1987-12-01",
+    "last_activity_date": "1987-12-01",
+    "effective_date": "1987-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Long Beach State"
+  },
+  {
+    "team": "Long Beach State",
+    "reign_started": "1987-12-02",
+    "last_activity_date": "1987-12-02",
+    "effective_date": "1987-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "San Diego State"
+  },
+  {
+    "team": "San Diego State",
+    "reign_started": "1987-12-03",
+    "last_activity_date": "1987-12-03",
+    "effective_date": "1987-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pacific"
   }
 ]

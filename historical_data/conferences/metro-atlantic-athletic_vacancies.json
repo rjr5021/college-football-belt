@@ -37,7 +37,7 @@
     "last_activity_date": "2007-11-14",
     "effective_date": "2007-11-15",
     "detected_on": "2026-09-16",
-    "reverted_to": "La Salle"
+    "reverted_to": "Duquesne"
   },
   {
     "team": "La Salle",
@@ -164,6 +164,14 @@
     "reign_started": "2007-11-30",
     "last_activity_date": "2007-11-30",
     "effective_date": "2007-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iona"
+  },
+  {
+    "team": "Duquesne",
+    "reign_started": "2007-11-15",
+    "last_activity_date": "2007-11-15",
+    "effective_date": "2007-11-16",
     "detected_on": "2026-09-16",
     "reverted_to": "Iona"
   }

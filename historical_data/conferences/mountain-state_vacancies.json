@@ -53,7 +53,7 @@
     "last_activity_date": "1947-12-03",
     "effective_date": "1947-12-04",
     "detected_on": "2026-09-16",
-    "reverted_to": "Denver"
+    "reverted_to": "BYU"
   },
   {
     "team": "Denver",
@@ -220,6 +220,14 @@
     "reign_started": "1947-12-24",
     "last_activity_date": "1947-12-24",
     "effective_date": "1947-12-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1947-12-04",
+    "last_activity_date": "1947-12-04",
+    "effective_date": "1947-12-05",
     "detected_on": "2026-09-16",
     "reverted_to": "Utah"
   }

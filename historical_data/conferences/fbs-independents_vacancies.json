@@ -45,7 +45,7 @@
     "last_activity_date": "2014-12-15",
     "effective_date": "2014-12-16",
     "detected_on": "2026-09-16",
-    "reverted_to": "Notre Dame"
+    "reverted_to": "Penn State"
   },
   {
     "team": "Notre Dame",
@@ -942,5 +942,669 @@
     "effective_date": "2015-04-07",
     "detected_on": "2026-09-16",
     "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2014-12-16",
+    "last_activity_date": "2014-12-16",
+    "effective_date": "2014-12-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2014-12-17",
+    "last_activity_date": "2016-11-12",
+    "effective_date": "2016-11-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2016-11-13",
+    "last_activity_date": "2016-11-13",
+    "effective_date": "2016-11-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2016-11-14",
+    "last_activity_date": "2022-10-08",
+    "effective_date": "2022-10-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2022-10-09",
+    "last_activity_date": "2022-10-09",
+    "effective_date": "2022-10-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2022-10-10",
+    "last_activity_date": "2022-10-10",
+    "effective_date": "2022-10-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2022-10-11",
+    "last_activity_date": "2022-10-11",
+    "effective_date": "2022-10-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2022-10-12",
+    "last_activity_date": "2022-10-12",
+    "effective_date": "2022-10-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2022-10-13",
+    "last_activity_date": "2022-10-13",
+    "effective_date": "2022-10-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2022-10-14",
+    "last_activity_date": "2022-10-14",
+    "effective_date": "2022-10-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2022-10-15",
+    "last_activity_date": "2022-10-15",
+    "effective_date": "2022-10-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2022-10-16",
+    "last_activity_date": "2022-10-16",
+    "effective_date": "2022-10-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "2022-10-17",
+    "last_activity_date": "2022-10-17",
+    "effective_date": "2022-10-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2022-10-18",
+    "last_activity_date": "2022-10-18",
+    "effective_date": "2022-10-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2022-10-19",
+    "last_activity_date": "2022-10-19",
+    "effective_date": "2022-10-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boston College"
+  },
+  {
+    "team": "Boston College",
+    "reign_started": "2022-10-20",
+    "last_activity_date": "2022-10-20",
+    "effective_date": "2022-10-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "2022-10-21",
+    "last_activity_date": "2022-10-21",
+    "effective_date": "2022-10-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2022-10-22",
+    "last_activity_date": "2022-10-22",
+    "effective_date": "2022-10-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2022-10-23",
+    "last_activity_date": "2022-10-23",
+    "effective_date": "2022-10-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2022-10-24",
+    "last_activity_date": "2022-10-24",
+    "effective_date": "2022-10-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tampa"
+  },
+  {
+    "team": "Tampa",
+    "reign_started": "2022-10-25",
+    "last_activity_date": "2022-10-25",
+    "effective_date": "2022-10-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2022-10-26",
+    "last_activity_date": "2022-10-26",
+    "effective_date": "2022-10-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Houston"
+  },
+  {
+    "team": "Houston",
+    "reign_started": "2022-10-27",
+    "last_activity_date": "2022-10-27",
+    "effective_date": "2022-10-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2022-10-28",
+    "last_activity_date": "2022-10-28",
+    "effective_date": "2022-10-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tulane"
+  },
+  {
+    "team": "Tulane",
+    "reign_started": "2022-10-29",
+    "last_activity_date": "2022-10-29",
+    "effective_date": "2022-10-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "2022-10-30",
+    "last_activity_date": "2022-10-30",
+    "effective_date": "2022-10-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2022-10-31",
+    "last_activity_date": "2022-10-31",
+    "effective_date": "2022-11-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Army"
+  },
+  {
+    "team": "UConn",
+    "reign_started": "2023-11-25",
+    "last_activity_date": "2024-11-30",
+    "effective_date": "2024-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Massachusetts"
+  },
+  {
+    "team": "Massachusetts",
+    "reign_started": "2024-12-01",
+    "last_activity_date": "2024-12-01",
+    "effective_date": "2024-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Army"
+  },
+  {
+    "team": "Army",
+    "reign_started": "2024-12-02",
+    "last_activity_date": "2024-12-02",
+    "effective_date": "2024-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pittsburgh"
+  },
+  {
+    "team": "Pittsburgh",
+    "reign_started": "2024-12-03",
+    "last_activity_date": "2024-12-03",
+    "effective_date": "2024-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2024-12-04",
+    "last_activity_date": "2024-12-04",
+    "effective_date": "2024-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2024-12-05",
+    "last_activity_date": "2024-12-05",
+    "effective_date": "2024-12-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2024-12-06",
+    "last_activity_date": "2024-12-06",
+    "effective_date": "2024-12-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2024-12-07",
+    "last_activity_date": "2024-12-07",
+    "effective_date": "2024-12-08",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2024-12-08",
+    "last_activity_date": "2024-12-08",
+    "effective_date": "2024-12-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "2024-12-09",
+    "last_activity_date": "2024-12-09",
+    "effective_date": "2024-12-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2024-12-10",
+    "last_activity_date": "2024-12-10",
+    "effective_date": "2024-12-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tulane"
+  },
+  {
+    "team": "Tulane",
+    "reign_started": "2024-12-11",
+    "last_activity_date": "2024-12-11",
+    "effective_date": "2024-12-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgia Tech"
+  },
+  {
+    "team": "Georgia Tech",
+    "reign_started": "2024-12-12",
+    "last_activity_date": "2024-12-12",
+    "effective_date": "2024-12-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Houston"
+  },
+  {
+    "team": "Houston",
+    "reign_started": "2024-12-13",
+    "last_activity_date": "2024-12-13",
+    "effective_date": "2024-12-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Florida State"
+  },
+  {
+    "team": "Florida State",
+    "reign_started": "2024-12-14",
+    "last_activity_date": "2024-12-14",
+    "effective_date": "2024-12-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2024-12-15",
+    "last_activity_date": "2024-12-15",
+    "effective_date": "2024-12-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2024-12-16",
+    "last_activity_date": "2024-12-16",
+    "effective_date": "2024-12-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Tampa"
+  },
+  {
+    "team": "Tampa",
+    "reign_started": "2024-12-17",
+    "last_activity_date": "2024-12-17",
+    "effective_date": "2024-12-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Miami"
+  },
+  {
+    "team": "Miami",
+    "reign_started": "2024-12-18",
+    "last_activity_date": "2024-12-18",
+    "effective_date": "2024-12-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2024-12-19",
+    "last_activity_date": "2024-12-19",
+    "effective_date": "2024-12-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Penn State"
+  },
+  {
+    "team": "Penn State",
+    "reign_started": "2024-12-20",
+    "last_activity_date": "2024-12-20",
+    "effective_date": "2024-12-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "2024-12-21",
+    "last_activity_date": "2024-12-21",
+    "effective_date": "2024-12-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2024-12-22",
+    "last_activity_date": "2024-12-22",
+    "effective_date": "2024-12-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boston College"
+  },
+  {
+    "team": "Boston College",
+    "reign_started": "2024-12-23",
+    "last_activity_date": "2024-12-23",
+    "effective_date": "2024-12-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "2024-12-24",
+    "last_activity_date": "2024-12-24",
+    "effective_date": "2024-12-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "West Virginia"
+  },
+  {
+    "team": "West Virginia",
+    "reign_started": "2024-12-25",
+    "last_activity_date": "2024-12-25",
+    "effective_date": "2024-12-26",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2024-12-26",
+    "last_activity_date": "2024-12-26",
+    "effective_date": "2024-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pennsylvania"
+  },
+  {
+    "team": "Pennsylvania",
+    "reign_started": "2024-12-27",
+    "last_activity_date": "2024-12-27",
+    "effective_date": "2024-12-28",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Princeton"
+  },
+  {
+    "team": "Princeton",
+    "reign_started": "2024-12-28",
+    "last_activity_date": "2024-12-28",
+    "effective_date": "2024-12-29",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Navy"
+  },
+  {
+    "team": "Navy",
+    "reign_started": "2024-12-29",
+    "last_activity_date": "2024-12-29",
+    "effective_date": "2024-12-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Cornell"
+  },
+  {
+    "team": "Cornell",
+    "reign_started": "2024-12-30",
+    "last_activity_date": "2024-12-30",
+    "effective_date": "2024-12-31",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Harvard"
+  },
+  {
+    "team": "Harvard",
+    "reign_started": "2024-12-31",
+    "last_activity_date": "2024-12-31",
+    "effective_date": "2025-01-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Columbia"
+  },
+  {
+    "team": "Columbia",
+    "reign_started": "2025-01-01",
+    "last_activity_date": "2025-01-01",
+    "effective_date": "2025-01-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Army"
+  },
+  {
+    "team": "Army",
+    "reign_started": "2025-01-02",
+    "last_activity_date": "2025-01-02",
+    "effective_date": "2025-01-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Dartmouth"
+  },
+  {
+    "team": "Dartmouth",
+    "reign_started": "2025-01-03",
+    "last_activity_date": "2025-01-03",
+    "effective_date": "2025-01-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Holy Cross"
+  },
+  {
+    "team": "Holy Cross",
+    "reign_started": "2025-01-04",
+    "last_activity_date": "2025-01-04",
+    "effective_date": "2025-01-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Boston College"
+  },
+  {
+    "team": "Boston College",
+    "reign_started": "2025-01-05",
+    "last_activity_date": "2025-01-05",
+    "effective_date": "2025-01-06",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Georgetown"
+  },
+  {
+    "team": "Georgetown",
+    "reign_started": "2025-01-06",
+    "last_activity_date": "2025-01-06",
+    "effective_date": "2025-01-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "New York University"
+  },
+  {
+    "team": "New York University",
+    "reign_started": "2025-01-07",
+    "last_activity_date": "2025-01-07",
+    "effective_date": "2025-01-08",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fordham"
+  },
+  {
+    "team": "Fordham",
+    "reign_started": "2025-01-08",
+    "last_activity_date": "2025-01-08",
+    "effective_date": "2025-01-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Saint Mary's (CA)"
+  },
+  {
+    "team": "Saint Mary's (CA)",
+    "reign_started": "2025-01-09",
+    "last_activity_date": "2025-01-09",
+    "effective_date": "2025-01-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Fordham"
+  },
+  {
+    "team": "Fordham",
+    "reign_started": "2025-01-10",
+    "last_activity_date": "2025-01-10",
+    "effective_date": "2025-01-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Carnegie Mellon"
+  },
+  {
+    "team": "Carnegie Mellon",
+    "reign_started": "2025-01-11",
+    "last_activity_date": "2025-01-11",
+    "effective_date": "2025-01-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Notre Dame"
+  },
+  {
+    "team": "Notre Dame",
+    "reign_started": "2025-01-12",
+    "last_activity_date": "2025-01-12",
+    "effective_date": "2025-01-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Yale"
+  },
+  {
+    "team": "Yale",
+    "reign_started": "2025-01-13",
+    "last_activity_date": "2025-01-13",
+    "effective_date": "2025-01-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Army"
+  },
+  {
+    "team": "Army",
+    "reign_started": "2025-01-14",
+    "last_activity_date": "2025-01-14",
+    "effective_date": "2025-01-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington & Jefferson"
+  },
+  {
+    "team": "Washington & Jefferson",
+    "reign_started": "2025-01-15",
+    "last_activity_date": "2025-01-15",
+    "effective_date": "2025-01-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Syracuse"
+  },
+  {
+    "team": "Syracuse",
+    "reign_started": "2025-01-16",
+    "last_activity_date": "2025-01-16",
+    "effective_date": "2025-01-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Brown"
+  },
+  {
+    "team": "Brown",
+    "reign_started": "2025-01-17",
+    "last_activity_date": "2025-01-17",
+    "effective_date": "2025-01-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Colgate"
+  },
+  {
+    "team": "Colgate",
+    "reign_started": "2025-01-18",
+    "last_activity_date": "2025-01-18",
+    "effective_date": "2025-01-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Brown"
+  },
+  {
+    "team": "Brown",
+    "reign_started": "2025-01-19",
+    "last_activity_date": "2025-01-19",
+    "effective_date": "2025-01-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Carlisle"
+  },
+  {
+    "team": "Carlisle",
+    "reign_started": "2025-01-20",
+    "last_activity_date": "2025-01-20",
+    "effective_date": "2025-01-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Harvard"
+  },
+  {
+    "team": "Harvard",
+    "reign_started": "2025-01-21",
+    "last_activity_date": "2025-01-21",
+    "effective_date": "2025-01-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Swarthmore"
+  },
+  {
+    "team": "Swarthmore",
+    "reign_started": "2025-01-22",
+    "last_activity_date": "2025-01-22",
+    "effective_date": "2025-01-23",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pennsylvania"
+  },
+  {
+    "team": "Pennsylvania",
+    "reign_started": "2025-01-23",
+    "last_activity_date": "2025-01-23",
+    "effective_date": "2025-01-24",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Lafayette"
+  },
+  {
+    "team": "Lafayette",
+    "reign_started": "2025-01-24",
+    "last_activity_date": "2025-01-24",
+    "effective_date": "2025-01-25",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Pennsylvania"
   }
 ]

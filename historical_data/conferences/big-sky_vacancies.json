@@ -21,7 +21,7 @@
     "last_activity_date": "1974-11-25",
     "effective_date": "1974-11-26",
     "detected_on": "2026-09-16",
-    "reverted_to": "Idaho"
+    "reverted_to": "Weber State"
   },
   {
     "team": "Idaho",
@@ -76,6 +76,14 @@
     "reign_started": "1974-12-02",
     "last_activity_date": "1974-12-02",
     "effective_date": "1974-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Idaho"
+  },
+  {
+    "team": "Weber State",
+    "reign_started": "1974-11-26",
+    "last_activity_date": "1974-11-26",
+    "effective_date": "1974-11-27",
     "detected_on": "2026-09-16",
     "reverted_to": "Idaho"
   }

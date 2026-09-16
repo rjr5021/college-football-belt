@@ -21,7 +21,7 @@
     "last_activity_date": "2011-12-05",
     "effective_date": "2011-12-06",
     "detected_on": "2026-09-16",
-    "reverted_to": "Utah"
+    "reverted_to": "BYU"
   },
   {
     "team": "Utah",
@@ -37,7 +37,7 @@
     "last_activity_date": "2011-12-07",
     "effective_date": "2011-12-08",
     "detected_on": "2026-09-16",
-    "reverted_to": "Utah"
+    "reverted_to": "New Mexico"
   },
   {
     "team": "Utah",
@@ -158,5 +158,13 @@
     "effective_date": "2011-12-23",
     "detected_on": "2026-09-16",
     "reverted_to": "UNLV"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "2011-12-06",
+    "last_activity_date": "2011-12-06",
+    "effective_date": "2011-12-07",
+    "detected_on": "2026-09-16",
+    "reverted_to": "TCU"
   }
 ]

@@ -61,7 +61,7 @@
     "last_activity_date": "1952-11-29",
     "effective_date": "1952-11-30",
     "detected_on": "2026-09-16",
-    "reverted_to": "Iowa"
+    "reverted_to": "Indiana"
   },
   {
     "team": "Iowa",
@@ -318,5 +318,45 @@
     "effective_date": "1953-01-01",
     "detected_on": "2026-09-16",
     "reverted_to": "Iowa"
+  },
+  {
+    "team": "Indiana",
+    "reign_started": "1952-11-30",
+    "last_activity_date": "1952-11-30",
+    "effective_date": "1952-12-01",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Iowa"
+  },
+  {
+    "team": "Iowa",
+    "reign_started": "1952-12-01",
+    "last_activity_date": "1952-12-01",
+    "effective_date": "1952-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Purdue"
+  },
+  {
+    "team": "Purdue",
+    "reign_started": "1952-12-02",
+    "last_activity_date": "1952-12-02",
+    "effective_date": "1952-12-03",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Illinois"
+  },
+  {
+    "team": "Illinois",
+    "reign_started": "1952-12-03",
+    "last_activity_date": "1952-12-03",
+    "effective_date": "1952-12-04",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Chicago"
+  },
+  {
+    "team": "Chicago",
+    "reign_started": "1952-12-04",
+    "last_activity_date": "1952-12-04",
+    "effective_date": "1952-12-05",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Wisconsin"
   }
 ]

@@ -45,7 +45,7 @@
     "last_activity_date": "1977-11-28",
     "effective_date": "1977-11-29",
     "detected_on": "2026-09-16",
-    "reverted_to": "Oregon State"
+    "reverted_to": "Washington"
   },
   {
     "team": "Oregon State",
@@ -61,7 +61,7 @@
     "last_activity_date": "1977-11-30",
     "effective_date": "1977-12-01",
     "detected_on": "2026-09-16",
-    "reverted_to": "USC"
+    "reverted_to": "Stanford"
   },
   {
     "team": "USC",
@@ -174,5 +174,21 @@
     "effective_date": "1977-12-15",
     "detected_on": "2026-09-16",
     "reverted_to": "California"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1977-11-29",
+    "last_activity_date": "1977-11-29",
+    "effective_date": "1977-11-30",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "Stanford",
+    "reign_started": "1977-12-01",
+    "last_activity_date": "1977-12-01",
+    "effective_date": "1977-12-02",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
   }
 ]

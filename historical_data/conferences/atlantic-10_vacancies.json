@@ -69,7 +69,7 @@
     "last_activity_date": "2006-12-08",
     "effective_date": "2006-12-09",
     "detected_on": "2026-09-16",
-    "reverted_to": "Richmond"
+    "reverted_to": "William & Mary"
   },
   {
     "team": "Richmond",
@@ -85,7 +85,7 @@
     "last_activity_date": "2006-12-10",
     "effective_date": "2006-12-11",
     "detected_on": "2026-09-16",
-    "reverted_to": "Villanova"
+    "reverted_to": "Rhode Island"
   },
   {
     "team": "Villanova",
@@ -212,6 +212,46 @@
     "reign_started": "2006-12-26",
     "last_activity_date": "2006-12-26",
     "effective_date": "2006-12-27",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Maine"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2006-12-09",
+    "last_activity_date": "2006-12-09",
+    "effective_date": "2006-12-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Towson"
+  },
+  {
+    "team": "Rhode Island",
+    "reign_started": "2006-12-11",
+    "last_activity_date": "2006-12-11",
+    "effective_date": "2006-12-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2006-12-12",
+    "last_activity_date": "2006-12-12",
+    "effective_date": "2006-12-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Delaware"
+  },
+  {
+    "team": "Delaware",
+    "reign_started": "2006-12-13",
+    "last_activity_date": "2006-12-13",
+    "effective_date": "2006-12-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2006-12-14",
+    "last_activity_date": "2006-12-14",
+    "effective_date": "2006-12-15",
     "detected_on": "2026-09-16",
     "reverted_to": "Maine"
   }
