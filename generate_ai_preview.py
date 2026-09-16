@@ -54,6 +54,12 @@ def record_in_ledger(key, next_game, preview, generated):
     ledger = load_json(LEDGER_PATH) or []
     if any(e.get("key") == key for e in ledger):
         return
+    # the sportsbook line at the time of the pick (fetch_belt_odds.py), so
+    # the ledger can also grade the lean against the spread
+    belt_risk = load_json(os.path.join(OUT_DIR, "belt_risk.json")) or {}
+    line = None
+    if belt_risk.get("next_game", {}).get("opponent") == next_game["opponent"]:
+        line = belt_risk["next_game"].get("line")
     ledger.append({
         "key": key,
         "holder": next_game["team"],
@@ -64,6 +70,9 @@ def record_in_ledger(key, next_game, preview, generated):
         "predicted_winner": preview.get("predicted_winner") or "",
         "predicted_score": preview.get("predicted_score") or "",
         "generated": generated,
+        "line": ({"provider": line.get("provider"), "holder_spread": line.get("holder_spread"),
+                  "formatted_spread": line.get("formatted_spread"), "over_under": line.get("over_under")}
+                 if line else None),
     })
     os.makedirs(CACHE_DIR, exist_ok=True)
     with open(LEDGER_PATH, "w") as f:

@@ -9,7 +9,10 @@ this does, any or all in a single run:
   2. PREVIEW posts -- one post for the upcoming game, meant to go out the
      Friday before it, pointing at the site's AI-written preview + weather
      forecast + prediction.
-  3. BIO sync -- keeps the account bio's "Current champion: X" line in
+  3. POLL posts -- a two-option "does the holder keep it?" poll, posted
+     right after the Friday preview (same X_POST_PREVIEW gate, its own
+     once-per-game cache key), open until kickoff.
+  4. BIO sync -- keeps the account bio's "Current champion: X" line in
      step with lineage.json's current_holder, whenever it changes (see
      sync_bio() below). Uses the legacy v1.1 API under the hood since
      profile updates aren't exposed on v2's tweepy.Client.
@@ -348,6 +351,73 @@ def post_preview(client, cache):
     save_cache(cache)
 
 
+# ------------------------------------------------------------- Friday poll
+
+POLL_MAX_MINUTES = 7 * 24 * 60   # X's ceiling for a poll
+POLL_OPTION_MAX = 25             # characters per option, X's limit
+
+
+def compose_poll(next_game):
+    """(text, options, duration_minutes) for the Friday 'does the holder
+    keep it?' poll -- two options, both inside X's 25-character cap (a long
+    program name falls back to a generic label), open until kickoff when
+    the kickoff time is known (capped at X's 7-day maximum, floored at an
+    hour) and for a day otherwise."""
+    holder, opponent = next_game["team"], next_game["opponent"]
+    keep = f"{holder} keeps it"
+    take = f"{opponent} takes it"
+    if len(keep) > POLL_OPTION_MAX:
+        keep = "The holder keeps it"
+    if len(take) > POLL_OPTION_MAX:
+        take = "The challenger takes it"
+    date = pretty_date(next_game["date"])
+    if next_game.get("neutral"):
+        matchup = f"{holder} vs. {opponent} (neutral site)"
+    elif next_game.get("is_home"):
+        matchup = f"{holder} vs. {opponent}"
+    else:
+        matchup = f"{holder} at {opponent}"
+    text = (f"\U0001F3C8 Belt on the line: {matchup}, {date}.\n\n"
+            f"Your call \u2014 does the belt stay put?\n\n{SITE_URL}/preview.html")
+    minutes = 24 * 60
+    raw = next_game.get("raw_date")
+    if raw:
+        try:
+            from datetime import datetime, timezone
+            kick = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            minutes = int((kick - datetime.now(timezone.utc)).total_seconds() // 60)
+        except ValueError:
+            pass
+    minutes = max(60, min(POLL_MAX_MINUTES, minutes))
+    return text, [keep, take], minutes
+
+
+def post_poll(client, cache):
+    """The Friday engagement poll, right after the preview post and gated
+    by the same X_POST_PREVIEW flag; one per upcoming game (cache key), so
+    a rerun of the Friday job never posts a second poll for the same
+    game. Not fatal to the pipeline if X refuses it."""
+    if os.environ.get("X_POST_PREVIEW", "").lower() not in ("1", "true", "yes"):
+        return
+    next_game = load_json(NEXT_GAME_PATH)
+    if not next_game:
+        return
+    key = preview_cache_key(next_game)
+    if cache.get("last_posted_poll_key") == key:
+        print("Already posted the poll for this upcoming game -- skipping.")
+        return
+    text, options, minutes = compose_poll(next_game)
+    try:
+        response = client.create_tweet(text=text, poll_options=options, poll_duration_minutes=minutes)
+    except Exception as e:
+        print(f"X poll post FAILED (not fatal to the pipeline): {e}")
+        return
+    print(f"Posted poll ({minutes} min): {response}")
+    print(text)
+    cache["last_posted_poll_key"] = key
+    save_cache(cache)
+
+
 # --------------------------------------------------------------- bio sync
 
 def sync_bio(api_v1, lineage, cache):
@@ -417,6 +487,7 @@ def main():
 
     post_results(client, lineage, cache)
     post_preview(client, cache)
+    post_poll(client, cache)
     sync_bio(api_v1, lineage, cache)
 
 

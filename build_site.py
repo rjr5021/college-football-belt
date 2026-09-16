@@ -90,6 +90,31 @@ GOOGLE_SITE_VERIFICATION = ""
 #    once the script above is live on the site.
 ADSENSE_PUBLISHER_ID = "pub-4807241949046212"
 
+# Optional merch shop (Fourthwall). Empty by default -- shop.html then shows
+# a "coming soon" teaser instead of a product grid, same no-op-when-unset
+# pattern as GOATCOUNTER_CODE/ADSENSE_PUBLISHER_ID above. To turn it on:
+# 1. Create a free Fourthwall account (fourthwall.com) and add products.
+#    The artwork in merch/ (belt-mark, belt-badge-circle, belt-sticker-circle,
+#    belt-wordmark-ink/paper, belt-tagline-ink/paper) is already PNG,
+#    transparent, and at or above Fourthwall's 300 DPI / 1500x1500px minimum,
+#    so it can be uploaded as-is -- no resizing needed.
+# 2. Set FOURTHWALL_STORE_DOMAIN below to the shop's live domain (Settings >
+#    Domain in the Fourthwall dashboard) -- e.g. "collegefootballbelt.fourthwall.com"
+#    or a connected custom domain.
+# 3. For each live product, add one entry to FOURTHWALL_PRODUCTS: "slug" is
+#    the last part of that product's Fourthwall page URL, "price" is whatever
+#    is shown on that page, and "image" is that product's image URL (right-
+#    click it on the live page > Copy image address). Rerun the pipeline.
+# Buying still finishes on Fourthwall's own checkout (true of every POD
+# platform, not a Fourthwall-specific limitation) -- this gets everything
+# up to that last click, browsing and all, living natively on the site
+# instead of linking out to a separate marketplace.
+FOURTHWALL_STORE_DOMAIN = ""
+FOURTHWALL_PRODUCTS = [
+    # {"slug": "belt-championship-tee", "title": "Championship Belt Tee",
+    #  "price": "$28", "image": "https://cdn.fourthwall.com/.../front.png"},
+]
+
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
 
@@ -306,6 +331,9 @@ NAV_PRIMARY = [
     ("stories", "stories.html", "Stories"),
 ]
 NAV_MORE = [
+    ("Shop", [
+        ("shop", "shop.html", "Shop"),
+    ]),
     ("Explore", [
         ("all-games", "all-games.html", "All games"),
         ("seasons", "seasons.html", "Seasons"),
@@ -315,6 +343,9 @@ NAV_MORE = [
         ("states", "states/index.html", "States"),
         ("decades", "decades/index.html", "Decades"),
         ("losers", "losers-belt.html", "Losers Belt"),
+        ("universes", "universes/index.html", "Alternate universes"),
+        ("web", "web.html", "Web of the belt"),
+        ("coaches", "coaches/index.html", "Coaches"),
         ("on-this-day", "on-this-day.html", "On this day"),
     ]),
     ("Play", [
@@ -329,6 +360,7 @@ NAV_MORE = [
         ("preview", "preview.html", "Next belt game"),
         ("leaders", "leaders.html", "Belt-game leaders"),
         ("heartbreak", "heartbreak.html", "Heartbreak list"),
+        ("polls", "polls.html", "Belt vs. the polls"),
         ("lean", "lean.html", "The lean&rsquo;s ledger"),
     ]),
     ("About", [
@@ -336,6 +368,7 @@ NAV_MORE = [
         ("ruleset", "ruleset.html", "Ruleset"),
         ("embed", "embed.html", "Embed badge"),
         ("api", "api.html", "API"),
+        ("data", "data.html", "Data &amp; press"),
         ("contact", "mailto:hello@collegefootballbelt.com", "Contact"),
     ]),
 ]
@@ -346,6 +379,12 @@ THEME_TOGGLE_HTML = (
     '<svg class="ti ti-light" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></svg>'
     '<svg class="ti ti-dark" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7z" fill="currentColor"/></svg>'
     '</button>')
+
+
+# hrefs of optional pages main() found it can't write this run (no data
+# yet) -- the header, footer and search index leave them out so the site
+# never links to a page that doesn't exist
+PAGES_ABSENT = set()
 
 
 def _nav_a(rel, key, href, label, active):
@@ -362,11 +401,11 @@ def site_header(rel="", active=None, crumb=""):
     ("" or "../"); `active` marks the current section; `crumb` is optional
     HTML shown under the header row (game pages use it for "Reign #N ·
     Game X of Y")."""
-    primary = "".join(_nav_a(rel, k, h, l, active) for k, h, l in NAV_PRIMARY)
+    primary = "".join(_nav_a(rel, k, h, l, active) for k, h, l in NAV_PRIMARY if h not in PAGES_ABSENT)
     more_active = any(k == active for _, items in NAV_MORE for k, _, _ in items)
     groups = ""
     for title, items in NAV_MORE:
-        links = "".join(_nav_a(rel, k, h, l, active) for k, h, l in items)
+        links = "".join(_nav_a(rel, k, h, l, active) for k, h, l in items if h not in PAGES_ABSENT)
         groups += f'<div class="moreGroup"><span class="moreKicker">{title}</span>{links}</div>'
     more = (f'<details class="moreMenu"{" data-active" if more_active else ""}>'
             f'<summary>More <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5 L5 6.5 L8 3.5"/></svg></summary>'
@@ -394,12 +433,13 @@ def site_header(rel="", active=None, crumb=""):
 FOOTER_COLUMNS = [
     ("Lineage", [("lineage.html", "Full history"), ("all-games.html", "All games"), ("seasons.html", "Seasons"),
                  ("timeline.html", "Timeline"), ("rivalries/index.html", "Rivalries"), ("conferences/index.html", "Conference belts"),
-                 ("states/index.html", "States"), ("decades/index.html", "Decades")]),
-    ("Tools", [("outlook.html", "Season outlook"), ("my-team.html", "My Team"), ("compare.html", "Compare teams"),
-               ("preview.html", "Next belt game"), ("daily.html", "The Daily Belt"), ("embed.html", "Embed badge"),
-               ("api.html", "API"), ("feed.xml", "RSS feed")]),
+                 ("states/index.html", "States"), ("decades/index.html", "Decades"), ("universes/index.html", "Alternate universes"),
+                 ("web.html", "Web of the belt"), ("coaches/index.html", "Coaches")]),
+    ("Tools", [("outlook.html", "Season outlook"), ("polls.html", "Belt vs. the polls"), ("my-team.html", "My Team"),
+               ("compare.html", "Compare teams"), ("preview.html", "Next belt game"), ("daily.html", "The Daily Belt"),
+               ("embed.html", "Embed badge"), ("api.html", "API"), ("data.html", "Data &amp; press"), ("feed.xml", "RSS feed")]),
     ("About", [("about.html", "About"), ("ruleset.html", "Ruleset"), ("stories.html", "Stories"), ("records.html", "Records"),
-               ("losers-belt.html", "Losers Belt"), ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
+               ("losers-belt.html", "Losers Belt"), ("shop.html", "Shop"), ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
                ("https://x.com/CollegeFBBelt", "X · @CollegeFBBelt"), ("https://www.instagram.com/collegefbbelt/", "Instagram")]),
 ]
 
@@ -411,6 +451,8 @@ def site_footer(rel="", note=""):
     for title, links in FOOTER_COLUMNS:
         anchors = ""
         for href, label in links:
+            if href in PAGES_ABSENT:
+                continue
             ext = href.startswith(("http", "mailto:"))
             url = href if ext else f"{rel}{href}"
             target = ' target="_blank" rel="noopener"' if href.startswith("http") else ""
@@ -1243,6 +1285,7 @@ details.moreStats .statCategory{ margin-top:18px; }
 .miniRow{ display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--hairline); font-size:14px; text-decoration:none; color:inherit; }
 .miniRow:last-child{ border-bottom:1px solid var(--hairline); }
 .miniRow:hover strong{ color:var(--brass-text); }
+.miniRow .mono{ font-size:12px; }
 .miniTag{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
 .miniStats{ display:flex; gap:24px; flex-wrap:wrap; }
 .miniStats div{ display:flex; flex-direction:column; gap:2px; }
@@ -1458,7 +1501,8 @@ details.moreStats .statCategory{ margin-top:18px; }
 @media (max-width:760px){ .tlEarlierRow{ display:block; padding-left:54px; margin-bottom:4px; } }
 
 /* ---------- homepage: two-up (on this day + ruleset), explore, follow ---------- */
-.twoUp{ display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+.twoUp{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:48px; align-items:start; }
+.twoUp > *{ min-width:0; }
 @media (max-width:860px){ .twoUp{ grid-template-columns:minmax(0,1fr); gap:8px; } }
 .rulesList{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:14px; counter-reset:rule; }
 @media (max-width:1000px){ .rulesList{ grid-template-columns:1fr; } }
@@ -1585,6 +1629,17 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .sectionMeta{ grid-column:2; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); }
 .storyCard p{ font-size:13.5px; color:var(--ink-soft); margin:0; }
 .storyCardLink{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--brass-text); margin-top:auto; }
+
+/* ---------- shop page ---------- */
+.shopGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:18px; margin:28px 0 8px; }
+.productCard{ display:flex; flex-direction:column; gap:6px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:16px 18px 20px; text-decoration:none; color:inherit; transition:border-color .15s ease, transform .15s ease; }
+.productCard:hover{ border-color:var(--brass); transform:translateY(-1px); }
+.productCard img{ width:100%; aspect-ratio:1/1; object-fit:contain; background:var(--paper); border-radius:8px; }
+.productCard h3{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:17px; margin:6px 0 0; text-wrap:balance; }
+.productCardPrice{ font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-soft); }
+.productCardLink{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--brass-text); margin-top:auto; }
+.shopTeaser{ background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:26px 24px; margin-top:28px; max-width:62ch; }
+.shopTeaser p{ margin:0; font-size:14.5px; color:var(--ink-soft); }
 .storyArticle{ max-width:680px; }
 .storyKicker{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; margin:0 0 6px; }
 .storyChapter{ margin:30px 0; padding-top:22px; border-top:1px solid var(--hairline); }
@@ -1683,6 +1738,62 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .miniRow > span:has(.miniDot){ display:flex; align-items:center; gap:2px; min-width:0; }
 .teamPlate .pageTitle a{ color:inherit; text-decoration:none; border-bottom:2px solid color-mix(in srgb, var(--team-ink) 45%, transparent); }
 .teamPlate .pageTitle a:hover{ border-bottom-color:var(--team-ink); }
+
+/* ---------- polls: rank chips ---------- */
+.rankChip{ display:inline-block; vertical-align:middle; margin-left:8px; padding:2px 7px; border-radius:3px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; background:color-mix(in srgb, currentColor 14%, transparent); color:inherit; white-space:nowrap; }
+.rankChip.nr{ opacity:.7; font-weight:500; }
+.teamPanel .rankChip{ font-size:11px; }
+.matchName .rankChip{ font-size:10px; margin-left:6px; }
+.pollNote{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); margin:10px 0 0; }
+.pollNote a{ color:var(--brass-text); }
+.pollLine{ margin-top:-4px; color:var(--ink-soft); }
+.pollLine a{ color:var(--brass-text); text-decoration:none; border-bottom:1px dotted var(--brass-line); }
+
+/* ---------- alternate universes + web of the belt ---------- */
+.universeGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:18px; margin:26px 0 10px; }
+.universeCard{ display:flex; flex-direction:column; gap:8px; padding:20px 22px 18px; border:1px solid var(--hairline); border-left:6px solid var(--u); border-radius:10px; background:var(--paper-2); text-decoration:none; color:inherit; transition:border-color .15s ease, transform .15s ease; }
+.universeCard:hover{ border-color:var(--brass); border-left-color:var(--u); transform:translateY(-1px); }
+.universeCard.real{ background:var(--paper-3); }
+.universeCard.real .kicker{ color:var(--ink); }
+.universeCard h2{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:30px; line-height:1; margin:0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.universeCard h2 .soonChip{ font-size:9.5px; }
+.universeRule{ margin:0; font-size:14px; color:var(--ink-soft); }
+.universeMeta{ margin:auto 0 0; display:flex; flex-wrap:wrap; gap:6px 14px; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+.chordWrap{ max-width:760px; margin:24px auto 10px; }
+.chordSvg{ display:block; width:100%; height:auto; }
+.chordRibbon{ opacity:.55; stroke:var(--paper); stroke-width:.5; transition:opacity .15s ease; }
+.chordRibbon:hover{ opacity:.95; }
+.chordSvg:hover .chordRibbon:not(:hover){ opacity:.25; }
+.chordArc{ stroke:var(--paper); stroke-width:1; }
+.chordLabel{ font-family:"IBM Plex Mono",monospace; font-size:11px; fill:var(--ink); }
+.degreesForm{ display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:18px 0; }
+.degreesForm label{ display:flex; flex-direction:column; gap:6px; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); flex:1; min-width:180px; }
+.degreesForm input{ min-height:44px; padding:0 14px; font:inherit; font-size:16px; border:1px solid var(--hairline-strong); border-radius:4px; background:var(--paper); color:var(--ink); }
+.degreesForm input:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+.degreesOut{ margin:8px 0 20px; padding:18px 22px; border:1px solid var(--brass-line); border-radius:8px; background:var(--paper-2); }
+.degreesLead{ margin:0 0 12px; font-size:15.5px; }
+.degreesList{ margin:0; padding-left:22px; font-size:15px; line-height:1.7; }
+.degreesList a{ color:inherit; text-decoration:none; border-bottom:1px dotted var(--brass-line); }
+.degreesList .mono{ font-size:11.5px; color:var(--ink-soft); margin-left:6px; }
+
+.sourcesLine{ margin:26px 0 0; padding-top:14px; border-top:1px solid var(--hairline); font-size:13px; color:var(--ink-soft); display:flex; flex-wrap:wrap; gap:6px 10px; align-items:baseline; }
+.sourcesLine .kicker{ margin-right:4px; }
+.sourcesLine a{ color:inherit; text-decoration:underline; text-decoration-color:var(--brass-line); text-underline-offset:3px; }
+.sourcesLine a:hover{ color:var(--brass-text); }
+
+.citeBlock{ font-family:"IBM Plex Mono",monospace; font-size:12px; line-height:1.5; background:var(--paper-2); border:1px solid var(--hairline); border-radius:6px; padding:12px 14px; overflow-x:auto; white-space:pre; margin:8px 0 0; }
+
+.ledgerAts{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; margin-left:8px; color:var(--ink-soft); }
+.ledgerAts.hit{ color:var(--good-text); }
+.ledgerAts.miss{ color:var(--bad-text); }
+.yourPick{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; margin-left:8px; padding:2px 6px; border-radius:3px; background:var(--paper-3); color:var(--ink); }
+.beatLean{ margin:8px 0 22px; padding:0 22px 18px; border:1px solid var(--brass-line); border-radius:8px; background:var(--paper-2); }
+.beatLean .sectionHead{ margin-top:18px; }
+.pickWidget{ margin:16px 0 0; padding:16px 18px; border:1px solid var(--brass-line); border-radius:8px; background:var(--paper-2); }
+.pickWidget .kicker{ display:block; margin-bottom:8px; }
+.pickBtns{ display:flex; gap:10px; flex-wrap:wrap; }
+.pickBtns .btn.picked{ background:var(--brass); border-color:var(--brass); color:#fff; }
+.pickNote{ margin:10px 0 0; font-size:13px; color:var(--ink-soft); }
 
 /* ---------- team page ---------- */
 .teamPlate{ margin-top:24px; padding:30px 32px 28px; border-radius:6px; background:linear-gradient(160deg, var(--team) 0%, color-mix(in srgb, var(--team) 84%, black) 100%); color:var(--team-ink); display:flex; flex-direction:column; gap:22px; box-shadow:var(--shadow); }
@@ -2288,6 +2399,12 @@ def render_player_stats(g):
 
 # --------------------------------------------------------------------- page
 
+# CFBD reuses ESPN's game ids for the modern era (nine digits, 2001 on);
+# anything below this is a CFBD-internal id for a historical game with no
+# ESPN page to link to
+ESPN_ID_FLOOR = 100_000_000
+
+
 def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     home, away = g["home"], g["away"]
     home_score, away_score = (int(x) for x in g["score"].split("-"))
@@ -2309,6 +2426,18 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     if g["neutral"]:
         meta_bits += ['<span class="dot"></span>', '<span class="neutralTag mono">Neutral site</span>']
     meta_bits += [f'<span class="beltTag mono">{esc(belt_tag)}</span>']
+
+    # AP poll context (fetch_rankings.py) -- the poll in effect going into this game
+    ranks = g.get("ranks") or {}
+    home_rank = away_rank = None
+    poll_note = ""
+    if ranks.get("poll"):
+        holder_is_home = g["holder"] == home
+        home_rank = ranks.get("holder_ap") if holder_is_home else ranks.get("opponent_ap")
+        away_rank = ranks.get("opponent_ap") if holder_is_home else ranks.get("holder_ap")
+        if home_rank or away_rank:
+            poll_note = (f'<p class="pollNote">AP poll, week {ranks.get("week")}: {esc(away)} {rank_word(away_rank)} at {esc(home)} {rank_word(home_rank)}'
+                         + (f' &middot; No. 1 that week: {esc(ranks["ap1"])}' if ranks.get("ap1") else "") + '. <a href="../polls.html">The belt vs. the polls &rarr;</a></p>')
 
     def side_label(team):
         """The pre-game holder is always 'Defending Holder' -- win, lose, or
@@ -2349,6 +2478,19 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     footer_note = ("Part of the lineage since 1869. Score"
                    + (" and line score" if g.get("line_score") else "")
                    + " sourced from the College Football Data API.")
+    # Sources strip: CFBD's modern game ids are ESPN's, so a box score link
+    # is free for ~2001 onward; everything gets the CFBD attribution + a
+    # pointer to the downloadable dataset the game is a row of
+    src_bits = []
+    try:
+        gid_int = int(g["game_id"])
+    except (TypeError, ValueError):
+        gid_int = 0
+    if gid_int >= ESPN_ID_FLOOR:
+        src_bits.append(f'<a href="https://www.espn.com/college-football/game/_/gameId/{gid_int}" target="_blank" rel="noopener">Box score at ESPN</a>')
+    src_bits.append(f'<a href="https://collegefootballdata.com/" target="_blank" rel="noopener">Game record: College Football Data</a> <span class="mono">(id {esc(str(g["game_id"]))})</span>')
+    src_bits.append(f'<a href="../data.html">This game in the downloadable dataset</a>')
+    sources_html = f'<p class="sourcesLine"><span class="kicker">Sources</span> {" &middot; ".join(src_bits)}</p>'
 
     body = f'''<!doctype html>
 <html lang="en">
@@ -2383,7 +2525,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
         <span class="side">Home &middot; {home_defender}</span>
         {logo_chip(colors, home, 30)}
       </div>
-      <span class="name">{esc(home)}</span>
+      <span class="name">{esc(home)}{rank_chip(home_rank)}</span>
       <span class="pts tabular">{home_score}</span>
     </div>
     <div class="vs">AT</div>
@@ -2392,15 +2534,17 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
         <span class="side">Away &middot; {away_defender}</span>
         {logo_chip(colors, away, 30)}
       </div>
-      <span class="name">{esc(away)}</span>
+      <span class="name">{esc(away)}{rank_chip(away_rank)}</span>
       <span class="pts tabular">{away_score}</span>
     </div>
   </div>
+{poll_note}
 {render_recap(g)}
 {render_line_score(g)}
 {render_team_stats(g)}
 {render_key_plays(g)}
 {render_player_stats(g)}
+{sources_html}
 {game_nav}
 </main>
 
@@ -4345,12 +4489,19 @@ def team_belt_summary(reigns, team, today):
 
 
 def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk=None,
-                          lineage=None, belt_games=None):
+                          lineage=None, belt_games=None, current_poll=None):
     """The next-belt-game preview (2026-09-16 redesign): a split header in
     both teams' colors, a stakes strip that answers "what happens if each
     side wins" before any prose, the AI-written preview as a column with the
     prediction boxed and labeled, and a sidebar of the belt history between
     the two programs."""
+    # AP rank chips (fetch_rankings.py's latest poll), only when the poll is from the game's season
+    holder_rank_chip = opp_rank_chip = ""
+    if current_poll and next_game and current_poll.get("season") == next_game.get("season"):
+        ap = current_poll.get("ap") or {}
+        holder_rank_chip = rank_chip(ap.get(next_game["team"]))
+        opp_rank_chip = rank_chip(ap.get(next_game["opponent"]))
+
     header = site_header('', 'preview')
     footer = site_footer('', 'Recent form and head-to-head from the College Football Data API; belt history from the lineage itself.')
 
@@ -4476,8 +4627,24 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
             has_outlook = bool(belt_risk.get("season", {}).get("end_of_season"))
             hold_txt = f'<strong>{round(holds_prob * 100)}%</strong> to hold the belt into the offseason'
             bits.append(hold_txt + (' (<a href="outlook.html">full season outlook</a>)' if has_outlook else ''))
+        line = belt_risk["next_game"].get("line") or {}
+        if line.get("formatted_spread"):
+            ou = f', O/U {line["over_under"]:g}' if line.get("over_under") is not None else ""
+            prov = f' ({esc(line["provider"])})' if line.get("provider") else ""
+            bits.append(f'line <strong>{esc(line["formatted_spread"])}</strong>{ou}{prov}')
         if bits:
             odds_html = f'<p class="previewOdds">{" &middot; ".join(bits)}</p>'
+    # ---- Beat the lean: the visitor's own pick, kept in this browser and graded on lean.html
+    pick_key = f"{holder}|{opponent}|{next_game['date']}"
+    pick_widget = f'''
+  <div class="pickWidget" id="pickWidget" data-key="{esc(pick_key)}" data-kick="{esc(next_game.get("raw_date") or "")}" data-holder="{esc(holder)}" data-opp="{esc(opponent)}">
+    <span class="kicker">Beat the lean</span>
+    <div class="pickBtns">
+      <button type="button" class="btn ghost" data-pick="{esc(holder)}">{esc(holder)} keeps it</button>
+      <button type="button" class="btn ghost" data-pick="{esc(opponent)}">{esc(opponent)} takes it</button>
+    </div>
+    <p class="pickNote" id="pickNote">Make your call before kickoff. It stays in this browser and gets graded against the result on <a href="lean.html">the ledger</a>, next to the lean&rsquo;s own pick.</p>
+  </div>'''
 
     # ---- AI-written preview (generate_ai_preview.py) ----
     ai_preview = ai_preview or {}
@@ -4575,7 +4742,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
   <div class="matchHead">
     <div class="matchSide home">
       <span class="kicker">Holder &middot; {ordinal(holder_reign_num)} reign &middot; {defenses} defense{"s" if defenses != 1 else ""}</span>
-      <div class="matchTeam">{logo_chip(colors, holder, 56)}<span class="matchName"><a href="teams/{team_slug(holder)}.html">{esc(holder)}</a></span></div>
+      <div class="matchTeam">{logo_chip(colors, holder, 56)}<span class="matchName"><a href="teams/{team_slug(holder)}.html">{esc(holder)}</a>{holder_rank_chip}</span></div>
       <span class="matchRecord">{record(h_form)}{" &middot; " if record(h_form) and last_result(h_form) else ""}{last_result(h_form)}</span>
     </div>
     <div class="matchCenter">
@@ -4586,7 +4753,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
     </div>
     <div class="matchSide away">
       <span class="kicker">{opp_kicker}</span>
-      <div class="matchTeam">{logo_chip(colors, opponent, 56)}<span class="matchName">{f'<a href="teams/{team_slug(opponent)}.html">{esc(opponent)}</a>' if opp_reigns else esc(opponent)}</span></div>
+      <div class="matchTeam">{logo_chip(colors, opponent, 56)}<span class="matchName">{f'<a href="teams/{team_slug(opponent)}.html">{esc(opponent)}</a>' if opp_reigns else esc(opponent)}{opp_rank_chip}</span></div>
       <span class="matchRecord">{record(o_form)}{" &middot; " if record(o_form) and last_result(o_form) else ""}{last_result(o_form)}</span>
     </div>
   </div>
@@ -4596,7 +4763,34 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
     <div class="stakeCell"><span class="kicker">Head to head, belt games</span><span class="stakeVal">{h2h_belt}</span></div>{weather_cell}
   </div>
   {odds_html}
+  {pick_widget}
   <script>
+  (function(){{
+    var w = document.getElementById('pickWidget');
+    if (!w) return;
+    var key = w.getAttribute('data-key'), kick = w.getAttribute('data-kick');
+    var picks = {{}};
+    try {{ picks = JSON.parse(localStorage.getItem('cfbBelt:picks') || '{{}}'); }} catch (e) {{}}
+    var locked = kick && !isNaN(Date.parse(kick)) && Date.now() >= Date.parse(kick);
+    var note = document.getElementById('pickNote');
+    function paint(){{
+      var mine = picks[key];
+      w.querySelectorAll('[data-pick]').forEach(function(b){{
+        b.classList.toggle('picked', !!mine && mine.pick === b.getAttribute('data-pick'));
+        b.disabled = locked;
+      }});
+      if (locked) note.textContent = mine ? 'Locked at kickoff. Your pick: ' + mine.pick + '. The result lands on the ledger.' : 'Kickoff has passed -- picks are locked for this one.';
+      else if (mine) note.innerHTML = 'Your pick: <strong>' + mine.pick.replace(/</g, '&lt;') + '</strong>. You can change it until kickoff; the ledger grades it after the game.';
+    }}
+    w.addEventListener('click', function(e){{
+      var b = e.target.closest('[data-pick]');
+      if (!b || locked) return;
+      picks[key] = {{ pick: b.getAttribute('data-pick'), at: new Date().toISOString() }};
+      try {{ localStorage.setItem('cfbBelt:picks', JSON.stringify(picks)); }} catch (err) {{}}
+      paint();
+    }});
+    paint();
+  }})();
   (function(){{
     var el = document.getElementById('kickoffLocal');
     var raw = el && el.getAttribute('data-utc');
@@ -4918,7 +5112,7 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
         teams = sorted(coach_teams[coach])
         n = coach_reign_count[coach]
         swatch = team_swatch(teams[0]) if len(teams) == 1 else None
-        href = f'teams/{team_slug(teams[0])}.html' if len(teams) == 1 else None
+        href = f'coaches/{coach_slug(coach)}.html'
         sub = f'{" & ".join(esc(t) for t in teams)} &middot; {n} reign{"s" if n != 1 else ""}'
         coach_rows += _record_row(i, swatch, esc(coach), f'{days:,}', sub, href)
 
@@ -5253,7 +5447,12 @@ STORIES = [
      "Home or road, one point or a mile, regular season or bowl: how title changes actually happen.", "Eras, places and the rule"),
     ("story-ties.html", "When Nobody Won",
      "Every tie with the belt on the line, the reigns a tie saved, and why the holder keeps it on a draw.", "Eras, places and the rule"),
+    ("story-belt-vs-polls.html", "The Belt vs. the Polls",
+     "How often the belt holder was the AP No. 1, the unranked teams that took it from ranked holders, and the reigns the poll never noticed.", "Eras, places and the rule"),
 ]
+
+
+STORIES_SKIPPED = set()   # story files main() couldn't write this run (missing optional data)
 
 
 def generate_stories_hub(lineage, belt_games):
@@ -5271,7 +5470,7 @@ def generate_stories_hub(lineage, belt_games):
     for section in dict.fromkeys(sec for _, _, _, sec in STORIES):
         cards = []
         for href, title_tpl, desc, sec in STORIES:
-            if sec != section:
+            if sec != section or href in STORIES_SKIPPED:
                 continue
             title = title_tpl.format(team=esc(top_defended["team"]), n=top_defended.get("defenses", 0))
             cards.append(f'''
@@ -6052,6 +6251,71 @@ def generate_privacy_page():
         <a href="mailto:hello@collegefootballbelt.com">hello@collegefootballbelt.com</a>.</p>
     </div>
   </section>
+</main>
+
+{site_footer('', 'The College Football Belt &mdash; lineal championship, since 1869.')}
+'''
+
+
+def generate_shop_page():
+    """The merch shop -- a native page in the site's own design system
+    rather than a link out to a separate marketplace. Reads entirely from
+    the FOURTHWALL_STORE_DOMAIN / FOURTHWALL_PRODUCTS config above: empty
+    (the default, before a Fourthwall store exists) renders a short teaser
+    instead of an empty grid; once products are added there, this becomes
+    a real product grid with Product schema.org markup for search. Buying
+    still finishes on Fourthwall's own checkout -- true of every POD
+    platform, not something a template can route around -- but everything
+    up to that last click (browsing, images, pricing) lives on-site."""
+    if not FOURTHWALL_PRODUCTS or not FOURTHWALL_STORE_DOMAIN:
+        body = '''
+  <div class="shopTeaser">
+    <p>The shop&rsquo;s in the works &mdash; belt-branded shirts, stickers, and mugs, built off the
+      same medallion-and-strap mark as the rest of the site. Check back soon, or
+      <a href="mailto:hello@collegefootballbelt.com">get in touch</a> if you want a heads-up when it opens.</p>
+  </div>'''
+        schema = ""
+    else:
+        cards = []
+        product_schema = []
+        for p in FOURTHWALL_PRODUCTS:
+            url = f"https://{FOURTHWALL_STORE_DOMAIN}/products/{esc(p['slug'])}"
+            cards.append(f'''
+    <a class="productCard" href="{url}" target="_blank" rel="noopener">
+      <img src="{esc(p['image'])}" alt="{esc(p['title'])}" loading="lazy" width="400" height="400">
+      <h3>{esc(p['title'])}</h3>
+      <span class="productCardPrice">{esc(p['price'])}</span>
+      <span class="productCardLink">View &amp; buy &rarr;</span>
+    </a>''')
+            product_schema.append({
+                "@context": "https://schema.org", "@type": "Product",
+                "name": p["title"], "image": p["image"], "url": url,
+                "offers": {"@type": "Offer", "price": p["price"].lstrip("$"),
+                           "priceCurrency": "USD", "availability": "https://schema.org/InStock"},
+            })
+        body = f'''
+  <div class="shopGrid">{"".join(cards)}
+  </div>'''
+        schema = (f'<script type="application/ld+json">{json.dumps(product_schema)}</script>'
+                   if product_schema else "")
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Shop — The College Football Belt</title>
+<meta name="description" content="Belt-branded shirts, stickers, and mugs -- the same championship-belt medallion and lineage-brass palette as the site itself.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+{schema}
+
+{site_header('', 'shop')}
+
+<main class="wrap">
+  <p class="kicker pageKicker">Merch</p>
+  <h1 class="pageTitle">Shop</h1>
+  <p class="lede">Gear built off the same belt mark and brass/ink/paper palette that colors the rest of the
+    site &mdash; no separate marketplace, just the shop, on the site.</p>
+{body}
 </main>
 
 {site_footer('', 'The College Football Belt &mdash; lineal championship, since 1869.')}
@@ -7132,7 +7396,7 @@ def generate_search_index(lineage, belt_games, team_slugs, seasons, conference_l
         entries.append({"n": f"{conf.get('conference', slug)} belt", "u": f"conferences/{slug}.html",
                         "t": "Conference belt", "k": conf.get("classification", "")})
     for key, href, label in NAV_PRIMARY[1:] + [x for _, items in NAV_MORE for x in items]:
-        if href.startswith(("http", "mailto:")):
+        if href.startswith(("http", "mailto:")) or href in PAGES_ABSENT:
             continue
         entries.append({"n": label, "u": href, "t": "Page"})
     return entries
@@ -7161,6 +7425,24 @@ STATE_NAMES = {
     "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia",
     "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming",
 }
+
+
+# share cards (generate_share_image.py renders site/share/<key>.png from
+# this after the build): key -> {eyebrow, title, stat, sub, primary, alt}
+SHARE_MANIFEST = {}
+BRAND_INK, BRAND_BRASS = "#211a12", "#a97f38"
+
+
+def share_meta(key, title, eyebrow="", stat="", sub="", primary=None, alt=None):
+    """Register a share card for a page and return the og:image /
+    twitter:image tags that point at it (seo_enhance.py keeps a
+    template-provided image and only fills the gaps)."""
+    SHARE_MANIFEST[key] = {"title": title, "eyebrow": eyebrow, "stat": stat, "sub": sub,
+                           "primary": primary or BRAND_INK, "alt": alt or BRAND_BRASS}
+    url = f"{SITE_URL}/share/{key}.png"
+    return (f'<meta property="og:image" content="{url}">\n<meta property="og:image:width" content="1200">\n'
+            f'<meta property="og:image:height" content="630">\n<meta name="twitter:card" content="summary_large_image">\n'
+            f'<meta name="twitter:image" content="{url}">')
 
 
 def page_head(title, description, rel="", extra=""):
@@ -7261,7 +7543,7 @@ def generate_outlook_page(belt_risk, lineage, colors, next_game=None):
     are actually on the schedule. Programs below 0.05% are left off. Refreshed every pipeline run; a for-fun estimate, not a betting product.</p>'''
 
     return f'''{page_head("Season Outlook — Who Holds the Belt on New Year's Day?",
-                     f"{year} College Football Belt season outlook: every program's odds of holding the lineal title when the games run out, simulated from the remaining schedule.")}
+                     f"{year} College Football Belt season outlook: every program's odds of holding the lineal title when the games run out, simulated from the remaining schedule.", "", share_meta("outlook", f"Who holds the belt when the season ends?", "Season outlook", f"Every program's odds, simulated from the remaining {year} schedule"))}
 
 {site_header('', 'outlook')}
 
@@ -7278,7 +7560,7 @@ def generate_outlook_page(belt_risk, lineage, colors, next_game=None):
 
 # ------------------------------------------------------------- reign pages
 
-def generate_reign_pages(lineage, colors, belt_games, reigns_dir):
+def generate_reign_pages(lineage, colors, belt_games, reigns_dir, reign_polls=None, reign_coaches=None):
     """One page per reign, chronological: reigns/<n>.html for reign #n --
     the game that won it, every defense, the game that ended it, and where
     the reign ranks all-time. Returns the number written."""
@@ -7349,7 +7631,27 @@ def generate_reign_pages(lineage, colors, belt_games, reigns_dir):
                 f"{'present' if is_current else fmt_date(r['end_date'])}, {days:,} days, {len(defenses)} defense{'s' if len(defenses) != 1 else ''}.")
         crumb = (f'<a href="../index.html">Belt</a> <span class="sep">/</span> <a href="../lineage.html">Full history</a> '
                  f'<span class="sep">/</span> Reign #{n} of {total}')
-        html_out = f'''{page_head(title, desc, "../", f'<style>:root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}</style>')}
+        poll_line = ""
+        pp = (reign_polls or {}).get(i)
+        if pp and (pp.get("won_poll") or pp.get("weeks")):
+            bits = []
+            if pp.get("won_poll"):
+                bits.append(f"{esc(team)} was {rank_word(pp['won_rank'])} in the AP poll going into that game"
+                            + (f", {esc(win_game['holder'])} was {rank_word(pp.get('beaten_rank'))}" if win_game and win_game.get("holder") else "") + ".")
+            if pp.get("weeks"):
+                if pp["ranked"]:
+                    bits.append(f"While holding the belt: ranked in {pp['ranked']} of {pp['weeks']} poll {_plural(pp['weeks'], 'week')}, best {rank_word(pp['best'])}"
+                                + (f", {pp['no1']} {_plural(pp['no1'], 'week')} at No. 1" if pp["no1"] else "") + ".")
+                else:
+                    bits.append(f"Unranked in all {pp['weeks']} poll {_plural(pp['weeks'], 'week')} it held the belt.")
+            poll_line = f'  <p class="editorial pollLine" style="font-size:15px">{" ".join(bits)} <a href="../polls.html">The belt vs. the polls &rarr;</a></p>'
+        ce = (reign_coaches or {}).get(i)
+        if ce:
+            poll_line += f'\n  <p class="editorial pollLine" style="font-size:15px">Head coach: <a href="../coaches/{ce["slug"]}.html">{esc(ce["name"])}</a> &middot; {len(ce["reigns"])} {_plural(len(ce["reigns"]), "reign")} started, {ce["days"]:,} days with the belt.</p>'
+        og = share_meta(f"reigns/{n}", team, f"Reign #{n} of {total} · {ordinal(nth)} {team} reign",
+                        f"{fmt_date(r['start_date'])} – {'present' if is_current else fmt_date(r['end_date'])} · {days:,} days · {len(defenses)} {'defense' if len(defenses) == 1 else 'defenses'}",
+                        html.unescape(re.sub(r"<[^>]+>", "", how))[:150], primary, alt)
+        html_out = f'''{page_head(title, desc, "../", f'<style>:root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}</style>' + og)}
 
 {site_header('../', 'history', crumb=crumb)}
 
@@ -7372,6 +7674,7 @@ def generate_reign_pages(lineage, colors, belt_games, reigns_dir):
 
   <div class="sectionHead"><span class="tag">How it started</span><h2>{fmt_date(r["start_date"])}</h2></div>
   <p class="editorial" style="font-size:17px">{how}</p>
+{poll_line}
 
   <div class="sectionHead"><span class="tag">Defenses</span><h2>The belt on the line, {len(defenses)} time{"s" if len(defenses) != 1 else ""}</h2></div>
   {def_block}
@@ -7465,7 +7768,10 @@ def generate_rivalry_pages(lineage, colors, belt_games, rivalries_dir):
         title = f"{a} vs. {b} — College Football Belt rivalry"
         desc = (f"All {len(games)} College Football Belt games between {a} and {b}, {span_years.replace('&ndash;', '–')}: "
                 f"{record_txt.replace('&ndash;', '–')} with the belt on the line, {changes} title change{'s' if changes != 1 else ''}.")
-        html_out = f'''{page_head(title, desc, "../", f'<style>:root{{ --home:{a_p}; --home-ink:{a_ink}; --home-accent:{a_acc}; --away:{b_p}; --away-ink:{b_ink}; --away-accent:{b_acc}; }}</style>')}
+        og = share_meta(f"rivalries/{slug}", f"{a} vs. {b}", "Belt rivalry",
+                        f"{len(games)} belt games · {record_txt.replace('&ndash;', '–')} · {changes} title change{'s' if changes != 1 else ''}",
+                        html.unescape(span_years), a_p, a_alt)
+        html_out = f'''{page_head(title, desc, "../", f'<style>:root{{ --home:{a_p}; --home-ink:{a_ink}; --home-accent:{a_acc}; --away:{b_p}; --away-ink:{b_ink}; --away-accent:{b_acc}; }}</style>' + og)}
 
 {site_header('../', 'rivalries', crumb=f'<a href="../index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Rivalries</a> <span class="sep">/</span> {esc(a)} vs. {esc(b)}')}
 
@@ -7513,7 +7819,7 @@ def generate_rivalry_pages(lineage, colors, belt_games, rivalries_dir):
       </tr>''')
 
     index_html = f'''{page_head("College Football Belt Rivalries — Who Keeps Meeting for the Belt",
-                              f"Every pair of programs that has met {RIVALRY_MIN_GAMES} or more times with the College Football Belt at stake: series records, title changes and every game.", "../")}
+                              f"Every pair of programs that has met {RIVALRY_MIN_GAMES} or more times with the College Football Belt at stake: series records, title changes and every game.", "../", share_meta("rivalries", "The rivalries", "Belt rivalries", f"{len(pairs)} pairings with {RIVALRY_MIN_GAMES}+ belt games between them"))}
 
 {site_header('../', 'rivalries')}
 
@@ -7544,7 +7850,7 @@ def generate_about_page(lineage, belt_games):
     holder = reigns[-1]["team"]
     years = date.today().year - 1869 + 1
     return f'''{page_head("About the College Football Belt",
-                     "What the College Football Belt is, how the lineal title is computed from every game since 1869, who runs the site and what is written by software.")}
+                     "What the College Football Belt is, how the lineal title is computed from every game since 1869, who runs the site and what is written by software.", "", share_meta("about", "What this is, and how it works", "About", "A lineal championship, computed from every game since 1869"))}
 
 {site_header('', 'about')}
 
@@ -7632,7 +7938,7 @@ def generate_timeline_page(lineage, colors, belt_games):
     longest_i = max(range(len(reigns)), key=lambda i: reign_duration_days(reigns[i], today))
     longest = reigns[longest_i]
     return f'''{page_head("The Belt Timeline, 1869 to Today — Every Reign at a Glance",
-                     f"Every College Football Belt reign since {first_year} on one timeline: {len(reigns)} reigns, {len(holders_days)} programs, each bar scaled to how long they held the title.")}
+                     f"Every College Football Belt reign since {first_year} on one timeline: {len(reigns)} reigns, {len(holders_days)} programs, each bar scaled to how long they held the title.", "", share_meta("timeline", "1869 to today, reign by reign", "Timeline", f"{len(reigns)} reigns as one strip of colored bars"))}
 
 {site_header('', 'timeline')}
 
@@ -7681,6 +7987,7 @@ def generate_leaders_page(belt_games, details, colors):
     scores on file (2003 onward), plus single-game bests."""
     games_with = [g for g in belt_games if details.get(str(g["game_id"]), {}).get("player_stats")]
     players = {}   # key -> {name, id, teams:set, games:set, totals:{(cat,col): n}, bests:{(cat,col): (n, game)}}
+    single = {}    # (cat,col) -> [(n, player key, game)] every stat line, for the single-game boards
     for g in games_with:
         ps = details[str(g["game_id"])]["player_stats"]
         for cat, data in ps.items():
@@ -7702,6 +8009,7 @@ def generate_leaders_page(belt_games, details, colors):
                     p["totals"][k] = p["totals"].get(k, 0) + n
                     if n > p["bests"].get(k, (0, None))[0]:
                         p["bests"][k] = (n, g)
+                    single.setdefault(k, []).append((n, key, g))
     first_year = games_with[0]["date"][:4] if games_with else "2003"
 
     def link(p):
@@ -7748,8 +8056,32 @@ def generate_leaders_page(belt_games, details, colors):
       <div class="recordList">{rows}</div>
     </section>''' if rows else ""
 
+    # ---- single-game bests: the biggest individual days with the belt on the line
+    single_boards = ""
+    for title, cat, col, label in LEADER_BOARDS:
+        k = (cat, col)
+        lines = sorted((x for x in single.get(k, []) if x[0] > 0), key=lambda x: (-x[0], x[2]["date"]))[:5]
+        if not lines:
+            continue
+        rows = ""
+        for i, (n, key, g) in enumerate(lines, 1):
+            p = players[key]
+            team = next((t for t in p["teams"] if t in (g["home"], g["away"])), next(iter(p["teams"]), ""))
+            opp = g["away"] if team == g["home"] else g["home"]
+            w, l, wp, lp = game_score_winner_first(g)
+            tag = "took the belt" if (g["outcome"] == "changed" and g["new_holder"] == team) else ("defended it" if g["new_holder"] == team else "in a loss")
+            rows += _record_row(i, team_color(colors, team)[0], f'{link(p)} <span class="playerTeam">{esc(team)}</span>',
+                                f'{fmt_n(n)} <span class="recordUnit">{label}</span>',
+                                f'<a href="games/{g["game_id"]}.html">vs {esc(opp)}, {fmt_date(g["date"])}</a> &middot; {esc(w)} {wp}&ndash;{lp}, {tag}')
+        single_boards += f'''
+    <section class="recordCard">
+      <h2>{title}</h2>
+      <p class="recordCardSub">Best single game with the belt on the line</p>
+      <div class="recordList">{rows}</div>
+    </section>'''
+
     return f'''{page_head("Belt-Game Career Leaders — The College Football Belt",
-                     f"Career leaders in College Football Belt games since {first_year}: passing, rushing and receiving yards, touchdowns, tackles, sacks and interceptions with the title at stake.")}
+                     f"Career leaders in College Football Belt games since {first_year}: passing, rushing and receiving yards, touchdowns, tackles, sacks and interceptions with the title at stake.", "", share_meta("leaders", "The belt-game career leaders", "Leaders", f"Career totals from every belt game with a box score, {first_year} onward"))}
 
 {site_header('', 'leaders')}
 
@@ -7757,6 +8089,9 @@ def generate_leaders_page(belt_games, details, colors):
   {page_intro("Leaders", "The belt-game career leaders",
               f"Totals from every belt game with a box score on file ({first_year} onward, {len(games_with):,} games, {len(players):,} players) &mdash; only the games where the belt was actually on the line count. Nobody else keeps this stat, because nobody else has the lineage.")}
   <div class="recordsGrid">{games_board}{boards}
+  </div>
+  <div class="sectionHead"><span class="tag">Single-game bests</span><h2>The biggest days with the belt on the line</h2><span class="sectionMeta">{len(games_with):,} box scores</span></div>
+  <div class="recordsGrid">{single_boards}
   </div>
   <p class="noteBox">Box scores come from CFBD&rsquo;s <span class="mono">/games/players</span> data, which starts in 2003, so a career here is a career in the belt-game era &mdash; the belt itself is older than every player on this page by a century. Names link to that player&rsquo;s stat line in every belt game they appeared in.</p>
 </main>
@@ -7816,7 +8151,7 @@ def generate_heartbreak_page(lineage, colors, belt_games):
     n_never = len(never)
     total_never_games = sum(s["games"] for s in never.values())
     return f'''{page_head("The Heartbreak List — Programs That Never Won the Belt",
-                     f"The {n_never} programs that have played for the College Football Belt without ever winning it: who came closest, who tried the most and who has lost the most belt games.")}
+                     f"The {n_never} programs that have played for the College Football Belt without ever winning it: who came closest, who tried the most and who has lost the most belt games.", "", share_meta("heartbreak", "Played for it. Never held it.", "Heartbreak", f"{n_never} programs have lined up against the holder and never won"))}
 
 {site_header('', 'heartbreak')}
 
@@ -7886,6 +8221,7 @@ def grade_ledger(ledger, belt_games, today):
         by_pair.setdefault(frozenset((g["home"], g["away"])), []).append(g)
     rows = []
     wins = losses = 0
+    ats = {"hit": 0, "miss": 0, "push": 0}
     margins = []
     for e in ledger:
         holder, opp = e.get("holder"), e.get("opponent")
@@ -7911,28 +8247,67 @@ def grade_ledger(ledger, belt_games, today):
                     wins += 1
                 else:
                     losses += 1
+            actual_margin = (h if game["home"] == holder else a) - (a if game["home"] == holder else h)
             if pred and not tie:
-                actual_margin = (h if game["home"] == holder else a) - (a if game["home"] == holder else h)
                 margins.append(abs((pred[0] - pred[1]) - actual_margin))
+            # against the spread: the lean's implied side (its predicted margin vs the line) against who actually covered
+            ats_status = None
+            line = e.get("line") or {}
+            hs = line.get("holder_spread")
+            if pred and hs is not None:
+                lean_edge = (pred[0] - pred[1]) + hs
+                real_edge = actual_margin + hs
+                lean_side = "holder" if lean_edge > 0 else ("opponent" if lean_edge < 0 else "push")
+                real_side = "holder" if real_edge > 0 else ("opponent" if real_edge < 0 else "push")
+                if lean_side == "push" or real_side == "push":
+                    ats_status = "push"
+                else:
+                    ats_status = "hit" if lean_side == real_side else "miss"
+                ats[ats_status] += 1
             rows.append({"e": e, "game": game, "status": "tie" if tie else ("hit" if correct else "miss"),
-                         "result": f'{esc(w)} {wp}&ndash;{lp}' if not tie else f'Tie, {h}&ndash;{a}'})
+                         "result": f'{esc(w)} {wp}&ndash;{lp}' if not tie else f'Tie, {h}&ndash;{a}',
+                         "winner": actual_winner, "ats": ats_status})
         else:
             try:
                 pending = date.fromisoformat(d) >= today - timedelta(days=1)
             except ValueError:
                 pending = True
-            rows.append({"e": e, "game": None, "status": "pending" if pending else "unmatched", "result": ""})
+            rows.append({"e": e, "game": None, "status": "pending" if pending else "unmatched", "result": "", "winner": None, "ats": None})
     rows.sort(key=lambda r: r["e"].get("date") or "", reverse=True)
     avg_margin = (sum(margins) / len(margins)) if margins else None
-    return rows, wins, losses, avg_margin
+    return rows, wins, losses, avg_margin, ats
+
+
+def ledger_api_rows(rows):
+    """The graded ledger as plain JSON for api/ledger.json -- what the
+    'Beat the lean' widget on the preview and ledger pages reads to grade
+    a visitor's own picks against the same results."""
+    out = []
+    for r in rows:
+        e = r["e"]
+        out.append({
+            "key": e.get("key"), "date": e.get("date"), "holder": e.get("holder"), "opponent": e.get("opponent"),
+            "is_home": e.get("is_home"), "neutral": e.get("neutral"),
+            "predicted_winner": e.get("predicted_winner") or "", "predicted_score": e.get("predicted_score") or "",
+            "line": (e.get("line") or {}).get("formatted_spread") or None,
+            "status": r["status"], "winner": r.get("winner"),
+            "game_id": r["game"]["game_id"] if r["game"] else None,
+            "score": r["game"]["score"] if r["game"] else None,
+            "ats": r.get("ats"),
+        })
+    return out
 
 
 def generate_lean_page(lineage, belt_games, colors):
     ledger = load_ledger()
     today = date.today()
     holders = {r["team"] for r in lineage["reigns"]}
-    rows, wins, losses, avg_margin = grade_ledger(ledger, belt_games, today)
+    rows, wins, losses, avg_margin, ats = grade_ledger(ledger, belt_games, today)
     graded = wins + losses
+    os.makedirs(os.path.join(OUT_DIR, API_DIR), exist_ok=True)
+    with open(os.path.join(OUT_DIR, API_DIR, "ledger.json"), "w", encoding="utf-8") as f:
+        json.dump({"generated": today.isoformat(), "record": {"wins": wins, "losses": losses},
+                   "ats": ats, "picks": ledger_api_rows(rows)}, f, separators=(",", ":"))
     if not ledger:
         body = ('<p class="lede">The ledger starts with the next preview: every pick the lean makes from here on is logged '
                 'the moment it&rsquo;s written and graded against the real score once the game goes final. Nothing gets revised after the fact.</p>')
@@ -7947,12 +8322,16 @@ def generate_lean_page(lineage, belt_games, colors):
             # older ledger entries may predate the is_home field: only say "at" when we know it was a road game
             loc = "at" if (e.get("is_home") is False and not e.get("neutral")) else "vs"
             game_link = f'<a href="games/{r["game"]["game_id"]}.html">{r["result"]}</a>' if r["game"] else ('Kicks off ' + fmt_date(e["date"]) if status == "pending" else "&mdash;")
+            line = e.get("line") or {}
+            line_txt = f' &middot; line {esc(line["formatted_spread"])}' if line.get("formatted_spread") else ""
+            ats_txt = {"hit": "covered", "miss": "didn&rsquo;t cover", "push": "push"}.get(r.get("ats") or "", "")
+            ats_html = f'<span class="ledgerAts {r["ats"]}">ATS: {ats_txt}</span>' if ats_txt else ""
             items += f'''
-      <div class="ledgerRow {status}">
+      <div class="ledgerRow {status}" data-key="{esc(e.get("key") or "")}">
         <span class="ledgerDate mono">{fmt_date(e["date"])}</span>
         <span class="ledgerGame">{team_link(e["holder"], "", holders)} {loc} {team_link(e["opponent"], "", holders)}</span>
-        <span class="ledgerPick">Pick: <strong>{esc(e.get("predicted_winner") or "—")}</strong>{(" &middot; " + esc(e["predicted_score"])) if e.get("predicted_score") else ""}</span>
-        <span class="ledgerResult">{game_link}</span>
+        <span class="ledgerPick">Pick: <strong>{esc(e.get("predicted_winner") or "—")}</strong>{(" &middot; " + esc(e["predicted_score"])) if e.get("predicted_score") else ""}{line_txt}</span>
+        <span class="ledgerResult">{game_link} {ats_html}</span>
         <span class="ledgerTag">{label}</span>
       </div>'''
         body = f'''
@@ -7960,12 +8339,17 @@ def generate_lean_page(lineage, belt_games, colors):
     <div><span class="n tabular">{wins}&ndash;{losses}</span><span class="l">Record on graded picks</span></div>
     <div><span class="n tabular">{pct}</span><span class="l">Hit rate</span></div>
     <div><span class="n tabular">{margin_txt}</span><span class="l">Avg. points off the predicted margin</span></div>
+    <div><span class="n tabular">{ats["hit"]}&ndash;{ats["miss"]}{("&ndash;" + str(ats["push"])) if ats["push"] else ""}</span><span class="l">Against the spread</span></div>
     <div><span class="n tabular">{len(ledger)}</span><span class="l">Picks logged</span></div>
+  </div>
+  <div class="beatLean" id="beatLean" hidden>
+    <div class="sectionHead"><span class="tag">Beat the lean</span><h2>You vs. the lean</h2></div>
+    <div id="beatLeanBody"></div>
   </div>
   <div class="ledger">{items}
   </div>'''
     return f'''{page_head("The Lean's Ledger — How the Belt Preview's Picks Have Done",
-                     "Every pick the College Football Belt's AI-written game preview has made, logged when it was written and graded against the real result: the running record.")}
+                     "Every pick the College Football Belt's AI-written game preview has made, logged when it was written and graded against the real result: the running record.", "", share_meta("lean", "The lean's ledger", "Keeping score on ourselves", "Every preview pick, logged when written and graded against the result"))}
 
 {site_header('', 'lean')}
 
@@ -7973,8 +8357,48 @@ def generate_lean_page(lineage, belt_games, colors):
   {page_intro("Keeping score on ourselves", "The lean&rsquo;s ledger",
               "Every prediction the <a href='preview.html'>preview page</a> makes is logged the moment it&rsquo;s written &mdash; the pick and the score &mdash; and graded here once the game goes final. It&rsquo;s a for-fun editorial call, so the least we can do is keep the receipts.")}
   {body}
-  <p class="noteBox">A pick is graded on the winner only; the predicted score is shown so you can judge the margin yourself. A tie (rare, and impossible since 1996) is neither a hit nor a miss. If a game was moved and the preview named the original date, it&rsquo;s matched to the real game within a week either way. Not betting advice &mdash; if it stops being fun, the National Problem Gambling Helpline is 1-800-522-4700.</p>
+  <p class="noteBox">A pick is graded on the winner only; the predicted score is shown so you can judge the margin yourself. Against the spread uses the line posted when the pick was written and the side the predicted margin implied. A tie (rare, and impossible since 1996) is neither a hit nor a miss. If a game was moved and the preview named the original date, it&rsquo;s matched to the real game within a week either way. Your own picks live only in this browser. Not betting advice &mdash; if it stops being fun, the National Problem Gambling Helpline is 1-800-522-4700.</p>
 </main>
+<script>
+(function(){{
+  var picks;
+  try {{ picks = JSON.parse(localStorage.getItem('cfbBelt:picks') || '{{}}'); }} catch (e) {{ picks = {{}}; }}
+  var keys = Object.keys(picks);
+  if (!keys.length) return;
+  fetch('api/ledger.json').then(function(r){{ return r.json(); }}).then(function(data){{
+    var you = {{w:0, l:0}}, lean = {{w:0, l:0}}, pending = 0, rows = [];
+    (data.picks || []).forEach(function(p){{
+      var mine = picks[p.key];
+      if (!mine) return;
+      if (p.status === 'hit' || p.status === 'miss') {{
+        var mineRight = mine.pick === p.winner;
+        if (mineRight) you.w++; else you.l++;
+        if (p.status === 'hit') lean.w++; else lean.l++;
+        rows.push('<li><strong>' + p.holder + (p.is_home === false && !p.neutral ? ' at ' : ' vs. ') + p.opponent + '</strong> <span class="mono">you: ' + mine.pick + (mineRight ? ' ✓' : ' ✗') + ' · lean: ' + p.predicted_winner + (p.status === 'hit' ? ' ✓' : ' ✗') + '</span></li>');
+      }} else if (p.status === 'pending') {{
+        pending++;
+        rows.push('<li><strong>' + p.holder + ' vs. ' + p.opponent + '</strong> <span class="mono">you: ' + mine.pick + ' · lean: ' + p.predicted_winner + ' · pending</span></li>');
+      }}
+      var row = document.querySelector('.ledgerRow[data-key="' + p.key.replace(/"/g, '&quot;') + '"] .ledgerPick');
+      if (row) row.insertAdjacentHTML('beforeend', ' <span class="yourPick">You: ' + mine.pick.replace(/</g, '&lt;') + '</span>');
+    }});
+    if (!rows.length) return;
+    var box = document.getElementById('beatLean');
+    var verdict = (you.w + you.l) ? (you.w > lean.w ? 'You are beating the lean.' : (you.w < lean.w ? 'The lean is beating you.' : 'Dead even.')) : 'Your first pick is still pending.';
+    document.getElementById('beatLeanBody').innerHTML =
+      '<div class="miniStats" style="margin:0 0 14px"><div><span class="n tabular">' + you.w + '–' + you.l + '</span><span class="l">You</span></div><div><span class="n tabular">' + lean.w + '–' + lean.l + '</span><span class="l">The lean, same games</span></div><div><span class="n tabular">' + pending + '</span><span class="l">Pending</span></div></div>' +
+      '<p class="editorial">' + verdict + '</p><ul class="storyList">' + rows.join('') + '</ul>' +
+      '<div class="btnRow"><button type="button" class="btn ghost" id="beatLeanShare">Share your record</button><span class="emptyNote" id="beatLeanCopied" hidden>Copied.</span></div>';
+    box.hidden = false;
+    document.getElementById('beatLeanShare').addEventListener('click', function(){{
+      var text = 'Beat the lean: I am ' + you.w + '–' + you.l + ' picking belt games; the lean is ' + lean.w + '–' + lean.l + ' on the same games. ' + location.origin + '/lean.html';
+      var done = function(){{ var c = document.getElementById('beatLeanCopied'); if (c) c.hidden = false; }};
+      if (navigator.share) {{ navigator.share({{ text: text }}).catch(function(){{}}); }}
+      else if (navigator.clipboard) {{ navigator.clipboard.writeText(text).then(done, done); }}
+    }});
+  }}).catch(function(){{}});
+}})();
+</script>
 
 {site_footer('', 'Predictions are written by Claude from the stats on the preview page; results from the College Football Data API.')}
 '''
@@ -8012,7 +8436,7 @@ def generate_daily_page(lineage, colors, belt_games):
     payload = json.dumps(pool, ensure_ascii=False)
     options = "".join(f'<option value="{esc(t)}">' for t in holders)
     return f'''{page_head("The Daily Belt — Guess Today's Program",
-                     "A daily College Football Belt puzzle: guess which program that has held the lineal title fits the clues, in six tries. New puzzle every day; keep your streak.")}
+                     "A daily College Football Belt puzzle: guess which program that has held the lineal title fits the clues, in six tries. New puzzle every day; keep your streak.", "", share_meta("daily", "The Daily Belt", "Daily puzzle", "One former holder, six guesses, a new clue after every miss"))}
 
 {site_header('', 'daily')}
 
@@ -8180,7 +8604,11 @@ def generate_state_pages(lineage, colors, belt_games, states_dir):
         title = f"The College Football Belt in {name}"
         desc = (f"Every College Football Belt reign by a {name} program: {len(items)} reign{'s' if len(items) != 1 else ''} across "
                 f"{len(teams)} program{'s' if len(teams) != 1 else ''}, {days_total:,} total days with the lineal title.")
-        html_out = f'''{page_head(title, desc, "../")}
+        top_state_team = max(teams.items(), key=lambda kv: kv[1]["days"])[0]
+        og = share_meta(f"states/{code.lower()}", name, "The belt in",
+                        f"{len(items)} reign{'s' if len(items) != 1 else ''} · {len(teams)} program{'s' if len(teams) != 1 else ''} · {days_total:,} days with the belt",
+                        "", *team_color(colors, top_state_team))
+        html_out = f'''{page_head(title, desc, "../", og)}
 
 {site_header('../', 'states', crumb=f'<a href="../index.html">Belt</a> <span class="sep">/</span> <a href="index.html">States</a> <span class="sep">/</span> {esc(name)}')}
 
@@ -8213,7 +8641,7 @@ def generate_state_pages(lineage, colors, belt_games, states_dir):
         rows += (f'<tr{cls}><td class="teamCell"><a href="{c.lower()}.html">{esc(n)}</a></td><td class="tabular">{r}</td>'
                  f'<td class="tabular">{t}</td><td class="tabular">{d:,}</td><td class="dates">{"Holds it now" if hh else ""}</td></tr>')
     index_html = f'''{page_head("The College Football Belt by State",
-                              f"All {len(summary)} states that have been home to a College Football Belt holder, ranked by days with the lineal title, with every reign and program for each.", "../")}
+                              f"All {len(summary)} states that have been home to a College Football Belt holder, ranked by days with the lineal title, with every reign and program for each.", "../", share_meta("states", "The belt, state by state", "Geography", f"{len(summary)} states have been home to the belt"))}
 
 {site_header('../', 'states')}
 
@@ -8274,8 +8702,10 @@ def generate_decade_pages(lineage, colors, belt_games, decades_dir):
         summary.append((slug, label, len(games), changes, len(held), top[0][0] if top else ""))
         longest_txt = (f'The longest reign to begin in the decade was <a href="../reigns/{longest[0] + 1}.html">{esc(longest[1]["team"])}&rsquo;s, '
                        f'{fmt_duration(*reign_dates(longest[1], today))}</a>.' if longest else "")
+        og = share_meta(f"decades/{label}", f"The {label}", "The belt, decade by decade",
+                        f"{len(games)} belt games · {changes} title changes · {len(held)} programs held it")
         html_out = f'''{page_head(f"The College Football Belt in the {label}",
-                              f"The College Football Belt in the {label}: {len(games)} belt games, {changes} title changes, and the {len(held)} programs that held the lineal title during the decade.", "../")}
+                              f"The College Football Belt in the {label}: {len(games)} belt games, {changes} title changes, and the {len(held)} programs that held the lineal title during the decade.", "../", og)}
 
 {site_header('../', 'decades', crumb=f'<a href="../index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Decades</a> <span class="sep">/</span> The {label}')}
 
@@ -8303,7 +8733,7 @@ def generate_decade_pages(lineage, colors, belt_games, decades_dir):
         f'<tr><td class="teamCell"><a href="{s}.html">The {l}</a></td><td class="tabular">{g}</td><td class="tabular">{c}</td><td class="tabular">{p}</td><td class="dates">{esc(t)}</td></tr>'
         for s, l, g, c, p, t in summary)
     index_html = f'''{page_head("The Belt Decade by Decade — 1860s to Today",
-                              "The College Football Belt one decade at a time: belt games, title changes and the programs that held the lineal title in each decade since 1869.", "../")}
+                              "The College Football Belt one decade at a time: belt games, title changes and the programs that held the lineal title in each decade since 1869.", "../", share_meta("decades", "The belt, decade by decade", "Decades", "Every decade since 1869: games, title changes, holders"))}
 
 {site_header('../', 'decades')}
 
@@ -8333,9 +8763,16 @@ def generate_decade_pages(lineage, colors, belt_games, decades_dir):
 # score and count in it is computed from the lineage at build time, so the
 # stories stay true as new reigns happen.
 
-def _story_page(title, description, kicker, h1, lede, chapters_html, stat_html=""):
+def _story_page(title, description, kicker, h1, lede, chapters_html, stat_html="", slug=None):
     header, footer = _story_nav_footer()
-    return f'''{page_head(title, description)}
+    key = "stories/" + (slug or re.sub(r"[^a-z0-9]+", "-", re.sub(r"<[^>]+>", "", html.unescape(h1)).lower()).strip("-"))
+    stat_txt = ""
+    m = re.search(r'<span class="storyStatN">(.*?)</span>(.*?)</div>', stat_html or "", re.S)
+    if m:
+        stat_txt = html.unescape(re.sub(r"<[^>]+>", "", m.group(1) + " " + m.group(2))).strip()
+    og = share_meta(key, html.unescape(re.sub(r"<[^>]+>", "", h1)), "Stories · The College Football Belt", stat_txt,
+                    html.unescape(re.sub(r"<[^>]+>", "", lede))[:140])
+    return f'''{page_head(title, description, "", og)}
 
 {header}
 
@@ -9497,6 +9934,1115 @@ def generate_story_shutouts(lineage, belt_games):
                        "Stories", "Not a single point", lede, "".join(chapters), stat)
 
 
+
+# ------------------------------------------------ the belt vs. the polls
+
+def _game_key(g):
+    """Sort key that puts a game where it falls in a season's poll
+    calendar: regular-season games by week, postseason after all of them."""
+    st = g.get("season_type") or "regular"
+    return (g["season"], 0 if st == "regular" else 1, g.get("week") or 0)
+
+
+def _poll_key(w):
+    """A poll week's place in that same calendar. A regular-season poll for
+    week w is released BEFORE week w's games (so it sorts with them and a
+    strict < comparison keeps the games out); the final poll comes out
+    after the bowls, so it sorts after every postseason game."""
+    return (w["season"], 0 if w["st"] == "regular" else 2, w["week"])
+
+
+def compute_poll_model(rankings, lineage, belt_games):
+    """Everything the polls page, the story and the per-page chips need,
+    derived once from fetch_rankings.py's belt_data/rankings.json.
+    Returns None when there's no poll data at all."""
+    if not rankings or not rankings.get("weeks"):
+        return None
+    reigns = lineage["reigns"]
+    first_poll = rankings.get("first_poll_season", 1936)
+    games_by_id = {str(g["game_id"]): g for g in belt_games}
+    start_game = {}
+    for g in belt_games:
+        if g["outcome"] in ("changed", "established"):
+            start_game[(g["date"], g["new_holder"])] = g
+    reign_start_keys = []
+    for r in reigns:
+        g = start_game.get((r["start_date"], r["team"]))
+        reign_start_keys.append(_game_key(g) if g else (int(r["start_date"][:4]), 0, 0))
+
+    from bisect import bisect_left
+
+    def reign_at(poll_key):
+        # the reign whose start key is strictly before the poll
+        i = bisect_left(reign_start_keys, poll_key) - 1
+        return i if i >= 0 else None
+
+    weeks = []
+    for w in rankings["weeks"]:
+        wk = dict(w)
+        wk["reign"] = reign_at(_poll_key(w))
+        weeks.append(wk)
+    reg_weeks = [w for w in weeks if w["st"] == "regular"]
+    final_weeks = [w for w in weeks if w["st"] != "regular"]
+
+    per_reign = {}
+    for w in weeks:
+        i = w["reign"]
+        if i is None:
+            continue
+        p = per_reign.setdefault(i, {"weeks": 0, "ranked": 0, "no1": 0, "best": None, "final": None, "won_rank": None, "won_poll": False})
+        if w["st"] == "regular":
+            p["weeks"] += 1
+            if w["holder_ap"] is not None:
+                p["ranked"] += 1
+                if p["best"] is None or w["holder_ap"] < p["best"]:
+                    p["best"] = w["holder_ap"]
+                if w["holder_ap"] == 1:
+                    p["no1"] += 1
+        else:
+            p["final"] = w["holder_ap"]
+    games_info = rankings.get("games", {})
+    for i, r in enumerate(reigns):
+        g = start_game.get((r["start_date"], r["team"]))
+        if not g:
+            continue
+        info = games_info.get(str(g["game_id"]))
+        if info and info.get("poll"):
+            p = per_reign.setdefault(i, {"weeks": 0, "ranked": 0, "no1": 0, "best": None, "final": None, "won_rank": None, "won_poll": False})
+            p["won_rank"] = info.get("opponent_ap")   # the winner was the challenger in that game
+            p["won_poll"] = True
+            p["beaten_rank"] = info.get("holder_ap")
+
+    # title changes and defenses with both sides' ranks
+    changes, defenses = [], []
+    for gid, info in games_info.items():
+        g = games_by_id.get(gid)
+        if not g or not info.get("poll"):
+            continue
+        row = {"g": g, "holder_ap": info.get("holder_ap"), "opp_ap": info.get("opponent_ap"), "ap1": info.get("ap1")}
+        (changes if g["outcome"] == "changed" else defenses).append(row)
+
+    # No. 1 streaks: consecutive regular-season poll weeks with the holder at No. 1 (same holder)
+    streaks = []
+    cur = None
+    for w in reg_weeks:
+        if w["holder_ap"] == 1 and cur and cur["team"] == w["holder"]:
+            cur["weeks"] += 1
+            cur["end"] = (w["season"], w["week"])
+        elif w["holder_ap"] == 1:
+            if cur:
+                streaks.append(cur)
+            cur = {"team": w["holder"], "weeks": 1, "start": (w["season"], w["week"]), "end": (w["season"], w["week"]), "reign": w["reign"]}
+        else:
+            if cur:
+                streaks.append(cur)
+            cur = None
+    if cur:
+        streaks.append(cur)
+    streaks.sort(key=lambda s: (-s["weeks"], s["start"]))
+
+    by_decade = {}
+    for w in reg_weeks:
+        d = by_decade.setdefault(w["season"] // 10 * 10, {"weeks": 0, "ranked": 0, "no1": 0})
+        d["weeks"] += 1
+        d["ranked"] += w["holder_ap"] is not None
+        d["no1"] += w["holder_ap"] == 1
+
+    n_reg = len(reg_weeks)
+    return {
+        "first_poll": first_poll,
+        "weeks": weeks, "reg_weeks": reg_weeks, "final_weeks": final_weeks,
+        "per_reign": per_reign, "changes": changes, "defenses": defenses,
+        "streaks": streaks, "by_decade": by_decade,
+        "n_weeks": n_reg,
+        "pct_ranked": (sum(1 for w in reg_weeks if w["holder_ap"] is not None) / n_reg) if n_reg else 0,
+        "pct_no1": (sum(1 for w in reg_weeks if w["holder_ap"] == 1) / n_reg) if n_reg else 0,
+        "pct_top10": (sum(1 for w in reg_weeks if w["holder_ap"] is not None and w["holder_ap"] <= 10) / n_reg) if n_reg else 0,
+        "finals_ranked": sum(1 for w in final_weeks if w["holder_ap"] is not None),
+        "finals_no1": sum(1 for w in final_weeks if w["holder_ap"] == 1),
+        "n_finals": len(final_weeks),
+        "seasons_missing": rankings.get("seasons_missing") or [],
+        "current": rankings.get("current"),
+    }
+
+
+def rank_chip(rank, poll="AP", unranked_text=None):
+    """A small mono chip: 'AP No. 4', or an 'unranked' chip when asked."""
+    if rank:
+        return f'<span class="rankChip">{poll} No. {rank}</span>'
+    if unranked_text:
+        return f'<span class="rankChip nr">{unranked_text}</span>'
+    return ""
+
+
+def rank_word(rank):
+    return f"No. {rank}" if rank else "unranked"
+
+
+def generate_polls_page(model, lineage, colors, belt_games):
+    """polls.html -- the belt against the AP poll, week by week since 1936."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    holders = {r["team"] for r in reigns}
+    first_poll = model["first_poll"]
+    # ---- upsets by rank: unranked challengers over ranked holders, and biggest gaps
+    unranked_over = sorted((c for c in model["changes"] if c["opp_ap"] is None and c["holder_ap"] is not None),
+                           key=lambda c: (c["holder_ap"], c["g"]["date"]))
+    gaps = sorted((c for c in model["changes"] if c["opp_ap"] is not None and c["holder_ap"] is not None and c["opp_ap"] > c["holder_ap"]),
+                  key=lambda c: (-(c["opp_ap"] - c["holder_ap"]), c["g"]["date"]))
+    top_challengers = sorted((d for d in model["defenses"] if d["opp_ap"] is not None),
+                             key=lambda d: (d["opp_ap"], d["g"]["date"]))
+    holder_ranked_beaten_by_nr = len(unranked_over)
+    n_changes_polled = len(model["changes"])
+
+    def game_row(row, note):
+        g = row["g"]
+        w, l, wp, lp = game_score_winner_first(g)
+        return (f'<a class="miniRow" href="games/{g["game_id"]}.html"><span>{g["date"][:4]} &middot; '
+                f'<strong>{esc(w)}</strong> {wp}&ndash;{lp} {esc(l)}</span><span class="miniTag">{note}</span></a>')
+
+    upset_rows = "".join(game_row(c, f'unranked over No. {c["holder_ap"]}') for c in unranked_over[:12])
+    gap_rows = "".join(game_row(c, f'No. {c["opp_ap"]} over No. {c["holder_ap"]}') for c in gaps[:10])
+    chal_rows = "".join(game_row(d, f'No. {d["opp_ap"]} turned away' + (" (tie)" if d["g"]["outcome"] == "retained (tie)" else "")) for d in top_challengers[:10])
+
+    streak_rows = ""
+    for s in model["streaks"][:10]:
+        (s0, w0), (s1, w1) = s["start"], s["end"]
+        span = f"{s0} wk {w0}&ndash;{'' if s1 == s0 else str(s1) + ' wk '}{w1}" if (s1, w1) != (s0, w0) else f"{s0} wk {w0}"
+        link = f'<a href="reigns/{s["reign"] + 1}.html">{esc(s["team"])}</a>' if s.get("reign") is not None else esc(s["team"])
+        streak_rows += f'<div class="miniRow"><span><strong>{link}</strong> &middot; {span}</span><span class="miniTag">{s["weeks"]} {_plural(s["weeks"], "week")} at No. 1</span></div>'
+
+    decade_rows = ""
+    for d, v in sorted(model["by_decade"].items()):
+        decade_rows += (f'<tr><td class="teamCell">{d}s</td><td class="tabular">{v["weeks"]}</td>'
+                        f'<td class="tabular">{v["ranked"] / v["weeks"] * 100:.0f}%</td><td class="tabular">{v["no1"] / v["weeks"] * 100:.0f}%</td></tr>')
+
+    # ---- every reign since the poll began
+    reign_rows = ""
+    for i, r in enumerate(reigns):
+        if int(r["start_date"][:4]) < first_poll:
+            continue
+        p = model["per_reign"].get(i)
+        s, e = reign_dates(r, today)
+        is_current = i == len(reigns) - 1
+        if p and p.get("won_poll"):
+            won = rank_word(p["won_rank"]) + (f' (beat No. {p["beaten_rank"]})' if p.get("beaten_rank") else "")
+        else:
+            won = "&mdash;"
+        best = rank_word(p["best"]) if p and p["weeks"] else "&mdash;"
+        no1 = str(p["no1"]) if p and p["weeks"] else "&mdash;"
+        final = ("&mdash;" if not p or p["final"] is None and not p.get("weeks") else rank_word(p["final"])) if p else "&mdash;"
+        cls = ' class="current"' if is_current else ""
+        reign_rows += (f'<tr{cls}><td class="num"><a href="reigns/{i + 1}.html">{i + 1}</a></td>'
+                       f'<td class="teamCell"><span class="reignChip" style="background:{team_color(colors, r["team"])[0]}"></span>{team_link(r["team"], "", holders)}</td>'
+                       f'<td class="dates">{fmt_date(r["start_date"])} &ndash; {"present" if is_current else fmt_date(r["end_date"])}</td>'
+                       f'<td class="dates">{won}</td><td class="tabular">{best}</td><td class="tabular">{no1}</td><td class="tabular">{final}</td></tr>')
+
+    coverage = ""
+    if model["seasons_missing"]:
+        coverage = (f'<p class="emptyNote">Poll data is still being fetched for {len(model["seasons_missing"])} '
+                    f'{_plural(len(model["seasons_missing"]), "season")}; the numbers here cover the rest and fill in on later runs.</p>')
+
+    return f'''{page_head("The Belt vs. the Polls — Ranked, Unranked and No. 1 Since 1936",
+                     f"Every College Football Belt holder since {first_poll} against the AP poll: how often the holder was ranked or No. 1, unranked teams that took the belt from ranked holders, and every reign's rank.", "", share_meta("polls", "The belt vs. the polls", "Since 1936", f"The holder was AP No. 1 in {model['pct_no1'] * 100:.0f}% of poll weeks, ranked in {model['pct_ranked'] * 100:.0f}%"))}
+
+{site_header('', 'polls')}
+
+<main class="wrap">
+  {page_intro("Since " + str(first_poll), "The belt vs. the polls",
+              f"The AP poll started in {first_poll}; the belt was already {first_poll - 1869} years old. Every poll week since, this is how the belt holder looked to the voters &mdash; and how often the two ways of naming a champion agreed.")}
+  {coverage}
+  <div class="miniStats" style="margin:10px 0 30px">
+    <div><span class="n tabular">{model["pct_ranked"] * 100:.0f}%</span><span class="l">of poll weeks the belt holder was ranked</span></div>
+    <div><span class="n tabular">{model["pct_no1"] * 100:.0f}%</span><span class="l">of poll weeks the holder was No. 1</span></div>
+    <div><span class="n tabular">{holder_ranked_beaten_by_nr}</span><span class="l">Title changes by an unranked team over a ranked holder</span></div>
+    <div><span class="n tabular">{model["finals_no1"]} of {model["n_finals"]}</span><span class="l">Seasons the holder finished No. 1 in the final poll</span></div>
+  </div>
+
+  <div class="twoUp">
+    <section>
+      <div class="sectionHead"><span class="tag">Upsets by rank</span><h2>Unranked, and took it anyway</h2></div>
+      {f'<div class="miniList">{upset_rows}</div>' if upset_rows else '<p class="emptyNote">None on record.</p>'}
+      <div class="sectionHead"><span class="tag">Biggest gaps</span><h2>Ranked, but well below the holder</h2></div>
+      {f'<div class="miniList">{gap_rows}</div>' if gap_rows else '<p class="emptyNote">None on record.</p>'}
+    </section>
+    <section>
+      <div class="sectionHead"><span class="tag">Held off</span><h2>The best-ranked challengers turned away</h2></div>
+      {f'<div class="miniList">{chal_rows}</div>' if chal_rows else '<p class="emptyNote">None on record.</p>'}
+      <div class="sectionHead"><span class="tag">Agreement</span><h2>Longest runs at No. 1 with the belt</h2></div>
+      {f'<div class="miniList">{streak_rows}</div>' if streak_rows else '<p class="emptyNote">The belt holder has never been No. 1.</p>'}
+    </section>
+  </div>
+
+  <div class="sectionHead"><span class="tag">By decade</span><h2>How often the voters and the belt agreed</h2></div>
+  <div class="tableScroll">
+    <table class="reignsTable" style="min-width:420px">
+      <thead><tr><th>Decade</th><th style="text-align:right">Poll weeks</th><th style="text-align:right">Holder ranked</th><th style="text-align:right">Holder No. 1</th></tr></thead>
+      <tbody>{decade_rows}</tbody>
+    </table>
+  </div>
+
+  <div class="sectionHead"><span class="tag">Every reign since {first_poll}</span><h2>Rank when it won, best rank while holding</h2></div>
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead><tr><th>#</th><th>Program</th><th>Reign</th><th>AP rank when it took the belt</th><th style="text-align:right">Best while holding</th><th style="text-align:right">Weeks at No. 1</th><th style="text-align:right">Final poll</th></tr></thead>
+      <tbody>{reign_rows}</tbody>
+    </table>
+  </div>
+  <p class="noteBox">&ldquo;Rank when it took the belt&rdquo; is the winner&rsquo;s place in the AP poll released before that game (the AP top 25 &mdash; a top 20 or top 10 in some eras); a dash means the season&rsquo;s first poll hadn&rsquo;t come out yet. A poll week counts for whoever held the belt when that poll was released. Polls from the College Football Data API.</p>
+</main>
+
+{site_footer('', 'AP poll data from the College Football Data API; the belt is computed from every game.')}
+'''
+
+
+def generate_story_belt_vs_polls(model, lineage, belt_games):
+    reigns = lineage["reigns"]
+    today = date.today()
+    first_poll = model["first_poll"]
+    chapters = []
+    n_weeks = model["n_weeks"]
+    unranked_over = sorted((c for c in model["changes"] if c["opp_ap"] is None and c["holder_ap"] is not None),
+                           key=lambda c: (c["holder_ap"], c["g"]["date"]))
+    # the longest reign whose holder was never ranked
+    never = [(i, r, p) for i, (r, p) in ((i, (reigns[i], model["per_reign"].get(i))) for i in range(len(reigns)))
+             if p and p["weeks"] >= 3 and p["ranked"] == 0]
+    never.sort(key=lambda x: -reign_duration_days(x[1], today))
+    chapters.append(_chapter("Two ways to name a champion", [
+        f"The AP poll has asked sportswriters who the best team is every week since {first_poll}. The belt has never asked anyone anything: "
+        f"it goes to whoever beat whoever had it. Put the two side by side for {n_weeks:,} poll weeks and they agree about "
+        f"{model['pct_no1'] * 100:.0f}% of the time &mdash; that is how often the program holding the belt was also the poll&rsquo;s No. 1.",
+        f"Widen it to &ldquo;ranked at all&rdquo; and the belt holder was in the top 25 in {model['pct_ranked'] * 100:.0f}% of poll weeks, "
+        f"and in the top ten in {model['pct_top10'] * 100:.0f}%. The rest of the time the belt was somewhere the voters were not looking.",
+    ]))
+    if model["streaks"]:
+        s = model["streaks"][0]
+        (s0, w0), (s1, w1) = s["start"], s["end"]
+        chapters.append(_chapter(f"The longest agreement: {esc(s['team'])}, {s['weeks']} weeks", [
+            f"The longest the belt holder has stayed No. 1 in the poll is {s['weeks']} consecutive poll weeks, {_reign_link(s['reign'], esc(s['team']))} "
+            f"from week {w0} of {s0} to week {w1} of {s1}. "
+            + ("Runs like that are rare because the belt demands a win every week and the poll only demands a good record: a holder can stay No. 1 through a bye, but not through a loss." if s["weeks"] >= 8 else
+               "Even the longest run is short, because the belt changes hands more often than the poll changes its mind."),
+            ("The rest of the top five: " + _join_words(f"{_reign_link(x['reign'], esc(x['team']))} ({x['weeks']}, {x['start'][0]})" for x in model["streaks"][1:5]) + ".") if len(model["streaks"]) > 1 else "",
+        ]))
+    if unranked_over:
+        c = unranked_over[0]
+        g = c["g"]
+        w, l, wp, lp = game_score_winner_first(g)
+        biggest_txt = f"{esc(w)} {wp}&ndash;{lp} over No. {c['holder_ap']} {esc(l)}"
+        chapters.append(_chapter("Unranked, and took it anyway", [
+            f"{len(unranked_over)} times a team that was not in the poll at all has taken the belt from a team that was. The biggest by rank: "
+            f"{_game_link(g, biggest_txt)} in {g['season']}.",
+            "Others near the top: " + _join_words(
+                _game_link(x["g"], f"{esc(game_score_winner_first(x['g'])[0])} over No. {x['holder_ap']} {esc(game_score_winner_first(x['g'])[1])} ({x['g']['season']})")
+                for x in unranked_over[1:6]) + ".",
+            "This is the belt working exactly as designed. A poll is an argument about who is best; the belt is a record of who won on the day the belt was on the line, "
+            "and one Saturday is enough.",
+        ]))
+    if never:
+        i, r, p = never[0]
+        s, e = reign_dates(r, today)
+        chapters.append(_chapter("The reigns the poll never noticed", [
+            f"{len(never)} reigns lasted at least three poll weeks without the holder appearing in the top 25 once. The longest was "
+            f"{_reign_link(i, possessive(r['team']) + ' ' + fmt_duration(s, e))} starting in {r['start_date'][:4]}: {p['weeks']} poll weeks with the belt, "
+            f"zero votes&rsquo; worth of attention.",
+            ("Also unranked throughout: " + _join_words(f"{_reign_link(j, esc(rr['team']))} ({rr['start_date'][:4]}, {pp['weeks']} weeks)" for j, rr, pp in never[1:6]) + ".") if len(never) > 1 else "",
+        ]))
+    # final polls
+    if model["n_finals"]:
+        share = model["finals_ranked"] / model["n_finals"]
+        verdict = ("The team holding the belt when the season ends is usually one the voters liked too; it is just rarely the team they liked most."
+                   if share >= 0.5 else
+                   "More often than not, the team holding the belt when the season ends is one the voters did not have in their top 25 at all "
+                   "&mdash; the belt spends its winters in places the poll never visits.")
+        chapters.append(_chapter("How the year ends", [
+            f"In the final poll of the season &mdash; the one released after the bowls &mdash; the belt holder has been ranked in {model['finals_ranked']} of "
+            f"{model['n_finals']} seasons and No. 1 in {model['finals_no1']}. {verdict}",
+        ]))
+    lede = (f"The poll era began in {first_poll}. Since then the belt holder has been the AP No. 1 in {model['pct_no1'] * 100:.0f}% of poll weeks, "
+            f"ranked in {model['pct_ranked'] * 100:.0f}%, and invisible to the voters the rest of the time. Here is where the two disagree most.")
+    stat = _stat(f"{model['pct_no1'] * 100:.0f}%", "of poll weeks since " + str(first_poll) + " the belt holder was also the AP No. 1")
+    return _story_page("The Belt vs. the Polls — When the Voters and the Lineage Agreed",
+                       f"How the College Football Belt holder has fared in the AP poll since {first_poll}: weeks ranked or No. 1, the unranked teams that took the belt from ranked holders, and the reigns the poll never noticed.",
+                       "Stories", "The belt vs. the polls", lede, "".join(chapters), stat)
+
+
+
+# ------------------------------------------------------ alternate universes
+
+def load_universes():
+    """belt_data/universes/*.json from build_alternate_lineages.py, in the
+    order that script defines them; {} until its one-time bootstrap ran."""
+    udir = os.path.join(DATA_DIR, "universes")
+    index_path = os.path.join(udir, "index.json")
+    if not os.path.isfile(index_path):
+        return {}
+    with open(index_path) as f:
+        index = json.load(f)
+    out = {}
+    for entry in index.get("universes", []):
+        path = os.path.join(udir, f"{entry['slug']}.json")
+        if os.path.isfile(path):
+            with open(path) as f:
+                out[entry["slug"]] = json.load(f)
+    return out
+
+
+def _holder_intervals(reigns, today):
+    """[(start_date, end_date, team)] for a reign list."""
+    out = []
+    for r in reigns:
+        s, e = reign_dates(r, today)
+        out.append((s, e, r["team"]))
+    return out
+
+
+def universe_agreement(real_reigns, alt_reigns, today):
+    """How much of the calendar the two lineages agree on: fraction of days
+    (from the later of the two origins to today) with the same holder,
+    plus the last day they agreed and the current streak of disagreement."""
+    a = _holder_intervals(real_reigns, today)
+    b = _holder_intervals(alt_reigns, today)
+    start = max(a[0][0], b[0][0])
+    breaks = sorted({start, today} | {s for s, _, _ in a if s >= start} | {s for s, _, _ in b if s >= start})
+    ia = ib = 0
+    agree_days = total = 0
+    last_agree = None
+    for i in range(len(breaks) - 1):
+        d0, d1 = breaks[i], breaks[i + 1]
+        while ia < len(a) - 1 and a[ia + 1][0] <= d0:
+            ia += 1
+        while ib < len(b) - 1 and b[ib + 1][0] <= d0:
+            ib += 1
+        n = (d1 - d0).days
+        total += n
+        if a[ia][2] == b[ib][2]:
+            agree_days += n
+            last_agree = d1
+    return {"share": (agree_days / total) if total else 0, "days": agree_days, "total": total,
+            "last_agree": last_agree, "since": start}
+
+
+def first_divergence(real_games, alt_games):
+    """The first belt game in the alternate universe that isn't in the real
+    one (by game id) -- where the two lineages part ways -- or None."""
+    real_ids = {g["game_id"] for g in real_games}
+    for g in alt_games:
+        if g["game_id"] not in real_ids:
+            return g
+    return None
+
+
+def _universe_reign_rows(u, colors, real_game_ids, today):
+    reigns = u["reigns"]
+    change_index = build_change_game_index(u["belt_games"])
+    rows = ""
+    for i, r in enumerate(reigns, 1):
+        is_current = i == len(reigns)
+        team = r["team"]
+        p, _ = team_color(colors, team)
+        g = change_index.get((r["start_date"], team))
+        gid = g["game_id"] if g else None
+        link_ok = gid in real_game_ids
+        if r.get("won_from") and g:
+            w, l, wp, lp = game_score_winner_first(g)
+            won_inner = f"def. {esc(r['won_from'])} {wp}&ndash;{lp}" + (" (tie)" if wp == lp else "")
+        elif r.get("predecessor"):
+            won_inner = f"reverted from {esc(r['predecessor'])}"
+        elif r.get("origin"):
+            won_inner = "Origin of this universe"
+        else:
+            won_inner = "Established the belt"
+        won_txt = f'<a href="../games/{gid}.html">{won_inner}</a>' if link_ok else won_inner
+        if is_current:
+            lost_txt = '<span class="mono">— present —</span>'
+            end_txt = "Present"
+        elif r.get("lost_to"):
+            lost_txt = f"to {esc(r['lost_to'])}"
+            end_txt = fmt_date(r["end_date"])
+        else:
+            lost_txt = "vacated"
+            end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
+        rows += f'''
+        <tr class="{'current' if is_current else ''}" data-team="{esc(team.lower())}">
+          <td class="num">{i}</td>
+          <td class="teamCell"><span class="reignChip" style="background:{p}"></span>{esc(team)}</td>
+          <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
+          <td class="tabular">{fmt_duration(*reign_dates(r, today))}</td>
+          <td class="tabular">{r.get("defenses", 0)}</td>
+          <td class="won">{won_txt}</td>
+          <td class="lost">{lost_txt}</td>
+        </tr>'''
+    return rows
+
+
+def generate_universe_pages(universes, lineage, colors, belt_games, out_dir):
+    """universes/index.html + universes/<slug>.html. Returns slugs written."""
+    if not universes:
+        return []
+    os.makedirs(out_dir, exist_ok=True)
+    today = date.today()
+    real_reigns = lineage["reigns"]
+    real_holder = real_reigns[-1]["team"]
+    real_game_ids = {g["game_id"] for g in belt_games}
+    holders = {r["team"] for r in real_reigns}
+    cards = ""
+    written = []
+    summaries = {}
+    for slug, u in universes.items():
+        reigns = u["reigns"]
+        cur = reigns[-1]
+        agree = universe_agreement(real_reigns, reigns, today)
+        div = first_divergence(belt_games, u["belt_games"])
+        days_by_team = {}
+        for r in reigns:
+            days_by_team[r["team"]] = days_by_team.get(r["team"], 0) + reign_duration_days(r, today)
+        top = sorted(days_by_team.items(), key=lambda kv: -kv[1])[:10]
+        longest_i = max(range(len(reigns)), key=lambda i: reign_duration_days(reigns[i], today))
+        summaries[slug] = {"agree": agree, "div": div, "top": top, "longest": longest_i}
+        primary, alt = team_color(colors, cur["team"])
+        same = cur["team"] == real_holder
+        cards += f'''
+    <a class="universeCard" href="{slug}.html" style="--u:{primary}">
+      <span class="kicker">{esc(u["name"])}</span>
+      <h2>{esc(cur["team"])}{' <span class="soonChip">same as the real belt</span>' if same else ''}</h2>
+      <p class="universeRule">{esc(u["rule"])}</p>
+      <p class="universeMeta"><span>{len(reigns):,} reigns</span><span>{u["totals"]["distinct_teams"]} programs</span><span>agrees with the real belt {agree["share"] * 100:.0f}% of the time</span></p>
+    </a>'''
+
+    real_card = f'''
+    <a class="universeCard real" href="../lineage.html" style="--u:{team_color(colors, real_holder)[0]}">
+      <span class="kicker">The real belt</span>
+      <h2>{esc(real_holder)}</h2>
+      <p class="universeRule">Whoever beats the holder takes it; ties stay with the holder; bowls count; since Rutgers&ndash;Princeton, 1869.</p>
+      <p class="universeMeta"><span>{len(real_reigns):,} reigns</span><span>{len(holders)} programs</span><span>the one that counts</span></p>
+    </a>'''
+    coverage = next(iter(universes.values())).get("coverage") or {}
+    cov_note = ""
+    if coverage.get("missing_seasons"):
+        cov_note = (f'<p class="emptyNote">The game archive behind these is missing {len(coverage["missing_seasons"])} season(s); '
+                    f'they fill in when the archive is completed.</p>')
+    index_html = f'''{page_head("Alternate Universes — The Belt Under Different Rules",
+                              "The College Football Belt rerun under alternate rules: ties pass the belt, bowls don't count, a start in 1936 or 1998. Who would hold it, and how often each universe agrees with the real one.", "../", share_meta("universes", "Alternate universes", "What if", "The belt rerun under different rules: ties pass it, bowls don't count, a 1936 or 1998 start"))}
+
+{site_header('../', 'universes')}
+
+<main class="wrap">
+  {page_intro("What if", "Alternate universes",
+              "The belt has exactly one rule and one starting point. Change either and the same {n:,} games produce a different history &mdash; sometimes a wildly different one. These are four of them, computed the same way as the real belt, over every game since 1869.".format(n=coverage.get("games") or len(belt_games)))}
+  {cov_note}
+  <div class="universeGrid">{real_card}{cards}
+  </div>
+  <p class="noteBox">Every universe uses the real engine with one change. A holder that stops playing (a program that dropped football, or vanishes from the record) hands the belt back to the program it took it from, the same rule the FBS and FCS scopes use. Agreement is the share of days since the universe began on which it and the real belt named the same holder.</p>
+</main>
+
+{site_footer('../', 'Every game since 1869 from the College Football Data API; the alternate walks are this site&rsquo;s own.')}
+'''
+    with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
+        f.write(index_html)
+
+    for slug, u in universes.items():
+        reigns = u["reigns"]
+        cur = reigns[-1]
+        sm = summaries[slug]
+        agree, div, top, longest_i = sm["agree"], sm["div"], sm["top"], sm["longest"]
+        primary, alt = team_color(colors, cur["team"])
+        ink, accent = panel_colors(primary, alt)
+        s0, e0 = reign_dates(cur, today)
+        longest = reigns[longest_i]
+        same = cur["team"] == real_holder
+        if div:
+            w, l, wp, lp = game_score_winner_first(div)
+            in_real = div["game_id"] in real_game_ids
+            div_link = f'<a href="../games/{div["game_id"]}.html">{esc(w)} {wp}&ndash;{lp} {esc(l)}</a>' if in_real else f"{esc(w)} {wp}&ndash;{lp} {esc(l)}"
+            div_txt = (f"The two histories part ways on {fmt_date(div['date'])}: {div_link}"
+                       + (", a game the real belt was never on the line for." if not in_real else ".")
+                       + (f" From there the universes have agreed on the holder {agree['share'] * 100:.0f}% of the time"
+                          + (f", most recently on {fmt_date(agree['last_agree'].isoformat())}." if agree["last_agree"] else ".")))
+        else:
+            div_txt = f"This universe has never left the real belt&rsquo;s path."
+        origin = u.get("origin_note") or ""
+        top_rows = "".join(
+            f'<div class="miniRow"><span><strong>{team_link(t, "../", holders)}</strong></span><span class="miniTag">{d:,} days</span></div>'
+            for t, d in top)
+        rows = _universe_reign_rows(u, colors, real_game_ids, today)
+        og = share_meta(f"universes/{slug}", f"{cur['team']} would hold the belt", f"Alternate universe · {u['name']}",
+                        f"{len(reigns):,} reigns · agrees with the real belt {agree['share'] * 100:.0f}% of the time", u["rule"], primary, alt)
+        page = f'''{page_head(f"{u['name']} — The Belt Under an Alternate Rule",
+                          f"The College Football Belt if {u['rule'][0].lower() + u['rule'][1:].rstrip('.')}: {cur['team']} would hold it, across {len(reigns):,} reigns, agreeing with the real belt {agree['share'] * 100:.0f}% of the time.", "../",
+                          f'<style>:root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}</style>' + og)}
+
+{site_header('../', 'universes', crumb=f'<a href="../index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Alternate universes</a> <span class="sep">/</span> {esc(u["name"])}')}
+
+<main class="wrap">
+  <section class="teamPlate">
+    <div class="teamPlateRow">
+      {logo_chip(colors, cur["team"], 56)}
+      <div>
+        <p class="kicker">{esc(u["name"])} &middot; {esc(u["rule"])}</p>
+        <h1 class="pageTitle">{esc(cur["team"])} would hold the belt</h1>
+      </div>
+    </div>
+    <div class="heroStats">
+      <div><span class="n tabular">{max(0, (e0 - s0).days):,}</span><span class="l">Days, since {fmt_date(cur["start_date"])}</span></div>
+      <div><span class="n tabular">{cur.get("defenses", 0)}</span><span class="l">Defenses</span></div>
+      <div><span class="n tabular">{len(reigns):,}</span><span class="l">Reigns in this universe</span></div>
+      <div><span class="n tabular">{agree["share"] * 100:.0f}%</span><span class="l">Agreement with the real belt</span></div>
+    </div>
+  </section>
+
+  <div class="sectionHead"><span class="tag">The rule</span><h2>{esc(u["rule"])}</h2></div>
+  <p class="editorial" style="font-size:17px">{esc(u["why"])}{(" " + esc(origin)) if origin else ""}</p>
+  <p class="editorial" style="font-size:17px">{div_txt}{" Right now the two agree: " + esc(cur["team"]) + " holds both." if same else f" Right now they disagree: the real belt is with {team_link(real_holder, '../', holders)}."}</p>
+
+  <div class="twoUp">
+    <section>
+      <div class="sectionHead"><span class="tag">Most days with it</span><h2>Who owns this universe</h2></div>
+      <div class="miniList">{top_rows}</div>
+    </section>
+    <section>
+      <div class="sectionHead"><span class="tag">Longest reign here</span><h2>{esc(longest["team"])}, {fmt_duration(*reign_dates(longest, today))}</h2></div>
+      <p class="editorial">{fmt_date(longest["start_date"])} to {fmt_date(longest["end_date"]) if longest.get("end_date") else "present"}, {longest.get("defenses", 0)} {_plural(longest.get("defenses", 0), "defense")}.
+        {len({r["team"] for r in reigns})} programs hold the belt in this universe, against {len(holders)} in the real one.</p>
+    </section>
+  </div>
+
+  <div class="sectionHead"><span class="tag">Every reign</span><h2>{len(reigns):,} reigns, oldest first</h2></div>
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead><tr><th>#</th><th>Program</th><th>Reign</th><th style="text-align:right">Length</th><th style="text-align:right">Def.</th><th>Won</th><th>Lost</th></tr></thead>
+      <tbody>{rows}
+      </tbody>
+    </table>
+  </div>
+  <p class="noteBox">Game links only exist for games the real belt was on the line for; the rest of this universe&rsquo;s games have no page of their own. A reign marked &ldquo;vacated&rdquo; ended because the holder stopped appearing in the record, and the belt reverted to the program it was taken from.</p>
+</main>
+
+{site_footer('../', 'Same engine as the real belt, one rule changed.')}
+'''
+        with open(os.path.join(out_dir, f"{slug}.html"), "w", encoding="utf-8") as f:
+            f.write(page)
+        written.append(slug)
+    return written
+
+
+# ------------------------------------------------------------ web of the belt
+
+def handoff_counts(reigns):
+    """{(from, to): n} for every title change (won_from -> team)."""
+    counts = {}
+    for r in reigns:
+        if r.get("won_from"):
+            k = (r["won_from"], r["team"])
+            counts[k] = counts.get(k, 0) + 1
+    return counts
+
+
+def chord_svg(reigns, colors, top_n=30, size=760):
+    """A static chord diagram of who took the belt from whom: the top_n
+    programs by title-change involvement get an arc, everyone else is
+    grouped as 'Others'. Ribbons are straight quadratic chords through the
+    center, colored by the taker."""
+    import math
+    counts = handoff_counts(reigns)
+    involvement = {}
+    for (a, b), n in counts.items():
+        involvement[a] = involvement.get(a, 0) + n
+        involvement[b] = involvement.get(b, 0) + n
+    top = [t for t, _ in sorted(involvement.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]]
+    top_set = set(top)
+    label = lambda t: t if t in top_set else "Others"
+    groups = top + ["Others"]
+    flows = {}
+    for (a, b), n in counts.items():
+        k = (label(a), label(b))
+        if k == ("Others", "Others"):
+            continue   # handoffs entirely inside the grouped tail would be one giant self-loop
+        flows[k] = flows.get(k, 0) + n
+    weight = {g: 0 for g in groups}
+    for (a, b), n in flows.items():
+        weight[a] += n
+        weight[b] += n
+    total = sum(weight.values()) or 1
+    cx = cy = size / 2
+    R = size / 2 - 78
+    r_in = R - 14
+    gap = 0.012
+    angles = {}
+    a0 = -math.pi / 2
+    for g in groups:
+        span = (weight[g] / total) * (2 * math.pi - gap * len(groups))
+        angles[g] = (a0, a0 + span)
+        a0 += span + gap
+    # slot allocation along each arc: outgoing then incoming, in flow order
+    cursor = {g: angles[g][0] for g in groups}
+    span_per = {g: (angles[g][1] - angles[g][0]) / max(1, weight[g]) for g in groups}
+
+    def take(g, n):
+        s = cursor[g]
+        e = s + span_per[g] * n
+        cursor[g] = e
+        return s, e
+
+    def pt(a, r):
+        return cx + r * math.cos(a), cy + r * math.sin(a)
+
+    def arc_path(a1, a2, r1, r2):
+        large = 1 if (a2 - a1) > math.pi else 0
+        x1, y1 = pt(a1, r2)
+        x2, y2 = pt(a2, r2)
+        x3, y3 = pt(a2, r1)
+        x4, y4 = pt(a1, r1)
+        return (f"M{x1:.1f},{y1:.1f} A{r2:.1f},{r2:.1f} 0 {large} 1 {x2:.1f},{y2:.1f} "
+                f"L{x3:.1f},{y3:.1f} A{r1:.1f},{r1:.1f} 0 {large} 0 {x4:.1f},{y4:.1f} Z")
+
+    def color(g):
+        return team_color(colors, g)[0] if g != "Others" else "#9a8f7b"
+
+    ribbons = []
+    for (a, b), n in sorted(flows.items(), key=lambda kv: -kv[1]):
+        sa, ea = take(a, n)
+        sb, eb = take(b, n)
+        x1, y1 = pt(sa, r_in)
+        x2, y2 = pt(ea, r_in)
+        x3, y3 = pt(sb, r_in)
+        x4, y4 = pt(eb, r_in)
+        large_a = 1 if (ea - sa) > math.pi else 0
+        large_b = 1 if (eb - sb) > math.pi else 0
+        d = (f"M{x1:.1f},{y1:.1f} A{r_in:.1f},{r_in:.1f} 0 {large_a} 1 {x2:.1f},{y2:.1f} "
+             f"Q{cx:.1f},{cy:.1f} {x3:.1f},{y3:.1f} A{r_in:.1f},{r_in:.1f} 0 {large_b} 1 {x4:.1f},{y4:.1f} "
+             f"Q{cx:.1f},{cy:.1f} {x1:.1f},{y1:.1f} Z")
+        title = f"{a} → {b}: {n} title change{'s' if n != 1 else ''}"
+        ribbons.append(f'<path class="chordRibbon" d="{d}" fill="{color(b)}" data-from="{esc(a)}" data-to="{esc(b)}"><title>{esc(title)}</title></path>')
+    arcs, labels = [], []
+    for g in groups:
+        a1, a2 = angles[g]
+        arcs.append(f'<path class="chordArc" d="{arc_path(a1, a2, r_in, R)}" fill="{color(g)}" data-team="{esc(g)}"><title>{esc(g)}: {weight[g]} title changes involved</title></path>')
+        mid = (a1 + a2) / 2
+        lx, ly = pt(mid, R + 8)
+        deg = math.degrees(mid)
+        flip = 90 < (deg % 360) < 270
+        anchor = "end" if flip else "start"
+        rot = deg + 180 if flip else deg
+        txt = g if len(g) <= 18 else g[:17] + "…"
+        labels.append(f'<text class="chordLabel" x="{lx:.1f}" y="{ly:.1f}" transform="rotate({rot:.1f} {lx:.1f} {ly:.1f})" text-anchor="{anchor}" dominant-baseline="middle">{esc(txt)}</text>')
+    return (f'<svg class="chordSvg" viewBox="0 0 {size} {size}" role="group" aria-label="Chord diagram of which programs took the belt from which">'
+            f'<g class="chordRibbons">{"".join(ribbons)}</g><g>{"".join(arcs)}</g><g>{"".join(labels)}</g></svg>'), groups
+
+
+def generate_web_page(lineage, colors, belt_games):
+    """web.html -- the chord diagram, the most common handoffs, and the
+    six-degrees tool (client-side, over the reign list embedded as JSON)."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    holders = sorted({r["team"] for r in reigns})
+    counts = handoff_counts(reigns)
+    svg, groups = chord_svg(reigns, colors)
+    pairs = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    top_pairs = "".join(
+        f'<div class="miniRow"><span><strong>{team_link(a, "", set(holders))}</strong> &rarr; <strong>{team_link(b, "", set(holders))}</strong></span><span class="miniTag">{n} {_plural(n, "time")}</span></div>'
+        for (a, b), n in pairs[:15])
+    both_ways = sorted(((a, b, counts[(a, b)] + counts[(b, a)]) for (a, b) in counts if a < b and (b, a) in counts),
+                       key=lambda x: (-x[2], x[0]))[:8]
+    both_rows = "".join(
+        f'<div class="miniRow"><span><strong>{esc(a)}</strong> &harr; <strong>{esc(b)}</strong></span><span class="miniTag">{n} handoffs</span></div>'
+        for a, b, n in both_ways)
+    took_from, lost_to = {}, {}
+    for (a, b), n in counts.items():
+        took_from.setdefault(b, set()).add(a)
+        lost_to.setdefault(a, set()).add(b)
+    top_takers = sorted(((t, len(v)) for t, v in took_from.items()), key=lambda kv: (-kv[1], kv[0]))[:8]
+    top_givers = sorted(((t, len(v)) for t, v in lost_to.items()), key=lambda kv: (-kv[1], kv[0]))[:8]
+    chain = [{"t": r["team"], "s": r["start_date"], "e": r.get("end_date"), "f": r.get("won_from"), "n": i + 1} for i, r in enumerate(reigns)]
+    options = "".join(f'<option value="{esc(t)}">' for t in holders)
+    n_changes = sum(counts.values())
+    n_pairs = len(counts)
+    return f'''{page_head("The Web of the Belt — Who Took It From Whom",
+                     f"Every College Football Belt title change as a web: which programs took the belt from which, the most common handoffs, and a tool that traces how the belt got from any program to any other.", "", share_meta("web", "The web of the belt", "Who took it from whom", f"{n_changes} title changes, {n_pairs} distinct handoffs"))}
+
+{site_header('', 'web')}
+
+<main class="wrap">
+  {page_intro("Who took it from whom", "The web of the belt",
+              f"{n_changes} title changes between {len(holders)} programs make {n_pairs} distinct handoffs. Each ribbon is one pairing, colored by the program that took the belt; the {len(groups) - 1} most involved programs get their own arc and everyone else is grouped (handoffs between two grouped programs are left out of the picture). Hover a ribbon for the count.")}
+  <div class="chordWrap">{svg}</div>
+
+  <div class="twoUp">
+    <section>
+      <div class="sectionHead"><span class="tag">Most common handoffs</span><h2>The belt&rsquo;s regular routes</h2></div>
+      <div class="miniList">{top_pairs}</div>
+    </section>
+    <section>
+      <div class="sectionHead"><span class="tag">Trade partners</span><h2>Back and forth the most</h2></div>
+      <div class="miniList">{both_rows}</div>
+      <div class="sectionHead"><span class="tag">Widest webs</span><h2>Most different partners</h2></div>
+      <p class="editorial">Taken the belt from the most different programs: {_join_words(f"{team_link(t, '', set(holders))} ({n})" for t, n in top_takers)}.<br>
+        Lost it to the most different programs: {_join_words(f"{team_link(t, '', set(holders))} ({n})" for t, n in top_givers)}.</p>
+    </section>
+  </div>
+
+  <div class="sectionHead"><span class="tag">Six degrees</span><h2>How did the belt get from A to B?</h2></div>
+  <form class="degreesForm" id="degreesForm" autocomplete="off">
+    <label for="degFrom">From <input id="degFrom" list="beltHolders" placeholder="Yale"></label>
+    <label for="degTo">To <input id="degTo" list="beltHolders" placeholder="Notre Dame"></label>
+    <datalist id="beltHolders">{options}</datalist>
+    <button class="btn" type="submit">Trace it</button>
+  </form>
+  <div class="degreesOut" id="degreesOut" hidden></div>
+  <p class="noteBox">The tool finds the fewest handoffs between one of A&rsquo;s reigns and a later reign by B &mdash; the shortest stretch of the lineage that starts with A holding the belt and ends with B holding it. Every program that has ever held the belt is connected to every other one this way, because there is only one belt.</p>
+</main>
+<script>
+(function(){{
+  var CHAIN = {json.dumps(chain)};
+  var form = document.getElementById('degreesForm');
+  var out = document.getElementById('degreesOut');
+  function esc(s){{ return String(s).replace(/[&<>"]/g, function(c){{ return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c]; }}); }}
+  function slug(t){{ return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }}
+  function fmt(iso){{ var m = ['January','February','March','April','May','June','July','August','September','October','November','December']; var p = iso.split('-'); return m[+p[1]-1] + ' ' + (+p[2]) + ', ' + p[0]; }}
+  form.addEventListener('submit', function(e){{
+    e.preventDefault();
+    var a = document.getElementById('degFrom').value.trim().toLowerCase();
+    var b = document.getElementById('degTo').value.trim().toLowerCase();
+    var idx = {{}};
+    CHAIN.forEach(function(r, i){{ (idx[r.t.toLowerCase()] = idx[r.t.toLowerCase()] || []).push(i); }});
+    if (!idx[a] || !idx[b]) {{ out.hidden = false; out.innerHTML = '<p class="emptyNote">Both programs have to have held the belt at some point. Pick from the list.</p>'; return; }}
+    if (a === b) {{ out.hidden = false; out.innerHTML = '<p class="emptyNote">Pick two different programs.</p>'; return; }}
+    var best = null;
+    idx[a].forEach(function(i){{
+      var j = idx[b].filter(function(k){{ return k > i; }})[0];
+      if (j !== undefined && (best === null || (j - i) < (best[1] - best[0]))) best = [i, j];
+    }});
+    var rev = null;
+    idx[b].forEach(function(i){{
+      var j = idx[a].filter(function(k){{ return k > i; }})[0];
+      if (j !== undefined && (rev === null || (j - i) < (rev[1] - rev[0]))) rev = [i, j];
+    }});
+    out.hidden = false;
+    if (best === null) {{
+      out.innerHTML = '<p class="emptyNote">' + esc(CHAIN[idx[a][0]].t) + ' has never held the belt before a ' + esc(CHAIN[idx[b][0]].t) + ' reign' + (rev ? ' — but it has gone the other way: try swapping them.' : '.') + '</p>';
+      return;
+    }}
+    var steps = CHAIN.slice(best[0], best[1] + 1);
+    var hops = steps.length - 1;
+    var html = '<p class="degreesLead"><strong>' + hops + ' handoff' + (hops === 1 ? '' : 's') + '</strong> — the shortest path from ' + esc(steps[0].t) + ' (reign #' + steps[0].n + ', ' + steps[0].s.slice(0,4) + ') to ' + esc(steps[steps.length-1].t) + ' (reign #' + steps[steps.length-1].n + ', ' + steps[steps.length-1].s.slice(0,4) + ')' + (rev ? ' · the reverse trip takes ' + (rev[1] - rev[0]) + '.' : '.') + '</p>';
+    html += '<ol class="degreesList">';
+    steps.forEach(function(r, k){{
+      html += '<li><a href="reigns/' + r.n + '.html"><strong>' + esc(r.t) + '</strong></a> <span class="mono">' + (k === 0 ? 'holding it, ' + fmt(r.s) : 'took it ' + fmt(r.s)) + '</span></li>';
+    }});
+    html += '</ol>';
+    out.innerHTML = html;
+  }});
+}})();
+</script>
+
+{site_footer('', 'Every handoff computed from the lineage; the diagram is drawn at build time.')}
+'''
+
+
+
+# ------------------------------------------------------------- coach pages
+
+def coach_slug(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "coach"
+
+
+def build_coach_index(coaches, lineage, belt_games):
+    """{coach name: {...}} for every head coach who was on a sideline for a
+    belt game (per belt_data/coaches.json's team-season -> coach map).
+    A reign's days and its start are attributed to the coach in charge
+    the season it began, like the records page's by-coach card."""
+    if not coaches:
+        return {}
+    today = date.today()
+    by_team_year = {}
+    for team, seasons in coaches.items():
+        for row in seasons:
+            if row.get("coach") and row.get("year") is not None:
+                by_team_year[(team, int(row["year"]))] = row["coach"]
+
+    def coach_of(team, season):
+        return by_team_year.get((team, season))
+
+    index = {}
+
+    def entry(name):
+        return index.setdefault(name, {"name": name, "slug": coach_slug(name), "teams": {}, "games": [],
+                                       "holder_w": 0, "holder_l": 0, "holder_t": 0,
+                                       "chal_w": 0, "chal_l": 0, "chal_t": 0,
+                                       "reigns": [], "days": 0, "defenses": 0, "first": None, "last": None})
+
+    for g in belt_games:
+        h, a = (int(x) for x in g["score"].split("-"))
+        tie = h == a
+        holder = g["holder"]
+        opp = g["opponent"]
+        sides = []
+        if holder:
+            c = coach_of(holder, g["season"])
+            if c:
+                sides.append((c, holder, "holder"))
+        c2 = coach_of(opp, g["season"])
+        if c2:
+            sides.append((c2, opp, "challenger"))
+        for c, team, role in sides:
+            e = entry(c)
+            e["teams"].setdefault(team, set()).add(g["season"])
+            won = g["new_holder"] == team and not tie
+            if role == "holder":
+                if tie:
+                    e["holder_t"] += 1
+                elif g["outcome"] == "changed":
+                    e["holder_l"] += 1
+                else:
+                    e["holder_w"] += 1
+            else:
+                if tie:
+                    e["chal_t"] += 1
+                elif g["outcome"] == "changed":
+                    e["chal_w"] += 1
+                else:
+                    e["chal_l"] += 1
+            e["games"].append({"g": g, "team": team, "role": role, "won": won, "tie": tie})
+            e["first"] = min(e["first"] or g["date"], g["date"])
+            e["last"] = max(e["last"] or g["date"], g["date"])
+    change_index = build_change_game_index(belt_games)
+    for i, r in enumerate(lineage["reigns"]):
+        g = change_index.get((r["start_date"], r["team"]))
+        if not g:
+            continue
+        c = coach_of(r["team"], g["season"])
+        if not c:
+            continue
+        e = entry(c)
+        e["reigns"].append((i, r))
+        e["days"] += reign_duration_days(r, today)
+        e["defenses"] += r.get("defenses", 0)
+    return index
+
+
+def generate_coach_pages(coach_index, lineage, colors, out_dir):
+    """coaches/<slug>.html + coaches/index.html. Returns slugs written."""
+    if not coach_index:
+        return []
+    os.makedirs(out_dir, exist_ok=True)
+    today = date.today()
+    holders = {r["team"] for r in lineage["reigns"]}
+    written = []
+    ranked = sorted(coach_index.values(), key=lambda e: (-e["days"], -len(e["games"]), e["name"]))
+    for e in ranked:
+        teams_sorted = sorted(e["teams"].items(), key=lambda kv: min(kv[1]))
+        main_team = max(e["teams"].items(), key=lambda kv: len(kv[1]))[0]
+        primary, alt = team_color(colors, main_team)
+        ink, accent = panel_colors(primary, alt)
+        team_bits = _join_words(f"{team_link(t, '../', holders)} ({min(y)}&ndash;{max(y)})" if len(y) > 1 else f"{team_link(t, '../', holders)} ({min(y)})" for t, y in teams_sorted)
+        reign_rows = "".join(
+            f'<a class="miniRow" href="../reigns/{i + 1}.html"><span><strong>{esc(r["team"])}</strong> &middot; {fmt_date(r["start_date"])} &ndash; {fmt_date(r["end_date"]) if r.get("end_date") else "present"}</span>'
+            f'<span class="miniTag">{fmt_duration(*reign_dates(r, today))} &middot; {r.get("defenses", 0)} def.</span></a>'
+            for i, r in sorted(e["reigns"], key=lambda ir: ir[1]["start_date"], reverse=True))
+        game_rows = ""
+        for x in sorted(e["games"], key=lambda x: x["g"]["date"], reverse=True):
+            g = x["g"]
+            w, l, wp, lp = game_score_winner_first(g)
+            opp = g["away"] if x["team"] == g["home"] else g["home"]
+            if x["tie"]:
+                tag = "tie, holder kept it"
+            elif x["role"] == "holder":
+                tag = "defended" if x["won"] else "lost the belt"
+            else:
+                tag = "took the belt" if x["won"] else "lost"
+            loc = "vs." if (g["neutral"] or g["home"] == x["team"]) else "at"
+            game_rows += (f'<a class="miniRow" href="../games/{g["game_id"]}.html"><span>{fmt_date(g["date"])} &middot; '
+                          f'<strong>{esc(x["team"])}</strong> {loc} {esc(opp)} {wp if w == x["team"] else lp}&ndash;{lp if w == x["team"] else wp}'
+                          f' <span class="mono" style="color:var(--ink-soft)">as {x["role"]}</span></span><span class="miniTag">{tag}</span></a>')
+        holder_rec = f"{e['holder_w']}&ndash;{e['holder_l']}" + (f"&ndash;{e['holder_t']}" if e["holder_t"] else "")
+        chal_rec = f"{e['chal_w']}&ndash;{e['chal_l']}" + (f"&ndash;{e['chal_t']}" if e["chal_t"] else "")
+        n_games = len(e["games"])
+        desc = (f"{e['name']}'s College Football Belt record: {n_games} belt game{'s' if n_games != 1 else ''} as head coach, "
+                f"{len(e['reigns'])} reign{'s' if len(e['reigns']) != 1 else ''} started, {e['days']:,} days with the belt.")
+        page = f'''{page_head(f"{e['name']} — Belt Record as Head Coach", desc, "../",
+                          f'<style>:root{{ --team:{primary}; --team-ink:{ink}; --team-accent:{accent}; }}</style>')}
+
+{site_header('../', 'coaches', crumb=f'<a href="../index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Coaches</a> <span class="sep">/</span> {esc(e["name"])}')}
+
+<main class="wrap">
+  <section class="teamPlate">
+    <div class="teamPlateRow">
+      {logo_chip(colors, main_team, 56)}
+      <div>
+        <p class="kicker">Head coach &middot; {esc(main_team)}{" and " + str(len(e["teams"]) - 1) + " more" if len(e["teams"]) > 1 else ""} &middot; belt games {e["first"][:4]}&ndash;{e["last"][:4]}</p>
+        <h1 class="pageTitle">{esc(e["name"])}</h1>
+      </div>
+    </div>
+    <div class="heroStats">
+      <div><span class="n tabular">{e["days"]:,}</span><span class="l">Days with the belt</span></div>
+      <div><span class="n tabular">{len(e["reigns"])}</span><span class="l">{_plural(len(e["reigns"]), "Reign")} started</span></div>
+      <div><span class="n tabular">{holder_rec}</span><span class="l">Defending it</span></div>
+      <div><span class="n tabular">{chal_rec}</span><span class="l">Challenging for it</span></div>
+    </div>
+  </section>
+  <p class="editorial" style="font-size:16px;margin-top:22px">Coached {team_bits} in seasons with a belt game. {n_games} belt {_plural(n_games, "game")} in all: {e["holder_w"] + e["holder_l"] + e["holder_t"]} with the belt in hand, {e["chal_w"] + e["chal_l"] + e["chal_t"]} trying to take it.</p>
+
+  <div class="twoUp">
+    <section>
+      <div class="sectionHead"><span class="tag">Reigns</span><h2>Started under this coach</h2></div>
+      {f'<div class="miniList">{reign_rows}</div>' if reign_rows else '<p class="emptyNote">Never won the belt as a head coach.</p>'}
+    </section>
+    <section>
+      <div class="sectionHead"><span class="tag">Every belt game</span><h2>{n_games} {_plural(n_games, "game")}, newest first</h2></div>
+      <div class="miniList">{game_rows}</div>
+    </section>
+  </div>
+  <p class="noteBox">Head coaches from the College Football Data API&rsquo;s coaching records, matched by team and season. A reign counts for the coach in charge the season it began; a mid-season change isn&rsquo;t split.</p>
+</main>
+
+{site_footer('../', 'Coaching records from the College Football Data API.')}
+'''
+        with open(os.path.join(out_dir, f"{e['slug']}.html"), "w", encoding="utf-8") as f:
+            f.write(page)
+        written.append(e["slug"])
+
+    rows = ""
+    for i, e in enumerate(ranked, 1):
+        teams = ", ".join(sorted(e["teams"]))
+        rec = f"{e['holder_w'] + e['chal_w']}&ndash;{e['holder_l'] + e['chal_l']}" + (f"&ndash;{e['holder_t'] + e['chal_t']}" if (e["holder_t"] + e["chal_t"]) else "")
+        rows += (f'<tr><td class="num">{i}</td><td class="teamCell"><a href="{e["slug"]}.html">{esc(e["name"])}</a></td>'
+                 f'<td class="dates">{esc(teams)}</td><td class="tabular">{e["days"]:,}</td><td class="tabular">{len(e["reigns"])}</td>'
+                 f'<td class="tabular">{len(e["games"])}</td><td class="tabular">{rec}</td></tr>')
+    with_belt = sum(1 for e in ranked if e["reigns"])
+    index_html = f'''{page_head("Belt Coaches — Every Head Coach With a Belt Game",
+                              f"Every head coach who has coached a College Football Belt game: {len(ranked)} coaches ranked by days with the belt, with reigns started, belt-game records and every game.", "../", share_meta("coaches", "The belt by head coach", "Sidelines", f"{len(ranked)} head coaches have coached a belt game"))}
+
+{site_header('../', 'coaches')}
+
+<main class="wrap">
+  {page_intro("Sidelines", "The belt by head coach",
+              f"{len(ranked)} head coaches have coached a belt game; {with_belt} of them won it. Ranked by days with the belt, credited to the coach in charge the season each reign began.")}
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead><tr><th>#</th><th>Coach</th><th>Programs</th><th style="text-align:right">Days with belt</th><th style="text-align:right">Reigns</th><th style="text-align:right">Belt games</th><th style="text-align:right">Record</th></tr></thead>
+      <tbody>{rows}</tbody>
+    </table>
+  </div>
+  <p class="noteBox">Coaching records come from the College Football Data API, which is thin before the modern era for smaller programs &mdash; a reign or game with no coach on file simply isn&rsquo;t attributed. The record column counts belt games won and lost in either role; a tie is a kept belt for the holder.</p>
+</main>
+
+{site_footer('../', 'Coaching records from the College Football Data API.')}
+'''
+    with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
+        f.write(index_html)
+    return written
+
+
+
+# ------------------------------------------------------- data + press kit
+
+DATASET_LICENSE = "CC BY 4.0"
+PRESS_MARK_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" width="340" height="220" viewBox="0 0 34 22">'
+                  '<rect x="0" y="8" width="34" height="6" rx="1" fill="#211a12"/>'
+                  '<rect x="3" y="6" width="6" height="10" rx="1" fill="#a97f38"/>'
+                  '<rect x="25" y="6" width="6" height="10" rx="1" fill="#a97f38"/>'
+                  '<path d="M17 0 L24 4 L24 18 L17 22 L10 18 L10 4 Z" fill="#a97f38" stroke="#211a12" stroke-width="1.5"/>'
+                  '<circle cx="17" cy="11" r="3.5" fill="#211a12"/></svg>')
+
+
+def write_dataset_files(lineage, belt_games, out_dir):
+    """site/data/: belt_games.csv, reigns.csv, lineage.json -- the whole
+    lineage as flat files anyone can open, cite or load. Returns the list
+    of (filename, bytes, row count) written."""
+    import csv
+    os.makedirs(out_dir, exist_ok=True)
+    today = date.today()
+    written = []
+    games_path = os.path.join(out_dir, "belt_games.csv")
+    with open(games_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["game_number", "reign_number", "game_id", "date", "season", "week", "season_type", "holder", "opponent",
+                    "home", "away", "home_points", "away_points", "neutral_site", "outcome", "new_holder"])
+        for g in belt_games:
+            h, a = g["score"].split("-")
+            w.writerow([g["game_number"], g["reign_number"], g["game_id"], g["date"], g["season"], g.get("week") or "",
+                        g.get("season_type") or "regular", g["holder"] or "", g["opponent"], g["home"], g["away"], h, a,
+                        1 if g.get("neutral") else 0, g["outcome"], g["new_holder"]])
+    written.append(("belt_games.csv", os.path.getsize(games_path), len(belt_games)))
+    reigns_path = os.path.join(out_dir, "reigns.csv")
+    change_index = build_change_game_index(belt_games)
+    with open(reigns_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["reign_number", "team", "start_date", "end_date", "days", "defenses", "won_from", "winning_score", "lost_to", "won_game_id"])
+        for i, r in enumerate(lineage["reigns"], 1):
+            s, e = reign_dates(r, today)
+            g = change_index.get((r["start_date"], r["team"]))
+            score = ""
+            if g:
+                wn, ln, wp, lp = game_score_winner_first(g)
+                score = f"{wp}-{lp}"
+            w.writerow([i, r["team"], r["start_date"], r.get("end_date") or "", (e - s).days, r.get("defenses", 0),
+                        r.get("won_from") or "", score, r.get("lost_to") or "", g["game_id"] if g else ""])
+    written.append(("reigns.csv", os.path.getsize(reigns_path), len(lineage["reigns"])))
+    lin_path = os.path.join(out_dir, "lineage.json")
+    with open(lin_path, "w", encoding="utf-8") as f:
+        json.dump({k: v for k, v in lineage.items() if k != "belt_games"} | {"belt_games": belt_games}, f, separators=(",", ":"))
+    written.append(("lineage.json", os.path.getsize(lin_path), len(belt_games)))
+    return written
+
+
+def generate_data_page(lineage, belt_games, files):
+    """data.html -- downloads, a citation, and the press kit."""
+    today = date.today()
+    totals = lineage["totals"]
+    holder = lineage["reigns"][-1]["team"]
+    first_year = belt_games[0]["date"][:4]
+
+    def size_txt(n):
+        return f"{n / 1024:.0f} KB" if n < 1024 * 1024 else f"{n / 1024 / 1024:.1f} MB"
+    file_rows = ""
+    labels = {"belt_games.csv": "Every belt game, one row each: date, teams, score, outcome, reign and game numbers.",
+              "reigns.csv": "Every reign: program, dates, days, defenses, who it was won from and lost to.",
+              "lineage.json": "The full structured lineage the site itself builds from (reigns + belt games + totals)."}
+    for name, size, rows in files:
+        file_rows += (f'<a class="miniRow" href="data/{name}" download><span><strong class="mono">{name}</strong> &middot; {esc(labels.get(name, ""))}</span>'
+                      f'<span class="miniTag">{rows:,} rows &middot; {size_txt(size)}</span></a>')
+    with open(os.path.join(OUT_DIR, "press", "belt-mark.svg"), "w", encoding="utf-8") as f:
+        f.write(PRESS_MARK_SVG)
+    cite_txt = f"The College Football Belt. collegefootballbelt.com. Lineage data through {fmt_date(belt_games[-1]['date'])}, accessed {fmt_date(today.isoformat())}."
+    bibtex = (f"@misc{{collegefootballbelt,\n  title = {{The College Football Belt}},\n  howpublished = {{\\url{{https://collegefootballbelt.com}}}},\n"
+              f"  note = {{Lineal college football championship lineage, {first_year}--{belt_games[-1]['date'][:4]}. Game results from the College Football Data API.}},\n"
+              f"  year = {{{today.year}}}\n}}")
+    return f'''{page_head("Data & Press — Download the Belt Dataset, Cite It, Press Kit",
+                     f"Download the College Football Belt dataset ({totals['belt_games']:,} belt games and {totals['reigns']} reigns since {first_year}) as CSV or JSON, how to cite it, and the press kit: logo, description and contact.", "", share_meta("data", "Take the belt with you", "Data & press", f"{totals['belt_games']:,} belt games and {totals['reigns']} reigns as CSV and JSON, free with attribution"))}
+
+{site_header('', 'data')}
+
+<main class="wrap">
+  {page_intro("Data &amp; press", "Take the belt with you",
+              f"Every belt game and reign since {first_year}, as flat files you can open in a spreadsheet or load in code, plus a citation and the press kit. Free to use with attribution.")}
+
+  <div class="sectionHead"><span class="tag">Download</span><h2>The dataset</h2><span class="sectionMeta">rebuilt every run</span></div>
+  <div class="miniList">{file_rows}</div>
+  <p class="editorial" style="margin-top:14px">These files are regenerated with every site build, so they always match what the pages show. The <a href="api.html">JSON API</a> serves the same data live (<span class="mono">api/current.json</span>, <span class="mono">api/reigns.json</span>, <span class="mono">api/games.json</span>) for anything that wants to fetch it rather than download it. Scores and dates come from the College Football Data API; the lineage &mdash; who held the belt, when and for how long &mdash; is computed by this site.</p>
+
+  <div class="twoUp">
+    <section>
+      <div class="sectionHead"><span class="tag">License</span><h2>Free to use, with credit</h2></div>
+      <p class="editorial">The belt lineage (reigns, belt games and every computed field) is published under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">{DATASET_LICENSE}</a>: use it, chart it, write about it, build on it &mdash; just credit <strong>collegefootballbelt.com</strong> and link back. The underlying game results belong to the College Football Data project; credit them too when you republish scores.</p>
+      <div class="sectionHead"><span class="tag">Cite it</span><h2>Suggested citation</h2></div>
+      <p class="editorial"><span class="mono" style="font-size:13px">{esc(cite_txt)}</span></p>
+      <pre class="citeBlock">{esc(bibtex)}</pre>
+    </section>
+    <section>
+      <div class="sectionHead"><span class="tag">Press kit</span><h2>Writing about the belt</h2></div>
+      <p class="editorial"><strong>One line:</strong> The College Football Belt is a lineal championship &mdash; one title, passed on the field to whoever beats the holder, traced through every game since the first one in 1869.</p>
+      <p class="editorial"><strong>One paragraph:</strong> Boxing has lineal champions: to be the champ, you beat the champ. collegefootballbelt.com applies that rule to college football, starting with Rutgers&rsquo; win over Princeton in the first game ever played. Every game since is checked against the record: if the holder loses, the belt moves. Ties stay with the holder, bowls count, and nothing is voted on. The site recomputes the entire {totals['belt_games']:,}-game, {totals['reigns']}-reign lineage from the College Football Data API several times a week; {esc(holder)} holds the belt today.</p>
+      <p class="editorial"><strong>Logo:</strong> <a href="press/belt-mark.svg" download>belt mark (SVG)</a> &middot; <a href="icon-512.png" download>icon (512px PNG, current holder&rsquo;s colors)</a> &middot; <a href="share.png">share card</a>. Brand colors: brass <span class="mono">#a97f38</span>, ink <span class="mono">#211a12</span>, paper <span class="mono">#e7e2d5</span>.</p>
+      <p class="editorial"><strong>Contact:</strong> <a href="mailto:hello@collegefootballbelt.com">hello@collegefootballbelt.com</a> &middot; <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">@CollegeFBBelt</a>. An independent fan project with no affiliation to any school, conference or the NCAA; see <a href="about.html">About</a>.</p>
+    </section>
+  </div>
+</main>
+
+{site_footer('', 'The lineage is this site&rsquo;s own computation; game results are from the College Football Data API.')}
+'''
+
+
 def generate_sitemap(urls):
     """A plain sitemap.xml -- every URL, one <lastmod> for all of them
     (today's build date; nothing here tracks true per-page last-changed
@@ -9718,6 +11264,16 @@ def main():
      team_paths, belt_risk, gameday, coaches) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
+    rankings = load_optional_json("rankings.json")          # fetch_rankings.py (optional)
+    poll_model = compute_poll_model(rankings, lineage, belt_games) if rankings else None
+    if poll_model is None:
+        STORIES_SKIPPED.add("story-belt-vs-polls.html")
+        PAGES_ABSENT.add("polls.html")
+    universes = load_universes()                             # build_alternate_lineages.py (optional)
+    if not universes:
+        PAGES_ABSENT.add("universes/index.html")
+    if not coaches:
+        PAGES_ABSENT.add("coaches/index.html")
 
     games_dir = os.path.join(OUT_DIR, "games")
     os.makedirs(games_dir, exist_ok=True)
@@ -9747,6 +11303,7 @@ def main():
         merged["recap"] = recaps.get(str(gid))
         merged["historical_note"] = historical_notes.get(str(gid))
         merged["key_plays"] = game_plays.get(str(gid))
+        merged["ranks"] = (rankings or {}).get("games", {}).get(str(gid))
 
         prev_game = belt_games[i - 1] if i > 0 else None
         next_belt_game = belt_games[i + 1] if i < len(belt_games) - 1 else None
@@ -9855,7 +11412,7 @@ def main():
                          f"bootstrap to enable them; the nav's \"Conferences\" link will 404 "
                          f"until at least one exists)")
 
-    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk,
+    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk, current_poll=(rankings or {}).get("current"),
                                          lineage=lineage, belt_games=belt_games)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
@@ -9900,7 +11457,23 @@ def main():
 
     # ---- the 2026-09-16 batch: reigns, rivalries, states, decades, and the
     # single pages (outlook, timeline, leaders, heartbreak, lean, daily, about)
-    reigns_written = generate_reign_pages(lineage, colors, belt_games, os.path.join(OUT_DIR, "reigns"))
+    coach_index = build_coach_index(coaches, lineage, belt_games)
+    reign_coaches = {i: e for e in coach_index.values() for i, _ in e["reigns"]}
+    reigns_written = generate_reign_pages(lineage, colors, belt_games, os.path.join(OUT_DIR, "reigns"),
+                                          reign_polls=(poll_model or {}).get("per_reign"), reign_coaches=reign_coaches)
+    coach_slugs = generate_coach_pages(coach_index, lineage, colors, os.path.join(OUT_DIR, "coaches"))
+    if poll_model:
+        with open(os.path.join(OUT_DIR, "polls.html"), "w", encoding="utf-8") as f:
+            f.write(generate_polls_page(poll_model, lineage, colors, belt_games))
+        with open(os.path.join(OUT_DIR, "story-belt-vs-polls.html"), "w", encoding="utf-8") as f:
+            f.write(generate_story_belt_vs_polls(poll_model, lineage, belt_games))
+    universe_slugs = generate_universe_pages(universes, lineage, colors, belt_games, os.path.join(OUT_DIR, "universes"))
+    with open(os.path.join(OUT_DIR, "web.html"), "w", encoding="utf-8") as f:
+        f.write(generate_web_page(lineage, colors, belt_games))
+    os.makedirs(os.path.join(OUT_DIR, "press"), exist_ok=True)
+    dataset_files = write_dataset_files(lineage, belt_games, os.path.join(OUT_DIR, "data"))
+    with open(os.path.join(OUT_DIR, "data.html"), "w", encoding="utf-8") as f:
+        f.write(generate_data_page(lineage, belt_games, dataset_files))
     rivalries_written = generate_rivalry_pages(lineage, colors, belt_games, os.path.join(OUT_DIR, "rivalries"))
     state_codes = generate_state_pages(lineage, colors, belt_games, os.path.join(OUT_DIR, "states"))
     decade_slugs = generate_decade_pages(lineage, colors, belt_games, os.path.join(OUT_DIR, "decades"))
@@ -9952,6 +11525,10 @@ def main():
     privacy_html = generate_privacy_page()
     with open(os.path.join(OUT_DIR, "privacy.html"), "w", encoding="utf-8") as f:
         f.write(privacy_html)
+
+    shop_html = generate_shop_page()
+    with open(os.path.join(OUT_DIR, "shop.html"), "w", encoding="utf-8") as f:
+        f.write(shop_html)
 
     if ADSENSE_PUBLISHER_ID:
         with open(os.path.join(OUT_DIR, "ads.txt"), "w", encoding="utf-8") as f:
@@ -10031,15 +11608,23 @@ def main():
     search_index += [{"n": f"{a} vs. {b}", "u": f"rivalries/{slug}.html", "t": "Rivalry", "k": "belt games"} for slug, a, b in rivalries_written]
     search_index += [{"n": STATE_NAMES.get(c, c), "u": f"states/{c.lower()}.html", "t": "State", "k": c} for c in state_codes]
     search_index += [{"n": f"The {s}", "u": f"decades/{s}.html", "t": "Decade"} for s in decade_slugs]
+    search_index += [{"n": universes[slug]["name"], "u": f"universes/{slug}.html", "t": "Alternate universe", "k": "what if"} for slug in universe_slugs]
+    search_index += [{"n": e["name"], "u": f"coaches/{e['slug']}.html", "t": "Coach", "k": ", ".join(sorted(e["teams"]))} for e in coach_index.values()]
+    search_index += [{"n": title, "u": href, "t": "Story"} for href, title, _, _ in STORIES
+                     if href not in STORIES_SKIPPED and "{" not in title]
     with open(os.path.join(OUT_DIR, "search-index.json"), "w", encoding="utf-8") as f:
         json.dump(search_index, f, ensure_ascii=False, separators=(",", ":"))
+    # share cards for generate_share_image.py to paint (see share_meta)
+    with open(os.path.join(OUT_DIR, "share-manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(SHARE_MANIFEST, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"Registered {len(SHARE_MANIFEST)} share card(s) in {OUT_DIR}/share-manifest.json")
 
     sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/lineage.html", f"{SITE_URL}/all-games.html",
                      f"{SITE_URL}/records.html", f"{SITE_URL}/preview.html",
                      f"{SITE_URL}/on-this-day.html", f"{SITE_URL}/embed.html",
                      f"{SITE_URL}/compare.html", f"{SITE_URL}/trivia.html", f"{SITE_URL}/api.html",
                      f"{SITE_URL}/stories.html", f"{SITE_URL}/story-longest-reigns.html",
-                     f"{SITE_URL}/story-most-defended.html", f"{SITE_URL}/privacy.html"]
+                     f"{SITE_URL}/story-most-defended.html", f"{SITE_URL}/privacy.html", f"{SITE_URL}/shop.html"]
     if wrote_ruleset:
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
@@ -10052,10 +11637,17 @@ def main():
     sitemap_urls.append(f"{SITE_URL}/defend-or-dethrone.html")
     sitemap_urls += [f"{SITE_URL}/{p}" for p in ("outlook.html", "timeline.html", "leaders.html", "heartbreak.html",
                                                   "lean.html", "daily.html", "about.html", "rivalries/index.html",
-                                                  "states/index.html", "decades/index.html",
-                                                  "story-one-week-wonders.html", "story-giant-killers.html",
-                                                  "story-coast-to-coast.html", "story-long-way-back.html",
-                                                  "story-changing-hands.html", "story-new-years.html")]
+                                                  "states/index.html", "decades/index.html", "web.html", "data.html")]
+    sitemap_urls += [f"{SITE_URL}/{href}" for href, _, _, _ in STORIES
+                     if href not in STORIES_SKIPPED and href not in ("story-longest-reigns.html", "story-most-defended.html")]
+    if poll_model:
+        sitemap_urls.append(f"{SITE_URL}/polls.html")
+    if universe_slugs:
+        sitemap_urls.append(f"{SITE_URL}/universes/index.html")
+        sitemap_urls += [f"{SITE_URL}/universes/{slug}.html" for slug in universe_slugs]
+    if coach_slugs:
+        sitemap_urls.append(f"{SITE_URL}/coaches/index.html")
+        sitemap_urls += [f"{SITE_URL}/coaches/{slug}.html" for slug in coach_slugs]
     sitemap_urls += [f"{SITE_URL}/rivalries/{slug}.html" for slug, _, _ in rivalries_written]
     sitemap_urls += [f"{SITE_URL}/states/{c.lower()}.html" for c in state_codes]
     sitemap_urls += [f"{SITE_URL}/decades/{s}.html" for s in decade_slugs]
@@ -10109,7 +11701,7 @@ def main():
     print(f"Wrote all-games page to {OUT_DIR}/all-games.html")
     print(f"Wrote preview page to {OUT_DIR}/preview.html")
     print(f"Wrote records page to {OUT_DIR}/records.html")
-    print(f"Wrote stories.html and {len(STORIES)} story articles to {OUT_DIR}/")
+    print(f"Wrote stories.html and {len(STORIES) - len(STORIES_SKIPPED)} story articles to {OUT_DIR}/")
     print(f"Wrote On This Day page to {OUT_DIR}/on-this-day.html")
     print(f"Wrote {teams_written} team pages to {teams_dir}/")
     print(f"Wrote {players_written} player pages to {players_dir}/")
@@ -10117,7 +11709,7 @@ def main():
         print(f"Wrote map page to {OUT_DIR}/map.html")
     if wrote_ruleset:
         print(f"Wrote ruleset page to {OUT_DIR}/ruleset.html")
-    print(f"Wrote badge.svg, embed.html, privacy.html, and compare.html to {OUT_DIR}/")
+    print(f"Wrote badge.svg, embed.html, privacy.html, shop.html, and compare.html to {OUT_DIR}/")
     if ADSENSE_PUBLISHER_ID:
         print(f"Wrote ads.txt to {OUT_DIR}/ (AdSense publisher {ADSENSE_PUBLISHER_ID})")
     print(f"Wrote trivia.html ({len(trivia_pool)} question(s) in the pool) to {OUT_DIR}/")

@@ -287,6 +287,17 @@ BOOTSTRAP_CHAMPIONSHIP_SCOPES = os.environ.get("BOOTSTRAP_CHAMPIONSHIP_SCOPES", 
 BOOTSTRAP_CONFERENCE_BELTS = os.environ.get("BOOTSTRAP_CONFERENCE_BELTS", "").strip().lower() in (
     "1", "true", "yes", "on")
 
+# Set by update-and-deploy.yml when the manual "Run workflow" button's
+# "bootstrap alternate universes" checkbox is ticked -- see
+# build_alternate_lineages.py's docstring. That script needs EVERY game
+# since 1869 (not just the belt games the baseline keeps), which it
+# fetches once (~316 CFBD calls) and archives, compressed, in
+# historical_data/all_games.json.gz; every run after that is free. Until
+# the archive exists the stage is a no-op and universes/ never appears on
+# the site.
+BOOTSTRAP_ALTERNATE_UNIVERSES = os.environ.get("BOOTSTRAP_ALTERNATE_UNIVERSES", "").strip().lower() in (
+    "1", "true", "yes", "on")
+
 # (script, human-readable label, env var it needs -- or None if it needs no key)
 STAGES = [
     ("build_lineage.py", "Updating the lineage (current + previous season)", "CFBD_API_KEY"),
@@ -294,6 +305,8 @@ STAGES = [
     ("build_conference_lineage.py", "Updating the FBS/FCS conference belts (optional)", "CFBD_API_KEY"),
     ("fetch_team_colors.py", "Refreshing team colors", "CFBD_API_KEY"),
     ("fetch_coaches.py", "Refreshing head-coach history for the by-coach leaderboard (optional)", "CFBD_API_KEY"),
+    ("fetch_rankings.py", "Refreshing AP/CFP poll history for the belt-vs-polls pages (optional)", "CFBD_API_KEY"),
+    ("build_alternate_lineages.py", "Rerunning the belt under alternate rules (optional)", "CFBD_API_KEY"),
     ("fetch_game_details.py", "Refreshing box scores for belt games", "CFBD_API_KEY"),
     ("fetch_game_plays.py", "Refreshing play-by-play for belt games", "CFBD_API_KEY"),
     ("fetch_matchup_preview.py", "Building the next-game matchup stats", "CFBD_API_KEY"),
@@ -354,6 +367,13 @@ def main():
                   "total, shared across all conferences) instead of skipping them. "
                   "This is a one-off; the next run goes back to the normal incremental "
                   "update for any conference that now has a baseline.")
+        elif script == "build_alternate_lineages.py" and BOOTSTRAP_ALTERNATE_UNIVERSES:
+            cmd.append("--bootstrap")
+            print(f"\n=== [{i}/{len(STAGES)}] {label} ({script} --bootstrap) ===")
+            print("    BOOTSTRAP_ALTERNATE_UNIVERSES is set -- doing the one-time full 1869-now "
+                  "games pull (~316 CFBD calls) into historical_data/all_games.json.gz so the "
+                  "alternate-rule lineages can be rerun for free on every later run. This is a "
+                  "one-off; the next run goes back to normal.")
         else:
             print(f"\n=== [{i}/{len(STAGES)}] {label} ({script}) ===")
         result = subprocess.run(cmd, cwd=here)

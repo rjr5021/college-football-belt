@@ -29,8 +29,9 @@ different kinds of prediction:
     CFBD's pregame WP isn't published yet for that game (common early in
     the week), so the Up Next card is never just blank.
 
-Two API calls total, regardless of how many games are left (Elo covers
-the whole season in one call; pregame WP is one call for one game).
+Three API calls total, regardless of how many games are left (Elo covers
+the whole season in one call; pregame WP and the betting line are one
+call each for the one upcoming game).
 
 Season outlook (2026-09-16, outlook.html): the same Elo numbers, but the
 Monte Carlo walks the REST of the season for every team -- when the holder
@@ -134,6 +135,54 @@ def fetch_pregame_wp(year, week, season_type, team, api_key):
         return None
     is_home = home_team == team
     return home_wp if is_home else (1.0 - home_wp)
+
+
+LINE_PROVIDER_PREFERENCE = ("consensus", "DraftKings", "ESPN Bet", "Bovada", "teamrankings", "numberfire")
+
+
+def fetch_line(year, week, season_type, team, opponent, api_key):
+    """The betting line for the holder's next game from CFBD's /lines
+    (one call; the consensus line when there is one, else the first
+    provider that posted). None when no book has a line yet -- normal
+    early in the week and for lightly traded games. Spread is stored from
+    the HOLDER's side: negative means the holder is favored."""
+    url = (f"{API_BASE}/lines?year={year}&week={week}&seasonType={season_type}"
+           f"&team={urllib.parse.quote(team)}")
+    try:
+        data = get_json(url, api_key)
+    except urllib.error.HTTPError:
+        return None
+    for row in data or []:
+        home = pick(row, "home_team", "homeTeam")
+        away = pick(row, "away_team", "awayTeam")
+        if {home, away} != {team, opponent}:
+            continue
+        lines = pick(row, "lines", default=[]) or []
+        if not lines:
+            return None
+        by_provider = {(pick(l, "provider", default="") or ""): l for l in lines}
+        chosen = next((by_provider[p] for p in LINE_PROVIDER_PREFERENCE if p in by_provider), lines[0])
+        spread = pick(chosen, "spread")
+        if spread is None:
+            return None
+        try:
+            spread = float(spread)
+        except (TypeError, ValueError):
+            return None
+        holder_is_home = home == team
+        holder_spread = spread if holder_is_home else -spread
+        ou = pick(chosen, "over_under", "overUnder")
+        return {
+            "provider": pick(chosen, "provider", default=""),
+            "spread": spread,                      # CFBD convention: from the home team's side
+            "holder_spread": holder_spread,        # negative = holder favored
+            "formatted_spread": pick(chosen, "formatted_spread", "formattedSpread", default=""),
+            "over_under": float(ou) if ou is not None else None,
+            "home_moneyline": pick(chosen, "home_moneyline", "homeMoneyline"),
+            "away_moneyline": pick(chosen, "away_moneyline", "awayMoneyline"),
+            "home_team": home, "away_team": away,
+        }
+    return None
 
 
 def find_remaining(games_raw, team):
@@ -309,6 +358,15 @@ def main():
     pregame_wp = fetch_pregame_wp(next_game["season"], next_game["week"],
                                    next_game["season_type"], holder, api_key)
 
+    print(f"Fetching the betting line for {holder}'s next game (1 API call)...")
+    line = fetch_line(next_game["season"], next_game["week"], next_game["season_type"],
+                      holder, next_game["opponent"], api_key)
+    if line:
+        print(f"  {line['provider']}: {line['formatted_spread'] or line['spread']}"
+              + (f", O/U {line['over_under']}" if line.get("over_under") is not None else ""))
+    else:
+        print("  no line posted yet")
+
     if pregame_wp is not None:
         defend_prob, defend_source = pregame_wp, "cfbd_pregame_wp"
     elif remaining:
@@ -334,6 +392,8 @@ def main():
             "date": next_game["date"],
             "defend_prob": round(defend_prob, 4) if defend_prob is not None else None,
             "source": defend_source,
+            # the sportsbook line (fetch_line), None until a book posts one
+            "line": line,
         },
         "season": {
             # ends the season holding the belt (a lost-and-regained belt

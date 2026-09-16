@@ -484,6 +484,92 @@ def generate_team_posters(lineage, colors):
     print(f"Wrote {len(by_team)} team poster(s) to {posters_dir}/")
 
 
+SHARE_MANIFEST = os.path.join(OUT_DIR, "share-manifest.json")
+SHARE_DIR = "share"
+
+
+def _wrap_title(draw, text, candidates, max_width, start_size, min_size):
+    """(font, [lines]): the biggest size at which the title fits on one
+    line, else on two lines split at a word boundary, never below min_size."""
+    font = fit_font(draw, text, candidates, max_width, start_size, min_size)
+    if draw.textbbox((0, 0), text, font=font)[2] <= max_width or " " not in text:
+        return font, [text]
+    words = text.split()
+    best = None
+    for i in range(1, len(words)):
+        a, b = " ".join(words[:i]), " ".join(words[i:])
+        size = start_size
+        while size > min_size:
+            f = _font(candidates, size)
+            if max(draw.textbbox((0, 0), a, font=f)[2], draw.textbbox((0, 0), b, font=f)[2]) <= max_width:
+                break
+            size -= 4
+        if best is None or size > best[0]:
+            best = (size, [a, b])
+    return _font(candidates, best[0]), best[1]
+
+
+def generate_card(spec, out_path):
+    """One 1200x630 share card from a manifest entry: {eyebrow, title, stat,
+    sub, primary, alt}. Same layout language as the homepage share.png."""
+    from PIL import ImageDraw
+    primary = spec.get("primary") or "#211a12"
+    alt = spec.get("alt") or "#a97f38"
+    ink, accent, dark_stop = panel_colors(primary, alt)
+    img = vertical_gradient(W, H, primary, dark_stop)
+    draw = ImageDraw.Draw(img)
+    eyebrow_font = _font(_MONO_CANDIDATES, 22)
+    wordmark_font = _font(_DISPLAY_CANDIDATES, 34)
+    stat_font = _font(_BODY_CANDIDATES, 28)
+    sub_font = _font(_BODY_CANDIDATES, 24)
+    url_font = _font(_MONO_CANDIDATES, 22)
+    draw_tracked_text(draw, (PAD, PAD), (spec.get("eyebrow") or "EST. 1869 · LINEAL CHAMPIONSHIP").upper(),
+                       eyebrow_font, ink, tracking=2)
+    draw.text((PAD, PAD + 38), "THE COLLEGE FOOTBALL BELT", font=wordmark_font, fill=ink)
+    title = spec.get("title") or ""
+    start_size = 108 if len(title.split()) > 3 else 124
+    font, lines = _wrap_title(draw, title, _DISPLAY_CANDIDATES, W - 2 * PAD, start_size, 52)
+    line_h = draw.textbbox((0, 0), "Xg", font=font)[3] + 6
+    block_h = line_h * len(lines)
+    y = max(PAD + 110, H // 2 - block_h // 2 - 10)
+    for ln in lines:
+        draw.text((PAD, y), ln, font=font, fill=accent)
+        y += line_h
+    y += 22
+    if spec.get("stat"):
+        draw.text((PAD, y), spec["stat"], font=stat_font, fill=ink)
+        y += 40
+    if spec.get("sub"):
+        sub = spec["sub"]
+        while draw.textbbox((0, 0), sub, font=sub_font)[2] > W - 2 * PAD and len(sub) > 20:
+            sub = sub[:-4].rstrip() + "…"
+        draw.text((PAD, y), sub, font=sub_font, fill=ink)
+    url_text = "collegefootballbelt.com"
+    url_w = draw.textbbox((0, 0), url_text, font=url_font)[2]
+    draw.text((W - PAD - url_w, H - PAD - 22), url_text, font=url_font, fill=ink)
+    img.save(out_path, "PNG")
+
+
+def generate_manifest_cards():
+    """Every page that registered a share card in build_site.py's
+    site/share-manifest.json (reigns, rivalries, stories, states, decades,
+    universes and the single pages) gets its own OG image under
+    site/share/. Zero new data: the manifest carries everything."""
+    if not os.path.exists(SHARE_MANIFEST):
+        print(f"No {SHARE_MANIFEST} -- build_site.py hasn't registered any share cards; skipping.")
+        return 0
+    with open(SHARE_MANIFEST) as f:
+        manifest = json.load(f)
+    n = 0
+    for key, spec in manifest.items():
+        out_path = os.path.join(OUT_DIR, SHARE_DIR, f"{key}.png")
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        generate_card(spec, out_path)
+        n += 1
+    print(f"Wrote {n} share card(s) to {os.path.join(OUT_DIR, SHARE_DIR)}/")
+    return n
+
+
 def generate_favicon(primary, accent, ink):
     """Writes site/favicon.png (32x32, referenced as the tab icon on every
     page), site/apple-touch-icon.png (180x180, for iOS home-screen
@@ -562,6 +648,7 @@ def main():
     generate_favicon(primary, accent, ink)
     generate_team_posters(lineage, colors)
     generate_team_share_images(lineage, colors)
+    generate_manifest_cards()
 
 
 if __name__ == "__main__":

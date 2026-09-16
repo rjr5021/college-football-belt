@@ -1,0 +1,57 @@
+warning: in the working copy of 'seo_enhance.py.local-backup', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/seo_enhance.py.local-backup b/seo_enhance.py[m
+[1mindex 230313e..35508f8 100644[m
+[1m--- a/seo_enhance.py.local-backup[m
+[1m+++ b/seo_enhance.py[m
+[36m@@ -67,17 +67,16 @@[m [mSTATIC_PAGES = {[m
+     "lineage.html": ([m
+         "Full College Football Belt History: Every Reign Since 1869",[m
+         "Every reign of the College Football Belt, the lineal college football "[m
+[31m-        "championship, from Rutgers in 1869 to today: who won it, who they beat, "[m
+[31m-        "how long they held it and how many times they defended it."),[m
+[32m+[m[32m        "championship, from Rutgers in 1869 to today: who won it, who they beat "[m
+[32m+[m[32m        "and how long they held it."),[m
+     "all-games.html": ([m
+         "Every College Football Belt Game Since 1869 — Scores & Results",[m
+         "Searchable list of every game played for the College Football Belt since "[m
+         "1869: dates, scores, title changes, defenses and ties."),[m
+     "records.html": ([m
+         "College Football Belt Records — Longest Reigns, Most Defenses",[m
+[31m-        "All-time College Football Belt records: longest reigns, most total days "[m
+[31m-        "held, most defenses, biggest blowouts and closest calls in lineal "[m
+[31m-        "college football championship history."),[m
+[32m+[m[32m        "All-time College Football Belt records: longest reigns, most days held, "[m
+[32m+[m[32m        "most defenses, longest droughts and belt held by coach."),[m
+     "ruleset.html": ([m
+         "How the College Football Belt Works — Official Ruleset",[m
+         "The rules of the College Football Belt: how the lineal title passes on "[m
+[36m@@ -224,8 +223,9 @@[m [mdef game_meta(g, total):[m
+     title = f"{away} at {home} {year}: {short}, {score}"[m
+     if len(title) > 62:[m
+         title = f"{away} at {home} {year}: {score} belt game"[m
+[31m-    desc = (f"{when}: {result}. {stake} Belt game #{n:,} of {total:,} in the lineal "[m
+[31m-            f"college football championship since 1869.")[m
+[32m+[m[32m    desc = f"{when}: {result}. {stake} College Football Belt game #{n:,} of {total:,} since 1869."[m
+[32m+[m[32m    if len(desc) > 158:  # Google truncates around 155-160 characters[m
+[32m+[m[32m        desc = f"{when}: {result}. {stake} Belt game #{n:,} of {total:,}."[m
+     return title, desc[m
+ [m
+ [m
+[36m@@ -323,11 +323,16 @@[m [mdef process_pages(lineage):[m
+                 base = get_meta(doc, "description") or ""[m
+                 if "college football belt" not in base.lower():[m
+                     lead = (f"{holder} holds the College Football Belt, the lineal college "[m
+[31m-                            f"football championship passed on the field since {first_year}. "[m
+[32m+[m[32m                            f"football title passed on the field since {first_year}. "[m
+                             if holder else[m
+                             f"The lineal college football championship, passed on the field "[m
+                             f"since {first_year}. ")[m
+                     desc = (lead + base).strip()[m
+[32m+[m[32m                    if len(desc) > 158:  # keep it inside what Google shows[m
+[32m+[m[32m                        first_sentence = base.split(". ")[0].rstrip(".") + "."[m
+[32m+[m[32m                        desc = (lead + first_sentence).strip()[m
+[32m+[m[32m                    if len(desc) > 158:[m
+[32m+[m[32m                        desc = lead.strip()[m
+                 extra.append(json_ld({[m
+                     "@context": "https://schema.org",[m
+                     "@graph": [[m
