@@ -65,6 +65,7 @@ BELT_DATA_DIR = os.path.join(HERE, "belt_data")
 LINEAGE_PATH = os.path.join(BELT_DATA_DIR, "lineage.json")
 NEXT_GAME_PATH = os.path.join(BELT_DATA_DIR, "next_game.json")
 AI_PREVIEW_PATH = os.path.join(BELT_DATA_DIR, "ai_preview.json")
+BELT_RISK_PATH = os.path.join(BELT_DATA_DIR, "belt_risk.json")
 CACHE_DIR = os.path.join(HERE, "social_cache")
 CACHE_PATH = os.path.join(CACHE_DIR, "ig_last_posted.json")
 SITE_URL = "https://collegefootballbelt.com"
@@ -181,7 +182,8 @@ def post_preview(access_token, ig_user_id, cache):
         return
 
     ai_preview = load_json(AI_PREVIEW_PATH)
-    caption = compose_preview_tweet(next_game, ai_preview)
+    belt_risk = load_json(BELT_RISK_PATH)
+    caption = compose_preview_tweet(next_game, ai_preview, belt_risk)
     caption = f"{caption}\n\n{HASHTAGS}"
 
     try:

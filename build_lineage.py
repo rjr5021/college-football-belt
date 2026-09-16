@@ -559,6 +559,70 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
     return upcoming
 
 
+def compute_team_paths(raw, current_holder, d1_teams, venue_tz=None, venue_info=None):
+    """For every current FBS/FCS team, a precomputed answer to "when could
+    we get a shot at the belt?" -- 2026-09-16, Bob's wishlist item #1,
+    "My team and the path to the belt": "The site already knows the
+    holder's remaining schedule and every team's schedule, so it can say
+    'Penn State doesn't play Notre Dame this year, but you play Purdue on
+    Nov 14 -- if Purdue takes it on Sep 26 and holds it, that's your
+    game.' A little scenario tree off the holder's schedule, pruned to
+    games my team is in."
+
+    Two kinds of path, both read straight out of this run's already-
+    fetched season schedule (`raw` -- see find_upcoming_games above; the
+    only NEW cost is the one-time fetch_division1_teams call to get the
+    full current D1 team list, already paid elsewhere for the Losers
+    Belt/FBS-FCS scopes):
+
+      - direct: the team's own remaining games against the CURRENT
+        holder -- "you play them on <date>."
+      - indirect (one-hop only, deliberately not chased further): for
+        each of the holder's own remaining games (holder vs. some
+        opponent O on date d), any LATER game the team has against that
+        SAME opponent O -- "if O takes the belt from the holder on d and
+        still has it, that's your shot." Whether O actually holds onto
+        it that long isn't modeled (that's the job of belt-at-risk odds,
+        wishlist item #2) -- the "and holds it" framing in the copy
+        itself carries the caveat, matching how Bob described it.
+
+    Returns {team_name: {...}} for every current D1 team plus the holder
+    itself (whose own entry just sets is_holder). build_site.py keys this
+    by team_slug() when it builds the client-side payload -- kept as
+    plain team names here since slugging is build_site.py's job
+    everywhere else in this pipeline, not this module's."""
+    venue_tz = venue_tz or {}
+    venue_info = venue_info or {}
+    holder_schedule = find_upcoming_games(raw, current_holder, count=99,
+                                           venue_tz=venue_tz, venue_info=venue_info)
+    all_teams = sorted(set(d1_teams) | {current_holder})
+    out = {}
+    for team in all_teams:
+        if team == current_holder:
+            out[team] = {"is_holder": True, "direct": [], "indirect": []}
+            continue
+        team_schedule = find_upcoming_games(raw, team, count=99,
+                                             venue_tz=venue_tz, venue_info=venue_info)
+        direct = [{"date": g["date"], "is_home": g["is_home"]}
+                  for g in team_schedule if g["opponent"] == current_holder]
+        indirect = []
+        for hg in holder_schedule:
+            via = hg["opponent"]
+            if via == team:
+                continue
+            for tg in team_schedule:
+                if tg["opponent"] == via and tg["date"] > hg["date"]:
+                    indirect.append({
+                        "via": via,
+                        "via_date": hg["date"],
+                        "your_date": tg["date"],
+                        "your_is_home": tg["is_home"],
+                    })
+        indirect.sort(key=lambda x: x["your_date"])
+        out[team] = {"is_holder": False, "direct": direct, "indirect": indirect}
+    return out
+
+
 def find_next_game(raw, holder, venue_tz=None, venue_info=None):
     """The current holder's single next scheduled game, or None -- kept as
     its own function since fetch_matchup_preview.py and
@@ -952,7 +1016,15 @@ def main():
     # "Belt Watch" (next_game/upcoming_games) stays COMBINED-only -- that's
     # what the homepage shows; the fbs/fcs scopes are Full History/All
     # Games-only for now, no separate homepage of their own.
-    upcoming_games = find_upcoming_games(raw, combined_current["team"], count=3,
+    #
+    # count=99 (not just the 3 "Belt Watch" needs) so the same file also
+    # covers the current season page's "remaining schedule" section
+    # (wishlist #4, 2026-09-16) -- no new API call, this is still the same
+    # already-fetched `raw` season data, just asking for more of it back.
+    # generate_homepage's own Belt Watch still only ever renders
+    # upcoming_games[1:3], so this is a pure superset -- nothing about the
+    # homepage's look changes.
+    upcoming_games = find_upcoming_games(raw, combined_current["team"], count=99,
                                           venue_tz=venue_tz, venue_info=venue_info)
     next_game = upcoming_games[0] if upcoming_games else None
     with open(os.path.join(OUT_DIR, "next_game.json"), "w") as f:
@@ -967,6 +1039,23 @@ def main():
     else:
         print("\nNo upcoming game found for the current holder in the fetched "
               "window (schedule not out yet, or the season's over).")
+
+    # "My team and the path to the belt" (wishlist #1) -- every current D1
+    # team's precomputed direct/indirect shot at the CURRENT holder, off
+    # this run's already-fetched season schedule. d1_teams may already be
+    # loaded (fbs/fcs scopes fetch it lazily above); fetch it here if this
+    # run only did the combined scope.
+    if d1_teams is None:
+        print("Fetching current Division 1 (FBS/FCS) team list from CFBD...")
+        d1_teams = fetch_division1_teams(args.key)
+    team_paths = compute_team_paths(raw, combined_current["team"], d1_teams,
+                                     venue_tz=venue_tz, venue_info=venue_info)
+    with open(os.path.join(OUT_DIR, "team_paths.json"), "w") as f:
+        json.dump({"holder": combined_current["team"], "teams": team_paths}, f, indent=2)
+    n_direct = sum(1 for t in team_paths.values() if t["direct"])
+    n_indirect = sum(1 for t in team_paths.values() if not t["direct"] and t["indirect"])
+    print(f"Wrote team_paths.json: {len(team_paths)} teams, {n_direct} with a direct "
+          f"shot on the schedule, {n_indirect} more with only an indirect one")
 
     print(f"""
 Lineage built -> {OUT_DIR}/

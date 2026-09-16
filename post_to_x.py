@@ -78,6 +78,7 @@ BELT_DATA_DIR = os.path.join(HERE, "belt_data")
 LINEAGE_PATH = os.path.join(BELT_DATA_DIR, "lineage.json")
 NEXT_GAME_PATH = os.path.join(BELT_DATA_DIR, "next_game.json")
 AI_PREVIEW_PATH = os.path.join(BELT_DATA_DIR, "ai_preview.json")
+BELT_RISK_PATH = os.path.join(BELT_DATA_DIR, "belt_risk.json")
 CACHE_DIR = os.path.join(HERE, "social_cache")
 CACHE_PATH = os.path.join(CACHE_DIR, "x_last_posted.json")
 SITE_URL = "https://collegefootballbelt.com"
@@ -276,7 +277,7 @@ def post_results(client, lineage, cache):
 
 # ----------------------------------------------------------- preview post
 
-def compose_preview_tweet(next_game, ai_preview):
+def compose_preview_tweet(next_game, ai_preview, belt_risk=None):
     holder, opponent = next_game["team"], next_game["opponent"]
     date = pretty_date(next_game["date"])
     if next_game.get("neutral"):
@@ -296,6 +297,16 @@ def compose_preview_tweet(next_game, ai_preview):
         lines.append("")
         lines.append(f"Prediction: {ai_preview['predicted_winner']} "
                       f"({ai_preview['predicted_score']})")
+
+    # Belt-at-risk odds (wishlist #2, 2026-09-16, Bob: "it also feeds the
+    # weekly X/IG post automatically") -- only when fetch_belt_odds.py's
+    # output actually covers THIS matchup (a stale belt_risk.json for a
+    # different opponent is skipped rather than shown wrong).
+    if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
+        defend_prob = belt_risk["next_game"].get("defend_prob")
+        if defend_prob is not None:
+            lines.append("")
+            lines.append(f"{holder} is a {round(defend_prob * 100)}% favorite to defend it")
 
     lines.append("")
     lines.append(f"{SITE_URL}/preview.html")
@@ -322,7 +333,8 @@ def post_preview(client, cache):
         return
 
     ai_preview = load_json(AI_PREVIEW_PATH)
-    text = compose_preview_tweet(next_game, ai_preview)
+    belt_risk = load_json(BELT_RISK_PATH)
+    text = compose_preview_tweet(next_game, ai_preview, belt_risk)
 
     try:
         response = client.create_tweet(text=text)

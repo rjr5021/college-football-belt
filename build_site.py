@@ -273,6 +273,10 @@ def load_data():
         colors = json.load(f)
     next_game = load_optional_json("next_game.json")
     upcoming_games = load_optional_json("upcoming_games.json") or []
+    team_paths = load_optional_json("team_paths.json")
+    belt_risk = load_optional_json("belt_risk.json")
+    gameday = load_optional_json("gameday.json")
+    coaches = load_optional_json("coaches.json")
     matchup = load_optional_json("matchup_preview.json")
     ai_preview = load_optional_json("ai_preview.json")
     weather = load_optional_json("weather.json")
@@ -319,7 +323,8 @@ def load_data():
                     conference_lineages[slug] = json.load(f)
     return (lineage, details, colors, next_game, upcoming_games, matchup,
             ai_preview, weather, recaps, historical_notes, game_plays,
-            losers_lineages, championship_lineages, conference_lineages)
+            losers_lineages, championship_lineages, conference_lineages,
+            team_paths, belt_risk, gameday, coaches)
 
 
 def team_color(colors, name):
@@ -763,6 +768,7 @@ details.moreStats .statCategory{ margin-top:18px; }
 
 /* ---------- upcoming game preview page ---------- */
 .previewMeta{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:2px 0 6px; }
+.previewOdds{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.01em; color:var(--ink-soft); margin:0 0 14px; padding:8px 12px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:4px; }
 .kickoffLocal{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin:0 0 30px; }
 .kickoffLocal[hidden]{ display:none; }
 .formGrid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:0 0 8px; }
@@ -833,6 +839,28 @@ details.moreStats .statCategory{ margin-top:18px; }
 .compareScore{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; }
 .compareEmpty{ color:var(--ink-soft); font-size:13.5px; padding:16px 0; }
 
+/* ---------- my team / path to the belt ---------- */
+.myTeamPicker{ display:flex; align-items:center; gap:14px; margin:18px 0 30px; flex-wrap:wrap; }
+.myTeamPicker select{
+  font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:17px;
+  padding:10px 14px; border:1px solid var(--hairline); border-radius:6px;
+  background:var(--paper-2); color:var(--ink); min-width:220px; max-width:100%;
+}
+.myTeamPicker button{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  padding:11px 18px; border-radius:6px; border:none; background:var(--ink); color:var(--paper); cursor:pointer;
+}
+.myTeamPicker button:hover{ opacity:.88; }
+.myTeamHeader{ display:flex; align-items:center; gap:14px; margin:0 0 22px; flex-wrap:wrap; }
+.myTeamHeader .teamLogo{ width:48px; height:48px; }
+.myTeamChangeLink{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline; text-decoration-color:var(--brass); }
+.myTeamCard{ padding:22px 24px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; margin:0 0 16px; }
+.myTeamCard.holder{ background:var(--good-bg); border-color:var(--good); }
+.myTeamCard .kicker{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); margin:0 0 8px; }
+.myTeamCard p{ margin:0; font-size:16px; line-height:1.6; }
+.myTeamCard p + p{ margin-top:10px; }
+.myTeamEmpty{ color:var(--ink-soft); font-size:14.5px; padding:8px 0 0; }
+
 /* ---------- embed page ---------- */
 .embedPreview{ display:flex; align-items:center; gap:14px; margin:20px 0 28px; padding:18px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:8px; flex-wrap:wrap; }
 .embedLabel{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:24px 0 8px; }
@@ -889,14 +917,52 @@ nav.site a:hover{ color:var(--ink); border-color:var(--brass); }
 .hero h1{ font-family:"Big Shoulders Display", sans-serif; font-weight:900; font-size:clamp(30px, 4vw, 42px); line-height:1.02; margin:0 0 14px; text-wrap:balance; }
 .hero p.lede{ font-size:17px; max-width:44ch; margin:0 0 18px; }
 
-.nextGame{ display:flex; align-items:center; gap:10px; width:fit-content; max-width:100%; margin:0 0 22px; padding:9px 16px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:20px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease; }
+.nextGame{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; width:fit-content; max-width:100%; margin:0 0 22px; padding:9px 16px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:20px; text-decoration:none; color:inherit; transition:border-color .15s ease, box-shadow .15s ease; }
 .nextGame:hover{ border-color:var(--brass); box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .nextGame:hover .nextGameText strong{ color:var(--brass-bright); }
 .nextGameTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); font-weight:600; white-space:nowrap; padding-right:10px; border-right:1px solid var(--brass-line); }
 .nextGameText{ font-size:13.5px; color:var(--ink); }
 .nextGameText strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:14.5px; }
+.nextGameOdds{ flex-basis:100%; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); padding-top:6px; margin-top:2px; border-top:1px solid var(--brass-line); }
+.gamedayBanner{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:9px 14px; border-radius:5px; text-decoration:none; font-family:"IBM Plex Mono",monospace; border:1px solid; animation:gamedayPulse 2.4s ease-in-out infinite; }
+.gamedayBanner.gamedaySafe{ background:var(--good-bg); border-color:var(--good); color:var(--good); }
+.gamedayBanner.gamedayDanger{ background:rgba(122,46,46,.14); border-color:#7a2e2e; color:#c65f5f; }
+.gamedayTag{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:3px; border:1px solid currentColor; }
+.gamedayTag::before{ content:"\25CF"; display:inline-block; margin-right:4px; }
+.gamedayScore{ font-size:14px; font-weight:600; color:var(--ink); }
+.gamedayClock{ font-size:12px; color:var(--ink-soft); }
+.gamedayState{ font-size:11px; font-weight:700; letter-spacing:.06em; margin-left:auto; }
+@keyframes gamedayPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.72; } }
+@media (prefers-reduced-motion: reduce){ .gamedayBanner{ animation:none; } }
 @media (max-width:500px){ .nextGame{ white-space:normal; } }
 
+.remainingSchedule{ display:flex; flex-direction:column; gap:8px; margin:0 0 22px; padding:0; list-style:none; font-size:12.5px; }
+.remainingSchedule .watchChip{ display:block; padding:9px 12px; border:1px solid var(--brass-line); border-radius:4px; }
+.dodStreakBar{ display:flex; flex-wrap:wrap; align-items:center; gap:22px; margin:20px 0 26px; padding:14px 18px; background:var(--paper-2); border:1px solid var(--brass-line); border-radius:6px; }
+.dodStreakBar > div{ display:flex; flex-direction:column; gap:2px; }
+.dodStreakBar .n{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:26px; }
+.dodStreakBar .l{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+.dodHistoryWrap{ flex:1; min-width:160px; }
+.dodHistory{ font-size:18px; letter-spacing:2px; line-height:1; }
+.dodPicker{ margin:0 0 22px; }
+.dodMatchup{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:20px; margin:0 0 14px; }
+.dodChoices{ display:flex; gap:14px; flex-wrap:wrap; }
+.dodChoice{ flex:1; min-width:160px; padding:16px 18px; border-radius:6px; border:1px solid var(--brass-line); background:var(--paper); font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; cursor:pointer; text-align:left; display:flex; flex-direction:column; gap:4px; transition:transform .12s ease; }
+.dodChoice:hover{ transform:translateY(-1px); }
+.dodChoice span{ font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:11px; letter-spacing:.04em; text-transform:none; color:var(--ink-soft); }
+.dodChoice.dodDefend:hover{ border-color:var(--good); background:var(--good-bg); }
+.dodChoice.dodDethrone:hover{ border-color:#7a2e2e; background:rgba(122,46,46,.14); }
+.dodPending{ margin:0 0 22px; padding:14px 18px; border:1px solid var(--brass-line); border-radius:6px; background:var(--paper-2); font-size:14px; }
+.dodShareBtn{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.04em; padding:9px 16px; border-radius:5px; border:1px solid var(--brass); background:transparent; color:var(--brass-text); cursor:pointer; }
+.dodShareBtn:hover{ background:var(--brass); color:var(--paper); }
+.birthdayPicker{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 18px; }
+.birthdayPicker input[type="date"]{ font-family:"IBM Plex Mono",monospace; font-size:13px; padding:9px 12px; border-radius:5px; border:1px solid var(--brass-line); background:var(--paper); color:var(--ink); }
+.birthdayPicker button{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.04em; padding:9px 18px; border-radius:5px; border:1px solid var(--brass); background:var(--brass); color:var(--paper); cursor:pointer; }
+.birthdayPicker button:hover{ background:var(--brass-bright); }
+.birthdayResult{ margin:0 0 30px; padding:16px 18px; border:1px solid var(--brass-line); border-radius:6px; background:var(--paper-2); font-size:14px; line-height:1.6; }
+.birthdayResult p{ margin:0 0 8px; }
+.birthdayResult p:last-child{ margin-bottom:0; }
+.birthdayAnswer{ font-family:"Big Shoulders Display",sans-serif; font-weight:700; font-size:19px; }
 .beltWatch{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 22px; font-size:12.5px; }
 .beltWatchLabel{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
 .watchChip{ color:var(--ink-soft); white-space:nowrap; }
@@ -1699,7 +1765,10 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../my-team.html">My Team</a>
       <a href="../conferences/index.html">Conferences</a>
+      <a href="../seasons.html">Seasons</a>
+      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -1827,13 +1896,29 @@ def render_on_this_day(belt_games, today):
   </section>'''
 
 
-def generate_on_this_day_page(belt_games):
+def generate_on_this_day_page(belt_games, reigns):
     """Standalone version of the homepage's "On this day" widget -- every
     belt game ever, tagged with its month/day, filtered entirely
     client-side against the VISITOR's own local date (not the build
     server's), with a month/day picker to browse any other date in belt
     history. Same data as everywhere else on the site, just reshaped --
-    no new fetches."""
+    no new fetches.
+
+    Also embeds "Who held the belt when you were born?" -- wishlist item
+    #6, 2026-09-16, Bob: "A date picker on the On This Day page that
+    answers this plus 'and it's changed hands 41 times since.' Cheap to
+    build, very shareable, and it's a natural gift from the map-scrubber
+    data you already have." That data is `reigns` -- every reign already
+    covers a continuous start_date/end_date span, so "who held it on date
+    D" is just finding the one reign whose span contains D, and "changed
+    hands N times since" is just counting how many reigns started after
+    D. The full reigns list is tiny (a few hundred rows, {{team,start,end}}
+    each) next to belt_games' 1,600+, so it's embedded whole -- an exact
+    answer for ANY date typed in, computed instantly in the browser, no
+    server round-trip."""
+    reigns_payload = [{"team": r["team"], "start": r["start_date"], "end": r.get("end_date")}
+                       for r in reigns]
+    first_date = reigns[0]["start_date"] if reigns else None
     rows = ""
     for g in sorted(belt_games, key=lambda g: g["date"], reverse=True):
         d = date.fromisoformat(g["date"])
@@ -1878,7 +1963,10 @@ def generate_on_this_day_page(belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -1886,6 +1974,23 @@ def generate_on_this_day_page(belt_games):
 
 <main class="wrap">
   <h1 class="pageTitle">On This Day</h1>
+
+  <div class="sectionHead">
+    <span class="tag">Just For You</span>
+    <span class="rule"></span>
+    <h2>Who Held the Belt When You Were Born?</h2>
+  </div>
+  <div class="birthdayPicker">
+    <input type="date" id="birthdayInput" aria-label="Your birth date" min="{esc(first_date or '1869-11-06')}">
+    <button type="button" id="birthdayGo">Find out</button>
+  </div>
+  <div class="birthdayResult" id="birthdayResult" hidden></div>
+
+  <div class="sectionHead">
+    <span class="tag">Browse</span>
+    <span class="rule"></span>
+    <h2>Every Game On a Date</h2>
+  </div>
   <p class="lede" id="otdLede">Every belt game that&rsquo;s ever happened on this date, across
     all 158 years of belt history.</p>
 
@@ -1922,6 +2027,63 @@ def generate_on_this_day_page(belt_games):
     </nav>
   </div>
 </footer>
+
+<script type="application/json" id="birthdayReigns">{json.dumps(reigns_payload, ensure_ascii=False)}</script>
+<script>
+(function(){{
+  var reigns = JSON.parse(document.getElementById('birthdayReigns').textContent);
+  var input = document.getElementById('birthdayInput');
+  var goBtn = document.getElementById('birthdayGo');
+  var resultEl = document.getElementById('birthdayResult');
+
+  function fmtDate(iso) {{
+    var d = new Date(iso + 'T00:00:00Z');
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, {{ year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }});
+  }}
+
+  function lookup() {{
+    var picked = input.value;  // 'YYYY-MM-DD' or ''
+    resultEl.hidden = false;
+    if (!picked) {{
+      resultEl.innerHTML = '<p>Pick a date above to see who held the belt that day.</p>';
+      return;
+    }}
+    if (reigns.length && picked < reigns[0].start) {{
+      resultEl.innerHTML = '<p>The belt didn&rsquo;t exist yet on ' + fmtDate(picked) +
+        ' &mdash; it wasn&rsquo;t put up until ' + fmtDate(reigns[0].start) + '.</p>';
+      return;
+    }}
+    var todayIso = new Date().toISOString().slice(0, 10);
+    if (picked > todayIso) {{
+      resultEl.innerHTML = '<p>That date hasn&rsquo;t happened yet &mdash; check back once it has.</p>';
+      return;
+    }}
+    var match = null;
+    for (var i = 0; i < reigns.length; i++) {{
+      var r = reigns[i];
+      if (r.start <= picked && (!r.end || picked < r.end)) {{ match = r; break; }}
+    }}
+    if (!match) {{
+      resultEl.innerHTML = '<p>Couldn&rsquo;t place that date in belt history &mdash; try another.</p>';
+      return;
+    }}
+    var changesSince = 0;
+    for (var j = 0; j < reigns.length; j++) {{
+      if (reigns[j].start > picked) changesSince++;
+    }}
+    var heldText = match.end
+      ? ('held it from ' + fmtDate(match.start) + ' until losing it on ' + fmtDate(match.end))
+      : ('has held it since ' + fmtDate(match.start) + ' &mdash; and holds it right now');
+    resultEl.innerHTML = '<p class="birthdayAnswer"><strong>' + match.team + '</strong> held the belt on ' +
+      fmtDate(picked) + '.</p><p>' + match.team + ' ' + heldText + '. The belt has changed hands ' +
+      changesSince + (changesSince === 1 ? ' time' : ' times') + ' since ' + fmtDate(picked) + '.</p>';
+  }}
+
+  goBtn.addEventListener('click', lookup);
+  input.addEventListener('keydown', function(e){{ if (e.key === 'Enter') lookup(); }});
+}})();
+</script>
 
 <script>
 (function(){{
@@ -1965,7 +2127,7 @@ def generate_on_this_day_page(belt_games):
 '''
 
 
-def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None):
+def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None, belt_risk=None, gameday=None):
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
@@ -2018,10 +2180,28 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
                 when_txt = f" &middot; in {days_until} days"
         except ValueError:
             pass
+        # ---- belt-at-risk odds (wishlist #2) -- fetch_belt_odds.py's Elo/
+        # pregame-WP estimate for this exact game, folded into the same
+        # card. Optional and silent when there's no belt_risk.json yet or
+        # it doesn't cover this specific opponent (a new next_game since
+        # the last run) -- same no-op-when-unset pattern as everything
+        # else optional on this site.
+        odds_html = ""
+        if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
+            defend_prob = belt_risk["next_game"].get("defend_prob")
+            holds_prob = belt_risk.get("season", {}).get("holds_into_offseason_prob")
+            bits = []
+            if defend_prob is not None:
+                bits.append(f'{round(defend_prob * 100)}% to defend')
+            if holds_prob is not None:
+                bits.append(f'{round(holds_prob * 100)}% to hold into the offseason')
+            if bits:
+                odds_html = f'<span class="nextGameOdds">{" &middot; ".join(bits)}</span>'
         next_game_html = f'''
     <a class="nextGame" href="preview.html">
       <span class="nextGameTag">Up Next</span>
       <span class="nextGameText">{loc_word} <strong>{esc(opponent)}</strong>{neutral_txt} &middot; {fmt_date(next_game["date"])}{when_txt}</span>
+      {odds_html}
     </a>'''
 
     # ---- belt watch: a short lookahead past the very next game, same free
@@ -2040,6 +2220,42 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <span class="beltWatchLabel">Belt Watch</span>
       {chips}
     </div>'''
+
+    # ---- game-day mode (wishlist #3) -- a live score + SAFE/IN DANGER
+    # banner when fetch_gameday_status.py found the holder's game actually
+    # in progress on CFBD's live /scoreboard. Silent (no banner) any other
+    # time -- no game today, too early in the week for /scoreboard to have
+    # it yet, or the game's already gone final (at which point the hero
+    # above already reflects the settled result -- build_lineage.py runs
+    # earlier in the same pipeline stage list and re-walks the chain the
+    # moment a final score shows up -- so a separate FINAL banner here
+    # would just be redundant with what the hero's already saying). Same
+    # no-op-when-unset pattern as everything else optional on this site.
+    gameday_html = ""
+    if gameday and gameday.get("status") == "in_progress" and gameday.get("holder") == holder:
+        hs = gameday.get("holder_score")
+        opp_score = gameday.get("opponent_score")
+        opp = gameday.get("opponent") or ""
+        safe = gameday.get("safe")
+        state_class = "gamedaySafe" if safe else "gamedayDanger"
+        state_txt = "SAFE" if safe else "IN DANGER"
+        clock_bits = []
+        if gameday.get("period"):
+            clock_bits.append(f'Q{gameday["period"]}')
+        if gameday.get("clock"):
+            clock_bits.append(gameday["clock"])
+        clock_txt = f' &middot; {" ".join(clock_bits)}' if clock_bits else ""
+        if hs is not None and opp_score is not None:
+            score_txt = f'{esc(holder)} {hs}&ndash;{opp_score} {esc(opp)}'
+        else:
+            score_txt = f'{esc(holder)} vs. {esc(opp)}'
+        gameday_html = f'''
+      <a class="gamedayBanner {state_class}" href="preview.html">
+        <span class="gamedayTag">Live</span>
+        <span class="gamedayScore">{score_txt}</span>
+        <span class="gamedayClock">{clock_txt}</span>
+        <span class="gamedayState">{state_txt}</span>
+      </a>'''
 
     # ---- chain of custody: the last CHAIN_LEN reigns, oldest to newest ----
     chain_reigns = reigns[-CHAIN_LEN:]
@@ -2125,7 +2341,10 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a href="#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -2136,6 +2355,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
 
   <section class="hero">
     <div>
+      {gameday_html}
       <h1>{esc(holder)} holds the belt.</h1>
       <p class="lede">{lede}</p>
       {next_game_html}
@@ -2400,7 +2620,10 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -2812,7 +3035,10 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -3217,7 +3443,10 @@ def generate_conference_belt_page(lineage, slug):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../my-team.html">My Team</a>
       <a href="index.html">Conferences</a>
+      <a href="../seasons.html">Seasons</a>
+      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -3267,6 +3496,8 @@ def generate_conference_belt_page(lineage, slug):
     <nav aria-label="Footer">
       <a href="../index.html">Home</a>
       <a href="index.html">Conferences</a>
+      <a href="../seasons.html">Seasons</a>
+      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
       <a href="../ruleset.html">Ruleset</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="../privacy.html">Privacy</a>
@@ -3382,6 +3613,7 @@ def generate_conferences_index_page(conference_lineages):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../my-team.html">My Team</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -3508,7 +3740,10 @@ def generate_all_games_page(lineage, colors, belt_games, scope="combined", avail
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -3718,7 +3953,7 @@ def render_weather(weather):
   <p class="emptyNote">Forecast as of {weather.get("fetched", "recently")} &mdash; weather this far out can change; treat it as a rough guide, not a promise.</p>'''
 
 
-def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
+def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk=None):
     nav = '''
     <nav class="site" aria-label="Primary">
       <a href="index.html">Home</a>
@@ -3731,7 +3966,10 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>'''
     header = f'''<header class="site wrap">
@@ -3853,6 +4091,23 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
     weather_html = render_weather(weather)
     calendar_html = build_calendar_links(next_game)
 
+    # ---- belt-at-risk odds (wishlist #2) -- same staleness-guarded pattern
+    # as the homepage's Up Next card: only shown when belt_risk.json exists
+    # and still covers this exact opponent.
+    odds_html = ""
+    if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
+        defend_prob = belt_risk["next_game"].get("defend_prob")
+        holds_prob = belt_risk.get("season", {}).get("holds_into_offseason_prob")
+        bits = []
+        if defend_prob is not None:
+            source = belt_risk["next_game"].get("source")
+            source_txt = "CFBD's pregame model" if source == "cfbd_pregame_wp" else "our Elo estimate"
+            bits.append(f'{esc(holder)} is a {round(defend_prob * 100)}% favorite to defend, per {source_txt}')
+        if holds_prob is not None:
+            bits.append(f'{round(holds_prob * 100)}% to hold the belt into the offseason across the remaining schedule')
+        if bits:
+            odds_html = f'<p class="previewOdds">{" &middot; ".join(bits)}</p>'
+
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
@@ -3865,6 +4120,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors):
 <main class="wrap">
   <h1 class="pageTitle">Up Next: {title}</h1>
   <p class="previewMeta">{esc(holder)} {esc(side_full)} {esc(opponent)} &middot; {fmt_date(next_game["date"])} &middot; the belt is on the line</p>
+  {odds_html}
   <p class="kickoffLocal" id="kickoffLocal" data-utc="{esc(next_game.get('raw_date') or '')}" hidden></p>
   <script>
   (function(){{
@@ -4047,7 +4303,10 @@ def generate_ruleset_page(md_text):
       <a href="index.html#numbers">By the Numbers</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4093,10 +4352,14 @@ def _record_row(rank, swatch_color, main_html, value_html, sub_html, href=None):
     return f'<{tag} class="recordRow"{href_attr}><span class="recordRank">{rank}</span>{body}</{tag}>'
 
 
-def generate_records_page(lineage, colors, belt_games):
-    """Eight record boards, all computed straight from data already on hand
-    -- no new API calls, no AI. Ties aren't broken (a team a few days short
-    of another's reign length still shows up if it's genuinely top-5)."""
+def generate_records_page(lineage, colors, belt_games, coaches=None):
+    """Ten record boards, computed straight from data already on hand --
+    no new API calls, no AI, except the by-coach board which needs the
+    separately-fetched, entirely optional belt_data/coaches.json (see
+    fetch_coaches.py; pass None/omit to just skip that one card, same
+    no-op-when-unset pattern as everything else on this site). Ties
+    aren't broken (a team a few days short of another's reign length
+    still shows up if it's genuinely top-5)."""
     reigns = lineage["reigns"]
     today = date.today()
     change_index = build_change_game_index(belt_games)
@@ -4148,6 +4411,69 @@ def generate_records_page(lineage, colors, belt_games):
         most_reigns_rows += _record_row(i, team_swatch(team), esc(team),
                                          f'{n}&times;', "reigns held",
                                          f'teams/{team_slug(team)}.html')
+
+    # ---- longest current droughts -- programs that have held the belt
+    # before but don't right now, ranked by how long it's been since their
+    # most recent reign ended (2026-09-16 wishlist, task #84). `reigns` is
+    # chronological (relied on elsewhere in this function too, e.g. `r is
+    # reigns[-1]` for "is this the current reign"), so the LAST entry seen
+    # per team below is that team's true most recent reign -- a team that
+    # held the belt, lost it, and later reclaimed it (so its most recent
+    # reign is the still-open current one) is correctly excluded, unlike
+    # naively skipping only open reigns as they're encountered, which
+    # would wrongly surface that team's earlier, superseded reign instead. ----
+    most_recent_reign_by_team = {}
+    for r in reigns:
+        most_recent_reign_by_team[r["team"]] = r
+    droughts = sorted(
+        (r for r in most_recent_reign_by_team.values() if r.get("end_date") is not None),
+        key=lambda r: date.fromisoformat(r["end_date"]), reverse=True)[:5]
+    drought_rows = ""
+    for i, r in enumerate(droughts, 1):
+        end = date.fromisoformat(r["end_date"])
+        drought_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
+                                     fmt_duration(end, today),
+                                     f'last held it {fmt_date(r["end_date"])}',
+                                     f'teams/{team_slug(r["team"])}.html')
+
+    # ---- most days held under one head coach -- attributes each reign's
+    # FULL duration to whichever coach was in charge at that reign's START
+    # (the season of the game that won it, per change_index), not a
+    # game-by-game split across a coaching change mid-reign -- most reigns
+    # are short enough that this is the reign's coach in every practical
+    # sense, and the alternative (prorating a reign across coaches) adds a
+    # lot of complexity for a card that's meant to be a fun leaderboard,
+    # not a rigorous attribution. A reign whose team/season CFBD has no
+    # coach on file for (belt_data/coaches.json, from fetch_coaches.py --
+    # entirely optional) is simply left out, same as every other
+    # optional/partial data source on this site. ----
+    coach_days = {}
+    coach_teams = {}
+    coach_reign_count = {}
+    if coaches:
+        for r in reigns:
+            g = change_index.get((r["start_date"], r["team"]))
+            season = g["season"] if g else None
+            if season is None:
+                continue
+            team_seasons = coaches.get(r["team"])
+            if not team_seasons:
+                continue
+            coach = next((s["coach"] for s in team_seasons if s["year"] == season), None)
+            if not coach:
+                continue
+            coach_days[coach] = coach_days.get(coach, 0) + reign_duration_days(r, today)
+            coach_teams.setdefault(coach, set()).add(r["team"])
+            coach_reign_count[coach] = coach_reign_count.get(coach, 0) + 1
+    most_days_by_coach = sorted(coach_days.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    coach_rows = ""
+    for i, (coach, days) in enumerate(most_days_by_coach, 1):
+        teams = sorted(coach_teams[coach])
+        n = coach_reign_count[coach]
+        swatch = team_swatch(teams[0]) if len(teams) == 1 else None
+        href = f'teams/{team_slug(teams[0])}.html' if len(teams) == 1 else None
+        sub = f'{" & ".join(esc(t) for t in teams)} &middot; {n} reign{"s" if n != 1 else ""}'
+        coach_rows += _record_row(i, swatch, esc(coach), f'{days:,}', sub, href)
 
     # ---- most defenses in a single reign ----
     most_defended = sorted(reigns, key=lambda r: r.get("defenses", 0), reverse=True)[:5]
@@ -4205,7 +4531,10 @@ def generate_records_page(lineage, colors, belt_games):
         ("Narrowest Defenses", "Closest the holder has come to losing it and didn't", narrowest_defense_rows),
         ("Narrowest Upsets", "The belt changed hands by the barest possible margin", narrowest_change_rows),
         ("Biggest Upsets", "The belt changed hands in an outright rout", biggest_upset_rows),
+        ("Longest Droughts", "Programs that have held it before, and how long it's been", drought_rows),
     ]
+    if coach_rows:
+        cards.append(("Belt Held By Coach", "Total days held, all attributed to the coach at reign's start", coach_rows))
     cards_html = "".join(f'''
     <section class="recordCard">
       <h2>{esc(title)}</h2>
@@ -4236,7 +4565,10 @@ def generate_records_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4290,7 +4622,10 @@ def _story_nav_footer(active_href=None):
       <a href="compare.html">Compare</a>
       <a href="trivia.html">Trivia</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>'''
     header = f'''<header class="site wrap">
@@ -4679,7 +5014,10 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../my-team.html">My Team</a>
       <a href="../conferences/index.html">Conferences</a>
+      <a href="../seasons.html">Seasons</a>
+      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -4818,7 +5156,10 @@ def generate_player_pages(belt_games, details, players_dir):
       <a href="../trivia.html">Trivia</a>
       <a href="../stories.html">Stories</a>
       <a href="../losers-belt.html">Losers Belt</a>
+      <a href="../my-team.html">My Team</a>
       <a href="../conferences/index.html">Conferences</a>
+      <a href="../seasons.html">Seasons</a>
+      <a href="../defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5064,7 +5405,10 @@ def generate_map_page(lineage, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5253,7 +5597,10 @@ def generate_embed_page(lineage, colors):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5347,7 +5694,10 @@ def generate_privacy_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5537,7 +5887,10 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5645,6 +5998,754 @@ def generate_compare_page(lineage, colors, belt_games):
       <a href="records.html">Records</a>
       <a href="embed.html">Embed</a>
       <a href="api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_my_team_page(team_paths, colors):
+    """"My team and the path to the belt" -- wishlist item #1, 2026-09-16,
+    Bob: "Let me pick a team once (localStorage, no account needed) and
+    then answer the question every fan actually has: when could we get a
+    shot at it?" Pick-once-and-remember via localStorage (no account,
+    matches the theme-toggle/PWA pattern already used elsewhere on the
+    site); the actual per-team scenario data is entirely precomputed at
+    build time by build_lineage.py's compute_team_paths() (team_paths.json)
+    off the current holder's + every team's remaining schedule, so this
+    page needs no extra API call and no per-visit computation beyond a
+    dict lookup.
+
+    `team_paths` is None if build_lineage.py hasn't written team_paths.json
+    yet (the fetch failed, or an older belt_data/ snapshot) -- caller skips
+    rendering this page entirely in that case, same no-op-when-unset
+    pattern as every other optional feature on this site."""
+    holder = team_paths["holder"]
+    teams = team_paths["teams"]
+    teams_sorted = sorted(teams.keys())
+
+    logos = {t: team_logo(colors, t) for t in teams_sorted if team_logo(colors, t)}
+    payload = json.dumps({"holder": holder, "teams": teams, "logos": logos}, ensure_ascii=False)
+    options_html = "".join(f'<option value="{esc(t)}">{esc(t)}</option>' for t in teams_sorted)
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>My Team and the Path to the Belt — The College Football Belt</title>
+<meta name="description" content="Pick your team and see exactly how it could get a shot at the College Football Belt this season -- straight off {esc(holder)}'s remaining schedule.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
+      <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">My Team and the Path to the Belt</h1>
+  <p class="lede" id="myTeamLede">Pick your team once &mdash; we'll remember it on this device &mdash; and we'll tell you
+    exactly how {esc(holder)}'s remaining schedule could put the belt in front of you this season.</p>
+
+  <div class="myTeamPicker" id="myTeamPicker" hidden>
+    <select id="myTeamSelect" aria-label="Choose your team">{options_html}</select>
+    <button type="button" id="myTeamSave">Save my team</button>
+  </div>
+
+  <div id="myTeamResult" hidden>
+    <div class="myTeamHeader">
+      <img id="myTeamLogo" class="teamLogo" alt="" hidden>
+      <h2 id="myTeamName" class="pageTitle" style="font-size:32px;margin:0;"></h2>
+      <button type="button" class="myTeamChangeLink" id="myTeamChange">Not your team? Pick another</button>
+    </div>
+    <div id="myTeamCards"></div>
+  </div>
+
+  <script type="application/json" id="myTeamData">{payload}</script>
+  <script>
+  (function(){{
+    var data = JSON.parse(document.getElementById('myTeamData').textContent);
+    var STORAGE_KEY = 'cfbbelt_my_team';
+    var picker = document.getElementById('myTeamPicker');
+    var select = document.getElementById('myTeamSelect');
+    var saveBtn = document.getElementById('myTeamSave');
+    var resultEl = document.getElementById('myTeamResult');
+    var nameEl = document.getElementById('myTeamName');
+    var logoEl = document.getElementById('myTeamLogo');
+    var cardsEl = document.getElementById('myTeamCards');
+    var changeBtn = document.getElementById('myTeamChange');
+    var lede = document.getElementById('myTeamLede');
+
+    function fmtDate(iso) {{
+      var d = new Date(iso + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString(undefined, {{ weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }});
+    }}
+
+    function getSaved() {{
+      try {{ return window.localStorage.getItem(STORAGE_KEY); }} catch (e) {{ return null; }}
+    }}
+    function setSaved(team) {{
+      try {{ window.localStorage.setItem(STORAGE_KEY, team); }} catch (e) {{}}
+    }}
+    function clearSaved() {{
+      try {{ window.localStorage.removeItem(STORAGE_KEY); }} catch (e) {{}}
+    }}
+
+    function showPicker() {{
+      resultEl.hidden = true;
+      picker.hidden = false;
+      lede.hidden = false;
+    }}
+
+    function cardHtml(kicker, text, isHolder) {{
+      return '<div class="myTeamCard' + (isHolder ? ' holder' : '') + '"><div class="kicker">' + kicker + '</div><p>' + text + '</p></div>';
+    }}
+
+    function render(team) {{
+      var entry = data.teams[team];
+      if (!entry) {{ showPicker(); return; }}
+      picker.hidden = true;
+      lede.hidden = true;
+      resultEl.hidden = false;
+      nameEl.textContent = team;
+      var logo = data.logos[team];
+      if (logo) {{ logoEl.src = logo; logoEl.alt = team + ' logo'; logoEl.hidden = false; }}
+      else {{ logoEl.hidden = true; }}
+
+      var html = '';
+      if (entry.is_holder) {{
+        html += cardHtml('Right now', team + ' already holds the College Football Belt. Defend it and it stays right here.', true);
+      }} else if (entry.direct.length) {{
+        entry.direct.forEach(function(g) {{
+          html += cardHtml('Your shot', 'You play ' + data.holder + (g.is_home ? ' at home' : ' on the road') +
+            ' on ' + fmtDate(g.date) + '. Win, and the belt is yours.');
+        }});
+      }} else if (entry.indirect.length) {{
+        html += '<p class="myTeamEmpty" style="margin-bottom:14px;">' + team + ' doesn\\'t play ' + data.holder +
+          ' this season, but here\\'s how it could still reach you:</p>';
+        entry.indirect.slice(0, 5).forEach(function(p) {{
+          html += cardHtml('If the belt moves', 'If ' + p.via + ' beats ' + data.holder + ' on ' + fmtDate(p.via_date) +
+            ' and holds onto it, you play them' + (p.your_is_home ? ' at home' : ' on the road') +
+            ' on ' + fmtDate(p.your_date) + ' &mdash; that\\'s your game.');
+        }});
+      }} else {{
+        html += '<p class="myTeamEmpty">No path to the belt visible on ' + team + '\\'s schedule right now &mdash; ' +
+          data.holder + ' would need to lose it to someone ' + team + ' plays later, and that game isn\\'t on the board yet. Check back as the schedule fills in.</p>';
+      }}
+      cardsEl.innerHTML = html;
+    }}
+
+    saveBtn.addEventListener('click', function() {{
+      var team = select.value;
+      setSaved(team);
+      render(team);
+    }});
+    changeBtn.addEventListener('click', function() {{
+      clearSaved();
+      showPicker();
+    }});
+
+    var saved = getSaved();
+    if (saved && data.teams[saved]) {{
+      render(saved);
+    }} else {{
+      showPicker();
+    }}
+  }})();
+  </script>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Your team choice is saved only in this browser &mdash; no account, nothing sent to us.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="embed.html">Embed</a>
+      <a href="api.html">API</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_season_page(season_year, season_games, reign_by_start, all_seasons, remaining_schedule=None):
+    """A season page -- wishlist item #4, 2026-09-16, Bob: "Everything on
+    the site is 'all time' or 'right now.' I'd want 'the 2026 belt season'
+    as its own page: every belt game so far in order, who took it from
+    whom, days each held it, and the remaining schedule below. Then the
+    same page for every past season, which becomes an evergreen archive
+    Google will love."
+
+    `season_year`: the CFBD season label (the year the season started --
+    e.g. a January 2027 CFP game is still season 2026) -- one page per
+    distinct value already present in belt_games, no new API call, since
+    every belt game already carries its own "season" field.
+    `season_games`: this season's belt_games, chronological (a sub-slice
+    of the same list compute_sequence() already numbered, so game_number/
+    reign_number are already on each row).
+    `reign_by_start`: {(team, start_date): reign} across ALL of lineage's
+    reigns -- built once by the caller -- so "days each held it" can look
+    up a reign that started this season even if it's still open (current)
+    or ended in a LATER season (a reign can outlive the season it started
+    in).
+    `all_seasons`: every season year on file, sorted ascending -- for the
+    prev/next-season links that make this an actually-browsable archive
+    rather than 150 orphaned pages.
+    `remaining_schedule`: the holder's full remaining schedule (only
+    passed for the current/latest season -- every other season is closed
+    history with nothing left to play)."""
+    is_current = season_year == all_seasons[-1]
+    idx = all_seasons.index(season_year)
+    prev_year = all_seasons[idx - 1] if idx > 0 else None
+    next_year = all_seasons[idx + 1] if idx < len(all_seasons) - 1 else None
+
+    title_changes = sum(1 for g in season_games if g["outcome"] in ("changed", "established"))
+    defenses_total = len(season_games) - title_changes
+
+    opening_team = season_games[0]["holder"]  # None only for 1869, the belt's own first game
+    closing_team = season_games[-1]["new_holder"]  # always the post-game holder, defended or not
+
+    if opening_team and opening_team != closing_team:
+        summary = (f"Opened the season with {esc(opening_team)} holding the belt; "
+                    f"{esc(closing_team)} {'holds it now' if is_current else 'closed it out'}.")
+    elif opening_team:
+        summary = f"{esc(closing_team)} held the belt the entire season -- {defenses_total} defense{'s' if defenses_total != 1 else ''}."
+    else:
+        summary = f"The belt itself was established this season, by {esc(closing_team)}."
+
+    today = date.today()
+    rows_html = ""
+    defense_no = 0
+    for g in season_games:
+        home, away = g["home"], g["away"]
+        home_score, away_score = (int(x) for x in g["score"].split("-"))
+        outcome = g["outcome"]
+        is_last_overall = is_current and g is season_games[-1]
+
+        if outcome == "established":
+            defense_no = 0
+            result_html = f'<span class="win">Belt established: {esc(g["new_holder"])}</span>'
+        elif outcome == "changed":
+            defense_no = 0
+            result_html = f'<span class="win">New champion: {esc(g["new_holder"])}</span>'
+        else:
+            defense_no += 1
+            tie_note = " (tie)" if outcome == "retained (tie)" else ""
+            result_html = f'Defended{tie_note} &middot; #{defense_no}'
+
+        loc_word = "vs." if g["neutral"] else "at"
+        matchup_html = f'<a href="games/{g["game_id"]}.html">{esc(away)} {loc_word} {esc(home)}</a>'
+        score_html = f'<a href="games/{g["game_id"]}.html">{away_score}&ndash;{home_score}</a>'
+
+        cls_bits = []
+        if outcome in ("changed", "established"):
+            cls_bits.append("titleChange")
+        if is_last_overall:
+            cls_bits.append("current")
+        cls = " ".join(cls_bits)
+
+        rows_html += f'''
+        <tr class="{cls}">
+          <td class="num">{g["game_number"]:,}</td>
+          <td class="dates">{fmt_date(g["date"])}</td>
+          <td class="matchup">{matchup_html}</td>
+          <td class="tabular">{score_html}</td>
+          <td class="result">{result_html}</td>
+        </tr>'''
+
+    # ---- "days each held it": every reign that STARTED this season,
+    # whether it's since ended (even in a later season) or is still open.
+    reign_rows_html = ""
+    for g in season_games:
+        if g["outcome"] not in ("changed", "established", "lost (tie)"):
+            continue
+        team = g["new_holder"]
+        r = reign_by_start.get((team, g["date"]))
+        if not r:
+            continue
+        start = date.fromisoformat(r["start_date"])
+        if r.get("end_date"):
+            end = date.fromisoformat(r["end_date"])
+            days_txt = f'{(end - start).days:,} days'
+        else:
+            days_txt = f'{(today - start).days:,} days &mdash; and counting'
+        won_from_html = (f'took it from {esc(r["won_from"])}' if r.get("won_from")
+                          else 'the belt&rsquo;s inaugural holder')
+        reign_rows_html += f'''
+        <tr>
+          <td class="teamCell"><a href="teams/{team_slug(team)}.html">{esc(team)}</a></td>
+          <td class="dates">{fmt_date(r["start_date"])}</td>
+          <td>{won_from_html}</td>
+          <td class="tabular">{days_txt}</td>
+        </tr>'''
+
+    reign_section_html = ""
+    if reign_rows_html:
+        reign_section_html = f'''
+  <div class="sectionHead">
+    <span class="tag">Season Detail</span>
+    <span class="rule"></span>
+    <h2>Reigns That Started This Season</h2>
+  </div>
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead><tr><th>Team</th><th>Since</th><th>How</th><th style="text-align:right">Held It</th></tr></thead>
+      <tbody>{reign_rows_html}
+      </tbody>
+    </table>
+  </div>'''
+
+    remaining_html = ""
+    if is_current and remaining_schedule:
+        chips = ""
+        for g in remaining_schedule:
+            loc = "vs." if (g.get("is_home") or g.get("neutral")) else "at"
+            chips += (f'<li class="watchChip">{loc} <strong>{esc(g["opponent"])}</strong> '
+                      f'&middot; {fmt_date(g["date"])}</li>')
+        remaining_html = f'''
+  <div class="sectionHead">
+    <span class="tag">Ahead</span>
+    <span class="rule"></span>
+    <h2>Remaining Schedule</h2>
+  </div>
+  <ul class="remainingSchedule">{chips}
+  </ul>'''
+
+    prev_next_html = '<p class="viewToggle">'
+    bits = []
+    if prev_year:
+        bits.append(f'&larr; <a href="season-{prev_year}.html">The {prev_year} season</a>')
+    bits.append('<a href="seasons.html">All seasons</a>')
+    if next_year:
+        bits.append(f'<a href="season-{next_year}.html">The {next_year} season</a> &rarr;')
+    prev_next_html += ' &middot; '.join(bits) + '</p>'
+
+    title_word = "The Current Season" if is_current else f"The {season_year} Season"
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>The {season_year} Belt Season — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
+      <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">{title_word}: {season_year}</h1>
+  <p class="lede">{summary} {len(season_games)} belt game{'s' if len(season_games) != 1 else ''} this season:
+    {title_changes} title change{'s' if title_changes != 1 else ''} and {defenses_total} defense{'s' if defenses_total != 1 else ''}.</p>
+
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead>
+        <tr><th>#</th><th>Date</th><th>Matchup</th><th style="text-align:right">Score</th><th>Result</th></tr>
+      </thead>
+      <tbody>{rows_html}
+      </tbody>
+    </table>
+  </div>
+  {reign_section_html}
+  {remaining_html}
+  {prev_next_html}
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every game computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_seasons_index_page(seasons_summary):
+    """The season archive's landing page -- one row per season, newest
+    first, each linking to its own season-<year>.html. `seasons_summary`
+    is [{"year":, "games":, "title_changes":, "opening_team":,
+    "closing_team":, "is_current":}], already sorted ascending by the
+    caller (this reverses it for newest-first display, the natural order
+    for an archive people mostly come to check "this year")."""
+    rows_html = ""
+    for s in reversed(seasons_summary):
+        label = "Current Season" if s["is_current"] else str(s["year"])
+        cls = "current" if s["is_current"] else ""
+        rows_html += f'''
+        <tr class="{cls}">
+          <td class="teamCell"><a href="season-{s["year"]}.html">{label}</a></td>
+          <td class="tabular">{s["games"]}</td>
+          <td class="tabular">{s["title_changes"]}</td>
+          <td class="teamCell">{esc(s["closing_team"])}</td>
+        </tr>'''
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Every Belt Season — The College Football Belt</title>
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
+      <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Every Belt Season</h1>
+  <p class="lede">Everything else on this site is all-time or right-now &mdash; this is the season-by-season
+    archive, {len(seasons_summary)} of them back to 1869. Tap any season for its full game-by-game story.</p>
+
+  <div class="tableScroll">
+    <table class="reignsTable">
+      <thead>
+        <tr><th>Season</th><th class="tabular">Games</th><th class="tabular">Title Changes</th><th>Closed With</th></tr>
+      </thead>
+      <tbody>{rows_html}
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Every season computed from the College Football Data API.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="mailto:hello@collegefootballbelt.com">Contact</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
+      <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>
+    </nav>
+  </div>
+</footer>
+'''
+
+
+def generate_defend_or_dethrone_page(next_game, recent_belt_games):
+    """"Defend or Dethrone" -- wishlist item #5, 2026-09-16, Bob: "A weekly
+    pick -- does the belt change hands or not -- with a streak stored
+    locally and a Wordle-style share card ('Belt streak: 7
+    \U0001f7e9\U0001f7e9\U0001f7e9\U0001f7e9\U0001f7e9\U0001f7e9\U0001f7e9').
+    No accounts, no backend, and it's the thing that gets people posting
+    the site's name on X every week."
+
+    Entirely client-side, same localStorage pick-and-remember pattern as
+    My Team -- the only wrinkle is GRADING a pick, since there's no
+    backend to tell the browser who won. The trick: this page embeds the
+    holder's upcoming game (to pick on) AND the last several ALREADY-
+    DECIDED belt games (to grade against) in the same small JSON payload.
+    A pick is stored as {{holder, opponent, date, pick}} -- the exact
+    matchup it was about -- and every time the page loads, it checks
+    whether that exact matchup now appears in the recent-games list (i.e.
+    the pipeline has since run again after the game finished); if so, it
+    grades the pick right there in the browser and updates the streak.
+    Ten games of lookback comfortably covers "came back after a bye week
+    or two"; anyone away longer than that just doesn't get that one pick
+    graded -- their streak simply picks back up with the next one, no
+    harm done.
+
+    `next_game`: belt_data/next_game.json's dict, or None.
+    `recent_belt_games`: the last ~10 entries of belt_games (chronological,
+    oldest first) -- always available (this feature needs no optional
+    upstream data at all beyond what build_lineage.py always writes)."""
+    payload_next = None
+    if next_game:
+        payload_next = {
+            "holder": next_game["team"], "opponent": next_game["opponent"],
+            "date": next_game["date"], "is_home": bool(next_game.get("is_home")),
+            "neutral": bool(next_game.get("neutral")),
+        }
+    payload_recent = [
+        {"holder": g["holder"], "opponent": g["opponent"], "date": g["date"],
+         "defended": g["outcome"] in ("retained", "retained (tie)")}
+        for g in recent_belt_games if g.get("holder")  # skips the one "established" game, which was never a pick
+    ]
+    payload = json.dumps({"next_game": payload_next, "recent_games": payload_recent}, ensure_ascii=False)
+
+    return f'''<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Defend or Dethrone — The College Football Belt</title>
+<meta name="description" content="Pick it every week: does the belt holder survive, or does the belt change hands? Build a streak, no account needed.">
+<link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
+{head_extras()}
+
+<header class="site wrap">
+  <div class="headerRow">
+    <div class="brandBlock">
+      <span class="eyebrow">Est. 1869 &middot; Lineal Championship</span>
+      <span class="wordmark">The College Football Belt</span>
+    </div>
+    <nav class="site" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
+      <a href="ruleset.html">Ruleset</a>
+      <a href="map.html">Map</a>
+      <a href="compare.html">Compare</a>
+      <a href="trivia.html">Trivia</a>
+      <a href="stories.html">Stories</a>
+      <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
+      <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
+      <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="pageTitle">Defend or Dethrone</h1>
+  <p class="lede">Every week the belt&rsquo;s on the line, make the call before kickoff: does the holder
+    survive, or does the belt change hands? Right or wrong, we&rsquo;ll remember your streak on this device.</p>
+
+  <div class="dodStreakBar">
+    <div><span class="n tabular" id="dodStreakNum">0</span><span class="l">Current Streak</span></div>
+    <div><span class="n tabular" id="dodBestNum">0</span><span class="l">Best Streak</span></div>
+    <div class="dodHistoryWrap"><span class="l">Recent</span><span id="dodHistory" class="dodHistory"></span></div>
+  </div>
+
+  <div class="dodPicker" id="dodPicker" hidden>
+    <p class="dodMatchup" id="dodMatchup"></p>
+    <div class="dodChoices">
+      <button type="button" class="dodChoice dodDefend" id="dodDefend">Defend<span>Holder keeps it</span></button>
+      <button type="button" class="dodChoice dodDethrone" id="dodDethrone">Dethrone<span>Belt changes hands</span></button>
+    </div>
+  </div>
+
+  <div class="dodPending" id="dodPending" hidden>
+    <p id="dodPendingText"></p>
+  </div>
+
+  <div class="dodPending" id="dodNone" hidden>
+    <p>No upcoming belt game on file right now &mdash; check back once the holder&rsquo;s next game is scheduled.</p>
+  </div>
+
+  <button type="button" class="dodShareBtn" id="dodShare">Share my streak</button>
+
+  <script type="application/json" id="dodData">{payload}</script>
+  <script>
+  (function(){{
+    var data = JSON.parse(document.getElementById('dodData').textContent);
+    var STORAGE_KEY = 'cfbbelt_dod';
+    var nextGame = data.next_game;
+    var recentGames = data.recent_games || [];
+
+    function fmtDate(iso) {{
+      var d = new Date(iso + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString(undefined, {{ weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }});
+    }}
+
+    function getState() {{
+      var raw = null;
+      try {{ raw = window.localStorage.getItem(STORAGE_KEY); }} catch (e) {{}}
+      if (!raw) return {{ streak: 0, best: 0, history: [], pending: null }};
+      try {{
+        var s = JSON.parse(raw);
+        return {{ streak: s.streak || 0, best: s.best || 0, history: s.history || [], pending: s.pending || null }};
+      }} catch (e) {{ return {{ streak: 0, best: 0, history: [], pending: null }}; }}
+    }}
+    function setState(s) {{
+      try {{ window.localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }} catch (e) {{}}
+    }}
+    function sameGame(a, b) {{
+      return !!a && !!b && a.holder === b.holder && a.opponent === b.opponent && a.date === b.date;
+    }}
+
+    var state = getState();
+
+    // Grade a pending pick the moment its game shows up in recent_games --
+    // i.e. the pipeline has run again since the game ended.
+    if (state.pending) {{
+      var decided = null;
+      for (var i = 0; i < recentGames.length; i++) {{
+        if (sameGame(recentGames[i], state.pending)) {{ decided = recentGames[i]; break; }}
+      }}
+      if (decided) {{
+        var actual = decided.defended ? 'defend' : 'dethrone';
+        var correct = actual === state.pending.pick;
+        state.streak = correct ? (state.streak + 1) : 0;
+        state.best = Math.max(state.best, state.streak);
+        state.history = state.history.concat([correct]);
+        if (state.history.length > 20) state.history = state.history.slice(-20);
+        state.pending = null;
+        setState(state);
+      }}
+    }}
+
+    var pickerEl = document.getElementById('dodPicker');
+    var pendingEl = document.getElementById('dodPending');
+    var noneEl = document.getElementById('dodNone');
+    var matchupEl = document.getElementById('dodMatchup');
+    var pendingTextEl = document.getElementById('dodPendingText');
+    var streakEl = document.getElementById('dodStreakNum');
+    var bestEl = document.getElementById('dodBestNum');
+    var historyEl = document.getElementById('dodHistory');
+    var shareBtn = document.getElementById('dodShare');
+    var defendBtn = document.getElementById('dodDefend');
+    var dethroneBtn = document.getElementById('dodDethrone');
+
+    function historyText() {{
+      return state.history.slice(-14).map(function(c) {{ return c ? '\\uD83D\\uDFE9' : '\\uD83D\\uDFE5'; }}).join('');
+    }}
+
+    function showState() {{
+      streakEl.textContent = state.streak;
+      bestEl.textContent = state.best;
+      historyEl.textContent = historyText();
+
+      if (!nextGame) {{
+        pickerEl.hidden = true;
+        pendingEl.hidden = true;
+        noneEl.hidden = false;
+        return;
+      }}
+      noneEl.hidden = true;
+      var loc = (nextGame.is_home || nextGame.neutral) ? 'vs.' : 'at';
+      if (state.pending && sameGame(nextGame, state.pending)) {{
+        pickerEl.hidden = true;
+        pendingEl.hidden = false;
+        pendingTextEl.textContent = 'You picked \\u201c' + (state.pending.pick === 'defend' ? 'Defend' : 'Dethrone') +
+          '\\u201d for ' + nextGame.holder + ' ' + loc + ' ' + nextGame.opponent + ' on ' + fmtDate(nextGame.date) +
+          '. Check back after the game.';
+      }} else {{
+        pendingEl.hidden = true;
+        pickerEl.hidden = false;
+        matchupEl.textContent = nextGame.holder + ' ' + loc + ' ' + nextGame.opponent + ' \\u00b7 ' + fmtDate(nextGame.date);
+      }}
+    }}
+
+    function pick(choice) {{
+      if (!nextGame) return;
+      state.pending = {{ holder: nextGame.holder, opponent: nextGame.opponent, date: nextGame.date, pick: choice }};
+      setState(state);
+      showState();
+    }}
+
+    if (defendBtn) defendBtn.addEventListener('click', function(){{ pick('defend'); }});
+    if (dethroneBtn) dethroneBtn.addEventListener('click', function(){{ pick('dethrone'); }});
+
+    if (shareBtn) {{
+      shareBtn.addEventListener('click', function() {{
+        var text = 'Belt streak: ' + state.streak + ' ' + historyText() + '\\ncollegefootballbelt.com/defend-or-dethrone.html';
+        if (navigator.share) {{
+          navigator.share({{ text: text }}).catch(function(){{}});
+        }} else if (navigator.clipboard) {{
+          navigator.clipboard.writeText(text).then(function() {{
+            var original = shareBtn.textContent;
+            shareBtn.textContent = 'Copied!';
+            setTimeout(function(){{ shareBtn.textContent = original; }}, 1800);
+          }}).catch(function(){{}});
+        }}
+      }});
+    }}
+
+    showState();
+  }})();
+  </script>
+</main>
+
+<footer class="wrap">
+  <div class="footRow">
+    <span>Your picks and streak are saved only in this browser &mdash; no account, nothing sent to us.</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="lineage.html">Full History</a>
+      <a href="all-games.html">All Games</a>
+      <a href="records.html">Records</a>
       <a href="mailto:hello@collegefootballbelt.com">Contact</a>
       <a href="privacy.html">Privacy</a>
       <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">X</a>
@@ -5783,7 +6884,10 @@ def generate_trivia_page(pool):
       <a href="compare.html">Compare</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -5961,7 +7065,10 @@ def generate_api_docs_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>
   </div>
@@ -6062,7 +7169,10 @@ def generate_404_page():
       <a href="trivia.html">Trivia</a>
       <a href="stories.html">Stories</a>
       <a href="losers-belt.html">Losers Belt</a>
+      <a href="my-team.html">My Team</a>
       <a href="conferences/index.html">Conferences</a>
+      <a href="seasons.html">Seasons</a>
+      <a href="defend-or-dethrone.html">Defend or Dethrone</a>
       <button type="button" class="themeToggle" aria-label="Toggle light or dark theme" title="Toggle theme"><span class="themeToggle-icon" aria-hidden="true">&#9680;</span></button>
     </nav>'''
     return f'''<!doctype html>
@@ -6256,7 +7366,8 @@ def generate_feed(belt_games, recaps):
 def main():
     (lineage, details, colors, next_game, upcoming_games, matchup,
      ai_preview, weather, recaps, historical_notes, game_plays,
-     losers_lineages, championship_lineages, conference_lineages) = load_data()
+     losers_lineages, championship_lineages, conference_lineages,
+     team_paths, belt_risk, gameday, coaches) = load_data()
     belt_games = lineage["belt_games"]
     compute_sequence(belt_games)
 
@@ -6294,7 +7405,7 @@ def main():
             f.write(html_out)
         written += 1
 
-    homepage_html = generate_homepage(lineage, colors, belt_games, next_game, upcoming_games)
+    homepage_html = generate_homepage(lineage, colors, belt_games, next_game, upcoming_games, belt_risk, gameday)
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 
@@ -6393,11 +7504,11 @@ def main():
                          f"bootstrap to enable them; the nav's \"Conferences\" link will 404 "
                          f"until at least one exists)")
 
-    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors)
+    preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
 
-    records_html = generate_records_page(lineage, colors, belt_games)
+    records_html = generate_records_page(lineage, colors, belt_games, coaches)
     with open(os.path.join(OUT_DIR, "records.html"), "w", encoding="utf-8") as f:
         f.write(records_html)
 
@@ -6410,7 +7521,7 @@ def main():
     with open(os.path.join(OUT_DIR, "stories.html"), "w", encoding="utf-8") as f:
         f.write(generate_stories_hub(lineage, belt_games))
 
-    on_this_day_html = generate_on_this_day_page(belt_games)
+    on_this_day_html = generate_on_this_day_page(belt_games, lineage["reigns"])
     with open(os.path.join(OUT_DIR, "on-this-day.html"), "w", encoding="utf-8") as f:
         f.write(on_this_day_html)
 
@@ -6460,6 +7571,56 @@ def main():
     with open(os.path.join(OUT_DIR, "compare.html"), "w", encoding="utf-8") as f:
         f.write(compare_html)
 
+    wrote_my_team = False
+    if team_paths:
+        my_team_html = generate_my_team_page(team_paths, colors)
+        with open(os.path.join(OUT_DIR, "my-team.html"), "w", encoding="utf-8") as f:
+            f.write(my_team_html)
+        wrote_my_team = True
+    else:
+        warnings.append("belt_data/team_paths.json not found -- skipped my-team.html "
+                         "(build_lineage.py writes it every run; only missing on a "
+                         "very first run before that's ever completed once)")
+
+    # ---- season pages (wishlist #4, 2026-09-16) -- one page per distinct
+    # season already present in belt_games, plus an index -- no new data
+    # or API call, just a different cut of what load_data() already read.
+    seasons_summary = []
+    wrote_seasons = False
+    if belt_games:
+        seasons_map = {}
+        for g in belt_games:
+            seasons_map.setdefault(g["season"], []).append(g)
+        all_seasons = sorted(seasons_map)
+        reign_by_start = {(r["team"], r["start_date"]): r for r in lineage["reigns"]}
+        for season_year in all_seasons:
+            season_games = seasons_map[season_year]
+            is_current = season_year == all_seasons[-1]
+            season_html = generate_season_page(
+                season_year, season_games, reign_by_start, all_seasons,
+                remaining_schedule=upcoming_games if is_current else None,
+            )
+            with open(os.path.join(OUT_DIR, f"season-{season_year}.html"), "w", encoding="utf-8") as f:
+                f.write(season_html)
+            title_changes = sum(1 for g in season_games if g["outcome"] in ("changed", "established"))
+            seasons_summary.append({
+                "year": season_year, "games": len(season_games),
+                "title_changes": title_changes,
+                "closing_team": season_games[-1]["new_holder"],
+                "is_current": is_current,
+            })
+        seasons_index_html = generate_seasons_index_page(seasons_summary)
+        with open(os.path.join(OUT_DIR, "seasons.html"), "w", encoding="utf-8") as f:
+            f.write(seasons_index_html)
+        wrote_seasons = True
+
+    # ---- Defend or Dethrone (wishlist #5) -- always written (needs no
+    # optional upstream data, just next_game.json + the always-present
+    # belt_games tail); grading happens entirely client-side.
+    dod_html = generate_defend_or_dethrone_page(next_game, belt_games[-10:])
+    with open(os.path.join(OUT_DIR, "defend-or-dethrone.html"), "w", encoding="utf-8") as f:
+        f.write(dod_html)
+
     trivia_pool = build_trivia_pool(lineage, belt_games, random.Random())
     trivia_html = generate_trivia_page(trivia_pool)
     with open(os.path.join(OUT_DIR, "trivia.html"), "w", encoding="utf-8") as f:
@@ -6485,6 +7646,12 @@ def main():
         sitemap_urls.append(f"{SITE_URL}/ruleset.html")
     if wrote_map:
         sitemap_urls.append(f"{SITE_URL}/map.html")
+    if wrote_my_team:
+        sitemap_urls.append(f"{SITE_URL}/my-team.html")
+    if wrote_seasons:
+        sitemap_urls.append(f"{SITE_URL}/seasons.html")
+        sitemap_urls += [f"{SITE_URL}/season-{s['year']}.html" for s in seasons_summary]
+    sitemap_urls.append(f"{SITE_URL}/defend-or-dethrone.html")
     for scope in available_scopes:
         sitemap_urls.append(f"{SITE_URL}/{LOSERS_BELT_FILENAMES[scope]}")
     for scope in championship_available_scopes:
