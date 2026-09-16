@@ -1302,5 +1302,117 @@
     "effective_date": "2011-05-08",
     "detected_on": "2026-09-16",
     "reverted_to": "Oregon"
+  },
+  {
+    "team": "Oregon",
+    "reign_started": "2011-05-08",
+    "last_activity_date": "2011-05-08",
+    "effective_date": "2011-05-09",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "2011-05-09",
+    "last_activity_date": "2011-05-09",
+    "effective_date": "2011-05-10",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "2011-05-10",
+    "last_activity_date": "2011-05-10",
+    "effective_date": "2011-05-11",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arizona State"
+  },
+  {
+    "team": "Arizona State",
+    "reign_started": "2011-05-11",
+    "last_activity_date": "2011-05-11",
+    "effective_date": "2011-05-12",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "2011-05-12",
+    "last_activity_date": "2011-05-12",
+    "effective_date": "2011-05-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UCLA"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "2011-05-13",
+    "last_activity_date": "2011-05-13",
+    "effective_date": "2011-05-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "2011-05-14",
+    "last_activity_date": "2011-05-14",
+    "effective_date": "2011-05-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Stanford"
+  },
+  {
+    "team": "Stanford",
+    "reign_started": "2011-05-15",
+    "last_activity_date": "2011-05-15",
+    "effective_date": "2011-05-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon"
+  },
+  {
+    "team": "Oregon",
+    "reign_started": "2011-05-16",
+    "last_activity_date": "2011-05-16",
+    "effective_date": "2011-05-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "2011-05-17",
+    "last_activity_date": "2011-05-17",
+    "effective_date": "2011-05-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "2011-05-18",
+    "last_activity_date": "2011-05-18",
+    "effective_date": "2011-05-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington State"
+  },
+  {
+    "team": "Washington State",
+    "reign_started": "2011-05-19",
+    "last_activity_date": "2011-05-19",
+    "effective_date": "2011-05-20",
+    "detected_on": "2026-09-16",
+    "reverted_to": "UCLA"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "2011-05-20",
+    "last_activity_date": "2011-05-20",
+    "effective_date": "2011-05-21",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arizona"
+  },
+  {
+    "team": "Arizona",
+    "reign_started": "2011-05-21",
+    "last_activity_date": "2011-05-21",
+    "effective_date": "2011-05-22",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Arizona State"
   }
 ]

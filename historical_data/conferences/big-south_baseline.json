@@ -3025,15 +3025,159 @@
       "end_date": "2023-03-06",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2023-03-07",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stony Brook",
+      "predecessor": "Gardner-Webb",
+      "end_date": "2023-03-07",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Gardner-Webb",
+      "start_date": "2023-03-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Charleston Southern",
+      "end_date": "2023-03-08",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Charleston Southern",
+      "start_date": "2023-03-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Gardner-Webb",
+      "predecessor": "Liberty",
+      "end_date": "2023-03-09",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2023-03-10",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Charleston Southern",
+      "predecessor": "Gardner-Webb",
+      "end_date": "2023-03-10",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Stony Brook",
+      "start_date": "2023-03-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2023-03-11",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2023-03-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Stony Brook",
+      "predecessor": "Gardner-Webb",
+      "end_date": "2023-03-12",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Presbyterian",
+      "start_date": "2023-03-13",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2023-03-13",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2023-03-14",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Presbyterian",
+      "predecessor": "Gardner-Webb",
+      "end_date": "2023-03-14",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Coastal Carolina",
+      "start_date": "2023-03-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Liberty",
+      "end_date": "2023-03-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Liberty",
+      "start_date": "2023-03-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Coastal Carolina",
+      "predecessor": "Gardner-Webb",
+      "end_date": "2023-03-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kennesaw State",
+      "start_date": "2023-03-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Liberty",
+      "predecessor": "Monmouth",
+      "end_date": "2023-03-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Monmouth",
+      "start_date": "2023-03-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kennesaw State",
+      "predecessor": "Kennesaw State",
+      "end_date": "2023-03-18",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Liberty",
-    "start_date": "2023-03-07",
+    "team": "Kennesaw State",
+    "start_date": "2023-03-19",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Stony Brook",
-    "predecessor": "Gardner-Webb"
+    "reclaimed_after": "Monmouth",
+    "predecessor": "Monmouth"
   }
 }

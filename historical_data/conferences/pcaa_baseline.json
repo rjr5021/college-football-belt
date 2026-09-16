@@ -3367,15 +3367,159 @@
       "end_date": "1988-03-31",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "San Jos\u00e9 State",
+      "start_date": "1988-04-01",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah State",
+      "predecessor": "Fresno State",
+      "end_date": "1988-04-01",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Fresno State",
+      "start_date": "1988-04-02",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "San Jos\u00e9 State",
+      "predecessor": "Pacific",
+      "end_date": "1988-04-02",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Pacific",
+      "start_date": "1988-04-03",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Fresno State",
+      "predecessor": "UNLV",
+      "end_date": "1988-04-03",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UNLV",
+      "start_date": "1988-04-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Pacific",
+      "predecessor": "Pacific",
+      "end_date": "1988-04-04",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Pacific",
+      "start_date": "1988-04-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UNLV",
+      "predecessor": "UNLV",
+      "end_date": "1988-04-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah State",
+      "start_date": "1988-04-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Pacific",
+      "predecessor": "San Jos\u00e9 State",
+      "end_date": "1988-04-06",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "San Jos\u00e9 State",
+      "start_date": "1988-04-07",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah State",
+      "predecessor": "Fresno State",
+      "end_date": "1988-04-07",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Long Beach State",
+      "start_date": "1988-04-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "San Jos\u00e9 State",
+      "predecessor": "UNLV",
+      "end_date": "1988-04-08",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "UNLV",
+      "start_date": "1988-04-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Long Beach State",
+      "predecessor": "Pacific",
+      "end_date": "1988-04-09",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Cal State Fullerton",
+      "start_date": "1988-04-10",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UNLV",
+      "predecessor": "Long Beach State",
+      "end_date": "1988-04-10",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Long Beach State",
+      "start_date": "1988-04-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Cal State Fullerton",
+      "predecessor": "UNLV",
+      "end_date": "1988-04-11",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "San Diego State",
+      "start_date": "1988-04-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Long Beach State",
+      "predecessor": "Pacific",
+      "end_date": "1988-04-12",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "San Jos\u00e9 State",
-    "start_date": "1988-04-01",
+    "team": "Pacific",
+    "start_date": "1988-04-13",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Utah State",
-    "predecessor": "Fresno State"
+    "reclaimed_after": "San Diego State",
+    "predecessor": "UNLV"
   }
 }
