@@ -128,6 +128,17 @@ def write_outputs(belt_games, reigns, tie_rule, conference, classification, path
     current = reigns[-1]
     origin_note = (f"First {conference}-vs-{conference} game in CFBD's data"
                     if belt_games and belt_games[0]["outcome"] == "established" else None)
+    # `belt_games` is always the FULL merged history (baseline + incremental
+    # tail) in chronological order, regardless of how narrow this particular
+    # run's incremental fetch window was -- so its last entry's date is a
+    # reliable "when did this conference last actually play a qualifying
+    # game" signal even on an ordinary incremental run. build_site.py's
+    # conferences index page (2026-09-16, Bob: "move the conferences that no
+    # longer exist to the bottom of their own section") uses this to tell a
+    # still-active conference (SEC, Big Ten, ...) from a historical one whose
+    # membership dissolved or merged away decades ago (SIAA, Big8, Southwest
+    # Conference, ...) without any extra CFBD calls or a hand-maintained list.
+    last_game_date = belt_games[-1]["date"] if belt_games else None
     with open(path, "w") as f:
         json.dump({
             "generated": time.strftime("%Y-%m-%d"),
@@ -139,6 +150,7 @@ def write_outputs(belt_games, reigns, tie_rule, conference, classification, path
             "current_holder": current["team"],
             "current_reign_since": current["start_date"],
             "current_defenses": current["defenses"],
+            "last_game_date": last_game_date,
             "totals": {
                 "belt_games": len(belt_games),
                 "reigns": len(reigns),

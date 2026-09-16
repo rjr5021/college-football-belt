@@ -3304,23 +3304,58 @@ def generate_conferences_index_page(conference_lineages):
     current holder at a glance. `conference_lineages` is a
     {slug: lineage_dict} map of whatever's actually been bootstrapped so
     far (see build_conference_lineage.py) -- a conference simply doesn't
-    appear here until its own one-time historical build has run."""
-    def card_for(slug, lineage):
+    appear here until its own one-time historical build has run.
+
+    2026-09-16, Bob: "move the conferences that no longer exist to the
+    bottom of their own section." Within each classification (FBS/FCS),
+    conferences with a qualifying game within the last ~2 seasons sort
+    first (alphabetically, as before); anything older -- SIAA, the old
+    Big 8/Southwest/Pac-8/Pac-10, Skyline, Yankee, and the like, whose
+    membership dissolved or merged into today's conferences -- drops into
+    a "No longer active" subsection below them, still alphabetical, still
+    inside that same FBS/FCS section. See build_conference_lineage.py's
+    write_outputs() for where last_game_date comes from: it's the full
+    merged history's last entry, not just this run's fetch window, so this
+    works correctly even on an ordinary incremental run."""
+    current_year = date.today().year
+
+    def is_active(lineage):
+        last = lineage.get("last_game_date")
+        return bool(last) and int(last[:4]) >= current_year - 1
+
+    def card_for(slug, lineage, active):
         conference = lineage["conference"]
         current = lineage["reigns"][-1]
         totals = lineage["totals"]
+        last = lineage.get("last_game_date")
+        sub = (f"since {fmt_date(current['start_date'])} &middot; {totals['reigns']} reigns all-time" if active
+               else f"last played as a conference in {last[:4]} &middot; {totals['reigns']} reigns all-time")
         return f'''
     <a class="record-card" href="{slug}.html" style="display:block;text-decoration:none;color:inherit">
       <div class="l">{esc(conference)}</div>
       <div class="v">{esc(current["team"])}</div>
-      <div class="sub">since {fmt_date(current["start_date"])} &middot; {totals["reigns"]} reigns all-time</div>
+      <div class="sub">{sub}</div>
     </a>'''
 
-    fbs_items = sorted((s, l) for s, l in conference_lineages.items() if l.get("classification") == "fbs")
-    fcs_items = sorted((s, l) for s, l in conference_lineages.items() if l.get("classification") == "fcs")
+    def section_html(classification):
+        items = sorted((s, l) for s, l in conference_lineages.items() if l.get("classification") == classification)
+        if not items:
+            return '<p class="lede">None built yet.</p>'
+        active_items = [(s, l) for s, l in items if is_active(l)]
+        defunct_items = [(s, l) for s, l in items if not is_active(l)]
+        html_parts = ['<div class="records">']
+        html_parts.append("".join(card_for(s, l, True) for s, l in active_items))
+        html_parts.append("\n  </div>")
+        if defunct_items:
+            html_parts.append('''
+  <h3 class="eyebrow" style="display:block;margin:28px 0 12px">No Longer Active</h3>
+  <div class="records">''')
+            html_parts.append("".join(card_for(s, l, False) for s, l in defunct_items))
+            html_parts.append("\n  </div>")
+        return "".join(html_parts)
 
-    fbs_html = "".join(card_for(s, l) for s, l in fbs_items) or '<p class="lede">None built yet.</p>'
-    fcs_html = "".join(card_for(s, l) for s, l in fcs_items) or '<p class="lede">None built yet.</p>'
+    fbs_html = section_html("fbs")
+    fcs_html = section_html("fcs")
 
     return f'''<!doctype html>
 <html lang="en">
@@ -3360,12 +3395,10 @@ def generate_conferences_index_page(conference_lineages):
     realignment moves a team's games with it, the way it should).</p>
 
   <h2>FBS Conferences</h2>
-  <div class="records">{fbs_html}
-  </div>
+  {fbs_html}
 
   <h2>FCS Conferences</h2>
-  <div class="records">{fcs_html}
-  </div>
+  {fcs_html}
 </main>
 
 <footer class="wrap">
