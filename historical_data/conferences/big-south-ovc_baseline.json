@@ -562,11 +562,47 @@
       "end_date": "2024-12-22",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "UT Martin",
+      "start_date": "2024-12-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Southeast Missouri State",
+      "predecessor": "Lindenwood",
+      "end_date": "2024-12-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Lindenwood",
+      "start_date": "2024-12-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "UT Martin",
+      "predecessor": "Southeast Missouri State",
+      "end_date": "2024-12-24",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Southeast Missouri State",
+      "start_date": "2024-12-25",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Lindenwood",
+      "predecessor": "UT Martin",
+      "end_date": "2024-12-25",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "UT Martin",
-    "start_date": "2024-12-23",
+    "start_date": "2024-12-26",
     "won_from": null,
     "won_score": null,
     "defenses": 0,

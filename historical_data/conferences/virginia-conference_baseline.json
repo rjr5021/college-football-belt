@@ -319,11 +319,35 @@
       "end_date": "1935-12-17",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Richmond",
+      "start_date": "1935-12-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "William & Mary",
+      "predecessor": "William & Mary",
+      "end_date": "1935-12-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "William & Mary",
+      "start_date": "1935-12-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Richmond",
+      "predecessor": "Richmond",
+      "end_date": "1935-12-19",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Richmond",
-    "start_date": "1935-12-18",
+    "start_date": "1935-12-20",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
