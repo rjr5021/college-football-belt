@@ -414,5 +414,61 @@
     "effective_date": "1978-01-12",
     "detected_on": "2026-09-16",
     "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1978-01-12",
+    "last_activity_date": "1978-01-12",
+    "effective_date": "1978-01-13",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "1978-01-13",
+    "last_activity_date": "1978-01-13",
+    "effective_date": "1978-01-14",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "1978-01-14",
+    "last_activity_date": "1978-01-14",
+    "effective_date": "1978-01-15",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1978-01-15",
+    "last_activity_date": "1978-01-15",
+    "effective_date": "1978-01-16",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1978-01-16",
+    "last_activity_date": "1978-01-16",
+    "effective_date": "1978-01-17",
+    "detected_on": "2026-09-16",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1978-01-17",
+    "last_activity_date": "1978-01-17",
+    "effective_date": "1978-01-18",
+    "detected_on": "2026-09-16",
+    "reverted_to": "Stanford"
+  },
+  {
+    "team": "Stanford",
+    "reign_started": "1978-01-18",
+    "last_activity_date": "1978-01-18",
+    "effective_date": "1978-01-19",
+    "detected_on": "2026-09-16",
+    "reverted_to": "USC"
   }
 ]
