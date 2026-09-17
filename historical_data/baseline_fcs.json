@@ -12763,11 +12763,47 @@
       "end_date": "2024-03-03",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Mercer",
+      "start_date": "2024-03-04",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "East Tennessee State",
+      "predecessor": "The Citadel",
+      "end_date": "2024-03-04",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "The Citadel",
+      "start_date": "2024-03-05",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Mercer",
+      "predecessor": "East Tennessee State",
+      "end_date": "2024-03-05",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "East Tennessee State",
+      "start_date": "2024-03-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "The Citadel",
+      "predecessor": "Mercer",
+      "end_date": "2024-03-06",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Mercer",
-    "start_date": "2024-03-04",
+    "start_date": "2024-03-07",
     "won_from": null,
     "won_score": null,
     "defenses": 10,
