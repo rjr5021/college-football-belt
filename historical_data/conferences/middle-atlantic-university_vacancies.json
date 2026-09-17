@@ -398,5 +398,21 @@
     "effective_date": "1961-12-10",
     "detected_on": "2026-09-17",
     "reverted_to": "Rutgers"
+  },
+  {
+    "team": "Rutgers",
+    "reign_started": "1961-12-10",
+    "last_activity_date": "1961-12-10",
+    "effective_date": "1961-12-11",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Bucknell"
+  },
+  {
+    "team": "Bucknell",
+    "reign_started": "1961-12-11",
+    "last_activity_date": "1961-12-11",
+    "effective_date": "1961-12-12",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Rutgers"
   }
 ]

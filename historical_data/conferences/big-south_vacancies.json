@@ -2334,5 +2334,101 @@
     "effective_date": "2023-08-10",
     "detected_on": "2026-09-17",
     "reverted_to": "Kennesaw State"
+  },
+  {
+    "team": "Kennesaw State",
+    "reign_started": "2023-08-10",
+    "last_activity_date": "2023-08-10",
+    "effective_date": "2023-08-11",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Monmouth"
+  },
+  {
+    "team": "Monmouth",
+    "reign_started": "2023-08-11",
+    "last_activity_date": "2023-08-11",
+    "effective_date": "2023-08-12",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Kennesaw State"
+  },
+  {
+    "team": "Kennesaw State",
+    "reign_started": "2023-08-12",
+    "last_activity_date": "2023-08-12",
+    "effective_date": "2023-08-13",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Liberty"
+  },
+  {
+    "team": "Liberty",
+    "reign_started": "2023-08-13",
+    "last_activity_date": "2023-08-13",
+    "effective_date": "2023-08-14",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Gardner-Webb"
+  },
+  {
+    "team": "Gardner-Webb",
+    "reign_started": "2023-08-14",
+    "last_activity_date": "2023-08-14",
+    "effective_date": "2023-08-15",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Charleston Southern"
+  },
+  {
+    "team": "Charleston Southern",
+    "reign_started": "2023-08-15",
+    "last_activity_date": "2023-08-15",
+    "effective_date": "2023-08-16",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Liberty"
+  },
+  {
+    "team": "Liberty",
+    "reign_started": "2023-08-16",
+    "last_activity_date": "2023-08-16",
+    "effective_date": "2023-08-17",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Coastal Carolina"
+  },
+  {
+    "team": "Coastal Carolina",
+    "reign_started": "2023-08-17",
+    "last_activity_date": "2023-08-17",
+    "effective_date": "2023-08-18",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Liberty"
+  },
+  {
+    "team": "Liberty",
+    "reign_started": "2023-08-18",
+    "last_activity_date": "2023-08-18",
+    "effective_date": "2023-08-19",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Presbyterian"
+  },
+  {
+    "team": "Presbyterian",
+    "reign_started": "2023-08-19",
+    "last_activity_date": "2023-08-19",
+    "effective_date": "2023-08-20",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Liberty"
+  },
+  {
+    "team": "Liberty",
+    "reign_started": "2023-08-20",
+    "last_activity_date": "2023-08-20",
+    "effective_date": "2023-08-21",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Stony Brook"
+  },
+  {
+    "team": "Stony Brook",
+    "reign_started": "2023-08-21",
+    "last_activity_date": "2023-08-21",
+    "effective_date": "2023-08-22",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Liberty"
   }
 ]
