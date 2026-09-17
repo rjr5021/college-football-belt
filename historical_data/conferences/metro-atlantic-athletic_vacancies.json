@@ -1238,5 +1238,61 @@
     "effective_date": "2008-04-12",
     "detected_on": "2026-09-17",
     "reverted_to": "Iona"
+  },
+  {
+    "team": "Iona",
+    "reign_started": "2008-04-12",
+    "last_activity_date": "2008-04-12",
+    "effective_date": "2008-04-13",
+    "detected_on": "2026-09-17",
+    "reverted_to": "La Salle"
+  },
+  {
+    "team": "La Salle",
+    "reign_started": "2008-04-13",
+    "last_activity_date": "2008-04-13",
+    "effective_date": "2008-04-14",
+    "detected_on": "2026-09-17",
+    "reverted_to": "St. Peter's"
+  },
+  {
+    "team": "St. Peter's",
+    "reign_started": "2008-04-14",
+    "last_activity_date": "2008-04-14",
+    "effective_date": "2008-04-15",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Iona"
+  },
+  {
+    "team": "Iona",
+    "reign_started": "2008-04-15",
+    "last_activity_date": "2008-04-15",
+    "effective_date": "2008-04-16",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Duquesne"
+  },
+  {
+    "team": "Duquesne",
+    "reign_started": "2008-04-16",
+    "last_activity_date": "2008-04-16",
+    "effective_date": "2008-04-17",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Iona"
+  },
+  {
+    "team": "Iona",
+    "reign_started": "2008-04-17",
+    "last_activity_date": "2008-04-17",
+    "effective_date": "2008-04-18",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Marist"
+  },
+  {
+    "team": "Marist",
+    "reign_started": "2008-04-18",
+    "last_activity_date": "2008-04-18",
+    "effective_date": "2008-04-19",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Iona"
   }
 ]

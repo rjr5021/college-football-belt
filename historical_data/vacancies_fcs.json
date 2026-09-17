@@ -710,5 +710,29 @@
     "effective_date": "2024-03-01",
     "detected_on": "2026-09-17",
     "reverted_to": "Mercer"
+  },
+  {
+    "team": "Mercer",
+    "reign_started": "2024-03-01",
+    "last_activity_date": "2024-03-01",
+    "effective_date": "2024-03-02",
+    "detected_on": "2026-09-17",
+    "reverted_to": "The Citadel"
+  },
+  {
+    "team": "The Citadel",
+    "reign_started": "2024-03-02",
+    "last_activity_date": "2024-03-02",
+    "effective_date": "2024-03-03",
+    "detected_on": "2026-09-17",
+    "reverted_to": "East Tennessee State"
+  },
+  {
+    "team": "East Tennessee State",
+    "reign_started": "2024-03-03",
+    "last_activity_date": "2024-03-03",
+    "effective_date": "2024-03-04",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Mercer"
   }
 ]
