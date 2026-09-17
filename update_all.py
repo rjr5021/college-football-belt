@@ -126,6 +126,20 @@ this is safe to point at an existing belt_data/ folder:
                                  key, and a committed cache
                                  (recap_cache/historical_notes.json) means
                                  each game is only ever generated once.
+ 11b. fetch_shop_products.py -- OPTIONAL, no key: reads the merch shop's
+                                 catalog (every public product's name,
+                                 price, availability and current mockup)
+                                 straight off the Fourthwall storefront
+                                 into historical_data/shop_catalog.json
+                                 (git-committed, so the last good catalog
+                                 survives an outage) and renders a 600px
+                                 thumbnail of each mockup into
+                                 belt_data/shop_thumbs/. shop.html is built
+                                 from these, so a product added, hidden,
+                                 repriced or redesigned in the Fourthwall
+                                 dashboard shows up on the next run with no
+                                 code change. Warns and keeps the previous
+                                 catalog if the store can't be reached.
  12. build_site.py           -- no network calls; regenerates every page
                                  from whatever's now in belt_data/.
  13. generate_share_image.py -- no network call, no API key; renders
@@ -316,6 +330,7 @@ STAGES = [
     ("generate_ai_preview.py", "Writing the AI game preview + prediction (optional)", None),
     ("generate_recaps.py", "Writing AI recaps of settled games (optional)", None),
     ("generate_historical_notes.py", "Writing fact-only notes for games with no box score (optional)", None),
+    ("fetch_shop_products.py", "Refreshing the merch shop catalog from Fourthwall (optional)", None),
     ("build_site.py", "Rebuilding the site", None),
     ("seo_enhance.py", "SEO polish (viewport, canonical, titles/descriptions, sitemap lastmod)", None),
     ("generate_share_image.py", "Rendering the share image, favicon, and team posters", None),

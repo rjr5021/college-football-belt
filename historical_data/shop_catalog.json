@@ -1,0 +1,1686 @@
+{
+ "store_url": "https://college-football-belt-shop.fourthwall.com",
+ "source": "Fourthwall storefront: /sitemap.xml + /products/<slug>.js",
+ "products": [
+  {
+   "id": "63e97592-6af7-45ee-a598-ecc00fb3b117",
+   "slug": "alabama-championship-belt-koozie",
+   "name": "Alabama Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/alabama-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0773c438-7c8e-4706-971f-5becfdef32cd.webp",
+    "id": "25a9e59b-e4ec-49dd-b877-21db680663b4",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0773c438-7c8e-4706-971f-5becfdef32cd.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/461f9188-d71e-45ef-af59-2aed23da1e81.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/1485f721-0ba0-4d04-b6e1-d39e3deada05.webp"
+   ],
+   "published_at": "2026-09-17T00:21:56.724Z",
+   "updated_at": "2026-09-17T17:37:00.494Z",
+   "thumb": "alabama-championship-belt-koozie-25a9e59b.webp"
+  },
+  {
+   "id": "27d56bf6-3f9c-428d-aec5-21e90351289e",
+   "slug": "alabama-championship-belt-pocket-tee",
+   "name": "Alabama Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/alabama-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/12edb0e3-0652-4ae5-9ad6-3fad1e56e7c1.webp",
+    "id": "a99612f2-007f-4ec2-95fc-98fd4019b839",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/12edb0e3-0652-4ae5-9ad6-3fad1e56e7c1.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/91d0404d-e3f9-403e-a4d6-ef298964a27f.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/ecda17b2-2ab5-41a9-b8f3-1df51112fc19.webp"
+   ],
+   "published_at": "2026-09-16T22:15:20.148Z",
+   "updated_at": "2026-09-17T14:08:43.558Z",
+   "thumb": "alabama-championship-belt-pocket-tee-a99612f2.webp"
+  },
+  {
+   "id": "db93a113-8876-4325-8d93-c06cfc6056ac",
+   "slug": "alabama-championship-belt-wrestling-tee",
+   "name": "Alabama Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/alabama-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4913e2e6-df76-4878-a625-1343e6dae99c.webp",
+    "id": "6ac6d95e-98f1-47fb-8764-0c401fd49742",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4913e2e6-df76-4878-a625-1343e6dae99c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4854dfee-32bd-4e14-827a-1834c922d789.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b1f6ca59-c806-4ef9-ba81-43870cc809e5.webp"
+   ],
+   "published_at": "2026-09-16T22:17:42.948Z",
+   "updated_at": "2026-09-17T17:32:57.943Z",
+   "thumb": "alabama-championship-belt-wrestling-tee-6ac6d95e.webp"
+  },
+  {
+   "id": "41cdd662-504b-47c5-94be-a89f16d4d934",
+   "slug": "auburn-championship-belt-koozie",
+   "name": "Auburn Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/auburn-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7011cd46-41c6-440b-b967-d77c228bb3de.webp",
+    "id": "cc790792-541a-47c6-9f2e-8b93eb72503a",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7011cd46-41c6-440b-b967-d77c228bb3de.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5daa9944-356d-43a1-9314-102a7b592890.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/12705fd1-59cb-4907-bd68-2c7de86afbcd.webp"
+   ],
+   "published_at": "2026-09-17T01:57:24.255Z",
+   "updated_at": "2026-09-17T18:14:07.202Z",
+   "thumb": "auburn-championship-belt-koozie-cc790792.webp"
+  },
+  {
+   "id": "0829147d-6881-4cc5-be6b-716701b17c01",
+   "slug": "auburn-championship-belt-pocket-tee",
+   "name": "Auburn Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/auburn-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/d1b07730-b27e-48f2-8bd8-096ee0f860ef.webp",
+    "id": "b856f697-cfe5-4ffb-8d96-1844dc372795",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/d1b07730-b27e-48f2-8bd8-096ee0f860ef.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/39dff6bc-3047-4fef-aa3d-befdbb862e4e.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/659ae083-eedc-4faf-86a2-c3909c3a0fac.webp"
+   ],
+   "published_at": "2026-09-17T01:54:57.372Z",
+   "updated_at": "2026-09-17T13:56:25.616Z",
+   "thumb": "auburn-championship-belt-pocket-tee-b856f697.webp"
+  },
+  {
+   "id": "5321b14e-7203-477d-bbe4-518c0873c95f",
+   "slug": "auburn-championship-belt-wrestling-tee",
+   "name": "Auburn Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/auburn-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/07554ebe-0a81-4d0e-9f70-faee2bb5c3a6.webp",
+    "id": "9ce95c78-9bc0-425f-af7a-6fa00e143c20",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/07554ebe-0a81-4d0e-9f70-faee2bb5c3a6.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4daf23d7-5b2b-415f-bff4-b26710790c95.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/84a72dde-7028-4e8b-9fb6-7c81efc55c8b.webp"
+   ],
+   "published_at": "2026-09-17T01:52:34.553Z",
+   "updated_at": "2026-09-17T18:11:55.861Z",
+   "thumb": "auburn-championship-belt-wrestling-tee-9ce95c78.webp"
+  },
+  {
+   "id": "5c67475d-90ec-473c-a575-a46e3512315d",
+   "slug": "clemson-championship-belt-koozie",
+   "name": "Clemson Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/clemson-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/2bce8254-2c12-4c0d-913b-6dbeda0f119d.webp",
+    "id": "378c9eef-605a-402d-a791-899fef2021e9",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/2bce8254-2c12-4c0d-913b-6dbeda0f119d.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/03ed9ac8-575b-4d42-8737-72cad4a46cd9.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/fc384cbb-d41a-484e-92bb-640939141a76.webp"
+   ],
+   "published_at": "2026-09-17T02:10:33.063Z",
+   "updated_at": "2026-09-17T18:02:51.647Z",
+   "thumb": "clemson-championship-belt-koozie-378c9eef.webp"
+  },
+  {
+   "id": "6ef0ae9f-e4b1-4e98-bc14-a6ddf0370802",
+   "slug": "clemson-championship-belt-pocket-tee",
+   "name": "Clemson Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/clemson-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0a9281b2-3fa2-48c5-90a8-bd0863aa2d11.webp",
+    "id": "22312dbd-1dc3-4e6f-8e1a-98dcbacae524",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0a9281b2-3fa2-48c5-90a8-bd0863aa2d11.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/3f15ffde-0749-4ea2-9d70-005a0a91861c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/cb7f8b7c-5241-42cf-98bb-ac47cd46f3b7.webp"
+   ],
+   "published_at": "2026-09-17T02:08:24.476Z",
+   "updated_at": "2026-09-17T13:54:21.253Z",
+   "thumb": "clemson-championship-belt-pocket-tee-22312dbd.webp"
+  },
+  {
+   "id": "992d8afd-d1c0-4120-a443-abf8fdaf6a6f",
+   "slug": "clemson-championship-belt-wrestling-tee",
+   "name": "Clemson Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/clemson-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9e74f3f4-cef5-4bdf-86d7-91bedfb80cb5.webp",
+    "id": "c5a1a48a-0359-48b6-bd60-db62060f51e9",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9e74f3f4-cef5-4bdf-86d7-91bedfb80cb5.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/3923c1ad-8584-496a-bc2a-1c02998fec69.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/091c812a-ff15-4515-a4b3-223abcc32e27.webp"
+   ],
+   "published_at": "2026-09-17T02:06:32.596Z",
+   "updated_at": "2026-09-17T18:00:40.068Z",
+   "thumb": "clemson-championship-belt-wrestling-tee-c5a1a48a.webp"
+  },
+  {
+   "id": "f1291e7a-68ee-4c8e-8b62-60732a53abd1",
+   "slug": "florida-championship-belt-koozie",
+   "name": "Florida Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/florida-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/ec59066f-0640-4d21-ad7e-6f912e748161.webp",
+    "id": "860e520b-f823-4254-ba9f-9b5edbb60974",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/ec59066f-0640-4d21-ad7e-6f912e748161.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/50b4dd37-3a4b-4bdb-8d6f-8a51fb288277.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/c872c8a2-b992-4eb8-9b47-6ef0047597a3.webp"
+   ],
+   "published_at": "2026-09-17T01:48:18.418Z",
+   "updated_at": "2026-09-17T18:18:13.776Z",
+   "thumb": "florida-championship-belt-koozie-860e520b.webp"
+  },
+  {
+   "id": "c4cac6c3-79fc-461d-b9db-4cb76a747f71",
+   "slug": "florida-championship-belt-pocket-tee",
+   "name": "Florida Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/florida-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/38a69b9a-5bc5-4345-aae0-ed2690a0e13a.webp",
+    "id": "1e957169-c441-4e66-95b5-f29cc4d21127",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/38a69b9a-5bc5-4345-aae0-ed2690a0e13a.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/2d13737b-74dc-497e-a56e-4f485a88f4ed.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/ff80e98e-1eef-43d6-ad1c-e34aaa132d81.webp"
+   ],
+   "published_at": "2026-09-17T01:46:12.314Z",
+   "updated_at": "2026-09-17T13:57:15.996Z",
+   "thumb": "florida-championship-belt-pocket-tee-1e957169.webp"
+  },
+  {
+   "id": "4d463fbd-7408-40f9-ac6a-97dc69c58a8f",
+   "slug": "florida-championship-belt-wrestling-tee",
+   "name": "Florida Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/florida-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/15f98e1c-0ad2-406e-858d-3f532cc04252.webp",
+    "id": "369d74db-22ba-4fd1-81c2-0cdc6d384e44",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/15f98e1c-0ad2-406e-858d-3f532cc04252.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/76cfe5bf-3dbb-4434-96f8-7dbfe886c533.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/851739aa-3a23-46fe-a054-bcceb9cce34a.webp"
+   ],
+   "published_at": "2026-09-17T01:44:18.285Z",
+   "updated_at": "2026-09-17T18:17:06.643Z",
+   "thumb": "florida-championship-belt-wrestling-tee-369d74db.webp"
+  },
+  {
+   "id": "d9b4e4eb-5ccb-4080-bf75-2b9eb35d65f0",
+   "slug": "georgia-championship-belt-koozie",
+   "name": "Georgia Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/georgia-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/ef328adf-1df6-4f86-8fcf-6de6af2ef128.webp",
+    "id": "e440f747-0cd4-4758-9f9c-da6fc3163548",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/ef328adf-1df6-4f86-8fcf-6de6af2ef128.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/e22f777f-a050-47a8-ac82-3b2a85a43dd6.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/92820785-90b7-4e71-a84e-09341dd837f6.webp"
+   ],
+   "published_at": "2026-09-17T01:10:42.980Z",
+   "updated_at": "2026-09-17T18:37:53.438Z",
+   "thumb": "georgia-championship-belt-koozie-e440f747.webp"
+  },
+  {
+   "id": "8cdbe352-efd6-431c-aec2-1456b6687316",
+   "slug": "georgia-championship-belt-pocket-tee",
+   "name": "Georgia Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/georgia-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/bcca6004-bf3a-4b0d-99f4-cff5035232ee.webp",
+    "id": "f75828d6-b4af-4e1d-81d9-624cef8429e4",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/bcca6004-bf3a-4b0d-99f4-cff5035232ee.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/082e3a45-ac13-4e5b-af05-785fc36d24d6.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/35216331-a524-4f1a-87e8-f9f584f15574.webp"
+   ],
+   "published_at": "2026-09-17T01:04:22.064Z",
+   "updated_at": "2026-09-17T14:01:43.196Z",
+   "thumb": "georgia-championship-belt-pocket-tee-f75828d6.webp"
+  },
+  {
+   "id": "e15d9bf9-b2fa-4b01-aa06-c49cd845ba5b",
+   "slug": "georgia-championship-belt-wrestling-tee",
+   "name": "Georgia Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/georgia-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/65fb5473-93a5-4633-9eb5-81c3e26ab49c.webp",
+    "id": "75d9ed82-f861-4c33-8af4-a825a4fc8db3",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/65fb5473-93a5-4633-9eb5-81c3e26ab49c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/955181ae-6933-4198-ba98-3058fecd38ed.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4fdc00ba-869e-43d1-b54a-9808e3cbe91f.webp"
+   ],
+   "published_at": "2026-09-17T01:01:39.241Z",
+   "updated_at": "2026-09-17T18:36:50.640Z",
+   "thumb": "georgia-championship-belt-wrestling-tee-75d9ed82.webp"
+  },
+  {
+   "id": "3a09d0fb-15b0-476f-972e-78c2e080d613",
+   "slug": "lsu-championship-belt-koozie",
+   "name": "LSU Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/lsu-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/34a785e6-e84e-4f9e-9bdd-9b5eba90dc12.webp",
+    "id": "29ba57d7-6df2-45c3-b00a-e025dc89a7c8",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/34a785e6-e84e-4f9e-9bdd-9b5eba90dc12.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/f1698520-b5d1-4416-bbe3-968f044e7ede.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/a219eb57-1a6b-4ed2-819d-afcde7148b93.webp"
+   ],
+   "published_at": "2026-09-17T01:28:27.478Z",
+   "updated_at": "2026-09-17T18:30:12.097Z",
+   "thumb": "lsu-championship-belt-koozie-29ba57d7.webp"
+  },
+  {
+   "id": "49251b88-4006-4b8a-b0af-c8e07369049e",
+   "slug": "lsu-championship-belt-pocket-tee",
+   "name": "LSU Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/lsu-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/bc4d8757-6011-4e82-a203-6d5f2219a6e1.webp",
+    "id": "23c98b5c-ef91-4cd0-b23a-75b89cb63a47",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/bc4d8757-6011-4e82-a203-6d5f2219a6e1.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6e35fa9a-fe65-4e3c-ab60-1bcefc154d11.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/3770d6dc-28ee-483f-943d-e580e984e70f.webp"
+   ],
+   "published_at": "2026-09-17T01:26:24.629Z",
+   "updated_at": "2026-09-17T13:59:48.335Z",
+   "thumb": "lsu-championship-belt-pocket-tee-23c98b5c.webp"
+  },
+  {
+   "id": "6afc780d-50d4-482b-babc-c43e6aa89dc0",
+   "slug": "lsu-championship-belt-wrestling-tee",
+   "name": "LSU Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/lsu-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7cf9dc2b-0951-421d-a3da-cf70010d2fa2.webp",
+    "id": "db482853-030f-4309-9ecf-d11abc27ba8d",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7cf9dc2b-0951-421d-a3da-cf70010d2fa2.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4f69dae4-f236-4ac1-867d-143ce0d887ff.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/c43ad99f-e0e9-4a8f-aed2-035923842460.webp"
+   ],
+   "published_at": "2026-09-17T01:22:07.221Z",
+   "updated_at": "2026-09-17T18:29:01.663Z",
+   "thumb": "lsu-championship-belt-wrestling-tee-db482853.webp"
+  },
+  {
+   "id": "76b7efaf-d314-4579-9f43-984fa3b753c2",
+   "slug": "miami-championship-belt-koozie",
+   "name": "Miami Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/miami-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/c395114d-fec6-40b3-a534-5586b386cdec.webp",
+    "id": "64db8fd9-92b8-4371-825d-0cbaa6a24669",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/c395114d-fec6-40b3-a534-5586b386cdec.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/73294526-5a94-48b9-bf7f-a8fd7b8177ca.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/187c0ca8-8804-4871-90e1-757f25fd4649.webp"
+   ],
+   "published_at": "2026-09-17T02:27:51.876Z",
+   "updated_at": "2026-09-17T17:17:40.411Z",
+   "thumb": "miami-championship-belt-koozie-64db8fd9.webp"
+  },
+  {
+   "id": "762c820f-f455-4baf-85f6-252154726ba7",
+   "slug": "miami-championship-belt-pocket-tee",
+   "name": "Miami Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/miami-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/fb3cb667-5a1d-47f1-8f0b-0348cae67258.webp",
+    "id": "25dba24c-63d3-40d5-8ebb-f7098b077559",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/fb3cb667-5a1d-47f1-8f0b-0348cae67258.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/026a9091-30a9-463e-abc8-977999cfe426.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/967610d3-0cad-4e4b-b324-5a97cea34cd9.webp"
+   ],
+   "published_at": "2026-09-17T02:25:35.208Z",
+   "updated_at": "2026-09-17T13:45:57.848Z",
+   "thumb": "miami-championship-belt-pocket-tee-25dba24c.webp"
+  },
+  {
+   "id": "9147556b-55f0-43b7-a51d-40edf22531c5",
+   "slug": "miami-championship-belt-wrestling-tee",
+   "name": "Miami Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/miami-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/1d5d61ad-a0dd-4ead-ac74-b001f56907b8.webp",
+    "id": "e4fc869b-c42c-40c2-8543-888d45f620b8",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/1d5d61ad-a0dd-4ead-ac74-b001f56907b8.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/2bb30663-2e78-4f6c-b286-f6b2b2f4631b.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/8d3b742c-2a3f-43f9-bfbf-2c037dcc3618.webp"
+   ],
+   "published_at": "2026-09-17T02:20:05.807Z",
+   "updated_at": "2026-09-17T17:15:14.240Z",
+   "thumb": "miami-championship-belt-wrestling-tee-e4fc869b.webp"
+  },
+  {
+   "id": "f841fda1-1167-4bcb-b59b-4c2789dfdcd2",
+   "slug": "michigan-championship-belt-koozie",
+   "name": "Michigan Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/michigan-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/caa271ca-f293-4b91-bd18-2da6eea7e6e6.webp",
+    "id": "b99099bb-6fbd-43ec-9b05-9e97b24c13b4",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/caa271ca-f293-4b91-bd18-2da6eea7e6e6.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/850af33b-b4f8-4654-a23b-ae26ed5c9912.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0780de35-6a41-410e-a0f2-c1681714df6e.webp"
+   ],
+   "published_at": "2026-09-17T00:57:07.972Z",
+   "updated_at": "2026-09-17T17:55:36.681Z",
+   "thumb": "michigan-championship-belt-koozie-b99099bb.webp"
+  },
+  {
+   "id": "394413a9-6f49-4937-a98b-fb2239ff749f",
+   "slug": "michigan-championship-belt-pocket-tee",
+   "name": "Michigan Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/michigan-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6b805ac4-a456-4bc1-aec0-2296325abdee.webp",
+    "id": "a15e4a73-60e4-44dc-a23d-a320844036b0",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6b805ac4-a456-4bc1-aec0-2296325abdee.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/e93a9ab7-69f6-4651-b7bc-0968b5dbcf20.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5d94a4b3-0552-4b3d-9b04-1b7d65966bc4.webp"
+   ],
+   "published_at": "2026-09-17T00:46:56.415Z",
+   "updated_at": "2026-09-17T14:03:09.745Z",
+   "thumb": "michigan-championship-belt-pocket-tee-a15e4a73.webp"
+  },
+  {
+   "id": "04a59192-6275-41cc-a198-2a4427d0c42d",
+   "slug": "michigan-championship-belt-wrestling-tee",
+   "name": "Michigan Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/michigan-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5b532623-eada-42be-9bd0-459f92cb984c.webp",
+    "id": "77039e3b-0a8b-486e-8de2-47535cc478be",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5b532623-eada-42be-9bd0-459f92cb984c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b2d56c43-5655-4a22-9450-36cdb94499e6.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/eae77f10-59eb-45fd-9394-af3ec7c3be4a.webp"
+   ],
+   "published_at": "2026-09-17T00:44:26.094Z",
+   "updated_at": "2026-09-17T17:51:52.049Z",
+   "thumb": "michigan-championship-belt-wrestling-tee-77039e3b.webp"
+  },
+  {
+   "id": "44cb6eff-d834-4022-8514-15dee206a14d",
+   "slug": "nebraska-championship-belt-koozie",
+   "name": "Nebraska Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/nebraska-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9f4a3c1b-6ac3-4747-841d-0a673bc06ec0.webp",
+    "id": "5cbd1de7-2fe6-48d2-b8f9-7c3840c0954a",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9f4a3c1b-6ac3-4747-841d-0a673bc06ec0.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/26c1cf70-6968-4711-a272-819b9f01a10d.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/27a571b7-5741-46fc-9e9f-62d64fee91a7.webp"
+   ],
+   "published_at": "2026-09-17T02:17:22.931Z",
+   "updated_at": "2026-09-17T17:23:08.635Z",
+   "thumb": "nebraska-championship-belt-koozie-5cbd1de7.webp"
+  },
+  {
+   "id": "af71ab8c-4ff8-4151-9ad0-08130195c0fb",
+   "slug": "nebraska-championship-belt-pocket-tee",
+   "name": "Nebraska Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/nebraska-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/71604c1d-18f7-40f5-b50b-fc3cb13f27a4.webp",
+    "id": "c63b4700-74b3-411c-b55a-2c6ec3ad0fe0",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/71604c1d-18f7-40f5-b50b-fc3cb13f27a4.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/da9ea8f2-132e-4fed-a797-c49e3074b406.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4bb87d8c-4fec-47f9-9a7f-343394ebf402.webp"
+   ],
+   "published_at": "2026-09-17T02:15:08.002Z",
+   "updated_at": "2026-09-17T13:52:35.918Z",
+   "thumb": "nebraska-championship-belt-pocket-tee-c63b4700.webp"
+  },
+  {
+   "id": "fdf2ee1e-bc2b-420d-8620-7332b5db2c23",
+   "slug": "nebraska-championship-belt-wrestling-tee",
+   "name": "Nebraska Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/nebraska-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/114da39b-7651-4f86-9832-424e08a436ae.webp",
+    "id": "38370137-0392-424d-8d2a-9eb07e35eabf",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/114da39b-7651-4f86-9832-424e08a436ae.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/924c2f07-82a4-4e80-ae3e-c9b887d25eaf.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/81d70ba3-8154-48fc-a51f-956afc223a40.webp"
+   ],
+   "published_at": "2026-09-17T02:13:12.370Z",
+   "updated_at": "2026-09-17T17:20:00.704Z",
+   "thumb": "nebraska-championship-belt-wrestling-tee-38370137.webp"
+  },
+  {
+   "id": "e16ab9f7-ba18-4a45-b10f-534069669f93",
+   "slug": "notre-dame-championship-belt-koozie",
+   "name": "Notre Dame Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/notre-dame-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/990eedef-4497-4f16-b2b2-24f13da459d8.webp",
+    "id": "9c127af5-0453-4763-9f86-f1cca2e820cb",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/990eedef-4497-4f16-b2b2-24f13da459d8.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5c4f61c4-72a9-42c3-af7e-4ea127691a62.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/72a704d1-2b50-4514-9aab-09ae2f3443e3.webp"
+   ],
+   "published_at": "2026-09-17T00:14:45.710Z",
+   "updated_at": "2026-09-17T18:40:26.018Z",
+   "thumb": "notre-dame-championship-belt-koozie-9c127af5.webp"
+  },
+  {
+   "id": "e9b61261-7751-4f8a-a6f7-e9f30cf9c550",
+   "slug": "notre-dame-championship-belt-pocket-tee",
+   "name": "Notre Dame Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/notre-dame-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0b5dee4f-7d53-459c-a785-f541dd707ca4.webp",
+    "id": "35d8ff2e-c251-42af-9eb1-0835597f201e",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0b5dee4f-7d53-459c-a785-f541dd707ca4.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b463f493-5e7f-4247-8a90-24c053d50aaa.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/2b7bd65e-f552-4d84-bbf1-d1a27d34ea29.webp"
+   ],
+   "published_at": "2026-09-16T22:30:56.773Z",
+   "updated_at": "2026-09-17T14:06:21.378Z",
+   "thumb": "notre-dame-championship-belt-pocket-tee-35d8ff2e.webp"
+  },
+  {
+   "id": "efcb747d-afc7-4e52-adfa-5697cbce184b",
+   "slug": "notre-dame-championship-belt-wrestling-tee",
+   "name": "Notre Dame Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/notre-dame-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5b9d545a-9c84-45a5-bd57-cbe64f494f47.webp",
+    "id": "dac649bb-88ad-43e9-bc51-79fa280e33fa",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/5b9d545a-9c84-45a5-bd57-cbe64f494f47.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/8ecb74f0-cbad-4e25-b97f-f49c2fa70b63.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b1aa4e0f-d35d-47aa-b966-fbd9ff0f1e04.webp"
+   ],
+   "published_at": "2026-09-16T22:32:35.745Z",
+   "updated_at": "2026-09-17T18:39:21.239Z",
+   "thumb": "notre-dame-championship-belt-wrestling-tee-dac649bb.webp"
+  },
+  {
+   "id": "aa0c4e92-2cdb-468b-9c10-1d7ace9bb35e",
+   "slug": "ohio-state-championship-belt-koozie",
+   "name": "Ohio State Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/ohio-state-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/27a2247d-010c-40be-b260-eeaa30508b5d.webp",
+    "id": "8a2601d0-a392-4f5c-81e2-eea84427ccea",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/27a2247d-010c-40be-b260-eeaa30508b5d.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/fd0f4eb3-c67e-4d89-b12e-ad392da60c0b.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/8349059e-3a91-4bb9-8e8c-8520b65ae044.webp"
+   ],
+   "published_at": "2026-09-17T00:43:57.188Z",
+   "updated_at": "2026-09-17T17:44:06.575Z",
+   "thumb": "ohio-state-championship-belt-koozie-8a2601d0.webp"
+  },
+  {
+   "id": "f1404e9c-a72f-49bc-b855-aa7a455d80ba",
+   "slug": "ohio-state-championship-belt-pocket-tee",
+   "name": "Ohio State Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/ohio-state-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/e9ecd5ce-1478-40cb-ae5b-1156e891519b.webp",
+    "id": "02a642a4-53f8-4872-8507-7b28e57312a8",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/e9ecd5ce-1478-40cb-ae5b-1156e891519b.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4cd9fcd9-cb27-43b8-80f5-1c14aaaa648f.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b70e4edd-c768-4f88-92ad-3a5141d10450.webp"
+   ],
+   "published_at": "2026-09-17T00:39:26.315Z",
+   "updated_at": "2026-09-17T14:04:02.901Z",
+   "thumb": "ohio-state-championship-belt-pocket-tee-02a642a4.webp"
+  },
+  {
+   "id": "415cccd9-4519-4030-a886-f49cfcec9943",
+   "slug": "ohio-state-championship-belt-wrestling-tee",
+   "name": "Ohio State Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/ohio-state-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/743f87b1-7d84-4ebf-b1ea-98550c4f88f3.webp",
+    "id": "75d601aa-e946-41cb-8fb7-e96498a46ea7",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/743f87b1-7d84-4ebf-b1ea-98550c4f88f3.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9918e479-014c-4936-b293-0c6d1b3a1c8a.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/903a358d-7953-48d6-8457-5819fd2fba5b.webp"
+   ],
+   "published_at": "2026-09-17T00:28:47.231Z",
+   "updated_at": "2026-09-17T17:41:36.140Z",
+   "thumb": "ohio-state-championship-belt-wrestling-tee-75d601aa.webp"
+  },
+  {
+   "id": "f1ec50c2-ef07-46e6-8ebf-59a30de992f7",
+   "slug": "oklahoma-championship-belt-koozie",
+   "name": "Oklahoma Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/oklahoma-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/09f3d0f9-adfe-4027-83d7-d5a3412bd60f.webp",
+    "id": "0034754d-2a77-413e-963e-2d8170f6f251",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/09f3d0f9-adfe-4027-83d7-d5a3412bd60f.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/3ccec272-d855-4f6c-a1cd-914b73799d91.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/2ebb205e-f363-469d-a39f-6adc22f07c97.webp"
+   ],
+   "published_at": "2026-09-17T01:41:54.331Z",
+   "updated_at": "2026-09-17T18:23:03.229Z",
+   "thumb": "oklahoma-championship-belt-koozie-0034754d.webp"
+  },
+  {
+   "id": "9cf91424-6f14-4944-8ebb-22c85e50d4c8",
+   "slug": "oklahoma-championship-belt-pocket-tee",
+   "name": "Oklahoma Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/oklahoma-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6acfb543-1c3b-4c47-8f07-9bf51f16ca24.webp",
+    "id": "3abbb07a-bd5a-40ef-b329-30ced0ea3e34",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6acfb543-1c3b-4c47-8f07-9bf51f16ca24.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b07c7331-7035-4628-bf8c-0570c28a891c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/20ab51dd-e86d-42e0-ab50-15189d74b204.webp"
+   ],
+   "published_at": "2026-09-17T01:39:37.678Z",
+   "updated_at": "2026-09-17T13:58:07.383Z",
+   "thumb": "oklahoma-championship-belt-pocket-tee-3abbb07a.webp"
+  },
+  {
+   "id": "4f458d0b-9df6-4727-8623-94e9b7039f52",
+   "slug": "oklahoma-championship-belt-wrestling-tee",
+   "name": "Oklahoma Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/oklahoma-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/1c248e43-5e8a-4619-bcfc-fe2cd7c4a328.webp",
+    "id": "7ab0ae0d-a515-4945-9cba-59a393da6c70",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/1c248e43-5e8a-4619-bcfc-fe2cd7c4a328.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/132a991f-7a5d-4a98-9ae0-8dab2e33d38c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/bb9c93cd-4230-4750-b359-400cbf0bd55a.webp"
+   ],
+   "published_at": "2026-09-17T01:37:42.460Z",
+   "updated_at": "2026-09-17T18:20:04.623Z",
+   "thumb": "oklahoma-championship-belt-wrestling-tee-7ab0ae0d.webp"
+  },
+  {
+   "id": "1e7553a6-16b3-4067-a8a0-31bf8b3d8419",
+   "slug": "penn-state-championship-belt-koozie",
+   "name": "Penn State Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/penn-state-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7668b549-2349-46f3-b676-606832299bdf.webp",
+    "id": "1e95f1ab-a12e-4570-9dc7-fb0de115d863",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7668b549-2349-46f3-b676-606832299bdf.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4aed605c-67a4-49cc-9839-36f86a4f211f.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/96f2a831-779a-4af0-b304-bd26ce6f62a0.webp"
+   ],
+   "published_at": "2026-09-17T02:03:54.537Z",
+   "updated_at": "2026-09-17T18:06:39.490Z",
+   "thumb": "penn-state-championship-belt-koozie-1e95f1ab.webp"
+  },
+  {
+   "id": "c1dd2483-31de-4e77-87a9-c7645f66566a",
+   "slug": "penn-state-championship-belt-pocket-tee",
+   "name": "Penn State Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/penn-state-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/801c5426-d599-4d77-b7a5-384ce331fbff.webp",
+    "id": "3bbe5ba8-f315-45e2-b868-02ac33cd8fa8",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/801c5426-d599-4d77-b7a5-384ce331fbff.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6d7a5abc-ba77-4780-830d-c60eddf35d68.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/61784ade-bb39-45f2-842f-849b37a90360.webp"
+   ],
+   "published_at": "2026-09-17T02:01:50.836Z",
+   "updated_at": "2026-09-17T13:55:31.438Z",
+   "thumb": "penn-state-championship-belt-pocket-tee-3bbe5ba8.webp"
+  },
+  {
+   "id": "f1efdcae-0508-44b1-84f4-319331178076",
+   "slug": "penn-state-championship-belt-wrestling-tee",
+   "name": "Penn State Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/penn-state-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9cca92b4-3399-4dc1-bb07-4c4fef3c8074.webp",
+    "id": "971f52f5-bb18-4036-bc14-bc9bec0a6c43",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/9cca92b4-3399-4dc1-bb07-4c4fef3c8074.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/da3b0348-5088-4e12-a1c5-620f177dd97c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/31f62688-7c00-4036-ba51-38f0c7a3aba0.webp"
+   ],
+   "published_at": "2026-09-17T01:59:53.752Z",
+   "updated_at": "2026-09-17T18:04:57.911Z",
+   "thumb": "penn-state-championship-belt-wrestling-tee-971f52f5.webp"
+  },
+  {
+   "id": "542e032d-3728-4df4-a88e-e92b4d2d96be",
+   "slug": "tennessee-championship-belt-koozie",
+   "name": "Tennessee Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/tennessee-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/8ed0e396-6b19-4196-9ef0-fc9a38440e0b.webp",
+    "id": "82c37fb7-50e7-41b6-9103-9d01ad5c9901",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/8ed0e396-6b19-4196-9ef0-fc9a38440e0b.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/67b47d61-96ea-4cef-9a0f-117a6c0461ba.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0ebcb411-db3a-42a4-b69c-d14d0e599739.webp"
+   ],
+   "published_at": "2026-09-17T01:35:16.245Z",
+   "updated_at": "2026-09-17T18:27:05.543Z",
+   "thumb": "tennessee-championship-belt-koozie-82c37fb7.webp"
+  },
+  {
+   "id": "7db8e9d1-775b-48ad-83a0-d85c64bc335c",
+   "slug": "tennessee-championship-belt-pocket-tee",
+   "name": "Tennessee Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/tennessee-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/647ff068-b3dd-49a2-b244-7439fa78e404.webp",
+    "id": "8cb33c36-a917-4503-8b3a-5b34d83091c4",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/647ff068-b3dd-49a2-b244-7439fa78e404.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/eafb1857-c4a2-42de-8cf2-206671ee03bb.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/951f46d8-a3cd-4b68-a88a-14698baa1918.webp"
+   ],
+   "published_at": "2026-09-17T01:33:20.106Z",
+   "updated_at": "2026-09-17T13:58:56.865Z",
+   "thumb": "tennessee-championship-belt-pocket-tee-8cb33c36.webp"
+  },
+  {
+   "id": "129a5e21-66e7-4819-9ca7-221a25cde0a2",
+   "slug": "tennessee-championship-belt-wrestling-tee",
+   "name": "Tennessee Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/tennessee-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0cf092f1-d3d7-4be8-a2aa-8bf3f4d8f12d.webp",
+    "id": "fde74a1d-bbd2-44df-b8e5-448090e7496b",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0cf092f1-d3d7-4be8-a2aa-8bf3f4d8f12d.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/8e01b803-b464-49e6-8d02-20d53fc2ab71.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/d2ff9c49-32d5-4f1c-81a8-a0bf2a9dd7ba.webp"
+   ],
+   "published_at": "2026-09-17T01:31:29.747Z",
+   "updated_at": "2026-09-17T18:25:03.530Z",
+   "thumb": "tennessee-championship-belt-wrestling-tee-fde74a1d.webp"
+  },
+  {
+   "id": "d09a7e4b-44c6-4d73-a250-b26633f879fe",
+   "slug": "texas-championship-belt-koozie",
+   "name": "Texas Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/texas-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4fae1303-18cd-49b7-8a5d-d9ce13fe463a.webp",
+    "id": "a6487b0e-f9e0-49ba-9019-41510ca5cc61",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/4fae1303-18cd-49b7-8a5d-d9ce13fe463a.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/fb274d06-27e3-4f9f-97e9-c62acfcfcfc9.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/0818bcf8-b2e9-46df-9db4-addb6b8c3246.webp"
+   ],
+   "published_at": "2026-09-17T01:17:14.984Z",
+   "updated_at": "2026-09-17T18:34:26.670Z",
+   "thumb": "texas-championship-belt-koozie-a6487b0e.webp"
+  },
+  {
+   "id": "c610908d-d063-4930-80b5-80e26882f795",
+   "slug": "texas-championship-belt-pocket-tee",
+   "name": "Texas Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/texas-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7cae44b3-d998-4a20-9747-4d669a114853.webp",
+    "id": "bd0cbd56-2776-4a64-b609-d6cc16e8eecd",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/7cae44b3-d998-4a20-9747-4d669a114853.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/cd3edaa5-9536-4824-ac9e-a0a65a4b3bda.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/fe45250a-5aeb-49d6-a130-6772aa7ff0e3.webp"
+   ],
+   "published_at": "2026-09-17T01:14:56.006Z",
+   "updated_at": "2026-09-17T14:00:37.229Z",
+   "thumb": "texas-championship-belt-pocket-tee-bd0cbd56.webp"
+  },
+  {
+   "id": "8889bc99-f94f-4447-93f4-4e11120160ce",
+   "slug": "texas-championship-belt-wrestling-tee",
+   "name": "Texas Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/texas-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b566c897-ba0f-4840-a684-c16d2bcd1c5a.webp",
+    "id": "6de5058a-8d59-4152-ac17-eef9fb476a1e",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b566c897-ba0f-4840-a684-c16d2bcd1c5a.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/00fb3c55-46a2-4751-a659-88edab2a850f.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/bd78ddf7-4484-4df0-9ee8-b1dc5cd8bae3.webp"
+   ],
+   "published_at": "2026-09-17T01:12:53.168Z",
+   "updated_at": "2026-09-17T18:33:31.639Z",
+   "thumb": "texas-championship-belt-wrestling-tee-6de5058a.webp"
+  },
+  {
+   "id": "598691c1-0867-4265-9815-9756ad2f7e1c",
+   "slug": "usc-championship-belt-koozie",
+   "name": "USC Championship Belt Koozie",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/usc-championship-belt-koozie",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 25.0,
+   "currency": "USD",
+   "colors": [
+    "All-Over Print"
+   ],
+   "sizes": [
+    "12oz"
+   ],
+   "description": "",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/40e542b2-fc6f-444b-81dd-acea1b766ecd.webp",
+    "id": "973f0afd-d7e0-4a64-bef6-ee6fd6393573",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/40e542b2-fc6f-444b-81dd-acea1b766ecd.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/6c72fd0c-fb71-4e9a-be8f-089015302f6c.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/97ba1c64-c74a-48ec-8b38-b588251fe4ca.webp"
+   ],
+   "published_at": "2026-09-17T00:20:45.320Z",
+   "updated_at": "2026-09-17T17:28:43.718Z",
+   "thumb": "usc-championship-belt-koozie-973f0afd.webp"
+  },
+  {
+   "id": "0a952d2b-d057-4d9e-881e-b51573622655",
+   "slug": "usc-championship-belt-pocket-tee",
+   "name": "USC Championship Belt Pocket Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/usc-championship-belt-pocket-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/212c3d77-d248-4add-9d28-ecc72dcd8c6a.webp",
+    "id": "df660170-75b0-4438-bf5f-760e8328a99e",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/212c3d77-d248-4add-9d28-ecc72dcd8c6a.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/1002ecde-e47e-4aad-8c1a-4cee6e12784b.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/065065d3-fa60-4b42-8092-1d7f5e612365.webp"
+   ],
+   "published_at": "2026-09-16T22:23:26.795Z",
+   "updated_at": "2026-09-17T14:07:27.043Z",
+   "thumb": "usc-championship-belt-pocket-tee-df660170.webp"
+  },
+  {
+   "id": "d1801d10-4172-43b0-8544-25d68b2d0f93",
+   "slug": "usc-championship-belt-wrestling-tee",
+   "name": "USC Championship Belt Wrestling Tee",
+   "url": "https://college-football-belt-shop.fourthwall.com/products/usc-championship-belt-wrestling-tee",
+   "available": true,
+   "price_min": 25.0,
+   "price_max": 31.0,
+   "currency": "USD",
+   "colors": [
+    "Black"
+   ],
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL"
+   ],
+   "description": "The medallion up front, the full creed on the back: \"No committee, no poll — you have to take it from whoever's holding it.\" The same brass/ink/paper look as collegefootballbelt.com, since 1869.",
+   "image": {
+    "url": "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/c3645151-c0d1-4c23-a455-687cd858f3c4.webp",
+    "id": "c69cc381-3fb5-452e-9139-38df4205db26",
+    "width": 1536,
+    "height": 2048
+   },
+   "images": [
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/c3645151-c0d1-4c23-a455-687cd858f3c4.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/b30f9ced-0423-4e5d-ba2c-e103c62e3625.webp",
+    "https://cdn.fourthwall.com/customizations/sh_8f43c56f-1666-427b-b891-c505132ebeb5/cf437c3d-8af2-4685-8c61-2c404d4fe589.webp"
+   ],
+   "published_at": "2026-09-16T22:25:28.869Z",
+   "updated_at": "2026-09-17T17:25:43.328Z",
+   "thumb": "usc-championship-belt-wrestling-tee-c69cc381.webp"
+  }
+ ]
+}

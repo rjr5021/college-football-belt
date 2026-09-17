@@ -637,6 +637,26 @@ own settings, worth doing deliberately rather than as a side effect of a
 script — but it's a short, well-documented `schtasks` setup if you want
 to go that route later.
 
+## Merch shop (Fourthwall)
+
+`site/shop.html` is a native page in the site's own design — products
+grouped by school, with a jump-to-team filter bar — that links out to the
+Fourthwall store (`college-football-belt-shop.fourthwall.com`) only at the
+final "buy" click. It is built from the store's own catalog, not from a
+list kept in the code: **`fetch_shop_products.py`**, a no-key stage that
+runs just before `build_site.py`, reads every public product off the
+storefront (name, price, availability, current mockup — via the
+storefront's `/sitemap.xml` and `/products/<slug>.js`) into
+`historical_data/shop_catalog.json` (git-committed, so the last good
+catalog survives a run where Fourthwall is unreachable) and renders a
+600px WebP thumbnail of each mockup into `belt_data/shop_thumbs/`, which
+`build_site.py` copies to `site/merch/`. Adding, hiding, repricing or
+redesigning a product in the Fourthwall dashboard shows up on the next run
+with no code change. `SHOP_ENABLED` near the top of `build_site.py` is the
+master switch (`False` keeps the page out of the build, the nav, the
+footer, search and the sitemap), and the team page of every school that
+has gear links to its slice of the shop.
+
 ## Deployment: GitHub Actions + GitHub Pages
 
 This solves weekly updates and hosting in one move, instead of two
