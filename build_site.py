@@ -90,65 +90,120 @@ GOOGLE_SITE_VERIFICATION = ""
 #    once the script above is live on the site.
 ADSENSE_PUBLISHER_ID = "pub-4807241949046212"
 
-# Optional merch shop (Fourthwall). Empty by default -- shop.html then shows
-# a "coming soon" teaser instead of a product grid, same no-op-when-unset
-# pattern as GOATCOUNTER_CODE/ADSENSE_PUBLISHER_ID above. To turn it on:
-# 1. Create a free Fourthwall account (fourthwall.com) and add products.
-#    The artwork in merch/ (belt-mark, belt-badge-circle, belt-sticker-circle,
-#    belt-wordmark-ink/paper, belt-tagline-ink/paper) is already PNG,
-#    transparent, and at or above Fourthwall's 300 DPI / 1500x1500px minimum,
-#    so it can be uploaded as-is -- no resizing needed.
-# 2. Set FOURTHWALL_STORE_DOMAIN below to the shop's live domain (Settings >
-#    Domain in the Fourthwall dashboard) -- e.g. "collegefootballbelt.fourthwall.com"
-#    or a connected custom domain.
-# 3. For each live product, add one entry to FOURTHWALL_PRODUCTS: "slug" is
-#    the last part of that product's Fourthwall page URL, "price" is whatever
-#    is shown on that page, and "image" is that product's image URL (right-
-#    click it on the live page > Copy image address). Rerun the pipeline.
-# Buying still finishes on Fourthwall's own checkout (true of every POD
-# platform, not a Fourthwall-specific limitation) -- this gets everything
-# up to that last click, browsing and all, living natively on the site
-# instead of linking out to a separate marketplace.
+# Merch shop (Fourthwall) -- real store, live 2026-09: 16 teams (current
+# champion + the winningest/most-followed programs first -- see
+# generate_shop_page()'s ordering) x 3 product types each (Koozie, Pocket
+# Tee, Wrestling Tee), 48 products total, on the free Fourthwall plan's
+# 50-product cap. shop.html groups them by school with a jump-to-team
+# filter bar instead of one flat grid, since "correct items, filterable by
+# team" is exactly what was missing before this (the site used to link to
+# a stale set of 12 generic, non-team products that no longer exist in the
+# store at all).
+#
+# FOURTHWALL_STORE_DOMAIN is the shop's live domain (Settings > Domain in
+# the Fourthwall dashboard). Note the store itself is still in Fourthwall's
+# "Coming soon" mode as of this writing -- every product link below 404s
+# to a coming-soon page for visitors until the store is flipped to Live
+# from the Fourthwall dashboard (Settings > general store status), same
+# note as claude/HANDOFF-fourthwall-shop-page.md.
+#
+# FOURTHWALL_TEAM_PRODUCTS: team name -> list of {"type", "slug", "image"}.
+# slug is the exact product-name slug Fourthwall generates
+# (lowercase, hyphenated) -- it's what completes the product URL
+# (https://{FOURTHWALL_STORE_DOMAIN}/products/{slug}) and has to match
+# whatever's actually live there. To add a team or product type: create
+# the product in Fourthwall (duplicate an existing one is fastest -- same
+# artwork pattern as merch/team-badges/), then add one entry here with its
+# real slug and thumbnail URL (right-click the product image in the
+# dashboard's product list > Copy image address, or read it off the
+# admin's /api/offer-listing response). FOURTHWALL_PRICE applies to every
+# product -- all 48 are priced the same ($25) in the dashboard today;
+# change it here if that ever stops being uniform (at that point this
+# wants a per-product price field instead).
 FOURTHWALL_STORE_DOMAIN = "college-football-belt-shop.fourthwall.com"
-FOURTHWALL_PRODUCTS = [
-    {"slug": "championship-belt-tee", "title": "Championship Belt Tee",
-     "price": "$32.00",
-     "image": "https://imgproxy.fourthwall.dev/kdFh5xMB3WU87ZZRUvGj6ObCrsXnxaGL9-QH1Oo_AaA/w:720/sm:1/enc/Fdd-36OTORTLaYp-/o-JhmmpQAD3HMbTo/ePyS7Fqa8-b_ry0E/wqrwM561mdCIcPit/HGfSvSF9xaELk-yd/f_FrK9-Y84yd37Al/pq16Of9JD9nC3Tdt/-rMMf2RGOA67Asws/7fB5lXbC7wFR78zH/TN0JxXyRzkzlyvRh/BsGjrilnwera0jvv/Hhpz_uf7wMoiBjcr/IDg5uvEBMwUtP61r/7iNDq3eMNRuSicnJ/5cypZq0h4LI.jpg"},
-    {"slug": "championship-belt-hoodie", "title": "Championship Belt Hoodie",
-     "price": "$44.00",
-     "image": "https://imgproxy.fourthwall.dev/SVlWjiJY_qVqU_XAfFpEbsfB0iek19i5ZTCNud_sHiQ/w:720/sm:1/enc/nMysomXslORnpo6l/gG4iA8thB9j5nWhR/_AW_AIzOBKJzSjgO/emNxHmS2CC6ezPnG/cJFwQ9_m-2RUF2oZ/sDjESslKWDgmy5-m/PqKJAjwx8bAOK05R/k21fpH_B5aVlSfVJ/mwxmARC2XZgmJy7E/ayjOYkDG3Oih6iu6/liZLAbpJ-Q7Kut9c/tNcZMFb1JuGVJnrj/BGvzgJfivxnUJbY5/a0SuTs4mHdFEh1tB/soxo7sFHY40.jpg"},
-    {"slug": "championship-belt-dad-hat", "title": "Championship Belt Dad Hat",
-     "price": "$26.00",
-     "image": "https://imgproxy.fourthwall.dev/w7CG6rzrsPFjvCmGUsTydrndEvk3CClWSbEBiHm-Qw4/w:720/sm:1/enc/ZKfN66JcRxFZ61p3/6f8IxD3UrxXlWp-l/cCUQuqNBbGOHZx34/aEFuYkhYreEw5aJs/x9T_HAXAwBLhAu0M/cC-AUX_rCs7jEZuB/LsR2c0n7V4IKl6eV/bU20e8VPTfUM7Wqb/AqPwS4qliILY4dqC/fhWehWbAKIM0f59L/NxPgTRDC4Ax6VnCh/x3LRN_oxgHc-z3iY/P6URuPvC096dKg4Y/M1OAdmz3n7lp3HM9/0M6vp8rktwU.jpg"},
-    {"slug": "championship-belt-mug", "title": "Championship Belt Mug",
-     "price": "$14.00",
-     "image": "https://imgproxy.fourthwall.dev/lYbLQXgP77R5z74Vvvr2XKhi5GuTQjFH2zo4HhzqrlU/w:720/sm:1/enc/gIlE6CsTS4EX-FXf/rkWdjcy30vwJJzep/2mMWbtudaKQWaNR-/ONN5gwgUHregZziY/v7LDhWtHuaSfdw7z/GJ6ePX2bTByRyLmD/_Oo8fEoVerYiJn23/5vz1eQ_L2ceWL9OP/Y3KV8e5wdQJOcUxX/O7CKMwXGzbQX-bFj/6c-cZj-k4gLm59q0/gibbic9c4fUdCu7u/Au_yUmk_mmasbQT7/KpKf7ABZfXb3TtF0/6TGIoDZdPT0.jpg"},
-    {"slug": "championship-belt-sticker", "title": "Championship Belt Sticker",
-     "price": "$5.29",
-     "image": "https://imgproxy.fourthwall.dev/jpftJVzNgvNuFVT8Ci8zVnOmb79qG8SNtFQpDAGLMKE/w:720/sm:1/enc/rI7916bsnkd9SQ6d/GVIvnS2MXkNZW39s/ik45oAP69HUDakOC/h-OhxWYfbjA28j51/kJG3y1bCxRGqThVS/ewJsBTHgxWOizNZV/XHo-AEGOGu8zwkAn/y4IySgqCSvD5JJTU/stbe9OdK2343DmFw/4xSbMwNbEzrA1b0d/8jiLtfOn2JoJghEA/I4rpHEnE6Bmz1HuT/UqEMBDPBhXWg305k/asJwetA1MPP0cGyf/oPQmczNB_EU.jpg"},
-    {"slug": "championship-belt-tote", "title": "Championship Belt Tote",
-     "price": "$18.56",
-     "image": "https://imgproxy.fourthwall.dev/9PXujXvM8gBDmxpMjIfjuUiJCRFDFd8vF3SJk_6zJv4/w:720/sm:1/enc/-rjESfKGFCRNiO3x/85G0UM_DmbgU2JUt/VtGYbJOpvuvln5Sq/HiLr2CWx9E7zp8bP/4bWVFeegJrmP0mSC/tW23INS966WraDXf/C8WwYJ62O8WsX_7s/jFtNDrO9iZ8pg-YQ/KtqZkUz-V1vdKqWg/l6-vT1mtQqVlWFUV/436Bk1EHn6dOW5lF/8fM4AZn10rtgpw5P/bYxcB9yBhFCl8xGk/D29wO6ly9BfdqGKz/HnceC924E98.jpg"},
-    {"slug": "championship-belt-long-sleeve-tee", "title": "Championship Belt Long Sleeve Tee",
-     "price": "$17.79",
-     "image": "https://imgproxy.fourthwall.dev/z1Ou1P8bkweGjaZEPatJFLWJ5UiquMuIKeNO-QThOwQ/w:720/sm:1/enc/J_kvB4M6iyKQdvPv/f3Bmv-FOVz_JMPOF/yl6FJJfx38qjierP/vTRQYWjPmiVLKzAX/SaPT9KG2LCN0ufkh/i4uYMoNW8p3Cn-pX/fAGR4p_YMlCpaQZu/1X6eCpJ43XsTGy2k/JRkDt5lWqHXDWRa7/wv-qk9dqNgbJkCKe/jhFg06fA_s4-mdxg/Sr0sMwp9UdLM6p3m/p-6VM6xs0cEGJlSG/8S0D6TtRVuUAzFtp/sxhfJSF_PoU.jpg"},
-    {"slug": "championship-belt-crewneck", "title": "Championship Belt Crewneck",
-     "price": "$21.79",
-     "image": "https://imgproxy.fourthwall.dev/8-TS3v_T_YFKLOnUmVeBo_DnLxTf2spI0hJuWPUQyMQ/w:720/sm:1/enc/rSGDmLkufzMkfPA-/CNhJw1Moyz4a208h/mEk_XGdvGhHovS2j/1XnANQ3DBD9dXgjd/hkIX2kl5E0o4zWOh/YWnCOWKTkaltpvJW/Zijz0zG3Zdp3hd1j/DxTRCELEOimj9AaQ/fYteWttzxbJZDWJD/iERLIJOetkEL6Xag/NNCIIrIgA9bQEhNN/KEhjRIDyGJ-NoGgG/XPxNN74tG3QNrKka/auev3MalH6VGP1Ir/yjNRXEmSoZE.jpg"},
-    {"slug": "championship-belt-beanie", "title": "Championship Belt Beanie",
-     "price": "$16.79",
-     "image": "https://imgproxy.fourthwall.dev/GGc0QvdgdDGmjkgP8VMD_VVMQtukCowmUsnvPus5muU/w:720/sm:1/enc/FHSHHnNyW3RwvAJQ/A8tPDldhz3HzjYRH/enpeLDwZVLRy_OuA/PLCFLu0vweq1uuNB/yN_jDj9sqHEJ5tm-/VZhGtmcXuFqz--mc/mnOPYRdJOgRqRUUs/mFuinFHaWm71YTbL/JBZa5h-XGoiBfnud/llzMRP6OHtPNEcT-/Fq5XVUs0lKszlUYx/kOICZwvOJHW20rAQ/v7Aabk3S8F1aT1OM/QcNgSC7bSn383voy/mdTRiP5jjeo.jpg"},
-    {"slug": "championship-belt-water-bottle", "title": "Championship Belt Water Bottle",
-     "price": "$23.35",
-     "image": "https://imgproxy.fourthwall.dev/nsanIQdJFUqmFEpIYyAjHWrWI9K2Ez2oy8ZAyWD-eRE/w:720/sm:1/enc/q59a1LGeVqkpZWax/6NjGdGdXJ-QpYQ8o/mpY-DMdC0yz26aF6/ljLranbW3UH8iPIg/pmiJYAXMRlrFSXmI/WUe_lQVkarKjfkrX/13wMmsGuETM_jH20/uNTh2M1pTIZCSp5V/LF0fNAl3R1cR6cug/YBP8rnwCRp9lChs8/QP1IHuzu3ttmJrFb/_c99RdiRXkvyyXoC/S-uFCFT0C2Vu5uv2/S0vCFJkzXXZ3lqPa/-A7g_Z638bA.jpg"},
-    {"slug": "championship-belt-notebook", "title": "Championship Belt Notebook",
-     "price": "$13.95",
-     "image": "https://imgproxy.fourthwall.dev/m28KEzpjhl08QhWkSPWA5TGyqo_3jJunX4CL5uF4g54/w:720/sm:1/enc/5dqZKnKRgLU9e4J-/TJIc3484sUk_iP6a/DW9WT8A63HjTwZ9J/Iwe2FsWFkzS8pCkd/KfuEFRBDkAtxGy1N/HFygFiocmfya8Hwh/1oW2SBP8xY80y350/pNaX0VO7Zcua2hSP/-y8lzSgM-vrUgspw/oKD7TCoJ7PI7otfL/Mu4cw45V-BkWiU-6/ZvgPVbYlbjDMgf0Z/u4fZCgjn8zJJmZiv/cBAipHFIsgI8wPgP/0yqMe2gWp84.jpg"},
-    {"slug": "championship-belt-poster", "title": "Championship Belt Poster",
-     "price": "$8.50",
-     "image": "https://imgproxy.fourthwall.dev/R9Ev11gYC_B8cVnkeugfk4dxdQAUZglVgr9Vx8riH7c/w:720/sm:1/enc/zNGKF1RewvvoJ7II/a4s-yCIN8SyyCdVc/LCLhztS8dbOIgaC4/ZQ4Ls-NrqRRCxW58/WC3PYT--H2FLZvBT/caEYcFpER1DQCSrU/iA-ObtxNBTaYmrux/jLdUKOX-EfTGVXWM/iDjWJNzBYi0Yck6g/Hap5AAXnSwHedfVf/pOmkmjVf-pwbDGTc/7JwXUB_7sB2LTqr5/hY883xDZedyDR50K/8PRbwHNDQnf47DIa/xUzZzIQJp_g.jpg"},
-]
-
+FOURTHWALL_PRICE = "$25.00"
+FOURTHWALL_TEAM_PRODUCTS = {
+    "Alabama": [
+        {"type": "Koozie", "slug": "alabama-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/xs_nZl0yYrBfCYPliYFYWTWJmViVmO_4vDqt-UYKqHc/w:220/sm:1/enc/vXxaF6HMYiialKzE/43BYZCpSIxFzABNS/WS1g3U9p-K7n60y_/66JwiaOg0UF0gEv6/rld4HgmHDUqal2IL/g1M459EpmU66g5la/gSVl-DQEY2xZD4kF/ldxmLOSI5cGPF27h/02WpNyF4Y-1WKPkb/E6n9lP3YWvEUgDDt/LD91PqCKHzUSqbmY/r1IXDCcpi1Y6xiW6/6oWKKwQW4P06z-7i/bSDe1Svaiv3sqW37/W4_Nf8Tnuxw.jpg"},
+        {"type": "Pocket Tee", "slug": "alabama-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/dAT7ENvPSPXNjtWfolCQhFbymCthTy-F17Q6zPOtOYQ/w:220/sm:1/enc/GoE4dzHAJcmoeAoP/ZLffZhS0exRvgisK/Ax6TVkC8SC_blCbR/Rw4jrFDXnrDLSwvh/1TgLYeVtmZzagqie/2DMXDa3Eydrwk30g/3piJTW8ft0PW13ds/3J8e6WKrCo3qk4kG/FIsVRtX30UlGwQyF/GDVCs-rmnT1TXaWQ/UNtFZKq0pG8XoYNt/QHGvzP6OFtvBUhKT/Gt_CvVpKSflSElUI/cbyRKfMwNa-dhCar/HYZXk4idD-8.jpg"},
+        {"type": "Wrestling Tee", "slug": "alabama-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/ZtHxJIxQfZjaIL3Qc-VMmZueoPY_sxQW0ZE5jqsp3h4/w:220/sm:1/enc/wuB0zEz3buSamSqM/PYstPetuco33l_4V/ItDm3fTiUqAFTy4U/QlLcMNK0a_MsXs6j/nR7y1DmdEYLsETdH/Ef0X3vbbFgYhMfnr/z3Ojhbcv-rGROwDM/Tzhgz7kn3KJdZuPv/Nh-CJesXgihnte0W/iChdo3JmdBbDVFYE/9juuBp93l5didzLW/8iMoZo4fZvyBehJP/K1t_OAgzVf3LCgVW/a3x7JgAU2jRVVBKs/W-t3QEIBnV4.jpg"},
+    ],
+    "Auburn": [
+        {"type": "Koozie", "slug": "auburn-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/sDY5LvtHgC2_55fzMRNfSXpHUL6uKnyVAJ5baovFMjg/w:220/sm:1/enc/agZWT8GiDfYlEKRZ/ObvpJhnXZNCjs_JV/x-Vq1GEMjY0I8NvC/Qb8dcLYdeQH0Imj_/S-9CAEgLNDjCQKMz/bxIdqmiYRqgKO_xE/Czr7UADNFuDtZmdw/o-4FwiSzQ0aMDPKm/QMe-p8U8x_ORarHd/zt09BeKENCElIWJ1/2t32_qdsiIc8V5lF/rLdfCFNbs1rjDGz7/pBbnZAGvg1TtJoiw/G6tyfJCYscn26Cqy/Q8kaw27-Li0.jpg"},
+        {"type": "Pocket Tee", "slug": "auburn-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/CZlM3KBsyBszZP61hhBlTtyZt8SmaJDOL-60BHx4ku0/w:220/sm:1/enc/uYWJLraCmPB_MFs4/goU5ZTUGKeZGnHIA/A7gydiapgNjX7ryQ/EurrewN1uvUwB-cc/Zmm_izJKuT377yVJ/tAhlFIfOTsjLZDRb/gzYeA7nwBvpPX17D/tm8ZHjaOliGAc2fX/PAHBGzUGLJ38w-8b/nKFHA166VrtPwV3W/00EdHeGaaZlCF8mf/M5ly4ke1HLJyO5E3/s_WbPxH5sl4EDd5A/u-7nVM2AJ2Z1umjg/7qHd-W_4m5s.jpg"},
+        {"type": "Wrestling Tee", "slug": "auburn-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/jhWrhN0pN1mtGBEeBO9LdVhgVbK_ULWzGS7EZkUzdA0/w:220/sm:1/enc/BMbXfjV8gPlCWDIX/m9N3Ey_Fq0KIaN4m/DvChOriB0lpBcETC/SL318GJtOzyMab49/Tbwxqq6hI2QhMcMI/OMm_5vf5QR3o6Zac/DJcT6zoZgkYGdL6_/VTwfz_a_o8sVwp1v/RgKirMOpyAL90P3I/5YhnAwL3PMMZv38f/lKrNRiywdAUikXs4/X79bE6PW5ZNZQoqX/AgW88_AGthAwAHeq/BwXm1GVpUWS6KH7-/5WmZzc_CghA.jpg"},
+    ],
+    "Clemson": [
+        {"type": "Koozie", "slug": "clemson-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/XjtyXMhOVnmoBNB0rjnsjkyfmW2ep51rqq8FIWwqPtw/w:220/sm:1/enc/JwcZ3erv8k8-DFVz/hsjVBqKlFzEkIfa2/1LYPyF1EnWDetGQU/D3vAwvtBhs4_qWcu/rOzTfnKaairqTsM8/bYPP1ugkm8eXay4-/uCPsEhGaM---R-sF/edi8ViEwAfyizoGS/lIVZHsvVNwW43zlL/m47h5IO1YVvpFX_u/J6ITI-pOCssUIq32/DhQjbc8-MDRdqvQ1/s1ZoRekPg1_ke4Zh/sOkLLcrpu3vj2mlP/sDhJLhPbmE8.jpg"},
+        {"type": "Pocket Tee", "slug": "clemson-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/G7mUJoHJklWUoYFQ9FP2xU1V3iEsvCHXDaKCUUUy7p0/w:220/sm:1/enc/iWOJAFefxscJJeLA/qtOP3RY9GFILXxVl/IXLVBmpi83-Ln_Ew/G5dxOqHYOrdMqkgA/W_-Gbh2I68bi-vPt/9lbIE2bZSZqJgubt/_xOoaLIO7qG8fMSU/a2mKPKkz75ZZZEq2/KXJi2p2sZeTdWm7o/VwsCuURaB1lrnOiO/KaSEWoaVfy21Cut6/PIzExSMIic6jt2AW/AqGCDfKLsxHQ6s_F/L5kYsABQt3L7SD_P/BMsZgLGIfRI.jpg"},
+        {"type": "Wrestling Tee", "slug": "clemson-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/Kps6giT-7XOF9CjtBdxbV0APKV04UX8U3yx0L_LgchI/w:220/sm:1/enc/2onZBpaRODzm0BdI/0la8D4EPDyNUr4Fp/8Mb4W1saQOo3M4sW/EoIZuGkHh4bDr5Ee/1wu1DgxfsckOY7Kn/MGwX2W_CqW_o0kUN/efwswnxibYKcIJgl/KbSqIdRO0ThBjNfL/kY9Xjf5nn7JiwV2c/KhMzwHU4Rwr68Inq/HhdXTbP5WN0BOljX/k-0VugltbetuNim2/qennm1I9t-C6YC41/rvLDxKhXnT0Ut4Tx/5lOA93zlm4o.jpg"},
+    ],
+    "Florida": [
+        {"type": "Koozie", "slug": "florida-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/0DJajwazEAEYCbWAs6xgGEsaxBhDoWp2W9qHgxJL5Sc/w:220/sm:1/enc/VKW_1BabcXqt2qYh/lXi52xjR31ND_377/aEy9t5Dt5bGrzL-k/lY_4o3FPh4K49SgI/0YKXklUVfinVHf7y/6WUV0_IaO3CpTmxn/PXoP48bW4yIuB6ER/fRQCzdHvEtv9xb0f/JDBPJMsTbD6Oid2U/7rKbttq2aFR4zigC/BFInYYGzIuEyFYkI/4aTKBbgxWDd9V1HX/SoCXOXDSlP6YWdJm/sLcFqDf9c4Bhr7Sk/0L4NiC6lo4s.jpg"},
+        {"type": "Pocket Tee", "slug": "florida-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/M7Jc1c4fzEXJMFqgdNXDi7OZjKCljNibp9EvWTCpNeg/w:220/sm:1/enc/QeD93vZfJHH4Yixs/ob8t8cfYE2MXvaRE/hbwghF12QJXVzQ3Y/dqqA33O41R6HYxXn/SDlIO8EIyz1CtVVE/2ZAIyRZ3AQsHN9sh/v1tc1pzt24lF_1fV/Op-Wp-v6UrmVYDC2/qeaO-JX9uimwWc5p/VDwFcnwgmvZjg_RR/-ZBDPghjisu-4Pm0/1YHmP_ZDfAkt5fpj/0xhXM2EV4txickDX/nkSLNDctxF42wuYS/WveSxi1M0Lc.jpg"},
+        {"type": "Wrestling Tee", "slug": "florida-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/JXnjMuBlC0j_BbGXSFeQ5EWq2xpsRZvW-YRmltmIvDQ/w:220/sm:1/enc/ZD216nO3lC9Cju-6/Z_CYRh8Hx9TvW_b9/-pzQrpR7TjdViWUB/fE5aLHsz3x_hn3m2/E-7N9KKebR-EyWh_/1S95ZRef1lBPfNhn/TVkhaS4bjzWrUx26/A9pxPItLuPGSu4hT/85prGseueufN-luV/2UUumkX5ku5G9EsB/aCS1Ca0w8TvK-Wzy/HtJSlkU43qdsb1Ii/E2H4kZiZ47T7OF0s/k6J820P5337mjQJK/L_XWr5FGuk4.jpg"},
+    ],
+    "Georgia": [
+        {"type": "Koozie", "slug": "georgia-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/BwmZzvpHM_V3wmDJFw-GxoVxwvbFqhOgdkdPvdWmnVk/w:220/sm:1/enc/a2SHN4dz8GxF40Wz/metpDs3CQ4Cg3qqD/dJrEHZILFiGMrKPY/cpJntoxstYuQyC_Z/WUJo_-YohJ9USWag/YzpXNSqm0w1BX0j9/L6qFNbae0yz6Y6GT/Cxi0IJ0WThNU_HUK/oqaLx91Csz2UNHfE/xwDr4LQas1e93go8/3SoS5FbiCyy3xMjq/SbiQbevtj_xokmON/xhbqwalBSZgw1Z45/7RXom2Xl2u8zH_gM/uiqf8mFH-Bk.jpg"},
+        {"type": "Pocket Tee", "slug": "georgia-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/Zngud28cW2Xg2KFt_-3jouObxGs9V1Vnlq3dg57R1yA/w:220/sm:1/enc/cKniuUXUJua1X0Wx/VpAfmnUlsUJI_Jpd/D9L9aBFwOSTk-l64/zxmfRwhd1Izgq3wr/XUAWwL9xEzmBT0CD/Mpkd3TadPmDA-IqY/6GUzG3zpXpbULFDr/f_EE4lBU-tju4EKf/4GxOkTCtNCTb3aw1/9Iq88vyV6r3tj4Rg/sp0i0HAkwfSEvnC1/6FpGIS3dl01zwKYT/1pRDM7r4ITBgyvM2/Yec1W0xWWvz_B89h/lzqSwUI0oh4.jpg"},
+        {"type": "Wrestling Tee", "slug": "georgia-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/YnIU5knjEfNlFMfVakfcEVtQR-oXdbvi1hgFc9Abj7M/w:220/sm:1/enc/bKKZyw26ZBQPYKuq/gROICYQDbS1KqodB/JW7BVIEgmDuVMODP/s4Qzz8zjHfEu7eoJ/OOYZi0lBepzPDQup/pIVaWO26EHJGvR-k/szK0Jn7gpYCfkH3Y/Y43NlDbkXvuPuEPV/u4xBwkaSD2_EEXzX/syY8ncBnkzKQIYzs/L71OfFqpKao1rah9/7p91ZAXk9HfUJAAz/TTxuH8Df6xK15Rly/buzrFONTY0WAoUeK/afLjpQaX7N8.jpg"},
+    ],
+    "LSU": [
+        {"type": "Koozie", "slug": "lsu-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/XNL7pjjM7vDENcAJ0Kbzs5toEcUNf3PnQTkJfymVBy8/w:220/sm:1/enc/OfxlPY3F9356ziW1/ipGbOXIToh5oqa85/bMpCNJLRDOtF-hRG/hSjeta5yABcznXvh/Gr_EKAwTCzRrfHHc/zxNrLYwiTu2ClXAi/_naf1QM7BYEsedig/TVWo3qfagjm0d0L7/lsBnD9nUNDoCWbno/rtA8oHzVysZAglnK/WHhvT9Usik4VEE-X/eAqrmrQiPcGsx9TM/XZ0d2NAA6fG5a5MG/BZZnUBs2cImn0QV5/x6imobEJPXA.jpg"},
+        {"type": "Pocket Tee", "slug": "lsu-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/TvG3hzcy-VsDFX1AiG-2dB4NuatYxGjj_8QeRtMFbhc/w:220/sm:1/enc/FcPoT6x3N5RS1VcX/piGZVWNoEfMebO-x/pZwpBeubPih8H2Mx/9nH_0XP-neYmjyzt/rmW7JTqZJ2WLli1Y/J5opnTktUc7s98JM/vs49UMolSWkiUWvy/3Hz4Ke-CEOWuAUtz/z-6fWubGqvC8kd__/f0ywPolYap_U0UUF/Mc9nSTr3_q0DpwjD/Cv9ztbZvCKoQk60Q/KH_d5XVW6wQPBEq6/34VMWD9DR8jiy3ed/XvZKLuzcto8.jpg"},
+        {"type": "Wrestling Tee", "slug": "lsu-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/TAB2-U2-ZPN8BVBEOjyyJkj1Acy2FJ85DU9sF7qKjdE/w:220/sm:1/enc/Qhs54QtsdU3PQpKK/Fxaz5lb4vPSan6Bi/KzdYBbcmKRT1NEUQ/TtYqFuLclTLEJpH2/0VBUI89hlVvSiwDO/yJ9bYCm5Z3K-4Mf8/NyrqqadD39KhVL4r/xnpdyM1DeE7xyqLe/OOxYRM8fIQ5bfo4I/PDv4otsWb_avVAv2/6ObwS6ar4zpenoqj/-6pQULIfpSe4yu5b/GGThoOWFiy_tXgBC/PXPy5c-FinpffpLs/RjLkaAjsArU.jpg"},
+    ],
+    "Miami": [
+        {"type": "Koozie", "slug": "miami-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/LN9a70ufJ2e7SvBobTSxoCJfgsOzCJQFcMMlUpIJmQY/w:220/sm:1/enc/YwYcqGuYFK25n8e1/pVz2FbRcObdfSOSE/KUTTAULAXZtXWXCR/oCZHFda_X5lJtvgq/JXUzUdbp2to0_PUZ/nUgcH7UPurm2kw-Z/rTsFd6o9P6NoRjse/7Pdo4RHpsA6ZwEBM/0nSwZxP3KoFdLGi0/gB04UncIgVKm5FOc/6vZr2HPpKkSusmkp/WScfUzkZHyDn0rdB/Q24hRw8UQyTv8Xod/qvUTyvgFYip6BX6v/i1oFcy4Jfrc.jpg"},
+        {"type": "Pocket Tee", "slug": "miami-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/MtC9eJDShReGNZakJF1GpbxWtimyQkBVKIo4sSWP6eo/w:220/sm:1/enc/GLi2ubd5aV8Hqy_8/jfgFpzWgZbQ9SVRM/_gCtVMDyhusAghqI/uAZVcqZeB0OvagPX/2Dn3UIpr-l0NH863/sKdQzMFEzqwPQMwR/VSqKs242WUM2HfJb/QLT6bRZ2qQqPMCTt/z73e83NrFTItHqFz/3OTNF_uC8YPcHtNX/vFI0MhEik_OXvqQP/1hURZcwPxA0a4kbt/OHFOHE3LovPqUKrc/tEK2baTB05FTyJFx/biE_Rvs72Z8.jpg"},
+        {"type": "Wrestling Tee", "slug": "miami-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/di8kvDJPW5H0rFs6E_5v1nfJyBrAQleiQx1yziowrTM/w:220/sm:1/enc/LqHkcME1NBie2Z1q/yaLPfxszeV2dvcAM/OAqZewDeruhInTOq/6VyR1CUJPipXbkoy/eIn8EaQacy2W046K/YYjMR94D4fAW9WS3/n1l4y4Esnfnb9dRh/u5j8N8Gpt2QzA7Hs/WxJAA2IBA8GG87Th/TLlPzu_PHKbHXbp4/-3qaNjo26Y21NkBH/l3QUCeyqscoIXbV8/SLR4_cCXAYRKWyPu/EsWiSVIbdmNMW53m/tbtSKimPDTc.jpg"},
+    ],
+    "Michigan": [
+        {"type": "Koozie", "slug": "michigan-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/zGdn3IQ2qPYghu0g6jFjDxRDRksONlfQPdbMHHIPsxI/w:220/sm:1/enc/Igr5iFY9DUsVuLYU/5v8J8KflsH-fhDE4/L2L7ZKnBBTF2WUkI/xBO1-D9sNXgGFbRl/MqWiH-7yOK3nYU7Q/IO2vMXq-QFUN5QH7/-nSLLC5J_quI38qd/8AQkkmIUKaK4fP8t/6a5pTI6Ur-U_FfQ1/sUQGZ1GhKfUQGPHo/iRMsPjYIaPZCWM4f/DqprfxaHPopJGIDl/0jTTO-v_itYJDJ8w/zRspmrYC5bGOFTFs/RU2IkkTQrU4.jpg"},
+        {"type": "Pocket Tee", "slug": "michigan-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/PTZ1tFzsrQYmYj3PEbnCnfLWpP3SBgmonXkOepQS1b0/w:220/sm:1/enc/3YQFGa__hYa4mjwM/VkdvIjPqRAK2B0Hj/fdfyns1b_oW6DHBp/haQ72VarduIMJbHq/eSZbJqAgieR8I7VK/TiybahI1-WP-S0q2/GnHwDXKCkWY_GIns/T3LUtbwQmP0NkRtc/KCSPIh-VWPf88YaQ/3Re42-bq9yixYm6k/mKbKXsZommo3KV4j/Y_5rgn-XkQzHOGTA/PJsT4P9G8x-EfDeK/KzloR-NZwUEEp7Ye/g4Z1tXWPvXI.jpg"},
+        {"type": "Wrestling Tee", "slug": "michigan-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/U5Hf01oWfsZLEnquqQVGNSjzxgoX0jNKamp4WOi-Amk/w:220/sm:1/enc/nJnr4gW0kd9Jc7uK/C_d5ki0-GULv7P0t/B_KgNd_FkDuofIdR/9AqeIzDmW_DnVUXK/OYW_kC804U6UWDgy/XSvr4kp6EOWm7rdD/aFAifb2dIObYSkCq/eSnOsJ70Aoc-8HW_/zZu5lyB_GKGL-DRA/cBY-Du_IZC5XyAd0/v379bgXqUI9FhI3v/tYcOZOCINgqJRaif/V35--aRPSQNyae9l/QGEvgjOub5aSB5SL/ppNKLYkN96A.jpg"},
+    ],
+    "Nebraska": [
+        {"type": "Koozie", "slug": "nebraska-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/wGb3SpcuxhCbk3A5SCgX-pcHnY83HIsd-ETYgr1r-YU/w:220/sm:1/enc/BAJqHOVPvhfsLUqW/EnlYtK7a527NhTmA/LZV87fToj_ySBMe_/24CqcBHa6DBfhAoR/Eb66LOkBZKs9-PqL/PqceMs65bDpNzlok/VGdLESGpTKsjUhLG/bkYOB8nkLawckQxX/Ht_hEqKsLSQHsivH/bOtFzpPlEfBojecm/rIRQPLTXvBes1HGN/3ym7IAGna2I_UOic/hCSko3pr8mmD5Yag/bFZZdwMnf4QPDuCq/D-CW_JNfpnk.jpg"},
+        {"type": "Pocket Tee", "slug": "nebraska-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/2Py4pHNiseFsJL9GH0QepHjcNsSsMZL21LBCjgDIqEk/w:220/sm:1/enc/a1UB34Njj895NieJ/xI1qgrwhLJbWZAUn/TnVxL-Z-teTsVGYV/4XRbXxSIETxglnpZ/sZZm21O1w-sztEuJ/Rr46Lar0OXlOnJ5Q/0t4C3NPTxI5mtDrl/d977WCCcWxlIgK4m/I_wbzJ8lB3kvoGaz/aMD8thkhdTnCLUSn/tF6LIh6kOkDj3tdG/9Mnm3akwoF4ut6sc/-GOLTpyZNZaxikM9/lc1aJq0i247qTSP0/7zlLbz46o6c.jpg"},
+        {"type": "Wrestling Tee", "slug": "nebraska-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/fKLs1mWwvA6mVt4PvkDpu57-YwF0RcfYBCrZJYffLRk/w:220/sm:1/enc/b7_njl7IGVr5gIu5/Py1bxZPMS1w1BZuW/4HTO7VRP_yJxOS-t/WhCW8DVFWbVJ8k8p/Y3bU_m-BgUmxDFRZ/i8xAktuAq1xst0fL/sj7hVInh0GPGMY4s/mFd2FrtJDBf7FoZZ/esmYT8Bo7E2AWtRa/KYM4YJIYZbbytY_Z/dLgxI0WH1nmP7BmD/gL_nTfIM772ddW_s/s7rQ6rHPMlCAGUIg/g_Nf8YuRsxRARDy5/p0w3A17DQRU.jpg"},
+    ],
+    "Notre Dame": [
+        {"type": "Koozie", "slug": "notre-dame-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/kvWJfMCeTN4AuF3h8hryya4f8_k5tT_mpnaR_Yv3szg/w:220/sm:1/enc/1d4PeFJvaC0T0Pjc/R4pKPyWp0aQw-jpm/FY9Tn7tEr6xVzb2x/yYr9hVoNagdLAcXL/fwOhLJRoGXFPLEFP/rzgENaHJ8Esyd77X/J9CO_n6BZjJMYWrT/i8_GLFY4rbP0F1Ms/ZkFtN_JEU8_dhUW9/2iEWe5RjQ63ATyWZ/8kpy-I2kh9D27KKd/imXZn83Wb2E-VXEH/pxtwjuyg1UpoReHh/zN4WqmZc0RAFJnSa/JEW17SChm48.jpg"},
+        {"type": "Pocket Tee", "slug": "notre-dame-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/2sZd1vY17t7qq4a2_xwxF0ZQWNBjhLaBUlP1PB6osAA/w:220/sm:1/enc/wEN0QU87N42pEUOH/SOH_px16Ukk3qko2/d25D-0jihHrilTuc/anqu3l4NzEqwqcQB/ZPMhr4RD2hMLFX3m/3TvrkK6kRjFN4JmS/gvVIPXht9xJuK3TC/q6teAXLJdt_JWbZL/87spyyP0xOdRqDzd/jrh0U7SlTlN63Puy/ekyy6pEzAVBTtO-A/CwwJxreIJTunZvNh/xEtWaINGa5WuGqD-/VJb7klcosXI9v3gT/Z8TO3us-IgI.jpg"},
+        {"type": "Wrestling Tee", "slug": "notre-dame-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/QeE1Zz5Zeo-9R_5WQnvBVIUyZTXwcOPrZrX9wmkcT7U/w:220/sm:1/enc/zhTjQsED9KjD0UXz/c0y9H2PP-zgP2c44/brQI4N6M96BT8fqF/EpmYp9DPaBaUkMEl/COG-eAZaPduUO1NX/JxnJYkWhg_PbdBcY/TNFrAfZ7CVpBt0od/6WMJJNhyN0OZHrSA/miE3ghTaySSYyQoz/f3UPb2FAh55me0m_/g5KUJD3F4jdhBRQu/LwWKy2NJLCeFkB-q/H_Ff-XTejXYxZmXT/ITE_4mHLD65x0R1P/CAqlVc992Po.jpg"},
+    ],
+    "Ohio State": [
+        {"type": "Koozie", "slug": "ohio-state-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/Jb71OzdTqF2dsPwcXidxVqoAqba-10v2Jwc52VeWKfM/w:220/sm:1/enc/Fb9MBq6OmuF3sRV_/diwakX_87t5jFPL-/yAi793OZNN-pbtgH/t_VzHhCHG4DJrjjk/FnCoe2WrESzIVma1/CkYr83QO8daQRDpH/3TwYV2z794n2_W-i/Y1gqr3p4xwpdt3Tj/wXlz0qi-JOkCgiWl/xd507eLqpDHH8PFv/8P2oeV6zbY8iblcC/4fZq-EKggCx3aUI9/lNGnsb8PcoU4I8yu/M9eQyUcoC_rAeZDT/ElCEIJiTihE.jpg"},
+        {"type": "Pocket Tee", "slug": "ohio-state-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/VxKDCuoBP9wbEFd0SX0w3sF2rEefzMXxV9Y8HRuOn5U/w:220/sm:1/enc/aTewZbaezBv-Lmfy/JHF8hTKdq9GnZA6j/q5g9erpF7u7cVpvE/YFwHq6YFeqM-HHpJ/CwmlGYWZoYYpUDj9/xBMLnqqwP6da87AF/DvR059TysIc4LqdZ/r4JsZ-pbzrb_Gnev/FpO2Pkd64xfsbFaK/sYZrP0k5a0xxSmZR/fl95V6zFNifS-I95/FQMk0XaSWcbOP13y/MZzyHQpo_ZC_V1Kf/OddpS8zFeEFK_XYv/qCH9ojcCEYY.jpg"},
+        {"type": "Wrestling Tee", "slug": "ohio-state-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/vNfYKiMhkmSEz0b-EkWsSOQwIP2v_iouhOGkd6cNkFM/w:220/sm:1/enc/ApR9m-bPtlqeruuv/8yNX8BEebJ5nHeHk/k_P2ZJijVp0VtElk/KKmgqZGe9WNcx7MV/qqgO7eg_4SYcL3nP/PRS5osd5XK1ULLJx/7kNg24VhPQFKRIDA/sN3kR6zauKt5ZYC_/448yQf70pcQ99283/ovab6Nqi0JqyNqJk/JjfEHn1k_3i39jWG/-AIEL04wLQbK9_4H/gM8jAQOplqQIm_2e/8AKc3CtnlMUEW1Qq/YUIj1tqwums.jpg"},
+    ],
+    "Oklahoma": [
+        {"type": "Koozie", "slug": "oklahoma-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/snuaDxE5BZT-G4Sah8dYJ8nh-V_Aqbv7pqrIujsCAJg/w:220/sm:1/enc/lbQDNsylPohE6SIr/YyNkO2WMq4Cl2iKP/Pf2OGNp7itNNX_CR/mLvcRKeslMgAjTdO/MZ_d4Gq1nr0RHIr9/j8_bz6UtKr03u0nW/DvaMaMHFwsqiHAuT/AvdJWsmIX4bi3drQ/AbZP-4qVUefrR5bb/Hjk0gBndNhVFsXIy/QuUsKY361iEojzHN/lcCMtYfmSHsQ9Vsn/f00em5Kk-7VjZu_a/2wFiqQoyk7sF2QDd/9k7wj0d6yVQ.jpg"},
+        {"type": "Pocket Tee", "slug": "oklahoma-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/nVeNpWYhvLXj0LM2IudDabRl4QwUsbpdTFfOSv33yoI/w:220/sm:1/enc/fbjwFbTHHbuupyhf/geUVTapmbnIjltgs/XRGp3UnZ4UShhhRW/V7lCJbPHE33bUaYU/wfNgJVC9M8J4Bp0h/3mfdVk-G_8ZWVHBz/veuryZL4PlswRpdp/hZDN_fNYlKA6kStp/QZJne8JCgFF0LRQp/29o7Bdu9XzxEwbl4/18AvWs3SDh8AmlJb/QNmPF88jvq8AGPBy/eGSb8ZfTzOXFpLqE/jm6q5UOGgNPmMj-0/gMydpXHUKVA.jpg"},
+        {"type": "Wrestling Tee", "slug": "oklahoma-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/I3gMgAshHar_Mt0jiRsMBwV66pBex6N8nRC5Ck8Krps/w:220/sm:1/enc/DWMkTeyZjW6u_rMh/CcYk2zd95F_YZxnd/j29cvK8Zjr-S7PPP/lqn5ix6X6FCaozpX/kmvBxAfsTRVi4zg9/Ka9XcgWz7u3u8h-f/Imw0vs-X0sYtMUoi/S3OmNhyAbksdlPBz/my39fc2D5VkTtDPL/ZOiSwymUpBnODCiU/q67aRn9M-Zmzb94s/dsnn6Q47oBpCghf6/HKs9u6qLncjyCBqL/zsNshIiLjV6ROdRk/qJdZAw8LJQc.jpg"},
+    ],
+    "Penn State": [
+        {"type": "Koozie", "slug": "penn-state-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/GCSTxCOixM4fGkWUhwUS2oWPkdXFwNaHi0jubEeciLU/w:220/sm:1/enc/mHu70IwRYacOJKMI/NHI9obqHANYIy5nU/ZFxDmjva9Uii8xyf/-WU10vpIsJ-fJwAj/ytM41RCGXl1x7tRL/DnGNX-FFvg1tQLB1/J4QZfVLRpm4Qdvhw/OQre0bxUPWCxDfII/2XUpkmyj7QMd8FMj/RfbmQYxf-bFlXcGa/kJvenLVgk1yD1bbL/opMmkPQc-qaDkRRu/lrH9A5pUzXipHUuR/nitsLkocGwwMuwXb/-3Ul8RA8CG4.jpg"},
+        {"type": "Pocket Tee", "slug": "penn-state-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/8duTyiK7xJ2dBbi584zaZ1ivmUiXD8MQ8--HtNMpiZ8/w:220/sm:1/enc/sYy0a6zMc9KHUYp1/XlGu6Bc0x21h_vA1/CBl6Qjb9GZukD3kz/ed8QnV8euhqOl6Gb/sODKRcmKjrPogRZi/ln9EOYLKdFAS5PNa/UeukIbGnH82Q_V17/ATexPaV9rxlRfeof/VmP5W7Lizu6M2wol/5cquCMhrSiipDtVr/3t4ZqnLzho2MtOz1/nj5vo6aMyI0F8xPK/VpkN8Jaj_QvSsPdi/kwg2_MLhXVX5MoXD/hak_nabDgBE.jpg"},
+        {"type": "Wrestling Tee", "slug": "penn-state-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/savTEShG2kUF761GVxSvILOVSelmXrBNhCkMhgxE-5I/w:220/sm:1/enc/lW96cQbfyrFQPf3b/ipcEJF4NRITP5sh8/ch1vpaYzgUcn4PtD/0jVqJ-puWKL3TMmk/c87MA8NMaIBhQafg/3Ha4GMdyYq_icyJF/3mOvI45P8nGNQbtJ/hQLIsNkEu_IEWz02/qURvaujjklDnlt6X/uUf4THJI004ot55X/z20QUjVAoA-VS2oP/vKeEHKEzJYt9M_GN/YYTOKsFEPmbMqW4T/hRrkc3N7CSeO-nh8/byZqfS-urCU.jpg"},
+    ],
+    "Tennessee": [
+        {"type": "Koozie", "slug": "tennessee-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/StFtMKThoRAyaPjXsgU_Yaz-G0F_luT5hBdKzRzGVkI/w:220/sm:1/enc/Dx4GvE26YucjXxdT/W3CYGhRxHpc2nAdU/_VQr3S_fDcePcsw9/LNdTjFouwUZoxdQj/iNcetTZkinjSYWZn/sGi_wiWV6GWz4vA6/JtwwOOUfPdrSjNHC/i9tzStbcd3OFhkmJ/j5XROO647TDSeGvs/LDZtuz1LkR3abwjh/eJ4ifCUJL_CcFWYn/fHLXy3_PYaNaAwHU/xSTaSG4DCJ-Nu9pB/Yttey4zWrfGk5Mo8/ayOfgQ45gZ8.jpg"},
+        {"type": "Pocket Tee", "slug": "tennessee-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/KP1rnW_D72L5H82JTaQtWREYusSQ2Q1SmpCEnC9RJ-M/w:220/sm:1/enc/dtfkhoHm6V5PvTv1/X2FvoxualAzM9pFh/lXu-bLEd7NOtIH5I/XNyHR2zWm1EDF3nx/oTU_xa1JOiVIQAea/lGdAFYnh7STtyehr/G0voiEQUcN-t8DIc/3elEvxmqRHsqffrX/0oIl-d7c-otemAbr/aj-0fi_ifAQGuQAY/YigA1G2gVbjN5D2I/twQSddla-QL1V_8_/0oobWDA9kVTCeLep/JBYpNtNX8gieIjp8/Ng7SoTsGxKs.jpg"},
+        {"type": "Wrestling Tee", "slug": "tennessee-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/x32i8tuXmohOb4zXDmpHTEejBBKYZqaMbsHLCputJ78/w:220/sm:1/enc/TG25s1whMnEurQf-/eVyjk2GwW0dhItiW/O4-OD1_xLKg0OrRY/0cRiKXckk1TPzgbE/-TC2MgDyIy6dXeSu/cZgy69bW0fWW93C1/Sz-N5sSv__QDUSna/fgMi67-0WKlqzfzg/0V1RJgEqErHI-W_V/N84k37g0xStyJJJN/o7TRP0dIZ40RzYx1/V5hVvRdR8v75b-XC/hHLG2p6c05WR1UuH/_zM0RgDVorzg8cYs/GQ0rIZmCBIY.jpg"},
+    ],
+    "Texas": [
+        {"type": "Koozie", "slug": "texas-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/6Ssh6UxFCLxyLQx51N8M_apVhSHGX_G0STFtzz6McnU/w:220/sm:1/enc/pOJUYVI-93W2BsIE/V5lsGSqAYlA5NbvM/eiD6-h3TzXrnPkzx/jwYBvhCPO-tk4pUK/eVR0zCha3XFF36uB/3s0tWrqBJuB-wJ8I/-LlY-QdEYy0ObOyf/76XTKr0eGdf_sF_o/9uhSqW9IxGSCw05Q/LZkj2SlneR553nIO/o1VBFHhKuz6xOOM3/AhIcP45ifi7lwrg4/851n75cZF_oNg0VL/-0UHkmzh3r6OxP06/vYtThdPF1-c.jpg"},
+        {"type": "Pocket Tee", "slug": "texas-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/9y7Ax1HIcT9hAwSFlmwaFC0NwVzNQySVE-qiIVsEaEg/w:220/sm:1/enc/FQI8-5hw7xJsiUCj/oLDPUThRIqeOy4VD/VYPQVUe7jwZLu2lw/uBQpta7SHe6dwuY8/92trluVpEyOD6A5X/FKg2PHjl__md8Gc3/bPxSdQ91ml7QLoJX/ZV3a2AMlrEvBSdOF/VmAKyYWybAbAj2jp/5VL8Q-EdsK2wtmvx/Ofd90lPXspp17v3X/WxqsZhXcHrmHhkcy/C6DXolYb8fYWBuVD/P2MZXrA0FSJrJBUa/i1UYnc14aQs.jpg"},
+        {"type": "Wrestling Tee", "slug": "texas-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/1Xbmd3qX1Bh9MoE34dHRPsuSO9rPLuRJjT_BMeO1PrY/w:220/sm:1/enc/qGK4Qgql0czMOOO0/yxNFozan5QoMELCD/O4183tJ4at7PTbyA/8wtCbPzl2b2gj0sK/JrL6zhTpX5et8TnQ/z3GnIrt_FzvQBjZM/tLuExzQgorx0WJDl/bYxfSIGESNACXOoj/7-AHdQtMC_n4d_TO/APg3IGa2Z5CofcCI/NwVbmd_ZZEqNp_eV/w0PilOBO-voJFJeS/NipXhBvuDYw6dyJq/V5Wf2DGMoA-Z0b1j/nWsKN8rgHsM.jpg"},
+    ],
+    "USC": [
+        {"type": "Koozie", "slug": "usc-championship-belt-koozie", "image": "https://imgproxy.fourthwall.dev/hzbeLPIBRG9Wj_cHhSD3cqrPoIaw0mMmPAqdGJ9MuOI/w:220/sm:1/enc/pNCuatb8hU_RZ2-k/J95r2dKZKzUktHqk/uwGrGtPC7UkzRSKP/OiGwYv2cCtAZXbDO/A8pJHUGBV9gCR0vj/m_m_00GylrqI41Td/WAs44CKmyRDLkAui/zqreg-TVT8By0n2L/CENeIgUZx9QILxi7/Tkgf-SNq-S652SSq/Bo6xi1pb8UhTVDdl/F1ushC-bypWJ9kgz/30c5UB14f-Y_1YHk/SN8oHpW5UKvlAj_L/Ewzi1uCFSwE.jpg"},
+        {"type": "Pocket Tee", "slug": "usc-championship-belt-pocket-tee", "image": "https://imgproxy.fourthwall.dev/iy77UZRYSu4fmQqJPvX4dV5c3-KKmiVA0qoxDM7mEwA/w:220/sm:1/enc/spm9pwaofRvFklly/Ak52PCQ5x5m6yU6f/eHgUmHtYZM86iw7A/ktcs27xFvp1xzH-2/8-uh0ggyXROeXDeJ/GqdATwY9VDMou3XC/hPEvcqIIU1M1UWES/H5wsmWB34_y9hoQ5/gQ0MHfwJTvqGskCT/px94DJiJNmldjGT8/kOj0E7Ej8dqS_44T/uFfB27FKXI2qkCZM/LBaTKbV4gPFT8_nU/0G7DuXSNvKLLYZeJ/j9yzACSsgFw.jpg"},
+        {"type": "Wrestling Tee", "slug": "usc-championship-belt-wrestling-tee", "image": "https://imgproxy.fourthwall.dev/PowOcOzPdZUOsIqQIG96jBj1xW46Wz7Yzfiajw9CSJo/w:220/sm:1/enc/rqiTGDOl40sp_ltG/eMCkE_LuZuDgTvOE/gPIZtenYM79l2TpA/3WLgiVPW2v9MkEma/LLOm8Yb3bYGfT80E/qHERFMPDlp_uPzR5/M7IelZtBe9pedI9b/PoaXtrteTHH6Sish/ulUo4usm320ohmix/iU9_4cJgHhvTAnjp/A20MOfqnTRJWN1wx/EY5ii78DFqvlGmRg/BXaCO4JsoN-2-Uov/_mW3m6CCPqut4XRx/nVbwjRcncd4.jpg"},
+    ],
+}
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
 
@@ -364,11 +419,9 @@ NAV_PRIMARY = [
     ("records", "records.html", "Records"),
     ("map", "map.html", "Map"),
     ("stories", "stories.html", "Stories"),
+    ("shop", "shop.html", "Shop"),
 ]
 NAV_MORE = [
-    ("Shop", [
-        ("shop", "shop.html", "Shop"),
-    ]),
     ("Explore", [
         ("all-games", "all-games.html", "All games"),
         ("seasons", "seasons.html", "Seasons"),
@@ -1464,7 +1517,6 @@ details.moreStats .statCategory{ margin-top:18px; }
 .heroKicker a{ color:inherit; text-decoration:none; }
 .heroName{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(64px,11.5vw,150px); line-height:.86; letter-spacing:-.01em; text-transform:uppercase; margin:0; text-wrap:balance; overflow-wrap:anywhere; }
 .heroName a{ color:inherit; text-decoration:none; }
-.heroName a:hover{ text-decoration:underline; text-decoration-thickness:.04em; text-underline-offset:.08em; }
 .heroLede{ font-size:clamp(17px,1.6vw,22px); line-height:1.4; max-width:34ch; margin:0; color:color-mix(in srgb, var(--holder-ink) 82%, transparent); text-wrap:pretty; }
 .heroStats{ display:flex; gap:clamp(24px,4vw,48px); flex-wrap:wrap; margin-top:4px; }
 .heroStats div{ display:flex; flex-direction:column; gap:4px; }
@@ -1696,6 +1748,13 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .productCardLink{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--brass-text); margin-top:auto; }
 .shopTeaser{ background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:26px 24px; margin-top:28px; max-width:62ch; }
 .shopTeaser p{ margin:0; font-size:14.5px; color:var(--ink-soft); }
+.shopFilterRow{ align-items:center; position:sticky; top:0; z-index:5; background:var(--paper); padding:14px 0; margin:24px 0 4px; border-bottom:1px solid var(--hairline); }
+.shopTeamFilter{ font-family:"IBM Plex Mono",monospace; font-size:12px; padding:10px 14px; border:1px solid var(--hairline-strong); border-radius:20px; background:var(--paper); color:var(--ink); min-width:170px; }
+.shopTeamChip{ display:inline-flex; align-items:center; gap:8px; }
+.shopTeamSection{ margin-top:36px; scroll-margin-top:70px; }
+.shopTeamSection .sectionHead h2{ display:flex; align-items:center; gap:10px; }
+.shopTeamSection .sectionHead h2 a{ display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none; }
+.shopTeamSection .sectionHead h2 a:hover{ color:var(--brass-text); }
 .storyArticle{ max-width:680px; }
 .storyKicker{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; margin:0 0 6px; }
 .storyChapter{ margin:30px 0; padding-top:22px; border-top:1px solid var(--hairline); }
@@ -6861,17 +6920,27 @@ def generate_privacy_page():
 '''
 
 
-def generate_shop_page():
+def generate_shop_page(lineage=None, colors=None):
     """The merch shop -- a native page in the site's own design system
     rather than a link out to a separate marketplace. Reads entirely from
-    the FOURTHWALL_STORE_DOMAIN / FOURTHWALL_PRODUCTS config above: empty
-    (the default, before a Fourthwall store exists) renders a short teaser
-    instead of an empty grid; once products are added there, this becomes
-    a real product grid with Product schema.org markup for search. Buying
-    still finishes on Fourthwall's own checkout -- true of every POD
+    the FOURTHWALL_STORE_DOMAIN / FOURTHWALL_TEAM_PRODUCTS config above:
+    empty (before a Fourthwall store exists) renders a short teaser instead
+    of a product grid; once products are added there, this becomes a real
+    grid -- grouped by school, with a jump-to-team filter bar, since a flat
+    grid of 48 team products with no way to find your own team's gear was
+    the actual problem with the old version of this page (that, and it
+    linked to 12 generic products that no longer exist in the store).
+    Product schema.org markup is emitted for every product, for search.
+    Buying still finishes on Fourthwall's own checkout -- true of every POD
     platform, not something a template can route around -- but everything
-    up to that last click (browsing, images, pricing) lives on-site."""
-    if not FOURTHWALL_PRODUCTS or not FOURTHWALL_STORE_DOMAIN:
+    up to that last click (browsing, images, pricing) lives on-site.
+
+    `lineage` (optional) orders the team sections: current title holder
+    first, then the rest by reign count (winningest first) -- the same
+    "current champion and winningest programs first" ordering the shop's
+    original plan called for. Without it (or for a team the lineage
+    doesn't know), sections just sort alphabetically."""
+    if not FOURTHWALL_TEAM_PRODUCTS or not FOURTHWALL_STORE_DOMAIN:
         body = '''
   <div class="shopTeaser">
     <p>The shop&rsquo;s in the works &mdash; belt-branded shirts, stickers, and mugs, built off the
@@ -6879,35 +6948,86 @@ def generate_shop_page():
       <a href="mailto:hello@collegefootballbelt.com">get in touch</a> if you want a heads-up when it opens.</p>
   </div>'''
         schema = ""
+        script = ""
     else:
-        cards = []
+        reigns = (lineage or {}).get("reigns") or []
+        current_holder = reigns[-1]["team"] if reigns else None
+        reign_counts = Counter(r["team"] for r in reigns)
+        teams = sorted(
+            FOURTHWALL_TEAM_PRODUCTS,
+            key=lambda t: (0 if t == current_holder else 1, -reign_counts.get(t, 0), t),
+        )
+
+        chips = []
+        sections = []
         product_schema = []
-        for p in FOURTHWALL_PRODUCTS:
-            url = f"https://{FOURTHWALL_STORE_DOMAIN}/products/{esc(p['slug'])}"
-            cards.append(f'''
+        for team in teams:
+            slug = team_slug(team)
+            anchor = f"shop-{slug}"
+            badge = logo_chip(colors, team, 24) if colors else ""
+            chip_badge = logo_chip(colors, team, 14) if colors else ""
+            chips.append(
+                f'<a class="chipLink shopTeamChip" href="#{anchor}" data-team="{esc(team.lower())}">{chip_badge}{esc(team)}</a>'
+            )
+            cards = []
+            for p in FOURTHWALL_TEAM_PRODUCTS[team]:
+                title = f"{team} Championship Belt {p['type']}"
+                url = f"https://{FOURTHWALL_STORE_DOMAIN}/products/{esc(p['slug'])}"
+                cards.append(f'''
     <a class="productCard" href="{url}" target="_blank" rel="noopener">
-      <img src="{esc(p['image'])}" alt="{esc(p['title'])}" loading="lazy" width="400" height="400">
-      <h3>{esc(p['title'])}</h3>
-      <span class="productCardPrice">{esc(p['price'])}</span>
+      <img src="{esc(p['image'])}" alt="{esc(title)}" loading="lazy" width="400" height="400">
+      <h3>{esc(p['type'])}</h3>
+      <span class="productCardPrice">{esc(FOURTHWALL_PRICE)}</span>
       <span class="productCardLink">View &amp; buy &rarr;</span>
     </a>''')
-            product_schema.append({
-                "@context": "https://schema.org", "@type": "Product",
-                "name": p["title"], "image": p["image"], "url": url,
-                "offers": {"@type": "Offer", "price": p["price"].lstrip("$"),
-                           "priceCurrency": "USD", "availability": "https://schema.org/InStock"},
-            })
+                product_schema.append({
+                    "@context": "https://schema.org", "@type": "Product",
+                    "name": title, "image": p["image"], "url": url,
+                    "offers": {"@type": "Offer", "price": FOURTHWALL_PRICE.lstrip("$"),
+                               "priceCurrency": "USD", "availability": "https://schema.org/InStock"},
+                })
+            team_url = f"teams/{slug}.html"
+            sections.append(f'''
+  <section class="shopTeamSection" id="{anchor}" data-team="{esc(team.lower())}">
+    <div class="sectionHead">
+      <span class="tag">School</span>
+      <h2><a href="{team_url}">{badge}{esc(team)}</a></h2>
+    </div>
+    <div class="shopGrid">{"".join(cards)}
+    </div>
+  </section>''')
+
         body = f'''
-  <div class="shopGrid">{"".join(cards)}
-  </div>'''
+  <div class="chipRow shopFilterRow">
+    <input type="search" id="shopTeamFilter" class="shopTeamFilter" placeholder="Filter by team&hellip;"
+           aria-label="Filter the shop by team" autocomplete="off">
+    {"".join(chips)}
+  </div>
+{"".join(sections)}'''
         schema = (f'<script type="application/ld+json">{json.dumps(product_schema)}</script>'
                    if product_schema else "")
+        script = '''
+<script>
+(function(){
+  var input = document.getElementById('shopTeamFilter');
+  if (!input) return;
+  input.addEventListener('input', function(){
+    var q = input.value.trim().toLowerCase();
+    document.querySelectorAll('.shopTeamChip').forEach(function(chip){
+      chip.hidden = q && chip.dataset.team.indexOf(q) === -1;
+    });
+    document.querySelectorAll('.shopTeamSection').forEach(function(section){
+      section.hidden = q && section.dataset.team.indexOf(q) === -1;
+    });
+  });
+})();
+</script>'''
 
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
 <title>Shop — The College Football Belt</title>
-<meta name="description" content="Belt-branded shirts, stickers, and mugs -- the same championship-belt medallion and lineage-brass palette as the site itself.">
+<meta name="description" content="Belt-branded shirts, koozies, and more, by school -- the same championship-belt medallion and lineage-brass palette as the site itself.">
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
 {schema}
@@ -6918,12 +7038,12 @@ def generate_shop_page():
   <p class="kicker pageKicker">Merch</p>
   <h1 class="pageTitle">Shop</h1>
   <p class="lede">Gear built off the same belt mark and brass/ink/paper palette that colors the rest of the
-    site &mdash; no separate marketplace, just the shop, on the site.</p>
+    site &mdash; organized by school, no separate marketplace, just the shop, on the site.</p>
 {body}
 </main>
 
 {site_footer('', 'The College Football Belt &mdash; lineal championship, since 1869.')}
-'''
+{script}'''
 
 
 def generate_compare_page(lineage, colors, belt_games):
@@ -12231,7 +12351,7 @@ def main():
     with open(os.path.join(OUT_DIR, "privacy.html"), "w", encoding="utf-8") as f:
         f.write(privacy_html)
 
-    shop_html = generate_shop_page()
+    shop_html = generate_shop_page(lineage, colors)
     with open(os.path.join(OUT_DIR, "shop.html"), "w", encoding="utf-8") as f:
         f.write(shop_html)
 
