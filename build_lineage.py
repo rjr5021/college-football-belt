@@ -107,6 +107,7 @@ from belt_engine import (
     save_json as engine_save_json,
     split_winner_baseline,
 )
+from supplemental_games import merge_supplemental
 
 API_BASE = "https://api.collegefootballdata.com"
 FIRST_GAME_DATE = "1869-11-06"
@@ -927,7 +928,11 @@ def main():
         print(f"Baselines found for every scope running this pass ({', '.join(scopes_to_run)}) "
               f"-- fetching only seasons {seasons} fresh (~{2 * len(seasons)} calls).")
     raw = fetch_seasons(range(fetch_from, args.end_year + 1), args.key)
-    games_all = normalize(raw, venue_tz)
+    # Games CFBD doesn't have (historical_data/supplemental_games.json, see
+    # ruleset.md). Only the fetched seasons -- older ones are already baked
+    # into the baseline by apply_supplemental_games.py.
+    games_all = merge_supplemental(normalize(raw, venue_tz),
+                                   seasons=range(fetch_from, args.end_year + 1))
     print(f"{len(games_all)} completed games in chronological order (any classification)")
 
     d1_teams = None  # fetched lazily below, only if fbs/fcs actually run this time

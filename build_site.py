@@ -36,6 +36,8 @@ from datetime import date, datetime, timedelta, timezone
 from email.utils import format_datetime
 from urllib.parse import quote, urlencode
 
+from supplemental_games import is_supplemental, sources_html as supplemental_sources_html
+
 OUT_DIR = "site"
 DATA_DIR = "belt_data"
 
@@ -2683,7 +2685,9 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
              f'<a href="../reigns/{g["reign_number"]}.html">Reign #{g["reign_number"]}</a> &middot; Game {g["game_number"]:,} of {total_games:,}')
     footer_note = ("Part of the lineage since 1869. Score"
                    + (" and line score" if g.get("line_score") else "")
-                   + " sourced from the College Football Data API.")
+                   + (" added by hand from contemporary newspaper reports; this game is missing from the College Football Data API."
+                      if is_supplemental(g["game_id"]) else
+                      " sourced from the College Football Data API."))
     # Sources strip: CFBD's modern game ids are ESPN's, so a box score link
     # is free for ~2001 onward; everything gets the CFBD attribution + a
     # pointer to the downloadable dataset the game is a row of
@@ -2694,7 +2698,11 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
         gid_int = 0
     if gid_int >= ESPN_ID_FLOOR:
         src_bits.append(f'<a href="https://www.espn.com/college-football/game/_/gameId/{gid_int}" target="_blank" rel="noopener">Box score at ESPN</a>')
-    src_bits.append(f'<a href="https://collegefootballdata.com/" target="_blank" rel="noopener">Game record: College Football Data</a> <span class="mono">(id {esc(str(g["game_id"]))})</span>')
+    supplemental_src = supplemental_sources_html(g["game_id"], esc, rel="../")
+    if supplemental_src:
+        src_bits.append(supplemental_src)
+    else:
+        src_bits.append(f'<a href="https://collegefootballdata.com/" target="_blank" rel="noopener">Game record: College Football Data</a> <span class="mono">(id {esc(str(g["game_id"]))})</span>')
     src_bits.append(f'<a href="../data.html">This game in the downloadable dataset</a>')
     sources_html = f'<p class="sourcesLine"><span class="kicker">Sources</span> {" &middot; ".join(src_bits)}</p>'
 
@@ -5220,11 +5228,15 @@ RULESET_MD_PATH = "ruleset.md"
 
 
 def inline_md(text):
-    """Escape text, then turn **bold** / *italic* into real tags. Order
-    matters -- escape the raw text first, then add trusted markup on top,
+    """Escape text, then turn [links](https://...), **bold** and *italic*
+    into real tags. Order matters -- escape the raw text first, then add trusted markup on top,
     and resolve **bold** before single *italic* so a bold span's asterisks
     aren't half-eaten by the italic pattern first."""
     t = esc(text)
+    # [label](https://...) links -- only http(s) targets, and the URL was
+    # already escaped with the rest of the text, so it's safe in href
+    t = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
+               r'<a href="\2" target="_blank" rel="noopener">\1</a>', t)
     t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
     t = re.sub(r"\*(.+?)\*", r"<em>\1</em>", t)
     return t

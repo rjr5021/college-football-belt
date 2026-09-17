@@ -1,8 +1,9 @@
 # The College Football Belt: Ruleset
 
-*Every belt game behind this site is cited and computed from play-by-play
-records, never hand-assembled. This page is the complete set of rules that
-computation runs on. If a divergence ever shows up between this site and
+*Every belt game behind this site is computed from the full game-by-game
+record, never hand-assembled; the rare game missing from that record is
+added from cited sources (see "Games missing from the data source"). This
+page is the complete set of rules that computation runs on. If a divergence ever shows up between this site and
 another tracker, it almost always traces back to one of the decisions below.*
 
 ## Origin
@@ -68,13 +69,29 @@ the belt.
 ## Non-FBS (or non-modern-classification) opponents
 
 If the holder loses to a team from a lower division — an FCS program, or in
-the pre-modern era a club or athletic-association team — the belt goes with
-it, exactly as it would against any other opponent. Division/classification
-is a modern administrative label; it isn't a rule of the game the belt is
+the pre-modern era a club, athletic-association or military service team —
+the belt goes with it, exactly as it would against any other opponent.
+Division/classification is a modern administrative label; it isn't a rule of the game the belt is
 based on. (Mechanically, this is already how the underlying data pull
 works: games are pulled across every classification with no FBS-only
 filter, so a belt-relevant upset by a lower-division team would already be
 caught — it doesn't require a separate rule to implement, only to state.)
+
+## Club and service teams can hold the belt
+
+The same logic runs in both directions. A club or service team that wins
+the belt holds it like anyone else: its later games are belt games, it can
+defend against other non-college teams, and it only loses the belt by
+losing on the field. This has happened: the Olympic Club of San Francisco
+took the belt from Saint Mary's in November 1931, and the San Diego Marines
+and West Coast Army both held it before Stanford won it on October 15, 1932.
+
+Who suits up doesn't change this either. In November 1931 the Olympic Club
+split its squad, sending half to Hawaii while the other half played a
+scheduled game at Loyola (Los Angeles). That half lost, and the belt went
+to Loyola. An official game on a team's schedule counts no matter who
+played in it, the same way a college's loss with its starters injured
+still counts.
 
 ## The early era (pre-1900)
 
@@ -89,18 +106,56 @@ above.
 ## Sourcing and methodology
 
 The full chain — every reign, every belt game, every score — is computed
-mechanically from the College Football Data API's complete game-by-game
-record, not researched or hand-entered. Given the rules on this page and
-every final score in order, the result is fully determined; there is no
-editorial judgment applied game to game. Game dates reflect the local
+mechanically from the College Football Data API's game-by-game
+record, not researched or hand-entered. The only exception is the short,
+cited list of games that record is missing (next section), and those are
+walked through the same rules as everything else. Given the rules on this
+page and every final score in order, the result is fully determined; there
+is no editorial judgment applied game to game. Game dates reflect the local
 kickoff time at the game's venue, not a UTC timestamp, so a late West Coast
 night game is dated the evening it was actually played rather than the
 following morning UTC.
+
+## Games missing from the data source
+
+The College Football Data API's record is close to complete for college
+teams, but it has gaps in the pre-war era, mostly games involving club,
+service and small-college teams. When a gap changes who held the belt,
+the missing game is added by hand, and only under these conditions:
+
+- The final score and date come from a contemporary source, normally a
+  newspaper report from the day after the game, and that citation is shown
+  on the game's page.
+- The game is added exactly as played. Its result goes through the same
+  rules as every other game, so every reign, defense and total after it is
+  recomputed, not edited.
+- Added games are kept in their own file, separate from the data source.
+  If the data source later adds the same game, its copy is used instead.
+- A game is added because it was played, never to make the lineage come
+  out a particular way. Whatever follows from it follows.
+
+The first correction came in September 2026 from Ray, who runs
+[rutgersstartedthis.com](https://rutgersstartedthis.com), another lineal
+belt tracker. The data source
+was missing Loyola's 13–0 win over the Olympic Club on November 21, 1931,
+so this site had the Olympic Club holding the belt until September 1932.
+Adding that game, and the five other missing games the belt then passed
+through, added four reigns (Loyola, the San Diego Marines, Fresno State
+and West Coast Army) and shortened the Olympic Club's reign to two weeks.
+The lineage rejoins the previous chain when USC beat Stanford on October
+22, 1932, so nothing after that date changed.
+
+*If you know of a missing game that affects the belt, email
+hello@collegefootballbelt.com with a source.*
 
 ## Open items
 
 - **Origin cross-check against the pre-2018 collegefootballbelt.com site**,
   pending Internet Archive access.
+- **Two dates in the 1932 correction are uncertain by a day**: the San
+  Diego Marines' wins over the Santa Barbara Athletic Club (listed as
+  September 12, possibly played the 11th) and West Coast Army (September 18,
+  listed by one source as the 17th). Neither changes the lineage.
 - **Pre-1900 inclusion boundary**: the current rule includes any game with a
   final score, which is the maximally inclusive reading. If the original
   site drew a narrower line, the cross-check above may prompt a revision.

@@ -1,0 +1,121 @@
+{
+  "about": "Completed games that the College Football Data API does not have, entered by hand from cited contemporary sources. Merged into the game stream by supplemental_games.py wherever the belt is walked (build_lineage.py, build_alternate_lineages.py) and applied to the committed baseline by apply_supplemental_games.py. Ids live in the reserved 90,000,000-99,999,999 range so they can never collide with a CFBD id. See ruleset.md, 'Games missing from the data source'.",
+  "games": [
+    {
+      "id": 90000001,
+      "date": "1931-11-21",
+      "season": 1931,
+      "week": 11,
+      "season_type": "regular",
+      "home": "Loyola Marymount",
+      "away": "Olympic Club",
+      "home_points": 13,
+      "away_points": 0,
+      "neutral": false,
+      "added": "2026-09-17",
+      "reason": "Missing from CFBD. Ends Olympic Club's 1931 reign two weeks after it began (CFBD's record has it running to Stanford, 1932-09-17). Reported by Ray of rutgersstartedthis.com.",
+      "note": "Olympic Club split its roster that week: half sailed for Hawaii and half stayed to play this previously scheduled game. It was an official Olympic Club game, so it counts.",
+      "sources": [
+        {"label": "\"Loyola Beats Olympic Club,\" Fresno Morning Republican, Nov. 22, 1931, p. 20", "url": "https://www.newspapers.com/clip/59494261/loyola-beats-olympic-club/"},
+        {"label": "1931 Olympic Club Winged O football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_Olympic_Club_Winged_O_football_team"},
+        {"label": "1931 Loyola Lions football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_Loyola_Lions_football_team"}
+      ]
+    },
+    {
+      "id": 90000002,
+      "date": "1931-11-29",
+      "season": 1931,
+      "week": 12,
+      "season_type": "regular",
+      "home": "San Diego Marines",
+      "away": "Loyola Marymount",
+      "home_points": 7,
+      "away_points": 0,
+      "neutral": false,
+      "added": "2026-09-17",
+      "reason": "Missing from CFBD. Loyola's only belt loss after taking it from Olympic Club.",
+      "sources": [
+        {"label": "\"Marines Upset Loyola,\" Los Angeles Times, Nov. 30, 1931, p. 9", "url": "https://www.newspapers.com/clip/22793755/marines-upset-loyola-aerial-efforts-of/"},
+        {"label": "1931 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_San_Diego_Marines_Devil_Dogs_football_team"},
+        {"label": "1931 Loyola Lions football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_Loyola_Lions_football_team"}
+      ]
+    },
+    {
+      "id": 90000003,
+      "date": "1932-09-12",
+      "season": 1932,
+      "week": 1,
+      "season_type": "regular",
+      "home": "San Diego Marines",
+      "away": "Santa Barbara Athletic Club",
+      "home_points": 11,
+      "away_points": 0,
+      "neutral": false,
+      "added": "2026-09-17",
+      "reason": "Missing from CFBD. A San Diego Marines defense.",
+      "note": "Date as listed on Wikipedia; the cited Los Angeles Times report ran the same day, so the game may have been played Sunday, Sept. 11. Either date leaves the lineage unchanged.",
+      "sources": [
+        {"label": "\"Marine Grids Winners,\" Los Angeles Times, Sept. 12, 1932, p. 6", "url": "https://www.newspapers.com/clip/59537602/marine-grids-winners/"},
+        {"label": "1932 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_San_Diego_Marines_Devil_Dogs_football_team"}
+      ]
+    },
+    {
+      "id": 90000004,
+      "date": "1932-09-18",
+      "season": 1932,
+      "week": 1,
+      "season_type": "regular",
+      "home": "San Diego Marines",
+      "away": "West Coast Army",
+      "home_points": 7,
+      "away_points": 6,
+      "neutral": false,
+      "added": "2026-09-17",
+      "reason": "Missing from CFBD. A San Diego Marines defense.",
+      "note": "The West Coast Army season page lists this as 'September 17?'; the Marines page gives Sept. 18 at 2:30 p.m. Either date leaves the lineage unchanged.",
+      "sources": [
+        {"label": "\"San Diego Marines Beat Army Eleven,\" News-Pilot (San Pedro), Sept. 19, 1932, p. 2", "url": "https://www.newspapers.com/clip/59537844/san-diego-marines-beat-army-eleven/"},
+        {"label": "1932 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_San_Diego_Marines_Devil_Dogs_football_team"},
+        {"label": "1932 West Coast Army football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_West_Coast_Army_football_team"}
+      ]
+    },
+    {
+      "id": 90000005,
+      "date": "1932-09-24",
+      "season": 1932,
+      "week": 2,
+      "season_type": "regular",
+      "home": "Fresno State",
+      "away": "San Diego Marines",
+      "home_points": 12,
+      "away_points": 0,
+      "neutral": false,
+      "added": "2026-09-17",
+      "reason": "Missing from CFBD. Fresno State takes the belt from the San Diego Marines.",
+      "sources": [
+        {"label": "\"Bulldogs Spring Upset By Taking Opener, 12 To 0,\" Fresno Bee/The Republican, Sept. 25, 1932, p. 11", "url": "https://www.newspapers.com/clip/59561196/bulldogs-spring-upset-by-taking-opener/"},
+        {"label": "1932 Fresno State Bulldogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_Fresno_State_Bulldogs_football_team"},
+        {"label": "1932 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_San_Diego_Marines_Devil_Dogs_football_team"}
+      ]
+    },
+    {
+      "id": 90000006,
+      "date": "1932-10-01",
+      "season": 1932,
+      "week": 3,
+      "season_type": "regular",
+      "home": "Fresno State",
+      "away": "West Coast Army",
+      "home_points": 6,
+      "away_points": 7,
+      "neutral": false,
+      "added": "2026-09-17",
+      "reason": "Missing from CFBD. West Coast Army takes the belt from Fresno State, then loses it at Stanford on Oct. 15 (already in CFBD).",
+      "sources": [
+        {"label": "\"Football Finds,\" Fresno Bee/The Republican, Oct. 2, 1932, p. 13", "url": "https://www.newspapers.com/clip/59582621/football-finds/"},
+        {"label": "1932 West Coast Army football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_West_Coast_Army_football_team"},
+        {"label": "1932 Fresno State Bulldogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_Fresno_State_Bulldogs_football_team"}
+      ]
+    }
+  ]
+}

@@ -173,6 +173,38 @@ plus a synthetic multi-season simulation (with ties) comparing a full
 bootstrap run against an incremental one two different ways. Both matched
 exactly.
 
+## Games CFBD doesn't have (`historical_data/supplemental_games.json`)
+
+CFBD's pre-war record has holes, mostly club and service teams. When a
+missing game changes who held the belt, it goes in
+`historical_data/supplemental_games.json` with its date, score and
+newspaper citations, using an id in the reserved 90,000,000-99,999,999
+range (never a CFBD id, never an ESPN box-score link). The rule itself is
+public in `ruleset.md` ("Games missing from the data source").
+
+- `supplemental_games.py` validates the file and merges its games into
+  the game stream at read time: `build_lineage.py` (fetched seasons only,
+  so a `--full-refetch` includes them) and `build_alternate_lineages.py`.
+  They are never written into `all_games.json.gz`, so an archive
+  `--bootstrap` can't lose them. If CFBD later adds the same game, CFBD's
+  copy wins and a note says the entry can be deleted.
+- `apply_supplemental_games.py` folds them into `baseline.json`. It
+  re-walks the archive from 1869, refuses to write unless the archive alone
+  reproduces the current baseline exactly, prints every changed belt game
+  and reign (`--dry-run` to preview), and drops cached historical notes for
+  games whose belt outcome changed so they're rewritten. No CFBD calls.
+  Re-run it whenever the JSON file changes.
+- `build_site.py` shows the citations in a supplemental game's Sources
+  strip in place of the CFBD attribution.
+- `test_supplemental_games.py` checks the file, the merge, that archive +
+  supplemental reproduces `baseline.json`, and the 1931-32 chain.
+
+First entries (2026-09-17): Loyola (CA) 13, Olympic Club 0 on Nov. 21,
+1931, reported by Ray of
+[rutgersstartedthis.com](https://rutgersstartedthis.com), plus the five
+other missing games the belt went through before Stanford won it on Oct. 15, 1932. Four reigns were
+inserted after #65, so every reign from #66 on moved up by four.
+
 ## Box scores and recaps for individual games
 
 You asked whether past belt games could show a box score and/or a summary.

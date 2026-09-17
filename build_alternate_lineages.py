@@ -398,6 +398,12 @@ def main():
         games.extend(expand(archive["seasons"][str(s)]))
     live_seasons = sorted({g["season"] for g in live})
     games.extend(g for g in live if g["season"] > (seasons[-1] if seasons else 0))
+    # Games CFBD doesn't have (historical_data/supplemental_games.json) --
+    # merged here, never written into the archive, so a --bootstrap
+    # rebuild can't drop them. merge_supplemental re-sorts; the sort below
+    # is kept for the no-supplemental case.
+    from supplemental_games import merge_supplemental
+    games = merge_supplemental(games)
     games.sort(key=lambda g: (g["date"], (g.get("season_type") or "regular") != "regular", g.get("id") or 0))
     coverage = {"archived_through": seasons[-1] if seasons else None, "live_seasons": live_seasons,
                 "missing_seasons": missing, "games": len(games)}
