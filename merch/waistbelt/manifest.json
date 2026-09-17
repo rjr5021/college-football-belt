@@ -1,347 +1,98 @@
 [
   {
+    "team": "Notre Dame",
+    "slug": "notre-dame",
+    "file": "belt-waist-notre-dame.png",
+    "koozie_file": "belt-waist-notre-dame-koozie.png"
+  },
+  {
     "team": "USC",
     "slug": "usc",
-    "file": "belt-waist-usc.png"
+    "file": "belt-waist-usc.png",
+    "koozie_file": "belt-waist-usc-koozie.png"
   },
   {
     "team": "Alabama",
     "slug": "alabama",
-    "file": "belt-waist-alabama.png"
-  },
-  {
-    "team": "Washington",
-    "slug": "washington",
-    "file": "belt-waist-washington.png"
-  },
-  {
-    "team": "Harvard",
-    "slug": "harvard",
-    "file": "belt-waist-harvard.png"
-  },
-  {
-    "team": "Auburn",
-    "slug": "auburn",
-    "file": "belt-waist-auburn.png"
-  },
-  {
-    "team": "Michigan",
-    "slug": "michigan",
-    "file": "belt-waist-michigan.png"
-  },
-  {
-    "team": "Notre Dame",
-    "slug": "notre-dame",
-    "file": "belt-waist-notre-dame.png"
+    "file": "belt-waist-alabama.png",
+    "koozie_file": "belt-waist-alabama-koozie.png"
   },
   {
     "team": "Ohio State",
     "slug": "ohio-state",
-    "file": "belt-waist-ohio-state.png"
+    "file": "belt-waist-ohio-state.png",
+    "koozie_file": "belt-waist-ohio-state-koozie.png"
   },
   {
-    "team": "Princeton",
-    "slug": "princeton",
-    "file": "belt-waist-princeton.png"
-  },
-  {
-    "team": "UCLA",
-    "slug": "ucla",
-    "file": "belt-waist-ucla.png"
-  },
-  {
-    "team": "LSU",
-    "slug": "lsu",
-    "file": "belt-waist-lsu.png"
-  },
-  {
-    "team": "Baylor",
-    "slug": "baylor",
-    "file": "belt-waist-baylor.png"
-  },
-  {
-    "team": "Tennessee",
-    "slug": "tennessee",
-    "file": "belt-waist-tennessee.png"
-  },
-  {
-    "team": "Yale",
-    "slug": "yale",
-    "file": "belt-waist-yale.png"
-  },
-  {
-    "team": "Clemson",
-    "slug": "clemson",
-    "file": "belt-waist-clemson.png"
-  },
-  {
-    "team": "Florida",
-    "slug": "florida",
-    "file": "belt-waist-florida.png"
+    "team": "Michigan",
+    "slug": "michigan",
+    "file": "belt-waist-michigan.png",
+    "koozie_file": "belt-waist-michigan-koozie.png"
   },
   {
     "team": "Georgia",
     "slug": "georgia",
-    "file": "belt-waist-georgia.png"
-  },
-  {
-    "team": "Miami",
-    "slug": "miami",
-    "file": "belt-waist-miami.png"
-  },
-  {
-    "team": "Ole Miss",
-    "slug": "ole-miss",
-    "file": "belt-waist-ole-miss.png"
-  },
-  {
-    "team": "Stanford",
-    "slug": "stanford",
-    "file": "belt-waist-stanford.png"
-  },
-  {
-    "team": "Arizona",
-    "slug": "arizona",
-    "file": "belt-waist-arizona.png"
-  },
-  {
-    "team": "Navy",
-    "slug": "navy",
-    "file": "belt-waist-navy.png"
-  },
-  {
-    "team": "Penn State",
-    "slug": "penn-state",
-    "file": "belt-waist-penn-state.png"
+    "file": "belt-waist-georgia.png",
+    "koozie_file": "belt-waist-georgia-koozie.png"
   },
   {
     "team": "Texas",
     "slug": "texas",
-    "file": "belt-waist-texas.png"
+    "file": "belt-waist-texas.png",
+    "koozie_file": "belt-waist-texas-koozie.png"
   },
   {
-    "team": "Arizona State",
-    "slug": "arizona-state",
-    "file": "belt-waist-arizona-state.png"
+    "team": "LSU",
+    "slug": "lsu",
+    "file": "belt-waist-lsu.png",
+    "koozie_file": "belt-waist-lsu-koozie.png"
   },
   {
-    "team": "Arkansas",
-    "slug": "arkansas",
-    "file": "belt-waist-arkansas.png"
+    "team": "Tennessee",
+    "slug": "tennessee",
+    "file": "belt-waist-tennessee.png",
+    "koozie_file": "belt-waist-tennessee-koozie.png"
   },
   {
     "team": "Oklahoma",
     "slug": "oklahoma",
-    "file": "belt-waist-oklahoma.png"
+    "file": "belt-waist-oklahoma.png",
+    "koozie_file": "belt-waist-oklahoma-koozie.png"
   },
   {
-    "team": "Pennsylvania",
-    "slug": "pennsylvania",
-    "file": "belt-waist-pennsylvania.png"
+    "team": "Florida",
+    "slug": "florida",
+    "file": "belt-waist-florida.png",
+    "koozie_file": "belt-waist-florida-koozie.png"
   },
   {
-    "team": "Purdue",
-    "slug": "purdue",
-    "file": "belt-waist-purdue.png"
+    "team": "Auburn",
+    "slug": "auburn",
+    "file": "belt-waist-auburn.png",
+    "koozie_file": "belt-waist-auburn-koozie.png"
   },
   {
-    "team": "South Carolina",
-    "slug": "south-carolina",
-    "file": "belt-waist-south-carolina.png"
+    "team": "Penn State",
+    "slug": "penn-state",
+    "file": "belt-waist-penn-state.png",
+    "koozie_file": "belt-waist-penn-state-koozie.png"
   },
   {
-    "team": "Syracuse",
-    "slug": "syracuse",
-    "file": "belt-waist-syracuse.png"
-  },
-  {
-    "team": "TCU",
-    "slug": "tcu",
-    "file": "belt-waist-tcu.png"
-  },
-  {
-    "team": "Texas A&M",
-    "slug": "texas-a-m",
-    "file": "belt-waist-texas-a-m.png"
-  },
-  {
-    "team": "Army",
-    "slug": "army",
-    "file": "belt-waist-army.png"
-  },
-  {
-    "team": "BYU",
-    "slug": "byu",
-    "file": "belt-waist-byu.png"
-  },
-  {
-    "team": "California",
-    "slug": "california",
-    "file": "belt-waist-california.png"
-  },
-  {
-    "team": "Georgia Tech",
-    "slug": "georgia-tech",
-    "file": "belt-waist-georgia-tech.png"
-  },
-  {
-    "team": "Mississippi State",
-    "slug": "mississippi-state",
-    "file": "belt-waist-mississippi-state.png"
+    "team": "Clemson",
+    "slug": "clemson",
+    "file": "belt-waist-clemson.png",
+    "koozie_file": "belt-waist-clemson-koozie.png"
   },
   {
     "team": "Nebraska",
     "slug": "nebraska",
-    "file": "belt-waist-nebraska.png"
+    "file": "belt-waist-nebraska.png",
+    "koozie_file": "belt-waist-nebraska-koozie.png"
   },
   {
-    "team": "Oklahoma State",
-    "slug": "oklahoma-state",
-    "file": "belt-waist-oklahoma-state.png"
-  },
-  {
-    "team": "Texas Tech",
-    "slug": "texas-tech",
-    "file": "belt-waist-texas-tech.png"
-  },
-  {
-    "team": "Wisconsin",
-    "slug": "wisconsin",
-    "file": "belt-waist-wisconsin.png"
-  },
-  {
-    "team": "Colorado",
-    "slug": "colorado",
-    "file": "belt-waist-colorado.png"
-  },
-  {
-    "team": "Columbia",
-    "slug": "columbia",
-    "file": "belt-waist-columbia.png"
-  },
-  {
-    "team": "Cornell",
-    "slug": "cornell",
-    "file": "belt-waist-cornell.png"
-  },
-  {
-    "team": "Duke",
-    "slug": "duke",
-    "file": "belt-waist-duke.png"
-  },
-  {
-    "team": "Florida State",
-    "slug": "florida-state",
-    "file": "belt-waist-florida-state.png"
-  },
-  {
-    "team": "Illinois",
-    "slug": "illinois",
-    "file": "belt-waist-illinois.png"
-  },
-  {
-    "team": "Iowa",
-    "slug": "iowa",
-    "file": "belt-waist-iowa.png"
-  },
-  {
-    "team": "Michigan State",
-    "slug": "michigan-state",
-    "file": "belt-waist-michigan-state.png"
-  },
-  {
-    "team": "NC State",
-    "slug": "nc-state",
-    "file": "belt-waist-nc-state.png"
-  },
-  {
-    "team": "Pittsburgh",
-    "slug": "pittsburgh",
-    "file": "belt-waist-pittsburgh.png"
-  },
-  {
-    "team": "Swarthmore",
-    "slug": "swarthmore",
-    "file": "belt-waist-swarthmore.png"
-  },
-  {
-    "team": "Villanova",
-    "slug": "villanova",
-    "file": "belt-waist-villanova.png"
-  },
-  {
-    "team": "West Virginia",
-    "slug": "west-virginia",
-    "file": "belt-waist-west-virginia.png"
-  },
-  {
-    "team": "Kansas State",
-    "slug": "kansas-state",
-    "file": "belt-waist-kansas-state.png"
-  },
-  {
-    "team": "Kentucky",
-    "slug": "kentucky",
-    "file": "belt-waist-kentucky.png"
-  },
-  {
-    "team": "Louisville",
-    "slug": "louisville",
-    "file": "belt-waist-louisville.png"
-  },
-  {
-    "team": "Maryland",
-    "slug": "maryland",
-    "file": "belt-waist-maryland.png"
-  },
-  {
-    "team": "Minnesota",
-    "slug": "minnesota",
-    "file": "belt-waist-minnesota.png"
-  },
-  {
-    "team": "Missouri",
-    "slug": "missouri",
-    "file": "belt-waist-missouri.png"
-  },
-  {
-    "team": "North Carolina",
-    "slug": "north-carolina",
-    "file": "belt-waist-north-carolina.png"
-  },
-  {
-    "team": "Northwestern",
-    "slug": "northwestern",
-    "file": "belt-waist-northwestern.png"
-  },
-  {
-    "team": "Oregon",
-    "slug": "oregon",
-    "file": "belt-waist-oregon.png"
-  },
-  {
-    "team": "Rutgers",
-    "slug": "rutgers",
-    "file": "belt-waist-rutgers.png"
-  },
-  {
-    "team": "Utah",
-    "slug": "utah",
-    "file": "belt-waist-utah.png"
-  },
-  {
-    "team": "Vanderbilt",
-    "slug": "vanderbilt",
-    "file": "belt-waist-vanderbilt.png"
-  },
-  {
-    "team": "Virginia",
-    "slug": "virginia",
-    "file": "belt-waist-virginia.png"
-  },
-  {
-    "team": "Virginia Tech",
-    "slug": "virginia-tech",
-    "file": "belt-waist-virginia-tech.png"
+    "team": "Miami",
+    "slug": "miami",
+    "file": "belt-waist-miami.png",
+    "koozie_file": "belt-waist-miami-koozie.png"
   }
 ]

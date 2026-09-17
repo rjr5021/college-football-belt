@@ -1,0 +1,162 @@
+[
+  {
+    "team": "Notre Dame",
+    "mascot": "Fighting Irish",
+    "color": "#0c2340",
+    "alt": "#c99700",
+    "is_current": true,
+    "current_since": "2025",
+    "first_year": 1923,
+    "reigns": 9
+  },
+  {
+    "team": "USC",
+    "mascot": "Trojans",
+    "color": "#990000",
+    "alt": "#ffcc00",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1932,
+    "reigns": 13
+  },
+  {
+    "team": "Alabama",
+    "mascot": "Crimson Tide",
+    "color": "#9e1b32",
+    "alt": "#ffffff",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1942,
+    "reigns": 11
+  },
+  {
+    "team": "Ohio State",
+    "mascot": "Buckeyes",
+    "color": "#ba0c2f",
+    "alt": "#a7b1b7",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1919,
+    "reigns": 9
+  },
+  {
+    "team": "Michigan",
+    "mascot": "Wolverines",
+    "color": "#00274c",
+    "alt": "#ffcb05",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1918,
+    "reigns": 9
+  },
+  {
+    "team": "Georgia",
+    "mascot": "Bulldogs",
+    "color": "#ba0c2f",
+    "alt": "#2c2a29",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1942,
+    "reigns": 6
+  },
+  {
+    "team": "Texas",
+    "mascot": "Longhorns",
+    "color": "#bf5700",
+    "alt": "#ffffff",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1965,
+    "reigns": 5
+  },
+  {
+    "team": "LSU",
+    "mascot": "Tigers",
+    "color": "#461d7c",
+    "alt": "#fdd023",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1958,
+    "reigns": 8
+  },
+  {
+    "team": "Tennessee",
+    "mascot": "Volunteers",
+    "color": "#ff8200",
+    "alt": "#ffffff",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1938,
+    "reigns": 7
+  },
+  {
+    "team": "Oklahoma",
+    "mascot": "Sooners",
+    "color": "#841617",
+    "alt": "#ffffff",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1968,
+    "reigns": 4
+  },
+  {
+    "team": "Florida",
+    "mascot": "Gators",
+    "color": "#0021a5",
+    "alt": "#fa4616",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1983,
+    "reigns": 6
+  },
+  {
+    "team": "Auburn",
+    "mascot": "Tigers",
+    "color": "#0c2340",
+    "alt": "#f26522",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1938,
+    "reigns": 9
+  },
+  {
+    "team": "Penn State",
+    "mascot": "Nittany Lions",
+    "color": "#001e44",
+    "alt": "#ffffff",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1926,
+    "reigns": 5
+  },
+  {
+    "team": "Clemson",
+    "mascot": "Tigers",
+    "color": "#f56600",
+    "alt": "#522d80",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1974,
+    "reigns": 6
+  },
+  {
+    "team": "Nebraska",
+    "mascot": "Cornhuskers",
+    "color": "#d00000",
+    "alt": "#ffffff",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1923,
+    "reigns": 3
+  },
+  {
+    "team": "Miami",
+    "mascot": "Hurricanes",
+    "color": "#f47321",
+    "alt": "#005030",
+    "is_current": false,
+    "current_since": null,
+    "first_year": 1954,
+    "reigns": 6
+  }
+]
