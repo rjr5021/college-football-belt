@@ -7165,15 +7165,159 @@
       "end_date": "1996-07-05",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1996-07-06",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas State",
+      "predecessor": "Nebraska",
+      "end_date": "1996-07-06",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1996-07-07",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Colorado",
+      "end_date": "1996-07-07",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Colorado",
+      "start_date": "1996-07-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Iowa State",
+      "end_date": "1996-07-08",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iowa State",
+      "start_date": "1996-07-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Colorado",
+      "predecessor": "Nebraska",
+      "end_date": "1996-07-09",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1996-07-10",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iowa State",
+      "predecessor": "Colorado",
+      "end_date": "1996-07-10",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas State",
+      "start_date": "1996-07-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-07-11",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1996-07-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas State",
+      "predecessor": "Nebraska",
+      "end_date": "1996-07-12",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1996-07-13",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-07-13",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1996-07-14",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Nebraska",
+      "end_date": "1996-07-14",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma State",
+      "start_date": "1996-07-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Missouri",
+      "end_date": "1996-07-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1996-07-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma State",
+      "predecessor": "Oklahoma",
+      "end_date": "1996-07-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas",
+      "start_date": "1996-07-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Missouri",
+      "end_date": "1996-07-17",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Oklahoma",
-    "start_date": "1996-07-06",
+    "team": "Missouri",
+    "start_date": "1996-07-18",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Kansas State",
-    "predecessor": "Nebraska"
+    "reclaimed_after": "Kansas",
+    "predecessor": "Oklahoma"
   }
 }

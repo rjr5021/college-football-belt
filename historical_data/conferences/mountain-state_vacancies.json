@@ -1318,5 +1318,69 @@
     "effective_date": "1948-05-09",
     "detected_on": "2026-09-16",
     "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1948-05-09",
+    "last_activity_date": "1948-05-09",
+    "effective_date": "1948-05-10",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1948-05-10",
+    "last_activity_date": "1948-05-10",
+    "effective_date": "1948-05-11",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1948-05-11",
+    "last_activity_date": "1948-05-11",
+    "effective_date": "1948-05-12",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Denver"
+  },
+  {
+    "team": "Denver",
+    "reign_started": "1948-05-12",
+    "last_activity_date": "1948-05-12",
+    "effective_date": "1948-05-13",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Colorado"
+  },
+  {
+    "team": "Colorado",
+    "reign_started": "1948-05-13",
+    "last_activity_date": "1948-05-13",
+    "effective_date": "1948-05-14",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado State",
+    "reign_started": "1948-05-14",
+    "last_activity_date": "1948-05-14",
+    "effective_date": "1948-05-15",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1948-05-15",
+    "last_activity_date": "1948-05-15",
+    "effective_date": "1948-05-16",
+    "detected_on": "2026-09-17",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1948-05-16",
+    "last_activity_date": "1948-05-16",
+    "effective_date": "1948-05-17",
+    "detected_on": "2026-09-17",
+    "reverted_to": "Utah"
   }
 ]
