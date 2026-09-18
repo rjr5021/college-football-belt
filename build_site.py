@@ -123,6 +123,10 @@ SHOP_IMAGE_DIR = "merch"      # under site/: the copied thumbnails
 # the team pages are written, so each of those pages can link to its own
 # slice of the shop.
 SHOP_TEAMS = set()
+# records.html's per-cutoff-year boards, filled by generate_records_page()
+# and written to site/records-since.json by main() (one build-time
+# computation feeds both the page and its year picker).
+RECORDS_SINCE_JSON = [None]
 PAPER_LIGHT = "#e7e2d5"
 PAPER_DARK = "#161009"
 
@@ -1654,6 +1658,15 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .recordValue{ font-size:14px; font-weight:600; color:var(--brass-text); }
 .recordSub{ grid-column:2 / 4; font-size:12px; color:var(--ink-soft); }
 .currentTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); }
+.recordEmpty{ margin:6px 0 12px; font-size:13px; color:var(--ink-soft); }
+.sinceBar{ display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:10px 14px; margin:22px 0 -6px; padding:14px 16px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; }
+.sinceLabel{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
+.sinceSelect{ font-family:"IBM Plex Mono",monospace; font-size:13px; padding:8px 12px; border:1px solid var(--hairline-strong); border-radius:6px; background:var(--paper); color:var(--ink); }
+.sinceQuicks{ display:flex; flex-wrap:wrap; gap:8px; }
+.sinceQuick{ background:transparent; cursor:pointer; }
+.sinceQuick.isActive{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.sinceNote{ grid-column:1 / -1; margin:0; font-size:12.5px; line-height:1.5; color:var(--ink-soft); }
+@media (max-width:700px){ .sinceBar{ grid-template-columns:auto 1fr; } .sinceQuicks{ grid-column:1 / -1; } }
 
 /* ---------- stories (hub + article) ---------- */
 .storyGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:18px; margin:28px 0 8px; }
@@ -5541,10 +5554,22 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
     fetch_coaches.py; pass None/omit to just skip that one card, same
     no-op-when-unset pattern as everything else on this site). Ties
     aren't broken (a team a few days short of another's reign length
-    still shows up if it's genuinely top-5)."""
-    reigns = lineage["reigns"]
+    still shows up if it's genuinely top-5).
+
+    Every board is a function of a start year (2026-09-18, Bob: "records
+    if you didn't count anything before 1950 -- and give the visitor the
+    option to pick the year"): `record_boards(since)` counts only reigns
+    that BEGAN on or after Jan 1 of that year and belt games PLAYED on or
+    after it. The page is rendered for the all-time case (SEO, no-JS), and
+    the same function is run once per possible cutoff year into
+    site/records-since.json, which the year picker on the page swaps in
+    client-side -- so there is exactly one implementation of every board,
+    and the picker's numbers are the build's numbers."""
+    reigns_all = lineage["reigns"]
     today = date.today()
     change_index = build_change_game_index(belt_games)
+    current_reign = reigns_all[-1]
+    first_year = int(reigns_all[0]["start_date"][:4])
 
     def start_game_href(r):
         g = change_index.get((r["start_date"], r["team"]))
@@ -5554,175 +5579,184 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
         primary, _ = team_color(colors, name)
         return primary
 
-    # ---- longest reigns, by days held (current reign counts through today) ----
-    longest = sorted(reigns, key=lambda r: reign_duration_days(r, today), reverse=True)[:5]
-    longest_rows = ""
-    for i, r in enumerate(longest, 1):
-        start, end = reign_dates(r, today)
-        is_current = r is reigns[-1]
-        sub = f'{fmt_date(r["start_date"])} &ndash; {"present" if is_current else fmt_date(r["end_date"])}'
-        if is_current:
-            sub += ' <span class="currentTag">current</span>'
-        longest_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
-                                     fmt_duration(start, end), sub, start_game_href(r))
-
-    # ---- most total days held, all-time -- summed across every reign a
-    # program has ever had, not just its longest one. A different ranking
-    # from "Longest Reigns" above: a program with several shorter reigns
-    # can outrank one with a single long one. ----
-    total_days_by_team = {}
-    reign_count_by_team = {}
-    for r in reigns:
-        total_days_by_team[r["team"]] = total_days_by_team.get(r["team"], 0) + reign_duration_days(r, today)
-        reign_count_by_team[r["team"]] = reign_count_by_team.get(r["team"], 0) + 1
-    most_total_days = sorted(total_days_by_team.items(), key=lambda kv: kv[1], reverse=True)[:5]
-    total_days_rows = ""
-    for i, (team, days) in enumerate(most_total_days, 1):
-        n = reign_count_by_team[team]
-        sub = f'across {n} reign{"s" if n != 1 else ""}'
-        total_days_rows += _record_row(i, team_swatch(team), esc(team),
-                                        f'{days:,}', sub, f'teams/{team_slug(team)}.html')
-
-    # ---- most reigns held by one program ----
-    reign_counts = {}
-    for r in reigns:
-        reign_counts[r["team"]] = reign_counts.get(r["team"], 0) + 1
-    most_reigns = sorted(reign_counts.items(), key=lambda kv: kv[1], reverse=True)[:5]
-    most_reigns_rows = ""
-    for i, (team, n) in enumerate(most_reigns, 1):
-        most_reigns_rows += _record_row(i, team_swatch(team), esc(team),
-                                         f'{n}&times;', "reigns held",
-                                         f'teams/{team_slug(team)}.html')
-
-    # ---- longest current droughts -- programs that have held the belt
-    # before but don't right now, ranked by how long it's been since their
-    # most recent reign ended (2026-09-16 wishlist, task #84). `reigns` is
-    # chronological (relied on elsewhere in this function too, e.g. `r is
-    # reigns[-1]` for "is this the current reign"), so the LAST entry seen
-    # per team below is that team's true most recent reign -- a team that
-    # held the belt, lost it, and later reclaimed it (so its most recent
-    # reign is the still-open current one) is correctly excluded, unlike
-    # naively skipping only open reigns as they're encountered, which
-    # would wrongly surface that team's earlier, superseded reign instead. ----
-    most_recent_reign_by_team = {}
-    for r in reigns:
-        most_recent_reign_by_team[r["team"]] = r
-    droughts = sorted(
-        (r for r in most_recent_reign_by_team.values() if r.get("end_date") is not None),
-        key=lambda r: date.fromisoformat(r["end_date"]), reverse=True)[:5]
-    drought_rows = ""
-    for i, r in enumerate(droughts, 1):
-        end = date.fromisoformat(r["end_date"])
-        drought_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
-                                     fmt_duration(end, today),
-                                     f'last held it {fmt_date(r["end_date"])}',
-                                     f'teams/{team_slug(r["team"])}.html')
-
-    # ---- most days held under one head coach -- attributes each reign's
-    # FULL duration to whichever coach was in charge at that reign's START
-    # (the season of the game that won it, per change_index), not a
-    # game-by-game split across a coaching change mid-reign -- most reigns
-    # are short enough that this is the reign's coach in every practical
-    # sense, and the alternative (prorating a reign across coaches) adds a
-    # lot of complexity for a card that's meant to be a fun leaderboard,
-    # not a rigorous attribution. A reign whose team/season CFBD has no
-    # coach on file for (belt_data/coaches.json, from fetch_coaches.py --
-    # entirely optional) is simply left out, same as every other
-    # optional/partial data source on this site. ----
-    coach_days = {}
-    coach_teams = {}
-    coach_reign_count = {}
-    if coaches:
-        for r in reigns:
-            g = change_index.get((r["start_date"], r["team"]))
-            season = g["season"] if g else None
-            if season is None:
-                continue
-            team_seasons = coaches.get(r["team"])
-            if not team_seasons:
-                continue
-            coach = next((s["coach"] for s in team_seasons if s["year"] == season), None)
-            if not coach:
-                continue
-            coach_days[coach] = coach_days.get(coach, 0) + reign_duration_days(r, today)
-            coach_teams.setdefault(coach, set()).add(r["team"])
-            coach_reign_count[coach] = coach_reign_count.get(coach, 0) + 1
-    most_days_by_coach = sorted(coach_days.items(), key=lambda kv: kv[1], reverse=True)[:5]
-    coach_rows = ""
-    for i, (coach, days) in enumerate(most_days_by_coach, 1):
-        teams = sorted(coach_teams[coach])
-        n = coach_reign_count[coach]
-        swatch = team_swatch(teams[0]) if len(teams) == 1 else None
-        href = f'coaches/{coach_slug(coach)}.html'
-        sub = f'{" & ".join(esc(t) for t in teams)} &middot; {n} reign{"s" if n != 1 else ""}'
-        coach_rows += _record_row(i, swatch, esc(coach), f'{days:,}', sub, href)
-
-    # ---- most defenses in a single reign ----
-    most_defended = sorted(reigns, key=lambda r: r.get("defenses", 0), reverse=True)[:5]
-    most_defended_rows = ""
-    for i, r in enumerate(most_defended, 1):
-        is_current = r is reigns[-1]
-        sub = fmt_date(r["start_date"])
-        if is_current:
-            sub += ' <span class="currentTag">current</span>'
-        most_defended_rows += _record_row(i, team_swatch(r["team"]), esc(r["team"]),
-                                           f'{r.get("defenses", 0)}', sub, start_game_href(r))
-
-    # ---- biggest blowouts in any belt game ----
     def margin(g):
         h, a = (int(x) for x in g["score"].split("-"))
         return abs(h - a)
-    blowouts = sorted(belt_games, key=margin, reverse=True)[:5]
-    blowout_rows = ""
-    for i, g in enumerate(blowouts, 1):
-        h, a = (int(x) for x in g["score"].split("-"))
-        winner = g["home"] if h > a else g["away"]
-        loser = g["away"] if h > a else g["home"]
-        win_score, lose_score = max(h, a), min(h, a)
-        blowout_rows += _record_row(i, team_swatch(winner), f'{esc(winner)} over {esc(loser)}',
-                                     f'+{margin(g)}', f'{win_score}&ndash;{lose_score} &middot; {fmt_date(g["date"])}',
-                                     f'games/{g["game_id"]}.html')
 
-    # ---- closest calls: narrowest defenses, narrowest upsets, biggest upsets ----
-    defenses_only = [g for g in belt_games if g["holder"] and g["new_holder"] == g["holder"]]
-    changes_only = [g for g in belt_games if g["holder"] and g["new_holder"] != g["holder"]]
+    def record_boards(since=None):
+        """[(key, title, subtitle, rows)] with rows as (rank, swatch,
+        main_html, value_html, sub_html, href) tuples -- the raw material
+        for both the HTML cards and the per-year JSON."""
+        if since and since > first_year:
+            cutoff = f"{since}-01-01"
+            reigns = [r for r in reigns_all if r["start_date"] >= cutoff]
+            games = [g for g in belt_games if g["date"] >= cutoff]
+            span = f"since {since}"
+        else:
+            reigns, games, span = reigns_all, belt_games, "all-time"
 
-    def close_call_row(rank, g, verb):
-        h, a = (int(x) for x in g["score"].split("-"))
-        tie = h == a
-        value = "Tie" if tie else f'+{margin(g)}'
-        return _record_row(
-            rank, team_swatch(g["new_holder"]),
-            f'{esc(g["new_holder"])} {"tied" if tie else verb} {esc(g["holder"])}',
-            value, f'{max(h, a)}&ndash;{min(h, a)} &middot; {fmt_date(g["date"])}',
-            f'games/{g["game_id"]}.html')
+        # ---- longest reigns, by days held (current reign counts through today) ----
+        longest = sorted(reigns, key=lambda r: reign_duration_days(r, today), reverse=True)[:5]
+        longest_rows = []
+        for i, r in enumerate(longest, 1):
+            start, end = reign_dates(r, today)
+            is_current = r is current_reign
+            sub = f'{fmt_date(r["start_date"])} &ndash; {"present" if is_current else fmt_date(r["end_date"])}'
+            if is_current:
+                sub += ' <span class="currentTag">current</span>'
+            longest_rows.append((i, team_swatch(r["team"]), esc(r["team"]), fmt_duration(start, end), sub, start_game_href(r)))
 
-    narrowest_defense_rows = "".join(
-        close_call_row(i, g, "over") for i, g in enumerate(sorted(defenses_only, key=margin)[:5], 1))
-    narrowest_change_rows = "".join(
-        close_call_row(i, g, "took it from") for i, g in enumerate(sorted(changes_only, key=margin)[:5], 1))
-    biggest_upset_rows = "".join(
-        close_call_row(i, g, "routed") for i, g in enumerate(sorted(changes_only, key=margin, reverse=True)[:5], 1))
+        # ---- most total days held -- summed across every reign a program
+        # has had (in the window), not just its longest one ----
+        total_days_by_team = {}
+        reign_count_by_team = {}
+        for r in reigns:
+            total_days_by_team[r["team"]] = total_days_by_team.get(r["team"], 0) + reign_duration_days(r, today)
+            reign_count_by_team[r["team"]] = reign_count_by_team.get(r["team"], 0) + 1
+        most_total_days = sorted(total_days_by_team.items(), key=lambda kv: kv[1], reverse=True)[:5]
+        total_days_rows = []
+        for i, (team, days) in enumerate(most_total_days, 1):
+            n = reign_count_by_team[team]
+            total_days_rows.append((i, team_swatch(team), esc(team), f'{days:,}',
+                                    f'across {n} reign{"s" if n != 1 else ""}', f'teams/{team_slug(team)}.html'))
 
-    cards = [
-        ("Total Days Held", "All-time, summed across every reign a program has had", total_days_rows),
-        ("Longest Reigns", "By days holding the belt", longest_rows),
-        ("Most Reigns", "By program, across all 158 years", most_reigns_rows),
-        ("Most Defended", "Consecutive defenses in a single reign", most_defended_rows),
-        ("Biggest Blowouts", "Largest margin of victory in any belt game", blowout_rows),
-        ("Narrowest Defenses", "Closest the holder has come to losing it and didn't", narrowest_defense_rows),
-        ("Narrowest Upsets", "The belt changed hands by the barest possible margin", narrowest_change_rows),
-        ("Biggest Upsets", "The belt changed hands in an outright rout", biggest_upset_rows),
-        ("Longest Droughts", "Programs that have held it before, and how long it's been", drought_rows),
-    ]
-    if coach_rows:
-        cards.append(("Belt Held By Coach", "Total days held, all attributed to the coach at reign's start", coach_rows))
+        # ---- most reigns held by one program ----
+        most_reigns = sorted(reign_count_by_team.items(), key=lambda kv: kv[1], reverse=True)[:5]
+        most_reigns_rows = [(i, team_swatch(team), esc(team), f'{n}&times;', "reigns held", f'teams/{team_slug(team)}.html')
+                            for i, (team, n) in enumerate(most_reigns, 1)]
+
+        # ---- longest current droughts -- programs that have held the belt
+        # (in the window) but don't right now, ranked by how long it's been
+        # since their most recent reign ended. `reigns` is chronological, so
+        # the LAST entry seen per team is that team's true most recent reign
+        # -- a team that reclaimed it (its most recent reign is the open one)
+        # is correctly excluded. Longest drought = the EARLIEST end date, an
+        # ascending sort: this shipped reverse=True the first time, which
+        # ranked the SHORTEST droughts under a "Longest" heading (Bob caught
+        # it 2026-09-18). ----
+        most_recent_reign_by_team = {}
+        for r in reigns:
+            most_recent_reign_by_team[r["team"]] = r
+        droughts = sorted((r for r in most_recent_reign_by_team.values() if r.get("end_date") is not None),
+                          key=lambda r: date.fromisoformat(r["end_date"]))[:5]
+        drought_rows = []
+        for i, r in enumerate(droughts, 1):
+            end = date.fromisoformat(r["end_date"])
+            drought_rows.append((i, team_swatch(r["team"]), esc(r["team"]), fmt_duration(end, today),
+                                 f'last held it {fmt_date(r["end_date"])}', f'teams/{team_slug(r["team"])}.html'))
+
+        # ---- most days held under one head coach -- attributes each reign's
+        # FULL duration to whichever coach was in charge at that reign's START
+        # (the season of the game that won it, per change_index). A reign
+        # whose team/season CFBD has no coach on file for is simply left out,
+        # same as every other optional/partial data source on this site. ----
+        coach_days, coach_teams, coach_reign_count = {}, {}, {}
+        if coaches:
+            for r in reigns:
+                g = change_index.get((r["start_date"], r["team"]))
+                season = g["season"] if g else None
+                if season is None:
+                    continue
+                team_seasons = coaches.get(r["team"])
+                if not team_seasons:
+                    continue
+                coach = next((s["coach"] for s in team_seasons if s["year"] == season), None)
+                if not coach:
+                    continue
+                coach_days[coach] = coach_days.get(coach, 0) + reign_duration_days(r, today)
+                coach_teams.setdefault(coach, set()).add(r["team"])
+                coach_reign_count[coach] = coach_reign_count.get(coach, 0) + 1
+        most_days_by_coach = sorted(coach_days.items(), key=lambda kv: kv[1], reverse=True)[:5]
+        coach_rows = []
+        for i, (coach, days) in enumerate(most_days_by_coach, 1):
+            teams = sorted(coach_teams[coach])
+            n = coach_reign_count[coach]
+            swatch = team_swatch(teams[0]) if len(teams) == 1 else None
+            sub = f'{" & ".join(esc(t) for t in teams)} &middot; {n} reign{"s" if n != 1 else ""}'
+            coach_rows.append((i, swatch, esc(coach), f'{days:,}', sub, f'coaches/{coach_slug(coach)}.html'))
+
+        # ---- most defenses in a single reign ----
+        most_defended = sorted(reigns, key=lambda r: r.get("defenses", 0), reverse=True)[:5]
+        most_defended_rows = []
+        for i, r in enumerate(most_defended, 1):
+            sub = fmt_date(r["start_date"])
+            if r is current_reign:
+                sub += ' <span class="currentTag">current</span>'
+            most_defended_rows.append((i, team_swatch(r["team"]), esc(r["team"]), f'{r.get("defenses", 0)}', sub, start_game_href(r)))
+
+        # ---- biggest blowouts in any belt game ----
+        blowout_rows = []
+        for i, g in enumerate(sorted(games, key=margin, reverse=True)[:5], 1):
+            h, a = (int(x) for x in g["score"].split("-"))
+            winner = g["home"] if h > a else g["away"]
+            loser = g["away"] if h > a else g["home"]
+            blowout_rows.append((i, team_swatch(winner), f'{esc(winner)} over {esc(loser)}', f'+{margin(g)}',
+                                 f'{max(h, a)}&ndash;{min(h, a)} &middot; {fmt_date(g["date"])}', f'games/{g["game_id"]}.html'))
+
+        # ---- closest calls: narrowest defenses, narrowest upsets, biggest upsets ----
+        defenses_only = [g for g in games if g["holder"] and g["new_holder"] == g["holder"]]
+        changes_only = [g for g in games if g["holder"] and g["new_holder"] != g["holder"]]
+
+        def close_call_row(rank, g, verb):
+            h, a = (int(x) for x in g["score"].split("-"))
+            tie = h == a
+            return (rank, team_swatch(g["new_holder"]),
+                    f'{esc(g["new_holder"])} {"tied" if tie else verb} {esc(g["holder"])}',
+                    "Tie" if tie else f'+{margin(g)}',
+                    f'{max(h, a)}&ndash;{min(h, a)} &middot; {fmt_date(g["date"])}', f'games/{g["game_id"]}.html')
+
+        narrowest_defense_rows = [close_call_row(i, g, "over") for i, g in enumerate(sorted(defenses_only, key=margin)[:5], 1)]
+        narrowest_change_rows = [close_call_row(i, g, "took it from") for i, g in enumerate(sorted(changes_only, key=margin)[:5], 1)]
+        biggest_upset_rows = [close_call_row(i, g, "routed") for i, g in enumerate(sorted(changes_only, key=margin, reverse=True)[:5], 1)]
+
+        n_years = today.year - (since if since and since > first_year else first_year) + 1
+        cards = [
+            ("total-days", "Total Days Held", f"{span.capitalize()}, summed across every reign a program has had", total_days_rows),
+            ("longest", "Longest Reigns", "By days holding the belt" + ("" if span == "all-time" else f", reigns begun {span}"), longest_rows),
+            ("most-reigns", "Most Reigns", f"By program, across all {n_years} years" if span == "all-time" else f"By program, reigns begun {span}", most_reigns_rows),
+            ("most-defended", "Most Defended", "Consecutive defenses in a single reign" + ("" if span == "all-time" else f" begun {span}"), most_defended_rows),
+            ("blowouts", "Biggest Blowouts", "Largest margin of victory in any belt game" + ("" if span == "all-time" else f" {span}"), blowout_rows),
+            ("narrowest-defenses", "Narrowest Defenses", "Closest the holder has come to losing it and didn't" + ("" if span == "all-time" else f" ({span})"), narrowest_defense_rows),
+            ("narrowest-upsets", "Narrowest Upsets", "The belt changed hands by the barest possible margin" + ("" if span == "all-time" else f" ({span})"), narrowest_change_rows),
+            ("biggest-upsets", "Biggest Upsets", "The belt changed hands in an outright rout" + ("" if span == "all-time" else f" ({span})"), biggest_upset_rows),
+            ("droughts", "Longest Droughts", "Programs that have held it before, and how long it's been" + ("" if span == "all-time" else f" (reigns {span})"), drought_rows),
+        ]
+        if coach_rows or (coaches and span == "all-time"):
+            cards.append(("by-coach", "Belt Held By Coach", "Total days held, all attributed to the coach at reign's start" + ("" if span == "all-time" else f" ({span})"), coach_rows))
+        return cards
+
+    def rows_html(rows, since_label=None):
+        if not rows:
+            return f'<p class="recordEmpty">Nothing to rank yet{(" " + since_label) if since_label else ""}.</p>'
+        return "".join(_record_row(*row) for row in rows)
+
+    default_cards = record_boards(None)
     cards_html = "".join(f'''
-    <section class="recordCard">
+    <section class="recordCard" data-board="{key}">
       <h2>{esc(title)}</h2>
       <p class="recordCardSub">{esc(sub)}</p>
-      <div class="recordList">{rows}</div>
-    </section>''' for title, sub, rows in cards)
+      <div class="recordList">{rows_html(rows)}</div>
+    </section>''' for key, title, sub, rows in default_cards)
+
+    # every cutoff year, deduplicated: consecutive years with identical
+    # boards point at the same entry, which keeps the file small
+    years = list(range(first_year, today.year + 1))
+    entries, year_to_entry = [], {}
+    for y in years:
+        boards = record_boards(y)
+        payload = [{"key": k, "sub": s, "rows": [list(r) for r in rows]} for k, _, s, rows in boards]
+        if entries and entries[-1] == payload:
+            year_to_entry[y] = len(entries) - 1
+        else:
+            entries.append(payload)
+            year_to_entry[y] = len(entries) - 1
+    RECORDS_SINCE_JSON[0] = json.dumps({"generated": today.isoformat(), "first_year": first_year, "years": years,
+                                        "index": [year_to_entry[y] for y in years], "entries": entries},
+                                       ensure_ascii=False, separators=(",", ":"))
+
+    quick_years = [y for y in (1900, 1950, 1970, 2000, 2010) if y < today.year]
+    quick_html = "".join(f'<button type="button" class="chipLink sinceQuick" data-year="{y}">Since {y}</button>' for y in quick_years)
+    options_html = "".join(f'<option value="{y}"{" selected" if y == first_year else ""}>{y}</option>' for y in years)
 
     return f'''<!doctype html>
 <html lang="en">
@@ -5746,11 +5780,59 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
     <a class="chipLink" href="rivalries/index.html">Rivalries</a>
   </div>
 
-  <div class="recordsGrid">{cards_html}
+  <div class="sinceBar" id="sinceBar">
+    <label class="sinceLabel" for="recordsSince">Count only from</label>
+    <select id="recordsSince" class="sinceSelect" aria-label="Start year for the records">{options_html}</select>
+    <div class="sinceQuicks">{quick_html}<button type="button" class="chipLink sinceQuick" data-year="{first_year}">All-time</button></div>
+    <p class="sinceNote" id="sinceNote">Showing all-time records, since the first game in {first_year}. Pick a year to count only reigns that began, and belt games played, on or after January 1 of that year.</p>
+  </div>
+
+  <div class="recordsGrid" id="recordsGrid">{cards_html}
   </div>
 </main>
 
 {site_footer('', 'Computed from the full belt lineage &mdash; recalculated fresh every run.')}
+<script>
+(function(){{
+  var sel = document.getElementById('recordsSince');
+  var note = document.getElementById('sinceNote');
+  var grid = document.getElementById('recordsGrid');
+  if (!sel || !grid) return;
+  var FIRST = {first_year};
+  var data = null, loading = null;
+  function load(){{
+    if (data) return Promise.resolve(data);
+    if (!loading) loading = fetch('records-since.json').then(function(r){{ return r.json(); }}).then(function(j){{ data = j; return j; }});
+    return loading;
+  }}
+  function row(r){{
+    var dot = r[1] ? '<span class="swatch" style="background:' + r[1] + '"></span>' : '';
+    var body = '<span class="recordMain">' + dot + r[2] + '</span><span class="recordValue tabular">' + r[3] + '</span>' + (r[4] ? '<span class="recordSub">' + r[4] + '</span>' : '');
+    var tag = r[5] ? 'a' : 'div';
+    return '<' + tag + ' class="recordRow"' + (r[5] ? ' href="' + r[5] + '"' : '') + '><span class="recordRank">' + r[0] + '</span>' + body + '</' + tag + '>';
+  }}
+  function render(year){{
+    var y = Math.max(FIRST, Math.min(parseInt(year, 10) || FIRST, data.years[data.years.length - 1]));
+    var entry = data.entries[data.index[data.years.indexOf(y)]];
+    entry.forEach(function(b){{
+      var card = grid.querySelector('[data-board="' + b.key + '"]');
+      if (!card) return;
+      card.querySelector('.recordCardSub').textContent = b.sub;
+      card.querySelector('.recordList').innerHTML = b.rows.length ? b.rows.map(row).join('') : '<p class="recordEmpty">Nothing to rank yet since ' + y + '.</p>';
+    }});
+    document.querySelectorAll('.sinceQuick').forEach(function(btn){{ btn.classList.toggle('isActive', parseInt(btn.dataset.year, 10) === y); }});
+    sel.value = String(y);
+    note.textContent = y === FIRST ? 'Showing all-time records, since the first game in ' + FIRST + '. Pick a year to count only reigns that began, and belt games played, on or after January 1 of that year.'
+                                   : 'Counting only reigns that began, and belt games played, on or after January 1, ' + y + '. Current reigns and droughts still run through today.';
+    try {{ history.replaceState(null, '', y === FIRST ? location.pathname : '#since=' + y); }} catch (e) {{}}
+  }}
+  function go(year){{ load().then(function(){{ render(year); }}); }}
+  sel.addEventListener('change', function(){{ go(sel.value); }});
+  document.querySelectorAll('.sinceQuick').forEach(function(btn){{ btn.addEventListener('click', function(){{ go(btn.dataset.year); }}); }});
+  var m = /since=(\\d{{4}})/.exec(location.hash);
+  if (m) go(m[1]);
+}})();
+</script>
 '''
 
 
@@ -13743,6 +13825,9 @@ def main():
     records_html = generate_records_page(lineage, colors, belt_games, coaches)
     with open(os.path.join(OUT_DIR, "records.html"), "w", encoding="utf-8") as f:
         f.write(records_html)
+    if RECORDS_SINCE_JSON[0]:       # the year picker's data, one entry per distinct cutoff
+        with open(os.path.join(OUT_DIR, "records-since.json"), "w", encoding="utf-8") as f:
+            f.write(RECORDS_SINCE_JSON[0])
 
     with open(os.path.join(OUT_DIR, "story-longest-reigns.html"), "w", encoding="utf-8") as f:
         f.write(generate_story_longest_reigns(lineage, belt_games))
