@@ -1721,6 +1721,7 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .wiGameLink{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); text-decoration:none; margin-left:8px; white-space:nowrap; }
 .wiAct .btn{ min-height:34px; padding:0 12px; font-size:10.5px; white-space:normal; text-align:center; }
 .wiFlip.isOn{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.wiTag{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--good-text); margin-left:6px; }
 .swatch.swatchNone{ background:transparent; border:1px solid var(--hairline-strong); }
 #wiShareRow[hidden], #wiMore[hidden], #wiSummary[hidden], #wiStatus[hidden]{ display:none !important; }   /* .btnRow/.btn set display, which beats the hidden attribute */
 @media (max-width:700px){ .wiRow{ grid-template-columns:1fr; row-gap:4px; } .wiAct{ margin-top:2px; } .wiAct .btn{ width:100%; } }
@@ -5717,7 +5718,9 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
                                  f'{max(h, a)}&ndash;{min(h, a)} &middot; {fmt_date(g["date"])}', f'games/{g["game_id"]}.html'))
 
         # ---- closest calls: narrowest defenses, narrowest upsets, biggest upsets ----
-        defenses_only = [g for g in games if g["holder"] and g["new_holder"] == g["holder"]]
+        # wins only -- a tie is a defense by rule but a 0-point "margin" would
+        # crowd out every actual narrow escape (Bob, 2026-09-18)
+        defenses_only = [g for g in games if g["holder"] and g["new_holder"] == g["holder"] and margin(g) > 0]
         changes_only = [g for g in games if g["holder"] and g["new_holder"] != g["holder"]]
 
         def close_call_row(rank, g, verb):
@@ -5745,7 +5748,7 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
             ("most-reigns", "Most Reigns", f"By program, across all {n_years} years" if span == "all-time" else f"By program, reigns begun {span}", most_reigns_rows),
             ("most-defended", "Most Defended", "Consecutive defenses in a single reign" + ("" if span == "all-time" else f" begun {span}"), most_defended_rows),
             ("blowouts", "Biggest Blowouts", "Largest margin of victory in any belt game" + ("" if span == "all-time" else f" {span}"), blowout_rows),
-            ("narrowest-defenses", "Narrowest Defenses", "Closest the holder has come to losing it and didn't" + ("" if span == "all-time" else f" ({span})"), narrowest_defense_rows),
+            ("narrowest-defenses", "Narrowest Defenses", "Closest the holder has come to losing it and still won (ties not counted)" + ("" if span == "all-time" else f" ({span})"), narrowest_defense_rows),
             ("narrowest-upsets", "Narrowest Upsets", "The belt changed hands by the barest possible margin" + ("" if span == "all-time" else f" ({span})"), narrowest_change_rows),
             ("biggest-upsets", "Biggest Upsets", "The belt changed hands in an outright rout" + ("" if span == "all-time" else f" ({span})"), biggest_upset_rows),
             ("droughts", "Longest Droughts", "Programs that have held it before, and how long it's been" + ("" if span == "all-time" else f" (reigns {span})"), drought_rows),
@@ -10023,7 +10026,8 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
     var hi = Math.max(g.hp, g.ap), lo = Math.min(g.hp, g.ap);
     var what;
     if (g.holder < 0) what = link(g.next) + ' took the first belt, beating ' + link(g.next === g.home ? g.away : g.home);
-    else if (g.flipped) what = (tie ? link(g.next) + ' takes it from ' + link(g.holder) + ' (a tie, flipped)' : link(g.next) + ' takes it from ' + link(g.holder) + ' (flipped)');
+    else if (g.flipped && g.next === g.holder) what = link(g.holder) + ' defends against ' + link(g.holder === g.home ? g.away : g.home) + ' <span class="wiTag">flipped</span>';   // a real loss, flipped into a win
+    else if (g.flipped) what = link(g.next) + ' takes it from ' + link(g.holder) + ' <span class="wiTag">' + (tie ? 'tie, flipped' : 'flipped') + '</span>';
     else if (tie) what = link(g.holder) + ' keeps it &mdash; tie with ' + link(g.holder === g.home ? g.away : g.home);
     else if (g.next === g.holder) what = link(g.holder) + ' defends against ' + link(g.holder === g.home ? g.away : g.home);
     else what = link(g.next) + ' takes it from ' + link(g.holder);
@@ -10066,7 +10070,7 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
     var everReal = {}; D.real.forEach(function(r){ everReal[r[7]] = true; });
     var firstTimers = {}; altReigns.forEach(function(r){ if (!everReal[r.team]) firstTimers[r.team] = (firstTimers[r.team] || 0) + 1; });
     var ft = Object.keys(firstTimers).map(Number);
-    var holderToday = u.reigns[u.reigns.length - 1].team;
+    var holderToday = u.rejoined ? D.holderNow : u.reigns[u.reigns.length - 1].team;   // identical from the rejoin on, by construction
     var longest = null; altReigns.forEach(function(r){ var d = (r.end === null ? D.today : r.end) - r.start; if (!longest || d > longest.d) longest = { r: r, d: d }; });
     var bits = [];
     bits.push('<div class="statCard"><span class="kicker">Holds the belt today</span><span class="big">' + swatch(holderToday) + link(holderToday) + '</span>'

@@ -158,16 +158,54 @@ def live_start_year():
     return date.today().year
 
 
+def venue_tz_from_cache():
+    """Venue id -> IANA timezone, rebuilt from the venues build_lineage.py
+    cached this run (belt_data/venues_raw.json) with the same rule it
+    uses (CFBD's timezone field, else timezonefinder on the coordinates)
+    -- no API call. Without this, the live seasons were normalized with
+    UTC dates while the archive and the real belt use venue-local dates,
+    so an evening kickoff landed a day late here: harmless for the
+    alternate-rule universes, but what-if.html flips games by date and a
+    date that doesn't match the real line means the flip never applies
+    (found live 2026-09-18, the day the page shipped)."""
+    path = os.path.join(DATA_DIR, VENUES_RAW_PATH.split(os.sep)[-1])
+    if not os.path.exists(path):
+        return {}
+    from build_lineage import _get_tzfinder, pick
+    with open(path) as f:
+        raw = json.load(f)
+    tf = _get_tzfinder()
+    out = {}
+    for v in raw or []:
+        vid = pick(v, "id")
+        if vid is None:
+            continue
+        tz = pick(v, "timezone", "time_zone")
+        if not tz and tf is not None:
+            try:
+                lat, lng = float(pick(v, "latitude", "lat")), float(pick(v, "longitude", "lng", "lon"))
+                tz = tf.timezone_at(lat=lat, lng=lng)
+            except (TypeError, ValueError, Exception):
+                tz = None
+        if tz:
+            out[vid] = tz
+    return out
+
+
 def normalized_live_games(venue_tz=None):
     """This run's freshly fetched seasons (belt_data/games_raw.json, written
     by build_lineage.py), normalized exactly the way the real belt sees
-    them. [] when the file isn't there (a run without build_lineage.py)."""
+    them -- venue-local dates included (venue_tz_from_cache() when the
+    caller has no fresh map). [] when the file isn't there (a run without
+    build_lineage.py)."""
     path = os.path.join(DATA_DIR, "games_raw.json")
     if not os.path.exists(path):
         return []
     from build_lineage import normalize
     with open(path) as f:
         raw = json.load(f)
+    if not venue_tz:
+        venue_tz = venue_tz_from_cache()
     return attach_venue_ids(normalize(raw, venue_tz), raw)
 
 
