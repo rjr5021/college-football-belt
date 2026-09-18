@@ -3446,5 +3446,109 @@
     "effective_date": "1963-01-23",
     "detected_on": "2026-09-18",
     "reverted_to": "New Mexico State"
+  },
+  {
+    "team": "New Mexico State",
+    "reign_started": "1963-01-23",
+    "last_activity_date": "1963-01-23",
+    "effective_date": "1963-01-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Hardin Simmons"
+  },
+  {
+    "team": "Hardin Simmons",
+    "reign_started": "1963-01-24",
+    "last_activity_date": "1963-01-24",
+    "effective_date": "1963-01-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UTEP"
+  },
+  {
+    "team": "UTEP",
+    "reign_started": "1963-01-25",
+    "last_activity_date": "1963-01-25",
+    "effective_date": "1963-01-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1963-01-26",
+    "last_activity_date": "1963-01-26",
+    "effective_date": "1963-01-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Hardin Simmons"
+  },
+  {
+    "team": "Hardin Simmons",
+    "reign_started": "1963-01-27",
+    "last_activity_date": "1963-01-27",
+    "effective_date": "1963-01-28",
+    "detected_on": "2026-09-18",
+    "reverted_to": "West Texas"
+  },
+  {
+    "team": "West Texas",
+    "reign_started": "1963-01-28",
+    "last_activity_date": "1963-01-28",
+    "effective_date": "1963-01-29",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico State"
+  },
+  {
+    "team": "New Mexico State",
+    "reign_started": "1963-01-29",
+    "last_activity_date": "1963-01-29",
+    "effective_date": "1963-01-30",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1963-01-30",
+    "last_activity_date": "1963-01-30",
+    "effective_date": "1963-01-31",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1963-01-31",
+    "last_activity_date": "1963-01-31",
+    "effective_date": "1963-02-01",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Arizona"
+  },
+  {
+    "team": "Arizona",
+    "reign_started": "1963-02-01",
+    "last_activity_date": "1963-02-01",
+    "effective_date": "1963-02-02",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1963-02-02",
+    "last_activity_date": "1963-02-02",
+    "effective_date": "1963-02-03",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Northern Arizona"
+  },
+  {
+    "team": "Northern Arizona",
+    "reign_started": "1963-02-03",
+    "last_activity_date": "1963-02-03",
+    "effective_date": "1963-02-04",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Arizona State"
+  },
+  {
+    "team": "Arizona State",
+    "reign_started": "1963-02-04",
+    "last_activity_date": "1963-02-04",
+    "effective_date": "1963-02-05",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Northern Arizona"
   }
 ]
