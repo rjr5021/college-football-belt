@@ -8838,5 +8838,285 @@
     "effective_date": "2015-11-08",
     "detected_on": "2026-09-18",
     "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado State",
+    "reign_started": "2015-11-08",
+    "last_activity_date": "2015-11-08",
+    "effective_date": "2015-11-09",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "2015-11-09",
+    "last_activity_date": "2015-11-09",
+    "effective_date": "2015-11-10",
+    "detected_on": "2026-09-18",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2015-11-10",
+    "last_activity_date": "2015-11-10",
+    "effective_date": "2015-11-11",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Hawai'i"
+  },
+  {
+    "team": "Hawai'i",
+    "reign_started": "2015-11-11",
+    "last_activity_date": "2015-11-11",
+    "effective_date": "2015-11-12",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "2015-11-12",
+    "last_activity_date": "2015-11-12",
+    "effective_date": "2015-11-13",
+    "detected_on": "2026-09-18",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2015-11-13",
+    "last_activity_date": "2015-11-13",
+    "effective_date": "2015-11-14",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Arizona"
+  },
+  {
+    "team": "Arizona",
+    "reign_started": "2015-11-14",
+    "last_activity_date": "2015-11-14",
+    "effective_date": "2015-11-15",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado State",
+    "reign_started": "2015-11-15",
+    "last_activity_date": "2015-11-15",
+    "effective_date": "2015-11-16",
+    "detected_on": "2026-09-18",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "2015-11-16",
+    "last_activity_date": "2015-11-16",
+    "effective_date": "2015-11-17",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Fresno State"
+  },
+  {
+    "team": "Fresno State",
+    "reign_started": "2015-11-17",
+    "last_activity_date": "2015-11-17",
+    "effective_date": "2015-11-18",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2015-11-18",
+    "last_activity_date": "2015-11-18",
+    "effective_date": "2015-11-19",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "2015-11-19",
+    "last_activity_date": "2015-11-19",
+    "effective_date": "2015-11-20",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Arizona State"
+  },
+  {
+    "team": "Arizona State",
+    "reign_started": "2015-11-20",
+    "last_activity_date": "2015-11-20",
+    "effective_date": "2015-11-21",
+    "detected_on": "2026-09-18",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "2015-11-21",
+    "last_activity_date": "2015-11-21",
+    "effective_date": "2015-11-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UTEP"
+  },
+  {
+    "team": "UTEP",
+    "reign_started": "2015-11-22",
+    "last_activity_date": "2015-11-22",
+    "effective_date": "2015-11-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2015-11-23",
+    "last_activity_date": "2015-11-23",
+    "effective_date": "2015-11-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Tulsa"
+  },
+  {
+    "team": "Tulsa",
+    "reign_started": "2015-11-24",
+    "last_activity_date": "2015-11-24",
+    "effective_date": "2015-11-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UTEP"
+  },
+  {
+    "team": "UTEP",
+    "reign_started": "2015-11-25",
+    "last_activity_date": "2015-11-25",
+    "effective_date": "2015-11-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "2015-11-26",
+    "last_activity_date": "2015-11-26",
+    "effective_date": "2015-11-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UTEP"
+  },
+  {
+    "team": "UTEP",
+    "reign_started": "2015-11-27",
+    "last_activity_date": "2015-11-27",
+    "effective_date": "2015-11-28",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "2015-11-28",
+    "last_activity_date": "2015-11-28",
+    "effective_date": "2015-11-29",
+    "detected_on": "2026-09-18",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "2015-11-29",
+    "last_activity_date": "2015-11-29",
+    "effective_date": "2015-11-30",
+    "detected_on": "2026-09-18",
+    "reverted_to": "San Diego State"
+  },
+  {
+    "team": "San Diego State",
+    "reign_started": "2015-11-30",
+    "last_activity_date": "2015-11-30",
+    "effective_date": "2015-12-01",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "2015-12-01",
+    "last_activity_date": "2015-12-01",
+    "effective_date": "2015-12-02",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "2015-12-02",
+    "last_activity_date": "2015-12-02",
+    "effective_date": "2015-12-03",
+    "detected_on": "2026-09-18",
+    "reverted_to": "San Diego State"
+  },
+  {
+    "team": "San Diego State",
+    "reign_started": "2015-12-03",
+    "last_activity_date": "2015-12-03",
+    "effective_date": "2015-12-04",
+    "detected_on": "2026-09-18",
+    "reverted_to": "SMU"
+  },
+  {
+    "team": "SMU",
+    "reign_started": "2015-12-04",
+    "last_activity_date": "2015-12-04",
+    "effective_date": "2015-12-05",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Rice"
+  },
+  {
+    "team": "Rice",
+    "reign_started": "2015-12-05",
+    "last_activity_date": "2015-12-05",
+    "effective_date": "2015-12-06",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Air Force"
+  },
+  {
+    "team": "Air Force",
+    "reign_started": "2015-12-06",
+    "last_activity_date": "2015-12-06",
+    "effective_date": "2015-12-07",
+    "detected_on": "2026-09-18",
+    "reverted_to": "SMU"
+  },
+  {
+    "team": "SMU",
+    "reign_started": "2015-12-07",
+    "last_activity_date": "2015-12-07",
+    "effective_date": "2015-12-08",
+    "detected_on": "2026-09-18",
+    "reverted_to": "TCU"
+  },
+  {
+    "team": "TCU",
+    "reign_started": "2015-12-08",
+    "last_activity_date": "2015-12-08",
+    "effective_date": "2015-12-09",
+    "detected_on": "2026-09-18",
+    "reverted_to": "SMU"
+  },
+  {
+    "team": "SMU",
+    "reign_started": "2015-12-09",
+    "last_activity_date": "2015-12-09",
+    "effective_date": "2015-12-10",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Louisiana Tech"
+  },
+  {
+    "team": "Louisiana Tech",
+    "reign_started": "2015-12-10",
+    "last_activity_date": "2015-12-10",
+    "effective_date": "2015-12-11",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2015-12-11",
+    "last_activity_date": "2015-12-11",
+    "effective_date": "2015-12-12",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "2015-12-12",
+    "last_activity_date": "2015-12-12",
+    "effective_date": "2015-12-13",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Louisiana Tech"
   }
 ]

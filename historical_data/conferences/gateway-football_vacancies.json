@@ -1798,5 +1798,61 @@
     "effective_date": "2008-06-21",
     "detected_on": "2026-09-18",
     "reverted_to": "Illinois State"
+  },
+  {
+    "team": "Illinois State",
+    "reign_started": "2008-06-21",
+    "last_activity_date": "2008-06-21",
+    "effective_date": "2008-06-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Southern Illinois"
+  },
+  {
+    "team": "Southern Illinois",
+    "reign_started": "2008-06-22",
+    "last_activity_date": "2008-06-22",
+    "effective_date": "2008-06-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Youngstown State"
+  },
+  {
+    "team": "Youngstown State",
+    "reign_started": "2008-06-23",
+    "last_activity_date": "2008-06-23",
+    "effective_date": "2008-06-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Illinois State"
+  },
+  {
+    "team": "Illinois State",
+    "reign_started": "2008-06-24",
+    "last_activity_date": "2008-06-24",
+    "effective_date": "2008-06-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Western Illinois"
+  },
+  {
+    "team": "Western Illinois",
+    "reign_started": "2008-06-25",
+    "last_activity_date": "2008-06-25",
+    "effective_date": "2008-06-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Illinois State"
+  },
+  {
+    "team": "Illinois State",
+    "reign_started": "2008-06-26",
+    "last_activity_date": "2008-06-26",
+    "effective_date": "2008-06-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Northern Iowa"
+  },
+  {
+    "team": "Northern Iowa",
+    "reign_started": "2008-06-27",
+    "last_activity_date": "2008-06-27",
+    "effective_date": "2008-06-28",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Southern Illinois"
   }
 ]

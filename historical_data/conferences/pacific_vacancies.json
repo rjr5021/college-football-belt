@@ -2718,5 +2718,93 @@
     "effective_date": "1959-10-21",
     "detected_on": "2026-09-18",
     "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1959-10-21",
+    "last_activity_date": "1959-10-21",
+    "effective_date": "1959-10-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Washington State"
+  },
+  {
+    "team": "Washington State",
+    "reign_started": "1959-10-22",
+    "last_activity_date": "1959-10-22",
+    "effective_date": "1959-10-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "1959-10-23",
+    "last_activity_date": "1959-10-23",
+    "effective_date": "1959-10-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1959-10-24",
+    "last_activity_date": "1959-10-24",
+    "effective_date": "1959-10-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "USC"
+  },
+  {
+    "team": "USC",
+    "reign_started": "1959-10-25",
+    "last_activity_date": "1959-10-25",
+    "effective_date": "1959-10-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "California"
+  },
+  {
+    "team": "California",
+    "reign_started": "1959-10-26",
+    "last_activity_date": "1959-10-26",
+    "effective_date": "1959-10-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Oregon"
+  },
+  {
+    "team": "Oregon",
+    "reign_started": "1959-10-27",
+    "last_activity_date": "1959-10-27",
+    "effective_date": "1959-10-28",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Stanford"
+  },
+  {
+    "team": "Stanford",
+    "reign_started": "1959-10-28",
+    "last_activity_date": "1959-10-28",
+    "effective_date": "1959-10-29",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UCLA"
+  },
+  {
+    "team": "UCLA",
+    "reign_started": "1959-10-29",
+    "last_activity_date": "1959-10-29",
+    "effective_date": "1959-10-30",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Oregon State"
+  },
+  {
+    "team": "Oregon State",
+    "reign_started": "1959-10-30",
+    "last_activity_date": "1959-10-30",
+    "effective_date": "1959-10-31",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Washington"
+  },
+  {
+    "team": "Washington",
+    "reign_started": "1959-10-31",
+    "last_activity_date": "1959-10-31",
+    "effective_date": "1959-11-01",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Oregon"
   }
 ]
