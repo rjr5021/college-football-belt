@@ -4406,5 +4406,181 @@
     "effective_date": "2024-05-09",
     "detected_on": "2026-09-17",
     "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2024-05-09",
+    "last_activity_date": "2024-05-09",
+    "effective_date": "2024-05-10",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Delaware"
+  },
+  {
+    "team": "Delaware",
+    "reign_started": "2024-05-10",
+    "last_activity_date": "2024-05-10",
+    "effective_date": "2024-05-11",
+    "detected_on": "2026-09-18",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "2024-05-11",
+    "last_activity_date": "2024-05-11",
+    "effective_date": "2024-05-12",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Rhode Island"
+  },
+  {
+    "team": "Rhode Island",
+    "reign_started": "2024-05-12",
+    "last_activity_date": "2024-05-12",
+    "effective_date": "2024-05-13",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Elon"
+  },
+  {
+    "team": "Elon",
+    "reign_started": "2024-05-13",
+    "last_activity_date": "2024-05-13",
+    "effective_date": "2024-05-14",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2024-05-14",
+    "last_activity_date": "2024-05-14",
+    "effective_date": "2024-05-15",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Villanova"
+  },
+  {
+    "team": "Villanova",
+    "reign_started": "2024-05-15",
+    "last_activity_date": "2024-05-15",
+    "effective_date": "2024-05-16",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2024-05-16",
+    "last_activity_date": "2024-05-16",
+    "effective_date": "2024-05-17",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Stony Brook"
+  },
+  {
+    "team": "Stony Brook",
+    "reign_started": "2024-05-17",
+    "last_activity_date": "2024-05-17",
+    "effective_date": "2024-05-18",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Delaware"
+  },
+  {
+    "team": "Delaware",
+    "reign_started": "2024-05-18",
+    "last_activity_date": "2024-05-18",
+    "effective_date": "2024-05-19",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UAlbany"
+  },
+  {
+    "team": "UAlbany",
+    "reign_started": "2024-05-19",
+    "last_activity_date": "2024-05-19",
+    "effective_date": "2024-05-20",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Stony Brook"
+  },
+  {
+    "team": "Stony Brook",
+    "reign_started": "2024-05-20",
+    "last_activity_date": "2024-05-20",
+    "effective_date": "2024-05-21",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Maine"
+  },
+  {
+    "team": "Maine",
+    "reign_started": "2024-05-21",
+    "last_activity_date": "2024-05-21",
+    "effective_date": "2024-05-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2024-05-22",
+    "last_activity_date": "2024-05-22",
+    "effective_date": "2024-05-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Towson"
+  },
+  {
+    "team": "Towson",
+    "reign_started": "2024-05-23",
+    "last_activity_date": "2024-05-23",
+    "effective_date": "2024-05-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Maine"
+  },
+  {
+    "team": "Maine",
+    "reign_started": "2024-05-24",
+    "last_activity_date": "2024-05-24",
+    "effective_date": "2024-05-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "James Madison"
+  },
+  {
+    "team": "James Madison",
+    "reign_started": "2024-05-25",
+    "last_activity_date": "2024-05-25",
+    "effective_date": "2024-05-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Hampshire"
+  },
+  {
+    "team": "New Hampshire",
+    "reign_started": "2024-05-26",
+    "last_activity_date": "2024-05-26",
+    "effective_date": "2024-05-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "2024-05-27",
+    "last_activity_date": "2024-05-27",
+    "effective_date": "2024-05-28",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Hofstra"
+  },
+  {
+    "team": "Hofstra",
+    "reign_started": "2024-05-28",
+    "last_activity_date": "2024-05-28",
+    "effective_date": "2024-05-29",
+    "detected_on": "2026-09-18",
+    "reverted_to": "James Madison"
+  },
+  {
+    "team": "James Madison",
+    "reign_started": "2024-05-29",
+    "last_activity_date": "2024-05-29",
+    "effective_date": "2024-05-30",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Northeastern"
+  },
+  {
+    "team": "Northeastern",
+    "reign_started": "2024-05-30",
+    "last_activity_date": "2024-05-30",
+    "effective_date": "2024-05-31",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Hampshire"
   }
 ]

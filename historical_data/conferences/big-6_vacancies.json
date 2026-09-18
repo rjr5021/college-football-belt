@@ -1718,5 +1718,77 @@
     "effective_date": "1948-06-18",
     "detected_on": "2026-09-17",
     "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1948-06-18",
+    "last_activity_date": "1948-06-18",
+    "effective_date": "1948-06-19",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1948-06-19",
+    "last_activity_date": "1948-06-19",
+    "effective_date": "1948-06-20",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Oklahoma"
+  },
+  {
+    "team": "Oklahoma",
+    "reign_started": "1948-06-20",
+    "last_activity_date": "1948-06-20",
+    "effective_date": "1948-06-21",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Missouri"
+  },
+  {
+    "team": "Missouri",
+    "reign_started": "1948-06-21",
+    "last_activity_date": "1948-06-21",
+    "effective_date": "1948-06-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Iowa State"
+  },
+  {
+    "team": "Iowa State",
+    "reign_started": "1948-06-22",
+    "last_activity_date": "1948-06-22",
+    "effective_date": "1948-06-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1948-06-23",
+    "last_activity_date": "1948-06-23",
+    "effective_date": "1948-06-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Kansas State"
+  },
+  {
+    "team": "Kansas State",
+    "reign_started": "1948-06-24",
+    "last_activity_date": "1948-06-24",
+    "effective_date": "1948-06-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Nebraska"
+  },
+  {
+    "team": "Nebraska",
+    "reign_started": "1948-06-25",
+    "last_activity_date": "1948-06-25",
+    "effective_date": "1948-06-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Kansas"
+  },
+  {
+    "team": "Kansas",
+    "reign_started": "1948-06-26",
+    "last_activity_date": "1948-06-26",
+    "effective_date": "1948-06-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Kansas State"
   }
 ]

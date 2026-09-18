@@ -3565,11 +3565,59 @@
       "end_date": "2024-03-15",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Oregon State",
+      "start_date": "2024-03-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "California",
+      "predecessor": "Utah",
+      "end_date": "2024-03-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "2024-03-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oregon State",
+      "predecessor": "Arizona",
+      "end_date": "2024-03-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Arizona",
+      "start_date": "2024-03-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "California",
+      "end_date": "2024-03-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "California",
+      "start_date": "2024-03-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Arizona",
+      "predecessor": "Oregon State",
+      "end_date": "2024-03-19",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Oregon State",
-    "start_date": "2024-03-16",
+    "start_date": "2024-03-20",
     "won_from": null,
     "won_score": null,
     "defenses": 1,
