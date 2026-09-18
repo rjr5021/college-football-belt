@@ -446,5 +446,21 @@
     "effective_date": "1936-01-23",
     "detected_on": "2026-09-18",
     "reverted_to": "Richmond"
+  },
+  {
+    "team": "Richmond",
+    "reign_started": "1936-01-23",
+    "last_activity_date": "1936-01-23",
+    "effective_date": "1936-01-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "William & Mary"
+  },
+  {
+    "team": "William & Mary",
+    "reign_started": "1936-01-24",
+    "last_activity_date": "1936-01-24",
+    "effective_date": "1936-01-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Richmond"
   }
 ]
