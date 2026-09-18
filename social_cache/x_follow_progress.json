@@ -1,4 +1,14 @@
 {
-  "followed": [],
-  "failed": {}
+    "followed": [
+          "AthlonSports",
+          "MrCFB",
+          "philsteele042",
+          "DanWetzel",
+          "CFBMatrix",
+          "bartonsimmons"
+    ],
+    "failed": {
+          "JasonKirkSBN": "account inactive: old handle is locked/0 posts, current handle @thejasonkirk moved to Bluesky -- checked manually via browser 2026-09-18 while X API access was broken",
+          "HeismanPundit": "user not found -- checked manually via browser 2026-09-18 while X API access was broken"
+    }
 }
