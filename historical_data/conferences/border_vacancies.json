@@ -2926,5 +2926,109 @@
     "effective_date": "1962-11-19",
     "detected_on": "2026-09-18",
     "reverted_to": "Northern Arizona"
+  },
+  {
+    "team": "Northern Arizona",
+    "reign_started": "1962-11-19",
+    "last_activity_date": "1962-11-19",
+    "effective_date": "1962-11-20",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Arizona State"
+  },
+  {
+    "team": "Arizona State",
+    "reign_started": "1962-11-20",
+    "last_activity_date": "1962-11-20",
+    "effective_date": "1962-11-21",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Northern Arizona"
+  },
+  {
+    "team": "Northern Arizona",
+    "reign_started": "1962-11-21",
+    "last_activity_date": "1962-11-21",
+    "effective_date": "1962-11-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1962-11-22",
+    "last_activity_date": "1962-11-22",
+    "effective_date": "1962-11-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1962-11-23",
+    "last_activity_date": "1962-11-23",
+    "effective_date": "1962-11-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Hardin Simmons"
+  },
+  {
+    "team": "Hardin Simmons",
+    "reign_started": "1962-11-24",
+    "last_activity_date": "1962-11-24",
+    "effective_date": "1962-11-25",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UTEP"
+  },
+  {
+    "team": "UTEP",
+    "reign_started": "1962-11-25",
+    "last_activity_date": "1962-11-25",
+    "effective_date": "1962-11-26",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Texas Tech"
+  },
+  {
+    "team": "Texas Tech",
+    "reign_started": "1962-11-26",
+    "last_activity_date": "1962-11-26",
+    "effective_date": "1962-11-27",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Arizona"
+  },
+  {
+    "team": "Arizona",
+    "reign_started": "1962-11-27",
+    "last_activity_date": "1962-11-27",
+    "effective_date": "1962-11-28",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1962-11-28",
+    "last_activity_date": "1962-11-28",
+    "effective_date": "1962-11-29",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico State"
+  },
+  {
+    "team": "New Mexico State",
+    "reign_started": "1962-11-29",
+    "last_activity_date": "1962-11-29",
+    "effective_date": "1962-11-30",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Hardin Simmons"
+  },
+  {
+    "team": "Hardin Simmons",
+    "reign_started": "1962-11-30",
+    "last_activity_date": "1962-11-30",
+    "effective_date": "1962-12-01",
+    "detected_on": "2026-09-18",
+    "reverted_to": "West Texas"
+  },
+  {
+    "team": "West Texas",
+    "reign_started": "1962-12-01",
+    "last_activity_date": "1962-12-01",
+    "effective_date": "1962-12-02",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico State"
   }
 ]

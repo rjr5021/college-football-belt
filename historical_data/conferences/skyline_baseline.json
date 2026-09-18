@@ -5158,15 +5158,147 @@
       "end_date": "1962-09-13",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "1962-09-14",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Denver",
+      "predecessor": "Utah State",
+      "end_date": "1962-09-14",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah State",
+      "start_date": "1962-09-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "Utah",
+      "end_date": "1962-09-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "1962-09-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah State",
+      "predecessor": "Utah State",
+      "end_date": "1962-09-16",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Denver",
+      "start_date": "1962-09-17",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "Utah",
+      "end_date": "1962-09-17",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "1962-09-18",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Denver",
+      "predecessor": "Utah State",
+      "end_date": "1962-09-18",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Wyoming",
+      "start_date": "1962-09-19",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "Utah",
+      "end_date": "1962-09-19",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Utah",
+      "start_date": "1962-09-20",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Wyoming",
+      "predecessor": "Utah State",
+      "end_date": "1962-09-20",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "BYU",
+      "start_date": "1962-09-21",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Utah",
+      "predecessor": "New Mexico",
+      "end_date": "1962-09-21",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "New Mexico",
+      "start_date": "1962-09-22",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "BYU",
+      "predecessor": "BYU",
+      "end_date": "1962-09-22",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "BYU",
+      "start_date": "1962-09-23",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "New Mexico",
+      "predecessor": "New Mexico",
+      "end_date": "1962-09-23",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Colorado State",
+      "start_date": "1962-09-24",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "BYU",
+      "predecessor": "BYU",
+      "end_date": "1962-09-24",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Utah",
-    "start_date": "1962-09-14",
+    "team": "BYU",
+    "start_date": "1962-09-25",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Denver",
-    "predecessor": "Utah State"
+    "reclaimed_after": "Colorado State",
+    "predecessor": "New Mexico"
   }
 }
