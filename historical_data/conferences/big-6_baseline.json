@@ -4753,15 +4753,123 @@
       "end_date": "1948-08-07",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1948-08-08",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iowa State",
+      "predecessor": "Missouri",
+      "end_date": "1948-08-08",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1948-08-09",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Oklahoma",
+      "end_date": "1948-08-09",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Oklahoma",
+      "start_date": "1948-08-10",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Missouri",
+      "end_date": "1948-08-10",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Missouri",
+      "start_date": "1948-08-11",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Oklahoma",
+      "predecessor": "Oklahoma",
+      "end_date": "1948-08-11",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Iowa State",
+      "start_date": "1948-08-12",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Missouri",
+      "predecessor": "Nebraska",
+      "end_date": "1948-08-12",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1948-08-13",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Iowa State",
+      "predecessor": "Missouri",
+      "end_date": "1948-08-13",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas State",
+      "start_date": "1948-08-14",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Nebraska",
+      "end_date": "1948-08-14",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Nebraska",
+      "start_date": "1948-08-15",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Kansas State",
+      "predecessor": "Missouri",
+      "end_date": "1948-08-15",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "Kansas",
+      "start_date": "1948-08-16",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Nebraska",
+      "predecessor": "Kansas State",
+      "end_date": "1948-08-16",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
-    "team": "Nebraska",
-    "start_date": "1948-08-08",
+    "team": "Kansas State",
+    "start_date": "1948-08-17",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
-    "reclaimed_after": "Iowa State",
-    "predecessor": "Missouri"
+    "reclaimed_after": "Kansas",
+    "predecessor": "Nebraska"
   }
 }
