@@ -71,10 +71,10 @@ on:
     - cron: '30 4 * * 0'
     #   - Sun 1:00am ET  -- final overnight catch-all
     - cron: '0 6 * * 0'
-    #   - Fri 6:00pm ET  -- dedicated run for the X preview post below;
+    #   - 2:00pm ET  -- dedicated run for the X preview post below;
     #     doesn't hurt to also pick up any last-minute data change before
     #     the weekend's games
-    - cron: '0 23 * * 5'
+    - cron: '0 18 * * 5'
     # Game-day mode (wishlist #3, 2026-09-16, Bob: "On Saturdays I want the
     # homepage to feel alive... it's just a different cron schedule on the
     # workflow you already have") -- these two lines add an hourly check-in
@@ -218,13 +218,13 @@ jobs:
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IG_BUSINESS_ACCOUNT_ID: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
-          # True only on the Friday 6pm ET cron line above -- that's the
+          # True only on the Friday 2pm ET cron line above -- that's the
           # one and only run meant to post the upcoming-game preview, on
           # both X and Instagram (post_to_instagram.py reads this same
           # flag, not a separate one -- see its docstring).
           # github.event.schedule tells us which cron line fired this run
           # (unset for workflow_dispatch/push, so those never post one).
-          X_POST_PREVIEW: ${{ github.event.schedule == '0 23 * * 5' }}
+          X_POST_PREVIEW: ${{ github.event.schedule == '0 18 * * 5' }}
           # Only set (to the string "true") on a manual "Run workflow" run
           # with the full-refetch checkbox ticked -- see the input above
           # and update_all.py's own docstring/FULL_REFETCH_GAME_DETAILS.
