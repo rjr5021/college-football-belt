@@ -3854,5 +3854,133 @@
     "effective_date": "2002-03-08",
     "detected_on": "2026-09-18",
     "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2002-03-08",
+    "last_activity_date": "2002-03-08",
+    "effective_date": "2002-03-09",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Louisiana"
+  },
+  {
+    "team": "Louisiana",
+    "reign_started": "2002-03-09",
+    "last_activity_date": "2002-03-09",
+    "effective_date": "2002-03-10",
+    "detected_on": "2026-09-18",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2002-03-10",
+    "last_activity_date": "2002-03-10",
+    "effective_date": "2002-03-11",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Fresno State"
+  },
+  {
+    "team": "Fresno State",
+    "reign_started": "2002-03-11",
+    "last_activity_date": "2002-03-11",
+    "effective_date": "2002-03-12",
+    "detected_on": "2026-09-18",
+    "reverted_to": "San Jos\u00e9 State"
+  },
+  {
+    "team": "San Jos\u00e9 State",
+    "reign_started": "2002-03-12",
+    "last_activity_date": "2002-03-12",
+    "effective_date": "2002-03-13",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "2002-03-13",
+    "last_activity_date": "2002-03-13",
+    "effective_date": "2002-03-14",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2002-03-14",
+    "last_activity_date": "2002-03-14",
+    "effective_date": "2002-03-15",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "2002-03-15",
+    "last_activity_date": "2002-03-15",
+    "effective_date": "2002-03-16",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Nevada"
+  },
+  {
+    "team": "Nevada",
+    "reign_started": "2002-03-16",
+    "last_activity_date": "2002-03-16",
+    "effective_date": "2002-03-17",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Northern Illinois"
+  },
+  {
+    "team": "Northern Illinois",
+    "reign_started": "2002-03-17",
+    "last_activity_date": "2002-03-17",
+    "effective_date": "2002-03-18",
+    "detected_on": "2026-09-18",
+    "reverted_to": "UNLV"
+  },
+  {
+    "team": "UNLV",
+    "reign_started": "2002-03-18",
+    "last_activity_date": "2002-03-18",
+    "effective_date": "2002-03-19",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico State"
+  },
+  {
+    "team": "New Mexico State",
+    "reign_started": "2002-03-19",
+    "last_activity_date": "2002-03-19",
+    "effective_date": "2002-03-20",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Idaho"
+  },
+  {
+    "team": "Idaho",
+    "reign_started": "2002-03-20",
+    "last_activity_date": "2002-03-20",
+    "effective_date": "2002-03-21",
+    "detected_on": "2026-09-18",
+    "reverted_to": "North Texas"
+  },
+  {
+    "team": "North Texas",
+    "reign_started": "2002-03-21",
+    "last_activity_date": "2002-03-21",
+    "effective_date": "2002-03-22",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "2002-03-22",
+    "last_activity_date": "2002-03-22",
+    "effective_date": "2002-03-23",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Boise State"
+  },
+  {
+    "team": "Boise State",
+    "reign_started": "2002-03-23",
+    "last_activity_date": "2002-03-23",
+    "effective_date": "2002-03-24",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico State"
   }
 ]

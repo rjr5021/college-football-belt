@@ -2686,5 +2686,93 @@
     "effective_date": "1962-10-06",
     "detected_on": "2026-09-18",
     "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1962-10-06",
+    "last_activity_date": "1962-10-06",
+    "effective_date": "1962-10-07",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1962-10-07",
+    "last_activity_date": "1962-10-07",
+    "effective_date": "1962-10-08",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1962-10-08",
+    "last_activity_date": "1962-10-08",
+    "effective_date": "1962-10-09",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Denver"
+  },
+  {
+    "team": "Denver",
+    "reign_started": "1962-10-09",
+    "last_activity_date": "1962-10-09",
+    "effective_date": "1962-10-10",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1962-10-10",
+    "last_activity_date": "1962-10-10",
+    "effective_date": "1962-10-11",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1962-10-11",
+    "last_activity_date": "1962-10-11",
+    "effective_date": "1962-10-12",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1962-10-12",
+    "last_activity_date": "1962-10-12",
+    "effective_date": "1962-10-13",
+    "detected_on": "2026-09-18",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1962-10-13",
+    "last_activity_date": "1962-10-13",
+    "effective_date": "1962-10-14",
+    "detected_on": "2026-09-18",
+    "reverted_to": "New Mexico"
+  },
+  {
+    "team": "New Mexico",
+    "reign_started": "1962-10-14",
+    "last_activity_date": "1962-10-14",
+    "effective_date": "1962-10-15",
+    "detected_on": "2026-09-18",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1962-10-15",
+    "last_activity_date": "1962-10-15",
+    "effective_date": "1962-10-16",
+    "detected_on": "2026-09-18",
+    "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado State",
+    "reign_started": "1962-10-16",
+    "last_activity_date": "1962-10-16",
+    "effective_date": "1962-10-17",
+    "detected_on": "2026-09-18",
+    "reverted_to": "BYU"
   }
 ]

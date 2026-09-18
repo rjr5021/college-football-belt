@@ -823,11 +823,35 @@
       "end_date": "1936-01-28",
       "lost_to": null,
       "vacated": true
+    },
+    {
+      "team": "Richmond",
+      "start_date": "1936-01-29",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "William & Mary",
+      "predecessor": "William & Mary",
+      "end_date": "1936-01-29",
+      "lost_to": null,
+      "vacated": true
+    },
+    {
+      "team": "William & Mary",
+      "start_date": "1936-01-30",
+      "won_from": null,
+      "won_score": null,
+      "defenses": 0,
+      "reclaimed_after": "Richmond",
+      "predecessor": "Richmond",
+      "end_date": "1936-01-30",
+      "lost_to": null,
+      "vacated": true
     }
   ],
   "open_reign": {
     "team": "Richmond",
-    "start_date": "1936-01-29",
+    "start_date": "1936-01-31",
     "won_from": null,
     "won_score": null,
     "defenses": 0,
