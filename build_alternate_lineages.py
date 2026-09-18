@@ -59,7 +59,7 @@ import sys
 import time
 from datetime import date
 
-from belt_engine import resolve_vacancies, walk_winner
+from belt_engine import FIRST_GAME_DATE, resolve_vacancies, walk_winner
 
 DATA_DIR = "belt_data"
 HIST_DIR = "historical_data"
@@ -98,6 +98,7 @@ FIELDS = ("id", "date", "season", "week", "season_type", "home", "away",
           "home_points", "away_points", "neutral",
           "home_conference", "away_conference", "venue_id")
 CONFERENCES_PATH = os.path.join(DATA_DIR, "conference_membership.json")
+WHATIF_PATH = os.path.join(DATA_DIR, "whatif_games.json")
 VENUES_PATH = os.path.join(DATA_DIR, "belt_venues.json")
 LINEAGE_PATH = os.path.join(DATA_DIR, "lineage.json")
 VENUES_RAW_PATH = os.path.join(DATA_DIR, "venues_raw.json")
@@ -358,6 +359,38 @@ def write_belt_context(games, archive, today):
           + (f" -- {note}" if note else ""))
 
 
+def write_whatif_games(games, today):
+    """Every completed game since 1869, in the exact order the real belt
+    walks them, as one compact file for the site's what-if page
+    (what-if.html, 2026-09-18, Bob: "if you changed one outcome along the
+    line, it could recalculate the entire line"). The page replays the
+    belt rule in the browser -- the winner of any game the holder plays
+    takes (or keeps) the belt, ties stay with the holder -- so it needs
+    the WHOLE record, not just the belt games: flip one result and the
+    new holder's own schedule, which was never a belt game in reality,
+    becomes the belt's path. Rows are [id, day, home, away, home_pts,
+    away_pts] with `day` = days since the first game and home/away as
+    indexes into `teams`, which keeps ~110,000 games around 1 MB raw and
+    a few hundred KB compressed; build_site.py copies it to
+    site/whatif-games.json with a page slug per team."""
+    teams = {}
+    rows = []
+    origin = date.fromisoformat(FIRST_GAME_DATE)
+    for g in games:
+        if g.get("home_points") is None or g.get("away_points") is None or g["date"] < FIRST_GAME_DATE:
+            continue
+        for t in (g["home"], g["away"]):
+            if t not in teams:
+                teams[t] = len(teams)
+        rows.append([g.get("id") or 0, (date.fromisoformat(g["date"]) - origin).days,
+                     teams[g["home"]], teams[g["away"]], int(g["home_points"]), int(g["away_points"])])
+    payload = {"schema": 1, "generated": today.isoformat(), "first_game_date": FIRST_GAME_DATE,
+               "teams": list(teams), "games": rows}
+    with open(WHATIF_PATH, "w", encoding="utf-8") as f:
+        json.dump(payload, f, separators=(",", ":"), ensure_ascii=False)
+    print(f"Wrote {WHATIF_PATH} ({len(rows):,} games, {len(teams)} teams) for the what-if page")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstrap", action="store_true",
@@ -413,6 +446,7 @@ def main():
     print(f"{len(games):,} games on hand (archived through {coverage['archived_through']}, live {live_seasons}).")
 
     write_belt_context(games, archive, today)
+    write_whatif_games(games, today)
 
     index = {"generated": today.isoformat(), "coverage": coverage, "universes": []}
     for u in UNIVERSES:

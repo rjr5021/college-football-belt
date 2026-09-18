@@ -377,6 +377,7 @@ NAV_MORE = [
         ("polls", "polls.html", "Belt vs. the polls"),
         ("lean", "lean.html", "The lean&rsquo;s ledger"),
         ("sotb", "state-of-the-belt.html", "State of the Belt"),
+        ("what-if", "what-if.html", "What if?"),
     ]),
     ("About", [
         ("about", "about.html", "About the belt"),
@@ -455,6 +456,7 @@ FOOTER_COLUMNS = [
     ("Tools", [("outlook.html", "Season outlook"), ("schedule.html", "Belt schedule"), ("polls.html", "Belt vs. the polls"), ("my-team.html", "My Team"),
                ("compare.html", "Compare teams"), ("preview.html", "Next belt game"), ("daily.html", "The Daily Belt"),
                ("state-of-the-belt.html", "State of the Belt"),
+               ("what-if.html", "What if?"),
                ("embed.html", "Embed badge"), ("api.html", "API"), ("data.html", "Data &amp; press"), ("feed.xml", "RSS feed"), ("belt.ics", "Calendar feed")]),
     ("About", [("about.html", "About"), ("ruleset.html", "Ruleset"), ("stories.html", "Stories"), ("records.html", "Records"),
                ("losers-belt.html", "Losers Belt"), ("shop.html", "Shop"), ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
@@ -1701,6 +1703,27 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .shopTeamSection .sectionHead h2 a{ display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none; }
 .shopTeamSection .sectionHead h2 a:hover{ color:var(--brass-text); }
 @media (max-width:700px){ .shopFilterRow{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:10px 0; margin-inline:calc(-1 * var(--gutter)); padding-inline:var(--gutter); } .shopFilterRow::-webkit-scrollbar{ display:none; } .shopFilterRow .chipLink{ flex:0 0 auto; } .shopTeamFilter{ flex:0 0 auto; min-width:150px; } }
+.wiBar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin:18px 0 6px; }
+.wiFilter{ font-family:"IBM Plex Mono",monospace; font-size:12px; padding:10px 14px; border:1px solid var(--hairline-strong); border-radius:20px; background:var(--paper); color:var(--ink); min-width:220px; }
+.wiCount{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
+.wiSummary{ margin-top:8px; }
+.wiSummary .sectionHead .wiReset{ background:none; border:0; cursor:pointer; padding:0; }
+.wiSummary .statCard .big a{ color:inherit; text-decoration:none; }
+.wiVs{ font-size:.55em; color:var(--ink-soft); font-weight:600; }
+.wiList{ display:flex; flex-direction:column; margin-top:6px; }
+.wiRow{ display:grid; grid-template-columns:118px minmax(0,1fr) auto; align-items:center; column-gap:14px; row-gap:6px; padding:10px 0; border-bottom:1px solid var(--hairline); }
+.wiRow.isChange{ background:linear-gradient(90deg, var(--paper-2), transparent 60%); }
+.wiRow.isFlipped{ background:var(--good-bg); border-radius:6px; padding-inline:10px; margin-inline:-10px; }
+.wiDate{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--ink-soft); white-space:nowrap; }
+.wiWhat{ font-size:14.5px; line-height:1.45; }
+.wiWhat a{ color:inherit; }
+.wiScore{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); margin-left:4px; }
+.wiGameLink{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-text); text-decoration:none; margin-left:8px; white-space:nowrap; }
+.wiAct .btn{ min-height:34px; padding:0 12px; font-size:10.5px; white-space:normal; text-align:center; }
+.wiFlip.isOn{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.swatch.swatchNone{ background:transparent; border:1px solid var(--hairline-strong); }
+#wiShareRow[hidden], #wiMore[hidden], #wiSummary[hidden], #wiStatus[hidden]{ display:none !important; }   /* .btnRow/.btn set display, which beats the hidden attribute */
+@media (max-width:700px){ .wiRow{ grid-template-columns:1fr; row-gap:4px; } .wiAct{ margin-top:2px; } .wiAct .btn{ width:100%; } }
 .shopTeamSection .shopCount{ grid-column:2; grid-row:1 / span 2; align-self:end; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; }
 .storyArticle{ max-width:680px; }
 .storyKicker{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-text); font-weight:600; margin:0 0 6px; }
@@ -5700,8 +5723,14 @@ def generate_records_page(lineage, colors, belt_games, coaches=None):
         def close_call_row(rank, g, verb):
             h, a = (int(x) for x in g["score"].split("-"))
             tie = h == a
-            return (rank, team_swatch(g["new_holder"]),
-                    f'{esc(g["new_holder"])} {"tied" if tie else verb} {esc(g["holder"])}',
+            # a defense reads "holder over/tied challenger"; a change of hands
+            # "new holder took it from / routed the old one" (the first version
+            # named the holder on both sides of a defense: "USC tied USC")
+            if g["new_holder"] == g["holder"]:
+                who = f'{esc(g["holder"])} {"tied" if tie else verb} {esc(g["opponent"])}'
+            else:
+                who = f'{esc(g["new_holder"])} {"tied" if tie else verb} {esc(g["holder"])}'
+            return (rank, team_swatch(g["new_holder"]), who,
                     "Tie" if tie else f'+{margin(g)}',
                     f'{max(h, a)}&ndash;{min(h, a)} &middot; {fmt_date(g["date"])}', f'games/{g["game_id"]}.html')
 
@@ -9801,6 +9830,385 @@ def generate_state_of_the_belt_page(lineage, belt_games, colors, coaches=None):
 '''
 
 
+# ------------------------------------------------------------------ what if?
+
+WHATIF_DIR = "whatif"       # under site/: index.json + one games file per decade
+
+
+def write_whatif_data(whatif, lineage, out_dir):
+    """Split build_alternate_lineages.py's belt_data/whatif_games.json into
+    site/whatif/: index.json (the team list, a page slug for every team
+    that has one, and the decade chunks) plus games-<decade>.json files
+    of [day, home, away, home_pts, away_pts] rows. The page fetches only
+    the decades a flip needs (a 2010s flip loads 2010s + 2020s, ~150 KB
+    compressed, not the whole 110,000-game record). Returns the index."""
+    os.makedirs(out_dir, exist_ok=True)
+    teams = whatif["teams"]
+    origin = date.fromisoformat(whatif["first_game_date"])
+    pages = HOLDER_PROGRAMS | CHALLENGER_PAGES
+    slugs = [team_slug(t) if t in pages else None for t in teams]
+    chunks = {}
+    for row in whatif["games"]:
+        year = (origin + timedelta(days=row[1])).year
+        chunks.setdefault(max(1869, year - year % 10), []).append(row[1:6])
+    index = {"generated": whatif.get("generated"), "first_game_date": whatif["first_game_date"],
+             "teams": teams, "slugs": slugs, "chunks": []}
+    for decade in sorted(chunks):
+        name = f"games-{decade}.json"
+        with open(os.path.join(out_dir, name), "w", encoding="utf-8") as f:
+            json.dump(chunks[decade], f, separators=(",", ":"))
+        index["chunks"].append({"decade": decade, "file": name, "games": len(chunks[decade]),
+                                "first_day": chunks[decade][0][0], "last_day": chunks[decade][-1][0]})
+    with open(os.path.join(out_dir, "index.json"), "w", encoding="utf-8") as f:
+        json.dump(index, f, separators=(",", ":"), ensure_ascii=False)
+    return index
+
+
+def generate_whatif_page(lineage, colors, belt_games, whatif_index):
+    """what-if.html (2026-09-18, Bob: "a page that if you changed one
+    outcome along the line, it could recalculate the entire line -- a what
+    if the visitor can control"). The real belt games are embedded; the
+    visitor flips any of them ("what if the loser had won?") and the page
+    replays the belt rule in the browser from that game forward over the
+    full game record (site/whatif/, loaded a decade at a time), so the new
+    holder's own schedule -- never a belt game in reality -- becomes the
+    belt's path. Flips stack (games in the rewritten line can be flipped
+    too) and live in the URL hash, so a universe can be shared. Nothing
+    here is fetched from an API: the same record the alternate-universe
+    pages are computed from, replayed client-side in a few milliseconds."""
+    teams = whatif_index["teams"]
+    team_index = {t: i for i, t in enumerate(teams)}
+    origin = date.fromisoformat(whatif_index["first_game_date"])
+    today = date.today()
+    reigns = lineage["reigns"]
+    holder_now = reigns[-1]["team"]
+
+    real = []
+    for g in belt_games:
+        h, a = team_index.get(g["home"]), team_index.get(g["away"])
+        if h is None or a is None:
+            continue
+        hp, ap = (int(x) for x in g["score"].split("-"))
+        real.append([(date.fromisoformat(g["date"]) - origin).days, h, a, hp, ap, g["game_id"],
+                     team_index.get(g["holder"]) if g["holder"] else -1, team_index[g["new_holder"]]])
+
+    n_games = sum(c["games"] for c in whatif_index["chunks"])
+    swatches = {}
+    for t in {r["team"] for r in reigns}:
+        primary, _ = team_color(colors, t)
+        swatches[team_index[t]] = primary
+    payload = json.dumps({"today": (today - origin).days, "originIso": whatif_index["first_game_date"],
+                          "real": real, "holderNow": team_index[holder_now], "swatches": swatches,
+                          "chunks": whatif_index["chunks"]}, separators=(",", ":"))
+
+    intro = page_intro("Rewrite history", "What if one game had gone the other way?",
+                       f"Every belt game since 1869 is below. Flip any of them &mdash; the loser wins instead &mdash; and the "
+                       f"page replays the belt rule from that day forward across all {n_games:,} games on record: whoever "
+                       f"beats the holder takes it, ties stay put. New holders, new reigns, and either a day when history "
+                       f"heals itself or a different champion today. Flip as many as you like; the link remembers them.")
+
+    script = r'''
+<script>
+(function(){
+  var D = __DATA__;
+  var TEAMS = null, SLUGS = null, LOADED = {}, LOADING = {};
+  var MS = 86400000, ORIGIN = new Date(D.originIso + 'T00:00:00Z');
+  var flips = [];   // [{day, home, away}] sorted by day, home/away as team indexes
+  var $ = function(id){ return document.getElementById(id); };
+  var list = $('wiList'), summary = $('wiSummary'), filter = $('wiFilter'), status = $('wiStatus');
+
+  function dayIso(d){ var t = new Date(ORIGIN.getTime() + d * MS); return t.toISOString().slice(0, 10); }
+  function fmtDay(d){ var t = new Date(ORIGIN.getTime() + d * MS); return t.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }); }
+  function dur(days){
+    if (days < 1) return 'same day';
+    var y = Math.floor(days / 365.25), r = Math.round(days - y * 365.25);
+    if (y >= 1) return y + (y === 1 ? ' yr' : ' yrs') + (r ? ', ' + r + (r === 1 ? ' day' : ' days') : '');
+    return days + (days === 1 ? ' day' : ' days');
+  }
+  function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function name(i){ return TEAMS ? TEAMS[i] : '#' + i; }
+  function link(i){ var n = esc(name(i)); return SLUGS && SLUGS[i] ? '<a href="teams/' + SLUGS[i] + '.html">' + n + '</a>' : n; }
+  function swatch(i){ var c = D.swatches[i]; return c ? '<span class="swatch" style="background:' + c + '"></span>' : '<span class="swatch swatchNone"></span>'; }
+  function key(g){ return g[0] + '.' + g[1] + '.' + g[2]; }
+  function flipKeySet(){ var s = {}; flips.forEach(function(f){ s[f.day + '.' + f.home + '.' + f.away] = true; }); return s; }
+
+  // ---- data ----
+  function loadIndex(){
+    return fetch('whatif/index.json').then(function(r){ return r.json(); }).then(function(ix){ TEAMS = ix.teams; SLUGS = ix.slugs; return ix; });
+  }
+  function chunksFrom(day){
+    return D.chunks.filter(function(c){ return c.last_day >= day; });
+  }
+  function ensureChunks(day){
+    var need = chunksFrom(day).filter(function(c){ return !LOADED[c.file]; });
+    if (!need.length) return Promise.resolve();
+    status.textContent = 'Loading ' + need.length + ' more decade' + (need.length === 1 ? '' : 's') + ' of games…';
+    status.hidden = false;
+    return Promise.all(need.map(function(c){
+      if (!LOADING[c.file]) LOADING[c.file] = fetch('whatif/' + c.file).then(function(r){ return r.json(); }).then(function(rows){ LOADED[c.file] = rows; });
+      return LOADING[c.file];
+    })).then(function(){ status.hidden = true; });
+  }
+  function gamesFrom(f){
+    // every game from the flipped game onward, in walk order (same-day games before it stay in reality)
+    var out = [];
+    chunksFrom(f.day).forEach(function(c){ (LOADED[c.file] || []).forEach(function(g){ if (g[0] >= f.day) out.push(g); }); });
+    for (var i = 0; i < out.length; i++) { if (out[i][0] === f.day && out[i][1] === f.home && out[i][2] === f.away) return out.slice(i); }
+    return out;
+  }
+
+  // ---- the belt rule, replayed from the earliest flip ----
+  function replay(){
+    var fl = flipKeySet();
+    var universe = { games: [], reigns: [], diverged: null, rejoined: null, alt: false };
+    if (!flips.length) {
+      universe.games = D.real.map(function(g){ return { day: g[0], home: g[1], away: g[2], hp: g[3], ap: g[4], id: g[5], holder: g[6], next: g[7], flipped: false }; });
+      universe.reigns = reignsOf(universe.games);
+      return universe;
+    }
+    var first = flips[0];
+    var before = [], holder = -1, k = 0;
+    for (; k < D.real.length; k++) {
+      var r = D.real[k];
+      if (r[0] >= first.day && r[1] === first.home && r[2] === first.away) break;
+      before.push({ day: r[0], home: r[1], away: r[2], hp: r[3], ap: r[4], id: r[5], holder: r[6], next: r[7], flipped: false });
+      holder = r[7];
+    }
+    var ids = {}; D.real.forEach(function(r){ ids[r[0] + '.' + r[1] + '.' + r[2]] = r[5]; });
+    var out = before.slice();
+    gamesFrom(first).forEach(function(g){
+      if (g[1] !== holder && g[2] !== holder) return;
+      var kk = g[0] + '.' + g[1] + '.' + g[2];
+      var hp = g[3], ap = g[4], flipped = !!fl[kk];
+      var winner;
+      if (flipped) {
+        if (hp === ap) winner = (holder === g[1]) ? g[2] : g[1];      // a flipped tie: the holder loses it
+        else winner = (hp > ap) ? g[2] : g[1];
+      } else winner = (hp === ap) ? holder : (hp > ap ? g[1] : g[2]);
+      out.push({ day: g[0], home: g[1], away: g[2], hp: hp, ap: ap, id: ids[kk] || null, holder: holder, next: winner, flipped: flipped });
+      holder = winner;
+    });
+    universe.alt = true;
+    universe.games = out;
+    universe.reigns = reignsOf(out);
+    universe.diverged = first.day;
+    // rejoin: the first game at or after the LAST flip where the rewritten line and reality end the day
+    // with the same holder -- the same record is walked from there, so they stay identical for good
+    var lastFlipDay = flips[flips.length - 1].day, ri = 0, realH = -1, joined = null;
+    for (var i = 0; i < out.length; i++) {
+      var g = out[i];
+      if (g.day < lastFlipDay || g.flipped) continue;
+      while (ri < D.real.length && D.real[ri][0] <= g.day) { realH = D.real[ri][7]; ri++; }
+      if (realH === g.next) { joined = g; break; }
+    }
+    universe.rejoined = joined;
+    return universe;
+  }
+  function reignsOf(games){
+    var reigns = [], cur = null;
+    games.forEach(function(g){
+      if (!cur || g.next !== g.holder) {
+        if (cur) { cur.end = g.day; cur.lostTo = g.next; }
+        cur = { team: g.next, start: g.day, end: null, defenses: 0, wonFrom: g.holder, lostTo: null };
+        reigns.push(cur);
+      } else cur.defenses++;
+    });
+    return reigns;
+  }
+
+  // ---- rendering ----
+  var current = null, shown = 0, PAGE = 120;
+  function rowHtml(g, showFlip){
+    var tie = g.hp === g.ap, win = g.hp > g.ap ? g.home : g.away, lose = g.hp > g.ap ? g.away : g.home;
+    var hi = Math.max(g.hp, g.ap), lo = Math.min(g.hp, g.ap);
+    var what;
+    if (g.holder < 0) what = link(g.next) + ' took the first belt, beating ' + link(g.next === g.home ? g.away : g.home);
+    else if (g.flipped) what = (tie ? link(g.next) + ' takes it from ' + link(g.holder) + ' (a tie, flipped)' : link(g.next) + ' takes it from ' + link(g.holder) + ' (flipped)');
+    else if (tie) what = link(g.holder) + ' keeps it &mdash; tie with ' + link(g.holder === g.home ? g.away : g.home);
+    else if (g.next === g.holder) what = link(g.holder) + ' defends against ' + link(g.holder === g.home ? g.away : g.home);
+    else what = link(g.next) + ' takes it from ' + link(g.holder);
+    var score = g.flipped && !tie ? '<s>' + hi + '&ndash;' + lo + '</s>' : hi + '&ndash;' + lo;
+    var flipBtn = '';
+    if (showFlip && g.holder >= 0) {
+      var k = g.day + '.' + g.home + '.' + g.away;
+      if (g.flipped) flipBtn = '<button type="button" class="btn ghost wiFlip isOn" data-key="' + k + '">Undo flip</button>';
+      else flipBtn = '<button type="button" class="btn ghost wiFlip" data-key="' + k + '">What if ' + esc(name(tie ? (g.holder === g.home ? g.away : g.home) : lose)) + ' had won?</button>';
+    }
+    var page = g.id ? ' <a class="wiGameLink" href="games/' + g.id + '.html">game page &rarr;</a>' : '';
+    return '<div class="wiRow' + (g.flipped ? ' isFlipped' : '') + (g.next !== g.holder && g.holder >= 0 ? ' isChange' : '') + '" data-day="' + g.day + '">'
+         + '<span class="wiDate">' + fmtDay(g.day) + '</span>'
+         + '<span class="wiWhat">' + swatch(g.next) + what + ' <span class="wiScore tabular">' + score + '</span>' + page + '</span>'
+         + '<span class="wiAct">' + flipBtn + '</span></div>';
+  }
+  function visibleGames(){
+    var q = (filter.value || '').trim().toLowerCase();
+    var games = current.games.slice().reverse();   // newest first
+    if (!q) return games;
+    return games.filter(function(g){
+      var y = dayIso(g.day).slice(0, 4);
+      return y === q || name(g.home).toLowerCase().indexOf(q) >= 0 || name(g.away).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+  function renderList(reset){
+    var games = visibleGames();
+    if (reset) shown = PAGE;
+    var slice = games.slice(0, shown);
+    list.innerHTML = slice.map(function(g){ return rowHtml(g, true); }).join('') || '<p class="emptyNote">No belt games match that.</p>';
+    $('wiMore').hidden = shown >= games.length;
+    $('wiCount').textContent = games.length.toLocaleString() + ' belt game' + (games.length === 1 ? '' : 's') + (current.alt ? ' in this universe' : '');
+  }
+  function renderSummary(){
+    if (!current.alt) { summary.hidden = true; $('wiShareRow').hidden = true; return; }
+    var u = current, first = flips[0];
+    var end = u.rejoined ? u.rejoined.day : D.today;
+    var altReigns = u.reigns.filter(function(r){ return r.start >= first.day && r.start <= end; });
+    var realReigns = 0; D.real.forEach(function(r){ if (r[0] >= first.day && r[0] <= end && r[6] !== r[7]) realReigns++; });
+    var everReal = {}; D.real.forEach(function(r){ everReal[r[7]] = true; });
+    var firstTimers = {}; altReigns.forEach(function(r){ if (!everReal[r.team]) firstTimers[r.team] = (firstTimers[r.team] || 0) + 1; });
+    var ft = Object.keys(firstTimers).map(Number);
+    var holderToday = u.reigns[u.reigns.length - 1].team;
+    var longest = null; altReigns.forEach(function(r){ var d = (r.end === null ? D.today : r.end) - r.start; if (!longest || d > longest.d) longest = { r: r, d: d }; });
+    var bits = [];
+    bits.push('<div class="statCard"><span class="kicker">Holds the belt today</span><span class="big">' + swatch(holderToday) + link(holderToday) + '</span>'
+            + '<p>' + (holderToday === D.holderNow ? 'Same as reality.' : 'In reality: ' + link(D.holderNow) + '.') + '</p></div>');
+    if (u.rejoined) bits.push('<div class="statCard"><span class="kicker">History heals itself</span><span class="big tabular">' + dur(u.rejoined.day - first.day) + '</span>'
+            + '<p>On ' + fmtDay(u.rejoined.day) + ' ' + link(u.rejoined.next) + ' ' + (u.rejoined.next === u.rejoined.holder ? 'held the belt' : 'took the belt') + ' in this universe and in reality alike &mdash; the same holder, the same games from then on.</p></div>');
+    else bits.push('<div class="statCard"><span class="kicker">Still diverged</span><span class="big tabular">' + dur(D.today - first.day) + '</span><p>The rewritten line never rejoins the real one; it is different today.</p></div>');
+    bits.push('<div class="statCard"><span class="kicker">Reigns in that stretch</span><span class="big tabular">' + altReigns.length + ' <span class="wiVs">vs ' + realReigns + '</span></span><p>Changes of hands in this universe versus reality, from your first flip' + (u.rejoined ? ' to the rejoin' : ' to today') + '.</p></div>');
+    if (ft.length) bits.push('<div class="statCard"><span class="kicker">First-time holders</span><span class="big">' + ft.length + '</span><p>' + ft.map(function(t){ return link(t) + (firstTimers[t] > 1 ? ' (' + firstTimers[t] + '&times;)' : ''); }).join(', ') + ' hold' + (ft.length === 1 ? 's' : '') + ' the belt here and never did in reality.</p></div>');
+    if (longest) bits.push('<div class="statCard"><span class="kicker">Longest reign in the rewrite</span><span class="big">' + swatch(longest.r.team) + link(longest.r.team) + '</span><p>' + dur(longest.d) + ', ' + longest.r.defenses + ' defense' + (longest.r.defenses === 1 ? '' : 's') + ', from ' + fmtDay(longest.r.start) + (longest.r.end === null ? ' and counting' : ' to ' + fmtDay(longest.r.end)) + '.</p></div>');
+    summary.innerHTML = '<div class="sectionHead"><span class="tag">Your universe</span><h2>' + flips.length + ' flip' + (flips.length === 1 ? '' : 's') + ', starting ' + fmtDay(first.day) + '</h2>'
+                      + '<button type="button" class="sectionLink wiReset" id="wiReset">Reset to reality &rarr;</button></div><div class="statCards">' + bits.join('') + '</div>';
+    summary.hidden = false;
+    $('wiShareRow').hidden = false;
+    $('wiReset').addEventListener('click', function(){ flips = []; update(); });
+  }
+  function isRealGame(f){
+    for (var i = 0; i < D.real.length; i++) { var r = D.real[i]; if (r[0] === f.day && r[1] === f.home && r[2] === f.away) return r[6] >= 0; }
+    return false;
+  }
+  function update(){
+    while (flips.length && !isRealGame(flips[0])) flips.shift();   // the first flip has to be a real belt game (a stale link, say)
+    var need = flips.length ? ensureChunks(flips[0].day) : Promise.resolve();
+    return need.then(function(){
+      current = replay();
+      renderSummary();
+      renderList(true);
+      writeHash();
+    });
+  }
+  function writeHash(){
+    var h = flips.map(function(f){ return f.day + '.' + encodeURIComponent(name(f.home)) + '.' + encodeURIComponent(name(f.away)); }).join(',');
+    try { history.replaceState(null, '', h ? '#f=' + h : location.pathname); } catch (e) {}
+  }
+  function readHash(){
+    var m = /f=([^&]+)/.exec(location.hash);
+    if (!m) return [];
+    var out = [];
+    m[1].split(',').forEach(function(part){
+      var p = part.split('.');
+      if (p.length !== 3) return;
+      var h = TEAMS.indexOf(decodeURIComponent(p[1])), a = TEAMS.indexOf(decodeURIComponent(p[2]));
+      if (h < 0 || a < 0) return;
+      out.push({ day: parseInt(p[0], 10), home: h, away: a });
+    });
+    out.sort(function(x, y){ return x.day - y.day; });
+    return out;
+  }
+  function toggleFlip(k){
+    var p = k.split('.').map(Number);
+    var i = flips.findIndex(function(f){ return f.day === p[0] && f.home === p[1] && f.away === p[2]; });
+    if (i >= 0) flips.splice(i, 1); else flips.push({ day: p[0], home: p[1], away: p[2] });
+    flips.sort(function(x, y){ return x.day - y.day; });
+    // a flip earlier than an existing one changes the line those later flips were made in; keep them, they
+    // simply apply if that game still happens in the new line
+    update();
+  }
+
+  list.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.wiFlip');
+    if (b) toggleFlip(b.dataset.key);
+  });
+  $('wiMore').addEventListener('click', function(){ shown += PAGE; renderList(false); });
+  filter.addEventListener('input', function(){ renderList(true); });
+  $('wiShare').addEventListener('click', function(){
+    var u = current, text = 'What if? ' + (u.rejoined ? 'History heals itself after ' + dur(u.rejoined.day - flips[0].day) + '.' : name(u.reigns[u.reigns.length - 1].team) + ' would hold the College Football Belt today.') + ' ' + location.href;
+    var done = function(){ $('wiCopied').hidden = false; };
+    if (navigator.share) navigator.share({ text: text }).catch(function(){});
+    else if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, done);
+  });
+  $('wiRandom').addEventListener('click', function(){
+    var pool = current.games.filter(function(g){ return g.holder >= 0 && !g.flipped && g.day >= D.today - 365 * 40; });
+    var g = pool[Math.floor(Math.random() * pool.length)];
+    if (g) toggleFlip(g.day + '.' + g.home + '.' + g.away);
+  });
+
+  // engine self-check (console: __whatif.verify()): walk the whole record with no flips and compare the
+  // belt games it produces with the real line the site computed -- they must be identical
+  window.__whatif = { verify: function(){
+    return ensureChunks(0).then(function(){
+      var games = gamesFrom({ day: 0, home: D.real[0][1], away: D.real[0][2] }), holder = -1, walked = [];
+      games.forEach(function(g, i){
+        if (i === 0) { holder = g[3] > g[4] ? g[1] : g[2]; walked.push([g[0], g[1], g[2], holder]); return; }
+        if (g[1] !== holder && g[2] !== holder) return;
+        var w = g[3] === g[4] ? holder : (g[3] > g[4] ? g[1] : g[2]);
+        walked.push([g[0], g[1], g[2], w]); holder = w;
+      });
+      var bad = [];
+      for (var i = 0; i < Math.max(walked.length, D.real.length); i++) {
+        var a = walked[i], b = D.real[i];
+        if (!a || !b || a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2] || a[3] !== b[7]) { bad.push({ i: i, walked: a, real: b }); if (bad.length > 5) break; }
+      }
+      return { ok: !bad.length, walked: walked.length, real: D.real.length, mismatches: bad };
+    });
+  } };
+
+  status.textContent = 'Loading the team list…';
+  loadIndex().then(function(){
+    status.hidden = true;
+    flips = readHash();
+    return update();
+  }).catch(function(){ status.textContent = 'The game record could not be loaded. Try again in a moment.'; status.hidden = false; });
+})();
+</script>'''.replace("__DATA__", payload)
+
+    body = f'''
+  {intro}
+  <div class="wiBar">
+    <input type="search" id="wiFilter" class="wiFilter" placeholder="Filter by team or year&hellip;" aria-label="Filter belt games by team or year" autocomplete="off">
+    <button type="button" class="btn ghost" id="wiRandom">Flip a random game</button>
+    <span class="wiCount" id="wiCount"></span>
+  </div>
+  <p class="emptyNote" id="wiStatus" hidden></p>
+  <section id="wiSummary" class="wiSummary" hidden></section>
+  <div class="btnRow" id="wiShareRow" hidden>
+    <button type="button" class="btn" id="wiShare">Share this universe</button>
+    <span class="emptyNote" id="wiCopied" hidden>Link copied.</span>
+  </div>
+  <div class="sectionHead"><span class="tag">The line</span><h2>Every belt game, newest first</h2></div>
+  <div class="wiList" id="wiList"><p class="emptyNote">Loading&hellip;</p></div>
+  <div class="btnRow" style="margin-top:14px"><button type="button" class="btn ghost" id="wiMore" hidden>Show more</button></div>
+  <p class="noteBox">The rule is the real one: whoever beats the holder takes the belt, a tie stays with the holder, every game
+    counts. A flip makes the loser the winner (a flipped tie hands the belt to the challenger); the replay then follows the
+    new holder&rsquo;s actual schedule, game by game, on the same record the rest of the site is built from. Reality holds
+    until your first flip, and &ldquo;history heals itself&rdquo; the first day both lines have the same holder &mdash; from
+    then on they are identical, because the games are.</p>'''
+
+    return f'''{page_head("What If? — Rewrite the College Football Belt",
+                     "Flip any belt game since 1869 and watch the lineal championship recalculate from that day forward: new holders, new reigns, and whether history heals itself.", "",
+                     share_meta("what-if", "Flip one game. Rewrite 150 years.", "What if?", f"{n_games:,} games on record, replayed in your browser", "The belt, recalculated from any result you change"))}
+
+{site_header('', 'what-if')}
+
+<main class="wrap">{body}
+</main>
+
+{site_footer('', 'Same record, same rule, replayed from the game you changed.')}
+{script}
+'''
+
+
+
 # ---------------------------------------------------------- the lean's ledger
 
 LEDGER_PATH = os.path.join("ai_preview_cache", "ledger.json")
@@ -13670,6 +14078,9 @@ def main():
         PAGES_ABSENT.add("by-conference.html")
     if not belt_venues or not belt_venues.get("games"):
         PAGES_ABSENT.add("venues/index.html")
+    whatif_games = load_optional_json("whatif_games.json")           # build_alternate_lineages.py (optional)
+    if not whatif_games or not whatif_games.get("games"):
+        PAGES_ABSENT.add("what-if.html")
 
     games_dir = os.path.join(OUT_DIR, "games")
     os.makedirs(games_dir, exist_ok=True)
@@ -13828,6 +14239,13 @@ def main():
     if RECORDS_SINCE_JSON[0]:       # the year picker's data, one entry per distinct cutoff
         with open(os.path.join(OUT_DIR, "records-since.json"), "w", encoding="utf-8") as f:
             f.write(RECORDS_SINCE_JSON[0])
+
+    if "what-if.html" not in PAGES_ABSENT:
+        whatif_index = write_whatif_data(whatif_games, lineage, os.path.join(OUT_DIR, WHATIF_DIR))
+        with open(os.path.join(OUT_DIR, "what-if.html"), "w", encoding="utf-8") as f:
+            f.write(generate_whatif_page(lineage, colors, belt_games, whatif_index))
+        print(f"Wrote what-if.html + {len(whatif_index['chunks'])} decade files "
+              f"({sum(c['games'] for c in whatif_index['chunks']):,} games) to {OUT_DIR}/{WHATIF_DIR}/")
 
     with open(os.path.join(OUT_DIR, "story-longest-reigns.html"), "w", encoding="utf-8") as f:
         f.write(generate_story_longest_reigns(lineage, belt_games))
@@ -14081,6 +14499,8 @@ def main():
                                                   "lean.html", "daily.html", "about.html", "rivalries/index.html",
                                                   "states/index.html", "decades/index.html", "web.html", "data.html",
                                                   "state-of-the-belt.html")]
+    if "what-if.html" not in PAGES_ABSENT:
+        sitemap_urls.append(f"{SITE_URL}/what-if.html")
     sitemap_urls += [f"{SITE_URL}/{href}" for href, _, _, _ in STORIES
                      if href not in STORIES_SKIPPED and href not in ("story-longest-reigns.html", "story-most-defended.html")]
     if poll_model:
