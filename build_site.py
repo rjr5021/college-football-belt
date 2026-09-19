@@ -4090,6 +4090,36 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
 # URLs. Applies only to these two pages (Full History, All Games), per
 # Bob's 2026-09-15 request -- the rest of the site (homepage, records,
 # team pages, etc.) stays on the combined/real belt, unchanged.
+# Days or games: a reign's length in calendar days counts the offseason
+# (a New Year's holder gets 200+ quiet days), its length in belt games
+# doesn't. Both are shown; the visitor picks (2026-09-19, suggested by a
+# reader, Elliot). Each .lengthCell carries data-games; the JS swaps the
+# visible text and remembers the choice.
+LENGTH_TOGGLE_JS = """(function(){
+  var btns = Array.prototype.slice.call(document.querySelectorAll('.lengthToggle .lengthBtn'));
+  var cells = Array.prototype.slice.call(document.querySelectorAll('.lengthCell'));
+  if (!btns.length || !cells.length) return;
+  var KEY = 'cfbBelt:reignMeasure';
+  function apply(measure){
+    cells.forEach(function(td){
+      if (!td.hasAttribute('data-days')) td.setAttribute('data-days', td.innerHTML);
+      var link = td.querySelector('a');
+      var games = td.getAttribute('data-games');
+      if (measure === 'games') {
+        if (link) { link.textContent = games; } else { td.textContent = games; }
+      } else {
+        td.innerHTML = td.getAttribute('data-days');
+      }
+    });
+    btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-measure') === measure); });
+    try { localStorage.setItem(KEY, measure); } catch (e) {}
+  }
+  btns.forEach(function(b){ b.addEventListener('click', function(){ apply(b.getAttribute('data-measure')); }); });
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved === 'games') apply('games');
+})();"""
+
 CHAMPIONSHIP_LINEAGE_FILENAMES = {"combined": "lineage.html", "fbs": "lineage_fbs.html",
                                    "fcs": "lineage_fcs.html"}
 CHAMPIONSHIP_ALL_GAMES_FILENAMES = {"combined": "all-games.html", "fbs": "all-games_fbs.html",
@@ -4099,10 +4129,13 @@ CHAMPIONSHIP_SWITCHER_LABELS = {"combined": "Combined (No Restriction)", "fbs": 
 CHAMPIONSHIP_SCOPE_TITLE_SUFFIX = {"combined": "", "fbs": " (FBS)", "fcs": " (FCS)"}
 CHAMPIONSHIP_SCOPE_INTRO = {
     "combined": "",
-    "fbs": " Restricted to FBS programs only &mdash; both sides of every game "
-        "have to be FBS, so the belt can never cross down into FCS.",
-    "fcs": " Restricted to FCS programs only &mdash; both sides of every game "
-        "have to be FCS, so the belt can never cross up into FBS.",
+    "fbs": " The FBS belt is the real belt through the 1977 season &mdash; there was one Division I "
+        "before the 1978 split &mdash; and from 1978 on only games between two FBS-conference members "
+        "count, judged by the conference each side was in that season, so a program that moves up or "
+        "down takes its games with it.",
+    "fcs": " Only games between two FCS-conference members count, judged by the conference each side "
+        "was in that season. Division I-AA dates from 1978, but the data source has almost no I-AA "
+        "results before 2003, so that is where this belt begins.",
 }
 
 
@@ -4132,7 +4165,12 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
-    change_index = build_change_game_index(belt_games) if scope == "combined" else {}
+    # the winning score comes from the scope's own belt games; only the
+    # combined scope has games/<id>.html pages to link to (2026-09-19: the
+    # fbs/fcs pages used to skip the index entirely and so said
+    # "Established the belt" on every row -- a reader, Elliot, caught it)
+    change_index = build_change_game_index(belt_games)
+    retired = lineage.get("retired")
     today = date.today()
 
     # ---- records: computed, not curated -- same ethos as the rest of the site
@@ -4143,6 +4181,8 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
     most_reigns_team, most_reigns_n = reign_counts.most_common(1)[0]
 
     def game_link_for(reign):
+        if scope != "combined":
+            return None
         g = change_index.get((reign["start_date"], reign["team"]))
         return g["game_id"] if g else None
 
@@ -4172,14 +4212,27 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
         gid = game_link_for(r)
 
         team_html = f'<a href="games/{gid}.html">{esc(team)}</a>' if gid else esc(team)
-        won_inner = f"def. {esc(r['won_from'])} {w}&ndash;{l}" if (r.get("won_from") and w is not None) else "Established the belt"
+        if r.get("reclaimed_after"):
+            won_inner = f"reverted after {esc(r['reclaimed_after'])} left"
+        elif r.get("won_from") and w is not None:
+            won_inner = f"def. {esc(r['won_from'])} {w}&ndash;{l}"
+        elif r.get("reestablished"):
+            won_inner = "Re-established the belt"
+        else:
+            won_inner = "Established the belt"
         won_txt = f'<a href="games/{gid}.html">{won_inner}</a>' if gid else won_inner
 
         next_reign = reigns[i] if i < len(reigns) else None
         lost_gid = game_link_for(next_reign) if next_reign else None
-        if is_current:
+        if is_current and not r.get("retired"):
             lost_txt = '<span class="mono">— present —</span>'
             end_txt = "Present"
+        elif r.get("retired"):
+            lost_txt = '<span class="mono">— belt retired —</span>'
+            end_txt = fmt_date(r["end_date"])
+        elif r.get("vacated"):
+            lost_txt = "vacated"
+            end_txt = fmt_date(r["end_date"])
         elif r.get("lost_to"):
             lost_inner = f"to {esc(r['lost_to'])}"
             lost_txt = f'<a href="games/{lost_gid}.html">{lost_inner}</a>' if lost_gid else lost_inner
@@ -4188,17 +4241,18 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
             lost_txt = "—"
             end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
 
-        cls = " current" if is_current else ""
+        cls = " current" if (is_current and not r.get("retired")) else ""
         num_html = f'<a href="reigns/{i}.html" title="Reign #{i}: every game of it">{i}</a>' if scope == "combined" else str(i)
         dur_html = fmt_duration(*reign_dates(r, today))
         if scope == "combined":
             dur_html = f'<a href="reigns/{i}.html">{dur_html}</a>'
+        n_games = r["defenses"] + (1 if (r.get("won_from") or r.get("won_score")) else 0)
         rows_html += f'''
         <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
           <td class="num">{num_html}</td>
           <td class="teamCell"><span class="reignChip" style="background:{p}"></span>{team_html}</td>
           <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
-          <td class="tabular">{dur_html}</td>
+          <td class="tabular lengthCell" data-games="{n_games} game{"s" if n_games != 1 else ""}">{dur_html}</td>
           <td class="tabular">{r["defenses"]}</td>
           <td class="won">{won_txt}</td>
           <td class="lost">{lost_txt}</td>
@@ -4208,6 +4262,13 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
     scope_intro = CHAMPIONSHIP_SCOPE_INTRO[scope]
     switcher_html = _championship_switcher_html(CHAMPIONSHIP_LINEAGE_FILENAMES, scope, available_scopes)
     all_games_href = CHAMPIONSHIP_ALL_GAMES_FILENAMES[scope]
+    origin_game = belt_games[0] if belt_games else None
+    if scope == "combined" or not origin_game or origin_game["date"] == "1869-11-06":
+        since_txt = "Rutgers beat Princeton on November&nbsp;6, 1869"
+    else:
+        since_txt = f"{esc(origin_game['new_holder'])} beat {esc(origin_game['opponent'])} on {fmt_date(origin_game['date'])}"
+    retired_txt = (f" This belt is retired: {esc(retired['team'])} held it when the games ran out on "
+                   f"{fmt_date(retired['last_game_date'])}." if retired else "")
     return f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
@@ -4221,10 +4282,10 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
 <main class="wrap">
   <p class="kicker pageKicker">Full history</p>
   <h1 class="pageTitle">The Full History{title_suffix}</h1>
-  <p class="lede">Every reign since Rutgers beat Princeton on November&nbsp;6, 1869 &mdash;
+  <p class="lede">Every reign since {since_txt} &mdash;
     {totals["reigns"]:,} of them, computed from {totals["belt_games"]:,} belt games across
     {totals["distinct_teams"]} programs. Type a team name to filter; tap a team to jump to the
-    game that won it.{scope_intro}</p>
+    game that won it.{scope_intro}{retired_txt}</p>
   {switcher_html}
 
   <div class="historyTop">
@@ -4237,6 +4298,10 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
       <div class="sortToggle" role="group" aria-label="Sort order">
         <button type="button" class="sortBtn active" data-order="asc">Oldest First</button>
         <button type="button" class="sortBtn" data-order="desc">Newest First</button>
+      </div>
+      <div class="sortToggle lengthToggle" role="group" aria-label="Measure reigns in">
+        <button type="button" class="lengthBtn active" data-measure="days">Days</button>
+        <button type="button" class="lengthBtn" data-measure="games">Games</button>
       </div>
       <div class="searchBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
@@ -4302,6 +4367,7 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
   try {{ savedOrder = localStorage.getItem(STORAGE_KEY); }} catch(e) {{}}
   if (savedOrder === 'desc') applyOrder('desc');
 }})();
+{LENGTH_TOGGLE_JS}
 </script>
 '''
 
@@ -4871,10 +4937,11 @@ def generate_conference_belt_page(lineage, slug):
     here links out to games/ or teams/. `lineage` is
     belt_data/conferences/<slug>_lineage.json's already-loaded contents."""
     conference = lineage["conference"]
-    classification = lineage.get("classification", "fbs")
+    classification = lineage.get("classification") or "fbs"
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
+    retired = lineage.get("retired")
     today = date.today()
 
     since_date = date.fromisoformat(current["start_date"])
@@ -4882,7 +4949,13 @@ def generate_conference_belt_page(lineage, slug):
     won_from = current.get("won_from")
     reclaimed_after = current.get("reclaimed_after")
 
-    if reclaimed_after:
+    if retired:
+        when = fmt_date(retired.get("dissolved_date") or retired["last_game_date"])
+        why = retired.get("note") or f"{conference} stopped playing"
+        lede = (f"<strong>This belt is retired.</strong> {esc(current['team'])} held it when {esc(conference)} "
+                f"played its last game on {fmt_date(retired['last_game_date'])}, and the reign is closed as of "
+                f"{when}: {esc(why)}.")
+    elif reclaimed_after:
         lede = (f"{esc(reclaimed_after)} caught it but left {esc(conference)} &mdash; since "
                  f"this belt only passes among {esc(conference)} members, it reverted back to "
                  f"{esc(current['team'])} on {fmt_date(current['start_date'])}.")
@@ -4890,8 +4963,12 @@ def generate_conference_belt_page(lineage, slug):
         lede = (f"Caught it by beating {esc(won_from)} on {fmt_date(current['start_date'])}.")
     else:
         lede = f"Has held it since {fmt_date(current['start_date'])}."
-    if defenses:
+    if defenses and not retired:
         lede += (f" Defended it {defenses} more time{'s' if defenses != 1 else ''} since.")
+    former = lineage.get("former_names") or []
+    if former:
+        lede += (f" The conference has also been recorded as {', '.join(esc(n) for n in former)}; "
+                 f"those seasons count here too.")
 
     durations = [(r, reign_duration_days(r, today)) for r in reigns]
     longest_reign, longest_days = max(durations, key=lambda p: p[1])
@@ -4903,7 +4980,7 @@ def generate_conference_belt_page(lineage, slug):
     <div class="record-card">
       <div class="l">Longest Reign</div>
       <div class="v">{esc(longest_reign["team"])} &mdash; {fmt_duration(*reign_dates(longest_reign, today))}</div>
-      <div class="sub">{fmt_date(longest_reign["start_date"])} &ndash; {fmt_date(longest_reign["end_date"]) if longest_reign.get("end_date") else "present"}</div>
+      <div class="sub">{fmt_date(longest_reign["start_date"])} &ndash; {fmt_date(longest_reign["end_date"]) if longest_reign.get("end_date") else "present"}{" (belt retired)" if longest_reign.get("retired") else ""}</div>
     </div>
     <div class="record-card">
       <div class="l">Most Defenses, One Reign</div>
@@ -4916,19 +4993,28 @@ def generate_conference_belt_page(lineage, slug):
       <div class="sub">{totals["distinct_teams"]} {esc(conference)} programs have held it</div>
     </div>'''
 
+    change_index = build_change_game_index(lineage["belt_games"])
     rows_html = ""
     for i, r in enumerate(reigns, 1):
         is_current = r is current
         team = r["team"]
+        w, l = _reign_win_score(r, change_index)
 
         if r.get("reclaimed_after"):
             caught_txt = f"reverted after {esc(r['reclaimed_after'])} left {esc(conference)}"
+        elif r.get("won_from") and w is not None:
+            caught_txt = f"beat {esc(r['won_from'])} {w}&ndash;{l}"
         elif r.get("won_from"):
             caught_txt = f"beat {esc(r['won_from'])}"
+        elif r.get("reestablished"):
+            caught_txt = f"Re-established it ({esc(conference)} resumed play)"
         else:
             caught_txt = "Established it (first game on record)"
 
-        if is_current:
+        if r.get("retired"):
+            passed_txt = '<span class="mono">— belt retired —</span>'
+            end_txt = fmt_date(retired.get("dissolved_date") or r["end_date"]) if retired and r is current else fmt_date(r["end_date"])
+        elif is_current:
             passed_txt = '<span class="mono">— present —</span>'
             end_txt = "Present"
         elif r.get("vacated"):
@@ -4941,13 +5027,14 @@ def generate_conference_belt_page(lineage, slug):
             passed_txt = "—"
             end_txt = fmt_date(r["end_date"]) if r.get("end_date") else "—"
 
-        cls = " current" if is_current else ""
+        cls = " current" if (is_current and not r.get("retired")) else ""
+        n_games = r["defenses"] + (1 if (r.get("won_from") or r.get("won_score")) else 0)
         rows_html += f'''
         <tr class="{cls.strip()}" data-team="{esc(team.lower())}">
           <td class="num">{i}</td>
           <td class="teamCell">{esc(team)}</td>
           <td class="dates">{fmt_date(r["start_date"])} &ndash; {end_txt}</td>
-          <td class="tabular">{fmt_duration(*reign_dates(r, today))}</td>
+          <td class="tabular lengthCell" data-games="{n_games} game{"s" if n_games != 1 else ""}">{fmt_duration(*reign_dates(r, today))}</td>
           <td class="tabular">{r["defenses"]}</td>
           <td class="won">{caught_txt}</td>
           <td class="lost">{passed_txt}</td>
@@ -4957,7 +5044,7 @@ def generate_conference_belt_page(lineage, slug):
 <html lang="en">
 <meta charset="UTF-8">
 <title>The {esc(conference)} Belt — The College Football Belt</title>
-<meta name="description" content="The {esc(conference)} Belt: a lineal conference title that passes to whoever beats the holder in a game between two {esc(conference)} members. Held by {esc(current["team"])}.">
+<meta name="description" content="The {esc(conference)} Belt: a lineal conference title that passes to whoever beats the holder in a game between two {esc(conference)} members. {("Retired with " + esc(current["team"]) + " when the conference stopped playing.") if retired else "Held by " + esc(current["team"]) + "."}">
 <link rel="stylesheet" href="../styles.css?v={STYLES_VERSION}">
 {head_extras('../')}
 
@@ -4977,9 +5064,15 @@ def generate_conference_belt_page(lineage, slug):
       <div><span class="n tabular">{totals["belt_games"]:,}</span><span class="l">Belt Games</span></div>
       <div><span class="n tabular">{totals["distinct_teams"]}</span><span class="l">Programs</span></div>
     </div>
-    <div class="searchBox">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
-      <input id="teamSearch" type="search" placeholder="Filter by team&hellip;" aria-label="Filter by team" autocomplete="off">
+    <div class="controls">
+      <div class="sortToggle lengthToggle" role="group" aria-label="Measure reigns in">
+        <button type="button" class="lengthBtn active" data-measure="days">Days</button>
+        <button type="button" class="lengthBtn" data-measure="games">Games</button>
+      </div>
+      <div class="searchBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
+        <input id="teamSearch" type="search" placeholder="Filter by team&hellip;" aria-label="Filter by team" autocomplete="off">
+      </div>
     </div>
   </div>
 
@@ -4999,10 +5092,16 @@ def generate_conference_belt_page(lineage, slug):
     </table>
     <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
+  <p class="noteBox">Membership is judged game by game, so realignment moves a team&rsquo;s games with it. A holder that leaves
+    {esc(conference)} vacates the belt, which reverts to the most recent earlier holder still in the conference; if no one is left to
+    inherit it, the belt retires with its last holder. Days count the offseason; switch to games to measure a reign by belt games only.</p>
   <p class="viewToggle"><a href="index.html">&larr; See every conference belt</a></p>
 </main>
 
 {site_footer('../', 'Every reign computed from the College Football Data API.')}
+<script>
+{LENGTH_TOGGLE_JS}
+</script>
 
 <script>
 (function(){{
@@ -5050,16 +5149,22 @@ def generate_conferences_index_page(conference_lineages):
     current_year = date.today().year
 
     def is_active(lineage):
+        if lineage.get("retired"):
+            return False
         last = lineage.get("last_game_date")
-        return bool(last) and int(last[:4]) >= current_year - 1
+        return bool(last) and int(last[:4]) >= current_year - 2
 
     def card_for(slug, lineage, active):
         conference = lineage["conference"]
         current = lineage["reigns"][-1]
         totals = lineage["totals"]
         last = lineage.get("last_game_date")
-        sub = (f"since {fmt_date(current['start_date'])} &middot; {totals['reigns']} reigns all-time" if active
-               else f"last played as a conference in {last[:4]} &middot; {totals['reigns']} reigns all-time")
+        if active:
+            sub = f"since {fmt_date(current['start_date'])} &middot; {totals['reigns']} reigns all-time"
+        elif lineage.get("retired"):
+            sub = f"retired with the belt in {last[:4]} &middot; {totals['reigns']} reigns all-time"
+        else:
+            sub = f"last played as a conference in {last[:4]} &middot; {totals['reigns']} reigns all-time"
         return f'''
     <a class="record-card" href="{slug}.html" style="display:block;text-decoration:none;color:inherit">
       <div class="l">{esc(conference)}</div>
@@ -5068,7 +5173,7 @@ def generate_conferences_index_page(conference_lineages):
     </a>'''
 
     def section_html(classification):
-        items = sorted((s, l) for s, l in conference_lineages.items() if l.get("classification") == classification)
+        items = sorted((s, l) for s, l in conference_lineages.items() if (l.get("classification") or "fbs") == classification)
         if not items:
             return '<p class="lede">None built yet.</p>'
         active_items = [(s, l) for s, l in items if is_active(l)]
@@ -5078,7 +5183,7 @@ def generate_conferences_index_page(conference_lineages):
         html_parts.append("\n  </div>")
         if defunct_items:
             html_parts.append('''
-  <h3 class="eyebrow" style="display:block;margin:28px 0 12px">No Longer Active</h3>
+  <h3 class="eyebrow" style="display:block;margin:28px 0 12px">No Longer Active &mdash; belts retired with their last holder</h3>
   <div class="records">''')
             html_parts.append("".join(card_for(s, l, False) for s, l in defunct_items))
             html_parts.append("\n  </div>")
@@ -5103,7 +5208,9 @@ def generate_conferences_index_page(conference_lineages):
   <p class="lede">The same lineal rule as the real belt &mdash; you catch it by beating the
     holder &mdash; run separately for every FBS and FCS conference, counting only games
     between two members of that ONE conference, at the time they actually played (so
-    realignment moves a team's games with it, the way it should).</p>
+    realignment moves a team&rsquo;s games with it, the way it should). A conference that
+    stopped playing keeps its belt with its last holder, closed on the day the league dissolved;
+    a league that only changed its name keeps one belt under its current name.</p>
 
   <h2>FBS Conferences</h2>
   {fbs_html}
@@ -5131,6 +5238,11 @@ def generate_all_games_page(lineage, colors, belt_games, scope="combined", avail
     as plain text instead of a link."""
     totals = lineage["totals"]
     linkable = scope == "combined"
+    origin_game = belt_games[0] if belt_games else None
+    if scope == "combined" or not origin_game or origin_game["date"] == "1869-11-06":
+        since_txt = "Rutgers beat Princeton on November&nbsp;6, 1869"
+    else:
+        since_txt = f"{esc(origin_game['new_holder'])} beat {esc(origin_game['opponent'])} on {fmt_date(origin_game['date'])}"
     # "established" (the very first belt game, which put the title up in the
     # first place) is folded into title_changes for this stat band -- it's
     # not a "defense" of anything, and folding it in keeps title_changes +
@@ -5198,8 +5310,7 @@ def generate_all_games_page(lineage, colors, belt_games, scope="combined", avail
 <main class="wrap">
   <p class="kicker pageKicker">Every belt game</p>
   <h1 class="pageTitle">Every Belt Game{title_suffix}</h1>
-  <p class="lede">Every game with the belt on the line since Rutgers beat Princeton on
-    November&nbsp;6, 1869 &mdash; {len(belt_games):,} of them: {title_changes:,} title changes
+  <p class="lede">Every game with the belt on the line since {since_txt} &mdash; {len(belt_games):,} of them: {title_changes:,} title changes
     and {defenses_total:,} successful defenses, across {totals["distinct_teams"]} programs.{scope_intro}
     Type a team name to filter; tap any game to open its page.</p>
   {switcher_html}
@@ -11208,9 +11319,11 @@ def generate_journey_page(lineage, colors, belt_games):
     longest_rows = "".join(hop_row(h, i + 1) for i, h in enumerate(longest))
     shortest_rows = "".join(hop_row(h, i + 1) for i, h in enumerate(shortest))
     all_rows = "".join(hop_row(h) for h in hops)
+    hops_by_decade = Counter(int(h["date"][:4]) // 10 * 10 for h in known)
     decade_rows = "".join(
-        f'<div class="recordRow"><span class="recordRank">{d}s</span><span class="recordMain">{m:,.0f} mi</span>'
-        f'<span class="recordValue">{sum(1 for h in known if int(h["date"][:4]) // 10 * 10 == d)} hop{"s" if sum(1 for h in known if int(h["date"][:4]) // 10 * 10 == d) != 1 else ""}</span></div>'
+        f'<div class="recordRow"><span class="recordRank"></span><span class="recordMain">{d}s</span>'
+        f'<span class="recordValue">{m:,.0f} mi</span>'
+        f'<span class="recordSub">{hops_by_decade[d]} hop{"s" if hops_by_decade[d] != 1 else ""}</span></div>'
         for d, m in sorted(by_decade.items()))
 
     # ---- the map ----

@@ -24,11 +24,12 @@ result (A defended through both long silences, then lost outright -- nothing
 here should ever have been reverted). A 15s SIGALRM safety net guards the
 test itself, matching the pattern used in test_belt_engine_cycle_fix.py.
 """
+import os
 import signal
 import sys
 from datetime import date, timedelta
 
-sys.path.insert(0, "/tmp/cfb-work")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import belt_engine as be
 
 D = date.fromisoformat("2005-01-01")

@@ -107,15 +107,7 @@ import urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from belt_engine import (
-    filter_division1_games,
-    load_json as engine_load_json,
-    load_vacancies as engine_load_vacancies,
-    merge_vacancies,
-    resolve_vacancies,
-    save_json as engine_save_json,
-    split_winner_baseline,
-)
+from belt_engine import filter_division1_games  # noqa: F401 -- build_losers_lineage.py imports it from here
 from supplemental_games import merge_supplemental
 
 API_BASE = "https://api.collegefootballdata.com"
@@ -123,22 +115,16 @@ FIRST_GAME_DATE = "1869-11-06"
 OUT_DIR = "belt_data"          # ephemeral, regenerated every run, gitignored
 HIST_DIR = "historical_data"   # small, git-committed baseline lives here
 
-# Three parallel championship-belt lineages, one per SCOPE, mirroring
-# build_losers_lineage.py's own SCOPES: "combined" is the real belt exactly
-# as it's always worked -- no Division 1 restriction at all, unsuffixed
-# filenames, walk()/split_at_season() below untouched -- so the
-# already-live baseline.json/lineage.json stay byte-for-byte compatible
-# with zero migration and zero behavior change. "fbs" and "fcs" are NEW
-# scopes (2026-09-15, Bob: "we could have an overall championship belt, a
-# FBS belt, FCS belt and conference belts") that additionally require BOTH
-# sides of every game to share that one current CFBD classification -- see
-# filter_division1_games in belt_engine.py. Those two use belt_engine.py's
-# resolve_vacancies()/split_winner_baseline() (gap-aware, vacancy-reverting)
-# rather than the plain walk()/split_at_season() below, because an FCS-only
-# scope can hit the exact same "small program goes dark for years" problem
-# that originally motivated building that machinery for the Losers Belt --
-# plain walk() has no way to recover from that and would just freeze.
-SCOPES = ("combined", "fbs", "fcs")
+# This script builds the real belt ("combined": no restriction, exactly as
+# it has always worked). The FBS-only and FCS-only companion belts used to
+# be built here too, as incremental "fbs"/"fcs" scopes with their own
+# committed baselines and vacancy files; since 2026-09-19 they are rebuilt
+# from scratch every run by build_conference_lineage.py (from the committed
+# game archive, with season-accurate classification -- see
+# classification.py), which is why the scope helpers below only ever see
+# "combined" now. The --bootstrap-championship-scopes flag is accepted and
+# ignored so the workflow's old checkbox keeps working.
+SCOPES = ("combined",)
 
 
 def _scope_suffix(scope):
@@ -943,29 +929,11 @@ def main():
     live_start_year = args.end_year - 1
     today = time.strftime("%Y-%m-%d")
 
-    # "combined" always runs (it's the original, already-live belt, and
-    # its own baseline is never missing in practice). "fbs"/"fcs" only run
-    # this pass if they already have a baseline (normal incremental
-    # update) OR the one-time bootstrap was explicitly requested --
-    # otherwise a scope with no baseline is SKIPPED entirely rather than
-    # silently triggering an unrequested ~316-call full fetch on some
-    # ordinary scheduled run. This mirrors build_losers_lineage.py's own
-    # opt-in bootstrap gate, just per-scope instead of all-or-nothing
-    # (Losers Belt's "combined" isn't already-live from day one the way
-    # this belt's is, so its gate can afford to be all-three-or-nothing).
+    if args.bootstrap_championship_scopes:
+        print("--bootstrap-championship-scopes: the FBS-only/FCS-only belts are rebuilt from the "
+              "game archive by build_conference_lineage.py every run now; nothing to bootstrap here.")
     scopes_to_run = ["combined"]
     baselines = {"combined": None if args.full_refetch else load_baseline("combined")}
-    for scope in ("fbs", "fcs"):
-        existing = None if args.full_refetch else load_baseline(scope)
-        if existing is not None or args.full_refetch or args.bootstrap_championship_scopes:
-            scopes_to_run.append(scope)
-            baselines[scope] = existing
-        else:
-            print(f"[{scope}] {baseline_path(scope)} not found, and the one-time "
-                  f"bootstrap wasn't requested -- skipping this scope entirely this "
-                  f"run (lineage_{scope}.json won't be (re)written; nothing else is "
-                  f"affected). Tick the 'bootstrap_championship_scopes' checkbox on "
-                  f"a manual 'Run workflow' to build it once.")
 
     print("Fetching venue timezones from CFBD...")
     venue_tz, venue_info = collect_venues(args.key)
@@ -976,17 +944,14 @@ def main():
     # live window every running scope's baseline already covers. Each
     # scope below re-filters this SAME raw pull, so running all three
     # costs no more CFBD calls than running just "combined" used to.
-    if any(b is None for b in baselines.values()):
+    if baselines["combined"] is None:
         fetch_from = args.start_year
-        print(f"At least one scope ({', '.join(scopes_to_run)}) needs the one-time "
-              f"full {fetch_from}-{args.end_year} pull from CFBD "
-              f"(~{2 * (args.end_year - fetch_from + 1)} calls, shared across "
-              f"{'all three' if len(scopes_to_run) == 3 else 'both' if len(scopes_to_run) == 2 else 'it'}).")
+        print(f"No baseline -- doing the one-time full {fetch_from}-{args.end_year} pull from CFBD "
+              f"(~{2 * (args.end_year - fetch_from + 1)} calls).")
     else:
-        fetch_from = min(min(b["live_start_year"] for b in baselines.values()), live_start_year)
+        fetch_from = min(baselines["combined"]["live_start_year"], live_start_year)
         seasons = list(range(fetch_from, args.end_year + 1))
-        print(f"Baselines found for every scope running this pass ({', '.join(scopes_to_run)}) "
-              f"-- fetching only seasons {seasons} fresh (~{2 * len(seasons)} calls).")
+        print(f"Baseline found -- fetching only seasons {seasons} fresh (~{2 * len(seasons)} calls).")
     raw = fetch_seasons(range(fetch_from, args.end_year + 1), args.key)
     # Games CFBD doesn't have (historical_data/supplemental_games.json, see
     # ruleset.md). Only the fetched seasons -- older ones are already baked
@@ -995,79 +960,35 @@ def main():
                                    seasons=range(fetch_from, args.end_year + 1))
     print(f"{len(games_all)} completed games in chronological order (any classification)")
 
-    d1_teams = None  # fetched lazily below, only if fbs/fcs actually run this time
+    d1_teams = None  # fetched lazily below (compute_team_paths)
     combined_current = None
 
     for scope in scopes_to_run:
         baseline = baselines[scope]
-        new_vacancies = all_vacancies = None
-
-        if scope == "combined":
-            games = games_all   # NO Division 1 restriction -- exactly as this always worked
-            label = "no restriction (the real belt, as always)"
-        else:
-            if d1_teams is None:
-                print("Fetching current Division 1 (FBS/FCS) team list from CFBD...")
-                d1_teams = fetch_division1_teams(args.key)
-            games = filter_division1_games(games_all, d1_teams, scope)
-            label = {"fbs": "FBS-only", "fcs": "FCS-only"}[scope]
-
+        games = games_all   # NO Division 1 restriction -- exactly as this always worked
         if baseline is None:
             print(f"\n[{scope}] No historical baseline -- doing a full "
-                  f"{args.start_year}-{args.end_year} walk ({label}, "
-                  f"{len(games)} of {len(games_all)} games qualify).")
-            if scope == "combined":
-                belt_games, reigns = walk(games, args.tie_rule)
-            else:
-                recent_teams = {g["home"] for g in games if g["season"] >= live_start_year} | \
-                               {g["away"] for g in games if g["season"] >= live_start_year}
-                belt_games, reigns, new_vacancies = resolve_vacancies(
-                    games, args.tie_rule, start_holder=None, start_reign=None,
-                    recent_teams=recent_teams, today=today)
+                  f"{args.start_year}-{args.end_year} walk ({len(games)} games).")
+            belt_games, reigns = walk(games, args.tie_rule)
         else:
             scope_fetch_from = min(baseline["live_start_year"], live_start_year)
             scoped_games = [g for g in games if g["season"] >= scope_fetch_from]
             print(f"\n[{scope}] Baseline found (through season "
                   f"{baseline['live_start_year'] - 1}, "
                   f"{len(baseline['historical_belt_games'])} belt games already settled) "
-                  f"-- using {len(scoped_games)} {label} games from season {scope_fetch_from} on")
-            if scope == "combined":
-                new_belt_games, tail_reigns = walk(
-                    scoped_games, args.tie_rule,
-                    start_holder=baseline["open_reign"]["team"],
-                    start_reign=baseline["open_reign"])
-                belt_games = baseline["historical_belt_games"] + new_belt_games
-                reigns = baseline["historical_reigns"] + tail_reigns
-            else:
-                recent_teams = {g["home"] for g in scoped_games if g["season"] >= live_start_year} | \
-                               {g["away"] for g in scoped_games if g["season"] >= live_start_year}
-                tail_belt_games, tail_reigns, new_vacancies = resolve_vacancies(
-                    scoped_games, args.tie_rule,
-                    start_holder=baseline["open_reign"]["team"],
-                    start_reign=baseline["open_reign"],
-                    recent_teams=recent_teams, today=today,
-                    context_reigns=baseline["historical_reigns"])
-                belt_games = baseline["historical_belt_games"] + tail_belt_games
-                reigns = baseline["historical_reigns"] + tail_reigns
-
-        if scope != "combined":
-            all_vacancies = engine_load_vacancies(vacancy_path(scope))
-            if new_vacancies:
-                all_vacancies, changed = merge_vacancies(all_vacancies, new_vacancies)
-                if changed:
-                    engine_save_json(all_vacancies, vacancy_path(scope), HIST_DIR)
-                    print(f"[{scope}] Wrote {vacancy_path(scope)} "
-                          f"({len(all_vacancies)} recorded vacancies)")
+                  f"-- using {len(scoped_games)} games from season {scope_fetch_from} on")
+            new_belt_games, tail_reigns = walk(
+                scoped_games, args.tie_rule,
+                start_holder=baseline["open_reign"]["team"],
+                start_reign=baseline["open_reign"])
+            belt_games = baseline["historical_belt_games"] + new_belt_games
+            reigns = baseline["historical_reigns"] + tail_reigns
 
         write_outputs(belt_games, reigns, args.tie_rule, scope)
 
-        # Advance this scope's baseline to today's live-window boundary.
-        if scope == "combined":
-            hist_belt_games, hist_reigns, open_reign = split_at_season(
-                belt_games, reigns, live_start_year)
-        else:
-            hist_belt_games, hist_reigns, open_reign = split_winner_baseline(
-                belt_games, all_vacancies, reigns[0], live_start_year)
+        # Advance the baseline to today's live-window boundary.
+        hist_belt_games, hist_reigns, open_reign = split_at_season(
+            belt_games, reigns, live_start_year)
         save_baseline(hist_belt_games, hist_reigns, open_reign, live_start_year, scope)
 
         current = reigns[-1]
@@ -1075,8 +996,7 @@ def main():
         print(f"[{scope}] current holder: {current['team']} since {current['start_date']} "
               f"({current['defenses']} defenses, {len(belt_games)} belt games, "
               f"{teams_n} distinct teams all-time)")
-        if scope == "combined":
-            combined_current = current
+        combined_current = current
 
     # "Belt Watch" (next_game/upcoming_games) stays COMBINED-only -- that's
     # what the homepage shows; the fbs/fcs scopes are Full History/All

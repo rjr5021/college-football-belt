@@ -46,26 +46,18 @@ this is safe to point at an existing belt_data/ folder:
                                  BOOTSTRAP_LOSERS_BELT below. Once
                                  bootstrapped, incremental the same way as
                                  build_lineage.py (~4-6 more calls/run).
-  3. build_conference_lineage.py -- one lineal "championship belt" per
-                                 FBS/FCS conference, using CFBD's own
-                                 per-game home_conference/away_conference
-                                 fields so only games where BOTH teams were
-                                 actually IN that conference AT THE TIME
-                                 count -- realignment (a team leaving its
-                                 conference) is handled the same way the
-                                 Losers Belt handles a program going dark.
-                                 OPTIONAL, same pattern as
-                                 build_losers_lineage.py: every conference
-                                 without a baseline yet skips itself
-                                 cleanly (no conferences/<slug>.html for it)
-                                 until BOOTSTRAP_CONFERENCE_BELTS below is
-                                 set; once a conference has a baseline it's
-                                 incremental from then on. Bootstraps ALL
-                                 FBS and FCS conferences together in one
-                                 run, sharing a single raw games fetch
-                                 (~316 CFBD calls total, same cost as one
-                                 full 1869-now history fetch, regardless of
-                                 how many conferences exist).
+  3. build_conference_lineage.py -- the companion belts (2026-09-19
+                                 rewrite): the FBS-only and FCS-only belts
+                                 (lineage_fbs.json / lineage_fcs.json) and
+                                 one belt per FBS/FCS conference, all
+                                 re-walked from scratch every run from the
+                                 committed game archive
+                                 (historical_data/all_games.json.gz) plus
+                                 this run's games_raw.json. Membership and
+                                 subdivision are judged game by game (the
+                                 conference each side was in that season --
+                                 classification.py). No API calls, no
+                                 committed state, nothing to bootstrap.
   4. fetch_team_colors.py    -- cheap; re-derives team_colors.json from a
                                  single /teams call, picking up any new
                                  belt-holding team.
@@ -216,34 +208,17 @@ own docstring. Set BOOTSTRAP_LOSERS_BELT=true (also wired to its own
 "Run workflow" checkbox) to run it once; after that it's incremental like
 everything else and this flag does nothing.
 
-Step 1's fbs/fcs championship-belt scopes and step 3
-(build_conference_lineage.py) are two MORE exceptions of the same shape,
-added alongside the Losers Belt/conference-belts feature. Each no-ops
-until its own one-time bootstrap is explicitly requested, because each
-costs real CFBD budget (~316 calls) the first time it runs:
+BOOTSTRAP_CHAMPIONSHIP_SCOPES and BOOTSTRAP_CONFERENCE_BELTS (the two
+"Run workflow" checkboxes) are kept for compatibility but do nothing since
+2026-09-19: the FBS/FCS belts and the conference belts are rebuilt from
+the committed game archive on every run and have no bootstrap. (The
+archive itself is the one-time BOOTSTRAP_ALTERNATE_UNIVERSES pull, already
+done.)
 
-  - Set BOOTSTRAP_CHAMPIONSHIP_SCOPES=true (wired to its own "Run
-    workflow" checkbox) to bootstrap the championship belt's fbs/fcs
-    scopes once. This only affects build_lineage.py's fbs/fcs scopes --
-    the original "combined" scope (lineage.html, everything the rest of
-    the site already links to) is on its own separate, already-live code
-    path and is never affected by this flag either way.
-  - Set BOOTSTRAP_CONFERENCE_BELTS=true (wired to its own "Run workflow"
-    checkbox) to bootstrap every FBS/FCS conference belt at once (per the
-    site owner's own choice: all conferences together, not staged).
-    Same no-op-until-requested behavior; a no-op for any conference
-    that's already bootstrapped, so re-ticking this later is also how to
-    pick up any newly-added conference without redoing the rest.
-
-Don't tick more than one of FULL_REFETCH_GAME_DETAILS,
-BOOTSTRAP_LOSERS_BELT, BOOTSTRAP_CHAMPIONSHIP_SCOPES, and
-BOOTSTRAP_CONFERENCE_BELTS in the same run (or even the same month)
-unless you've checked your CFBD usage first -- each of the three
-bootstrap flags costs ~316 calls on its own (~600 for the full box-score
-refetch), and stacking them, plus whatever the schedule has already spent
-that month, can easily exceed the 1,000-call/month free-tier cap. When in
-doubt, run them one at a time across separate months/weeks rather than
-all at once.
+Don't tick FULL_REFETCH_GAME_DETAILS and BOOTSTRAP_LOSERS_BELT in the
+same run (or even the same month) unless you've checked your CFBD usage
+first -- ~316 and ~600 calls respectively, on top of whatever the
+schedule has already spent that month.
 
 Stops immediately if a CFBD stage fails (nonzero exit code), rather than
 building a site from a half-updated data set. generate_ai_preview.py,
@@ -316,7 +291,7 @@ BOOTSTRAP_ALTERNATE_UNIVERSES = os.environ.get("BOOTSTRAP_ALTERNATE_UNIVERSES", 
 STAGES = [
     ("build_lineage.py", "Updating the lineage (current + previous season)", "CFBD_API_KEY"),
     ("build_losers_lineage.py", "Updating the Losers Belt (optional)", "CFBD_API_KEY"),
-    ("build_conference_lineage.py", "Updating the FBS/FCS conference belts (optional)", "CFBD_API_KEY"),
+    ("build_conference_lineage.py", "Rebuilding the companion belts: FBS-only, FCS-only and every conference (from the game archive)", None),
     ("fetch_team_colors.py", "Refreshing team colors", "CFBD_API_KEY"),
     ("fetch_coaches.py", "Refreshing head-coach history for the by-coach leaderboard (optional)", "CFBD_API_KEY"),
     ("fetch_rankings.py", "Refreshing AP/CFP poll history for the belt-vs-polls pages (optional)", "CFBD_API_KEY"),

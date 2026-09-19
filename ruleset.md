@@ -49,6 +49,13 @@ Notre Dame won the belt on November 29, 2025, then missed the 2025 playoff
 and opted out of a bowl game, so the belt sat frozen through the entire
 offseason with no belt game until the 2026 opener.
 
+That means a reign's length in days always includes the offseason: a team
+that holds the belt on New Year's Day gets 200-plus quiet days added to its
+reign before anyone can take it. That is the lineal convention and it stays,
+but the site also measures every reign in belt games — the game that won it
+plus every defense — and the Full History and conference pages let you
+switch between the two. A reader, Elliot, suggested the switch.
+
 ## Interrupted seasons
 
 Seasons that were canceled or drastically shortened league-wide — 1918
@@ -147,6 +154,45 @@ The lineage rejoins the previous chain when USC beat Stanford on October
 
 *If you know of a missing game that affects the belt, email
 hello@collegefootballbelt.com with a source.*
+
+## Companion belts: FBS-only, FCS-only and the conference belts
+
+Alongside the real belt the site runs companion belts under the same rule,
+each restricted to a smaller world of games. They are derived the same way
+— mechanically, from the game record — with three additions the real belt
+never needs:
+
+- **Which games count is judged game by game, in the season the game was
+  played.** A conference belt counts a game only if both teams were members
+  of that conference at the time. The FBS-only and FCS-only belts count a
+  game only if both teams belonged to a conference of that subdivision that
+  season, so a program that moves up or down takes its games with it. The
+  subdivisions themselves date from 1978, when Division I split into I-A
+  (now FBS) and I-AA (now FCS): the FBS belt is simply the real belt through
+  the 1977 season and diverges only after that, and the FCS belt cannot
+  start before 1978. In practice it starts in 2003, the first season the
+  data source has any real coverage of I-AA games; it has almost none
+  between 1978 and 2002.
+- **A holder that leaves vacates the belt.** When a holder's later games no
+  longer count — it changed conferences, moved between subdivisions — its
+  reign closes on its last qualifying game and the belt reverts to the most
+  recent earlier holder that is still in that world and still playing. The
+  belt never rests with a team that will never play another qualifying game.
+- **A belt whose world ends retires.** When a conference dissolves there is
+  no one left to inherit its belt, so the final reign closes on the date the
+  league formally dissolved (or the day after its last game, when no formal
+  date is known) and the belt is retired with that holder. A league that only
+  changed its name keeps one continuous belt under its current name; one
+  that stopped sponsoring football and later resumed starts a fresh lineage
+  with its next game.
+
+These rules replaced an earlier version in September 2026 after Elliot, a
+reader, pointed out that the FCS belt listed a run of one-day reigns, that
+North Dakota State had somehow never held it, and that defunct conferences
+showed their last holder as still reigning "to the present." He was right
+on every count; the last one was a genuine bug, and the others came from
+judging every game by each program's classification today rather than in
+the season it was played.
 
 ## Open items
 

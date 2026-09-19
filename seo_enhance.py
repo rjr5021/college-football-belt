@@ -66,6 +66,27 @@ LEGACY_REDIRECTS = {
     "2018/10/index.html": "/",
 }
 
+# Conference belt pages that folded into another when the belts were
+# rebuilt on 2026-09-19 (a renamed league keeps one belt under its current
+# name -- classification.CONFERENCE_RENAMES) or stopped existing (Division
+# II leagues the old build had mistaken for FCS). Each old URL gets a stub
+# pointing at the page that replaced it.
+CONFERENCE_REDIRECTS = {
+    "pac-10": "pac-12", "pac-8": "pac-12", "aawu": "pac-12", "pacific": "pac-12",
+    "big-6": "big-8", "big-7": "big-8",
+    "pcaa": "big-west",
+    "gateway-football": "mvfc", "gateway-collegiate-athletic": "mvfc",
+    "colonial": "patriot",
+    "yankee": "coastal-athletic", "atlantic-10": "coastal-athletic", "caa": "coastal-athletic",
+    "big-east": "american-athletic",
+    "mountain-state": "skyline",
+    "western": "big-ten",
+    "ovc-big-south": "big-south-ovc",
+    "siac": "index", "awc": "index",
+}
+for _old, _new in CONFERENCE_REDIRECTS.items():
+    LEGACY_REDIRECTS[f"conferences/{_old}.html"] = f"/conferences/{_new}.html"
+
 # Section pages: (title, description). None = keep the template's own.
 STATIC_PAGES = {
     "lineage.html": (

@@ -702,6 +702,28 @@ Eastern time, restated in the visitor's own zone by a few lines of JS.
   over the leaves, no sampling. The page is skipped (and left out of the
   nav) until the tree exists.
 
+## The companion belts: FBS-only, FCS-only and one per conference
+
+`build_conference_lineage.py` (stage 3) builds every companion belt --
+`lineage_fbs.json`, `lineage_fcs.json` and `conferences/<slug>_lineage.json`
+-- from scratch on every run, from the committed archive of every game
+since 1869 (`historical_data/all_games.json.gz`) plus the run's own
+`games_raw.json`. No API calls, no committed baselines or vacancy files,
+nothing to bootstrap: ~105,000 games walk in a few seconds. Which games
+count is decided game by game from the conference each side was in that
+season (`classification.py`: a hand-kept conference -> FBS/FCS map with
+era rules, pure renames folded together, dissolution dates for leagues
+that folded). The FBS belt is the real belt through 1977 and FBS-vs-FBS
+from 1978; the FCS belt starts with the data source's first real FCS
+coverage (2003). `belt_engine.resolve_vacancies` handles a holder that
+leaves its belt's world (realignment, a move between subdivisions): the
+belt reverts to the most recent earlier holder that will actually play
+again, or retires with its last holder when nobody can inherit it -- and
+never invents a placeholder reign. The rules are written up in
+`ruleset.md` ("Companion belts"); the rewrite followed a reader's (Elliot's)
+report of one-day reigns, a missing North Dakota State and defunct
+conferences held "to the present."
+
 ## Merch shop (Fourthwall)
 
 `site/shop.html` is a native page in the site's own design — products

@@ -176,137 +176,161 @@ def _predecessor(reign):
     return reign.get("predecessor") or reign.get("won_from")
 
 
-def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
-                       today, context_reigns=(), gap_threshold_days=GAP_THRESHOLD_DAYS):
-    """Winner-take counterpart to build_losers_lineage.py's
-    resolve_vacancies() -- identical mechanics (see that function's own,
-    much longer docstring for the full explanation), calling walk_winner()
-    instead of walk_losers(). `recent_teams` is deliberately generic: for
-    a dormant-program check it's "teams active in the current+previous
-    season," for a conference belt it's "teams currently in this
-    conference" -- either way, a holder not in that set (with no later
-    matching game still pending) gets its reign closed as of its last
-    real activity and the belt reverts to whoever it was caught from.
+def _next_game_date(team, games_after):
+    for g in games_after:
+        if team in (g["home"], g["away"]):
+            return g["date"]
+    return None
 
-    Returns (belt_games, reigns, vacancies).
+
+def _successor(effective_date, games, exclude, recent_teams, chronology, gap_threshold_days):
+    """Who inherits a vacated belt: the most recent earlier holder (newest
+    first through the real chronology) that is actually going to play --
+    a qualifying game within one gap threshold of the vacancy -- so the
+    walk that follows makes real progress instead of reverting again the
+    next day. At the end of the fetched data (nobody has a later game yet)
+    the heir must instead be a team that has played recently
+    (`recent_teams`), which is what keeps a live belt with a live holder
+    and lets a dissolved conference's belt retire (its roster is empty).
+    Returns a team name, or None when nobody qualifies."""
+    games_after = [g for g in games if g["date"] >= effective_date]
+    end_of_data = not games_after
+    tried = set()
+    for r in reversed(list(chronology)):
+        t = r["team"]
+        if t in exclude or t in tried:
+            continue
+        tried.add(t)
+        if end_of_data:
+            if t in recent_teams:
+                return t
+            continue
+        nxt = _next_game_date(t, games_after)
+        if nxt is None:
+            continue
+        window = gap_threshold_days
+        if _disrupted_era_overlap(effective_date, nxt):
+            window = max(window, DISRUPTION_GAP_THRESHOLD_DAYS)
+        if (date.fromisoformat(nxt) - date.fromisoformat(effective_date)).days <= window:
+            return t
+    return None
+
+
+def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
+                       today, context_reigns=(), gap_threshold_days=GAP_THRESHOLD_DAYS,
+                       first_game_date=None, reestablish=True):
+    """Walk a filtered game list under the winner-take rule and resolve
+    every point where the holder stops appearing in it -- a program that
+    went dark, a team that left the conference this belt is restricted to,
+    a program that moved between subdivisions -- without ever inventing a
+    holder that isn't going to play.
+
+    Rewritten 2026-09-19 after the previous version (a port of the Losers
+    Belt's logic) was found producing runaway day-by-day reversions on the
+    live site: when a vacated belt reverted to a predecessor with no later
+    game, that predecessor was vacated the next day, and so on around the
+    same few teams -- 124 zero-day "reigns" on the FCS belt, 1,209 bogus
+    vacancies on the WAC belt, a defunct Big 8 belt "held since 1996" --
+    and every pipeline run added more, because the cycle guard only lived
+    for one run. A reader, Elliot, reported the symptoms.
+
+    The rule now:
+
+      1. Walk until the holder has no further qualifying game (or a gap
+         longer than `gap_threshold_days` before its next one).
+      2. If the holder is simply the current holder at the end of the data
+         and still an active member of this belt's world (`recent_teams`),
+         stop: that's the reign in progress.
+      3. Otherwise the reign is vacated as of its last real game and the
+         belt reverts to the most recent EARLIER holder that will actually
+         play again within one threshold (see _successor). That heir's
+         very next game is guaranteed to be walked, so a vacancy always
+         moves the story forward by at least one real game.
+      4. If no earlier holder qualifies: a holder that merely went quiet
+         (it has a later game) carries the belt through the silence, one
+         forgiven gap at a time; a holder with no later game at all
+         RETIRES the belt -- its reign closes on its last game, flagged
+         `retired`, and nothing synthetic follows. If qualifying games
+         resume later (a conference that dropped football and came back),
+         a fresh lineage is established with the next game, flagged
+         `reestablished`.
+
+    `first_game_date` is the belt's own origin (its first qualifying
+    game) -- the conference belts and the FBS/FCS belts do not start on
+    1869-11-06. Returns (belt_games, reigns, vacancies); a retirement is
+    recorded as a vacancy with `reverted_to` None and `retired` True.
     """
+    games = sorted(games, key=lambda g: (g["date"], g.get("season_type") != "regular", g.get("id", 0)))
+    if first_game_date is None:
+        first_game_date = start_reign["start_date"] if start_reign else (games[0]["date"] if games else FIRST_GAME_DATE)
     all_belt_games, all_reigns, vacancies = [], [], []
     holder, reign = start_holder, start_reign
-    seen = set()
-    # Cycle guard, ported from build_losers_lineage.py's resolve_vacancies()
-    # (added there in commit #67, then fixed again in commit ed45ed3 after a
-    # live bootstrap run hit the exact same class of bug HERE, in this
-    # engine, because this file had been forked from an EARLIER version of
-    # that logic and never picked up either fix). `seen` alone only catches
-    # the exact same (team, start_date) key repeating -- but a revert's
-    # synthetic start_date advances by a day every hop, so a real N-team
-    # predecessor cycle (A -> B -> C -> A -> ...) never repeats an exact key
-    # even though the same teams do, and can revert once a day forever.
-    # `chain_teams` tracks every team reverted FROM since the last real
-    # forward progress (a genuine defense or a real change of holder) --
-    # reset the moment that happens. Checked in BOTH places a revert can be
-    # decided: inside the has_gap forgiveness loop below (so a cycle
-    # reached via a real-but-too-far-away game gets one gap forgiven and a
-    # chance to walk out of the cycle for real) AND in the main stop/revert
-    # decision (so a cycle reached via TERMINAL dormancy -- no later game
-    # for any of the cycling teams at all -- still gets caught; that path
-    # never touches the has_gap loop at all, which is exactly how this bug
-    # slipped through the first time it was "fixed").
+    gaps_to_forgive = 0
     chain_teams = set()
+    reestablished_pending = False
+    iterations = 0
 
     while True:
+        iterations += 1
+        if iterations > 100000:
+            raise RuntimeError("resolve_vacancies: no progress after 100000 passes -- this is a bug")
+        if not games:
+            return all_belt_games, all_reigns, vacancies
         belt_games, reigns = walk_winner(games, tie_rule, start_holder=holder, start_reign=reign,
-                                          gap_threshold_days=gap_threshold_days)
+                                          gap_threshold_days=gap_threshold_days,
+                                          gaps_to_forgive=gaps_to_forgive,
+                                          first_game_date=first_game_date)
+        if reestablished_pending and reigns:
+            reigns[0]["reestablished"] = True
+            reestablished_pending = False
         tip = reigns[-1]
-        predecessor = _predecessor(tip)
+        if tip.get("defenses", 0) > 0 or len(reigns) > 1 or belt_games:
+            chain_teams = set()          # real forward progress happened in this pass
+        last_activity = tip.get("last_game_date", tip["start_date"])
+        has_gap = any(g["date"] > last_activity and tip["team"] in (g["home"], g["away"]) for g in games)
+        dormant = tip["team"] not in recent_teams
 
-        has_gap = any(g["date"] > tip["last_game_date"]
-                      and tip["team"] in (g["home"], g["away"]) for g in games)
-        reign_key = (tip["team"], tip["start_date"])
-
-        if tip.get("defenses", 0) > 0 or len(reigns) > 1:
-            chain_teams = set()
-
-        # BUGFIX (see belt_engine.py's own history): this loop used to
-        # call walk_winner() again with the SAME holder/reign and a bare
-        # skip_first_gap=True every pass -- a pure function fed identical
-        # inputs, so once one pass didn't resolve, every later pass
-        # recomputed the exact same tip forever (a true infinite loop --
-        # this is what run #76 hit live on the [siaa] conference, whose
-        # origin reign has a gap with no predecessor and, it turns out,
-        # more than one such gap before real data resumes). The fix:
-        # forgive strictly MORE gaps each pass (1, then 2, then 3, ...),
-        # always re-walking from the SAME original (holder, reign) --
-        # never from `tip`, which would just replay the same first gap
-        # again -- so each pass provably consumes more of the finite
-        # games list than the last, guaranteeing this terminates.
-        gaps_to_forgive = 0
-        while has_gap and (predecessor is None or reign_key in seen
-                            or tip["team"] in chain_teams):
-            gaps_to_forgive += 1
-            belt_games, reigns = walk_winner(games, tie_rule, start_holder=holder,
-                                              start_reign=reign,
-                                              gap_threshold_days=gap_threshold_days,
-                                              gaps_to_forgive=gaps_to_forgive)
-            tip = reigns[-1]
-            predecessor = _predecessor(tip)
-            has_gap = any(g["date"] > tip["last_game_date"]
-                          and tip["team"] in (g["home"], g["away"]) for g in games)
-            reign_key = (tip["team"], tip["start_date"])
-            if tip.get("defenses", 0) > 0 or len(reigns) > 1:
-                chain_teams = set()
-
-        if predecessor is None or reign_key in seen or \
-                not (has_gap or tip["team"] not in recent_teams):
+        if not has_gap and not dormant:
             all_belt_games += belt_games
             all_reigns += reigns
             return all_belt_games, all_reigns, vacancies
 
-        # BUGFIX (2026-09-16, live on the Mountain West and Conference USA
-        # conference belts -- Bob: "Conference USA and the Mountain West
-        # are still active conferences... their last champion probably
-        # changed conferences"): `predecessor` is only ever ONE hop back
-        # (whoever the current tip's team caught the belt from), and
-        # `inherited` below re-derives the NEXT hop the same way -- fine
-        # normally, but when two-or-more teams that left the conference in
-        # the same realignment wave only ever caught the belt from EACH
-        # OTHER in the tracked window (Mountain West: TCU and Utah both
-        # left for the Big 12/Pac-12 within months of each other in
-        # 2011-2012, and TCU's/Utah's real reigns alternate "won_from"
-        # each other; Conference USA: North Texas/Rice/UAB all left for
-        # the AAC together in 2022-2023), the single-hop chase just
-        # flip-flops between those same teams forever. `chain_teams`
-        # correctly detects that as a cycle -- but giving up and freezing
-        # on whichever one of them happened to be `tip` is wrong; there's
-        # real history further back with a team that's still actually in
-        # the conference (Mountain West: New Mexico; the fix just hadn't
-        # been taught how to reach past a short cycle to find it). So
-        # instead of stopping here, fall back to scanning the full real
-        # reign chronology (context_reigns + all_reigns -- every reign
-        # this walk has already produced, real AND synthetic, oldest to
-        # newest) for the most recent team this chain hasn't already
-        # tried, and jump the revert straight to them instead of their
-        # (already-tried) one-hop predecessor. Only reachable once a cycle
-        # is actually detected, so it never changes behavior for the
-        # ordinary non-cycling case.
-        if tip["team"] in chain_teams:
-            fallback = None
-            for r in reversed(list(context_reigns) + all_reigns):
-                if r["team"] not in chain_teams:
-                    fallback = r["team"]
-                    break
-            if fallback is None:
-                all_belt_games += belt_games
-                all_reigns += reigns
-                return all_belt_games, all_reigns, vacancies
-            predecessor = fallback
+        effective_date = (date.fromisoformat(last_activity) + timedelta(days=1)).isoformat()
+        chronology = list(context_reigns) + all_reigns + reigns[:-1]
+        successor = _successor(effective_date, games, chain_teams | {tip["team"]}, recent_teams,
+                               chronology, gap_threshold_days)
 
-        last_activity = tip.get("last_game_date", tip["start_date"])
+        if successor is None:
+            if has_gap:
+                gaps_to_forgive += 1     # nobody to hand it to: the holder carries it through the silence
+                continue
+            # end of the line for this belt: retire it with its last real holder
+            v = {"team": tip["team"], "reign_started": tip["start_date"],
+                 "last_activity_date": last_activity, "effective_date": effective_date,
+                 "detected_on": today, "reverted_to": None, "retired": True}
+            vacancies.append(v)
+            retired_tip = {**tip, "end_date": last_activity, "lost_to": None, "retired": True}
+            all_belt_games += belt_games
+            all_reigns += reigns[:-1] + [retired_tip]
+            later = [g for g in games if g["date"] > last_activity]
+            if later and reestablish:
+                print(f"Belt: {tip['team']} has no qualifying game after {last_activity} and nobody "
+                      f"can inherit it -- retiring the belt there; a new lineage starts with the "
+                      f"next qualifying game on {later[0]['date']}.")
+                games = later
+                holder, reign = None, None
+                first_game_date = later[0]["date"]
+                gaps_to_forgive = 0
+                chain_teams = set()
+                reestablished_pending = True
+                continue
+            print(f"Belt: {tip['team']} has no qualifying game after {last_activity} and nobody "
+                  f"can inherit it -- the belt retires there.")
+            return all_belt_games, all_reigns, vacancies
+
         v = {"team": tip["team"], "reign_started": tip["start_date"],
-             "last_activity_date": last_activity,
-             "effective_date": (date.fromisoformat(last_activity)
-                                 + timedelta(days=1)).isoformat(),
-             "detected_on": today, "reverted_to": predecessor}
+             "last_activity_date": last_activity, "effective_date": effective_date,
+             "detected_on": today, "reverted_to": successor}
         if has_gap:
             reason = ("went quiet for a long stretch (no qualifying game in well "
                       "over a season) before showing up again later in the data")
@@ -322,18 +346,18 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         all_belt_games += belt_games
         all_reigns += reigns[:-1] + [vacated_tip]
         vacancies.append(v)
-        seen.add(reign_key)
         chain_teams.add(tip["team"])
 
         inherited = None
-        for r in reversed(list(context_reigns) + all_reigns):
-            if r["team"] == predecessor:
+        for r in reversed(chronology):
+            if r["team"] == successor:
                 inherited = _predecessor(r)
                 break
-        holder = predecessor
-        reign = {"team": predecessor, "start_date": v["effective_date"],
+        holder = successor
+        reign = {"team": successor, "start_date": effective_date,
                  "won_from": None, "won_score": None, "defenses": 0,
-                 "reclaimed_after": v["team"], "predecessor": inherited}
+                 "reclaimed_after": tip["team"], "predecessor": inherited}
+        gaps_to_forgive = 0
 
 
 def merge_vacancies(all_vacancies, new_vacancies):
@@ -392,6 +416,11 @@ def split_winner_baseline(belt_games, all_vacancies, first_reign, live_start_yea
     for kind, _, e in events:
         if kind == "game":
             bg = e
+            if reign is None:   # a belt re-established after a retirement
+                reign = {"team": bg["new_holder"], "start_date": bg["date"],
+                         "won_from": bg.get("holder"), "won_score": bg["score"], "defenses": 0,
+                         "reestablished": True}
+                continue
             if bg["outcome"] == "established":
                 continue
             if bg["outcome"] in ("changed", "lost (tie)"):
@@ -404,13 +433,18 @@ def split_winner_baseline(belt_games, all_vacancies, first_reign, live_start_yea
                 reign["defenses"] += 1
         else:
             v = e
-            if reign["team"] != v["team"]:
+            if reign is None or reign["team"] != v["team"]:
                 print(f"WARNING: vacancy record for {v['team']!r} doesn't match "
                       f"the reign open at that point ({reign['team']!r}) -- "
                       f"skipping it in the historical split.", file=sys.stderr)
                 continue
             reign["end_date"] = v.get("last_activity_date", v["reign_started"])
             reign["lost_to"] = None
+            if v.get("reverted_to") is None:
+                reign["retired"] = True     # the belt ended here; nothing synthetic follows
+                closed.append(reign)
+                reign = None
+                continue
             reign["vacated"] = True
             closed.append(reign)
             inherited = None

@@ -20,11 +20,12 @@ WINNER-take rule this engine uses, and to belt_engine's game dict shape) and
 checks it collapses to one lap instead of spinning forever. A 15s SIGALRM
 safety net guards the test itself.
 """
+import os
 import signal
 import sys
 from datetime import date, timedelta
 
-sys.path.insert(0, "/tmp/cfb-work")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import belt_engine as be
 
 D = date.fromisoformat("2005-01-01")
@@ -81,14 +82,22 @@ for v in vacancies:
     print(" vacated:", v["team"], v["reign_started"], "->", v["effective_date"],
           "reverted_to", v["reverted_to"])
 
-assert len(vacancies) == 5, (
-    f"Expected exactly one lap of the 5-team cycle (5 reverts: B/C/D/E/A) "
-    f"before the chain_teams guard stops it on the second trip through B -- "
-    f"got {len(vacancies)}.")
+# 2026-09-19: the engine no longer reverts to a predecessor that will never
+# play again, so a terminal-dormancy cycle produces NO lap at all: A's second
+# reign retires the belt on its last game (one vacancy, reverted_to None),
+# nothing synthetic follows, and the belt is re-established by the next
+# qualifying game (Z beats Y). Before this, the cycle "collapsed to one lap"
+# of five zero-day reigns -- and on the live site, where every pipeline run
+# started with a fresh cycle guard, it kept lapping once a day forever.
+assert len(vacancies) == 1 and vacancies[0]["reverted_to"] is None and vacancies[0].get("retired"), (
+    f"Expected the belt to retire with A (one vacancy, reverted_to None), got {vacancies}")
+assert vacancies[0]["team"] == "A" and vacancies[0]["last_activity_date"] == d(5)
 
-teams_vacated = [v["team"] for v in vacancies]
-assert len(set(teams_vacated)) == 5, (
-    "Expected each of the 5 teams to be vacated exactly once, not looped "
-    f"back around a second time -- got {teams_vacated}")
+teams = [r["team"] for r in reigns]
+assert teams == ["A", "B", "C", "D", "E", "A", "Z"], f"unexpected chain: {teams}"
+retired = reigns[5]
+assert retired.get("retired") and retired["end_date"] == d(5) and retired["lost_to"] is None, retired
+assert reigns[6].get("reestablished") and reigns[6]["won_from"] is None and reigns[6]["end_date"] is None, reigns[6]
+assert not any(r.get("reclaimed_after") for r in reigns), "no synthetic reversion reigns expected"
 
 print("\nALL BELT-ENGINE CYCLE-FIX TESTS PASSED")
