@@ -1034,7 +1034,7 @@ img{ max-width:100%; }
 .brandShort{ display:none; }
 .headTools{ display:none; align-items:center; gap:4px; }
 .primaryNav{ display:flex; align-items:center; gap:22px; flex:1; justify-content:flex-end; min-width:0; }
-.navLinks{ display:flex; align-items:center; gap:26px; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+.navLinks{ display:flex; align-items:center; gap:22px; flex:none; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
 .navLinks > a, .moreMenu > summary{ text-decoration:none; color:var(--ink-soft); padding:6px 0; border-bottom:2px solid transparent; white-space:nowrap; cursor:pointer; }
 .navLinks > a:hover, .moreMenu > summary:hover{ color:var(--ink); }
 .navLinks > a[aria-current="page"], .moreMenu[data-active] > summary{ color:var(--ink); border-bottom-color:var(--brass-bright); }
@@ -1048,7 +1048,7 @@ img{ max-width:100%; }
 .moreGroup a{ text-decoration:none; color:var(--ink); white-space:nowrap; }
 .moreGroup a:hover, .moreGroup a[aria-current="page"]{ color:var(--brass-text); }
 .moreGroup a[aria-current="page"]{ font-weight:600; }
-.navTools{ display:flex; align-items:center; gap:10px; }
+.navTools{ display:flex; align-items:center; gap:10px; flex:0 1 auto; min-width:0; }   /* the search box gives up width before the links can overlap the brand */
 .siteSearch{ position:relative; display:flex; align-items:center; gap:8px; height:36px; width:200px; flex:0 1 200px; min-width:120px; padding:0 12px; border:1px solid var(--hairline-strong); border-radius:18px; color:var(--ink-soft); background:var(--paper); }
 .siteSearch:focus-within{ border-color:var(--brass); color:var(--ink); }
 .siteSearch svg{ flex:none; display:block; }
