@@ -24,16 +24,25 @@ What it does, per page:
   (plus two small mobile CSS fixes appended to styles.css -- see MOBILE_CSS)
 
 Site-wide:
-  7. sitemap.xml <lastmod> -- the build stamps today's date on all ~1,750
-     URLs every run, which teaches Google to ignore lastmod entirely. Now only
-     pages that really change (section pages, recent games, the current
-     holder's page) carry today's date; settled history carries none.
+  7. sitemap.xml <lastmod> -- the build stamps today's date on every URL,
+     which teaches Google to ignore lastmod entirely. Now each page's date is
+     the day its built bytes last changed (historical_data/page_hashes.json
+     remembers a hash per page; the workflow commits it back), so settled
+     history keeps an old date and only pages that really changed move.
   8. Redirect stubs for URLs from the pre-2018 site that Google still has
      indexed -- the WordPress leftovers (/Seasons.htm, /index.htm,
      /author/admin/, /2018/10/, /blog, /about, /team/<Name>) and the whole
      old static scheme (/<year>/<year> Game Summaries/<Away> at <Home>.htm,
      /Schools/<Name> Stats.htm), generated from the lineage so every old
      URL lands on the page that replaced it (see legacy_redirect_map).
+  9. IndexNow (2026-09-19): the key file Bing/DuckDuckGo/Yahoo/Yandex verify
+     ownership with (/<INDEXNOW_KEY>.txt) and indexnow-changed.json, the
+     list of pages whose built bytes changed this build (step 7's hashes;
+     every page on the first run, which is the one-time full submission
+     Bing wants anyway). The deploy job POSTs that
+     list to api.indexnow.org once the site is live, so Bing re-crawls the
+     changed pages within minutes instead of whenever it next reads the
+     sitemap. Google ignores IndexNow; it gets the sitemap as before.
 
 Idempotent: running it twice changes nothing the second time.
 """
@@ -43,7 +52,7 @@ import json
 import os
 import re
 import sys
-from datetime import date, timedelta
+from datetime import date
 from urllib.parse import quote
 
 import build_site as bs
@@ -57,7 +66,6 @@ SOCIAL_PROFILES = [
     "https://www.instagram.com/collegefbbelt/",
 ]
 MARKER = "<!-- seo_enhance -->"
-RECENT_DAYS = 21  # games/teams touched this recently keep a fresh <lastmod>
 
 LEGACY_REDIRECTS = {
     "index.htm": "/",
@@ -483,47 +491,82 @@ def process_pages(lineage):
     return counts["pages"]
 
 
+PAGE_HASHES = os.path.join("historical_data", "page_hashes.json")   # committed back by the workflow
+
+
+def _page_file(loc):
+    """The built file behind a sitemap URL (None if it isn't a page of ours)."""
+    if not loc.startswith(SITE_URL + "/"):
+        return None
+    rel = loc[len(SITE_URL) + 1:] or "index.html"
+    if rel.endswith("/"):
+        rel += "index.html"
+    if not rel.endswith(".html"):
+        return None
+    return os.path.join(OUT_DIR, *rel.split("/"))
+
+
+def track_page_changes(sitemap_urls):
+    """Which pages really changed this build, and when each last did.
+    historical_data/page_hashes.json (committed back by the workflow with the
+    rest of historical_data/) keeps {url: [sha1 of the built file, date it
+    last changed]}; a page whose bytes match the stored hash keeps its old
+    date. Returns ({url: last_changed_date}, [urls changed this build]).
+    Before 2026-09-19 this was a heuristic (section pages and the last three
+    weeks' games always "fresh"); real hashes mean <lastmod> is true and
+    IndexNow gets exactly the pages worth re-crawling."""
+    import hashlib
+    try:
+        with open(PAGE_HASHES, encoding="utf-8") as f:
+            store = json.load(f)
+    except (OSError, ValueError):
+        store = {}
+    today = date.today().isoformat()
+    dates, changed, seen = {}, [], set()
+    for loc in sitemap_urls:
+        path = _page_file(loc)
+        if not path or not os.path.exists(path):
+            continue
+        with open(path, "rb") as f:
+            digest = hashlib.sha1(f.read()).hexdigest()[:16]
+        old = store.get(loc)
+        if old and old[0] == digest:
+            dates[loc] = old[1]
+        else:
+            dates[loc] = today
+            changed.append(loc)
+            store[loc] = [digest, today]
+        seen.add(loc)
+    for loc in [k for k in store if k not in seen]:
+        del store[loc]          # a page that left the sitemap
+    os.makedirs(os.path.dirname(PAGE_HASHES), exist_ok=True)
+    with open(PAGE_HASHES, "w", encoding="utf-8") as f:
+        json.dump(store, f, separators=(",", ":"), sort_keys=True)
+    return dates, changed
+
+
 def process_sitemap(lineage):
+    """<lastmod> = the date each page's content last changed (see
+    track_page_changes), instead of today's date on everything. Returns
+    (urls, changed): every sitemap URL, and the ones that changed this build."""
     path = os.path.join(OUT_DIR, "sitemap.xml")
     if not os.path.exists(path):
-        return 0
-    today = date.today()
-    cutoff = (today - timedelta(days=RECENT_DAYS)).isoformat()
-    recent_games = {str(g["game_id"]) for g in lineage["belt_games"] if g["date"] >= cutoff}
-    recent_teams = set()
-    for g in lineage["belt_games"]:
-        if g["date"] >= cutoff:
-            recent_teams.update({g["home"], g["away"]})
-    if lineage.get("current_holder"):
-        recent_teams.add(lineage["current_holder"])
-    recent_team_slugs = {bs.team_slug(t) for t in recent_teams}
-
-    def fresh(loc):
-        rel = loc[len(SITE_URL) + 1:]
-        if rel.startswith("games/"):
-            return rel[6:-5] in recent_games
-        if rel.startswith("teams/"):
-            return rel[6:-5] in recent_team_slugs
-        if rel.startswith("players/"):
-            return False
-        return rel not in {"privacy.html", "api.html", "embed.html", "ruleset.html"}
-
+        return [], []
     with open(path, encoding="utf-8") as f:
         xml = f.read()
-    stripped = 0
+    urls = [html.unescape(m.group(1)) for m in re.finditer(r"<url><loc>([^<]+)</loc>", xml)]
+    dates, changed = track_page_changes(urls)
 
     def fix(m):
-        nonlocal stripped
         loc = html.unescape(m.group(1))
-        if fresh(loc):
-            return m.group(0)
-        stripped += 1
-        return f"  <url><loc>{m.group(1)}</loc></url>"
+        when = dates.get(loc)
+        return (f"  <url><loc>{m.group(1)}</loc><lastmod>{when}</lastmod></url>" if when
+                else f"  <url><loc>{m.group(1)}</loc></url>")
 
-    xml = re.sub(r"  <url><loc>([^<]+)</loc><lastmod>[^<]+</lastmod></url>", fix, xml)
+    xml = re.sub(r"  <url><loc>([^<]+)</loc>(?:<lastmod>[^<]+</lastmod>)?</url>", fix, xml)
     with open(path, "w", encoding="utf-8") as f:
         f.write(xml)
-    return stripped
+    return urls, changed
 
 
 # Once the viewport tag is on, phones lay pages out at their real width, which
@@ -665,17 +708,46 @@ def write_legacy_redirects(lineage=None):
     return len(redirects)
 
 
+# IndexNow (https://www.indexnow.org): a key any string of 8-128 hex/dash
+# characters; the search engines prove we own the site by fetching
+# /<key>.txt, so the key is public by design and lives here rather than in a
+# secret. Change it and every engine simply re-verifies on the next ping.
+INDEXNOW_KEY = "86bde37ac2fecf6ed78a67f2ade711a7"
+INDEXNOW_CHANGED = "indexnow-changed.json"
+INDEXNOW_MAX_URLS = 10000            # the protocol's per-request limit
+
+
+def write_indexnow(changed):
+    """The key file and this build's changed-URL list for the deploy job's
+    IndexNow ping (the workflow POSTs indexnow-changed.json to
+    api.indexnow.org after the site is live). `changed` comes from
+    process_sitemap(): the pages whose built bytes differ from the last
+    build's (all of them on the first run, which doubles as the one-time
+    full submission)."""
+    with open(os.path.join(OUT_DIR, f"{INDEXNOW_KEY}.txt"), "w", encoding="utf-8") as f:
+        f.write(INDEXNOW_KEY)
+    host = SITE_URL.split("//", 1)[-1].strip("/")
+    payload = {"host": host, "key": INDEXNOW_KEY, "keyLocation": f"{SITE_URL}/{INDEXNOW_KEY}.txt",
+               "urlList": changed[:INDEXNOW_MAX_URLS]}
+    with open(os.path.join(OUT_DIR, INDEXNOW_CHANGED), "w", encoding="utf-8") as f:
+        json.dump(payload, f, separators=(",", ":"))
+    return len(payload["urlList"])
+
+
 def main():
     if not os.path.isdir(OUT_DIR):
         sys.exit(f"No {OUT_DIR}/ folder -- run build_site.py first.")
     with open(os.path.join(bs.DATA_DIR, "lineage.json"), encoding="utf-8") as f:
         lineage = json.load(f)
     pages = process_pages(lineage)
-    stripped = process_sitemap(lineage)
     redirects = write_legacy_redirects(lineage)
     patch_styles()
-    print(f"SEO: updated {pages} pages, trimmed stale <lastmod> from {stripped} sitemap URLs, "
-          f"wrote {redirects} legacy redirect stubs.")
+    # the pages are final now: hash them, date the sitemap, list the changes
+    urls, changed = process_sitemap(lineage)
+    listed = write_indexnow(changed)
+    print(f"SEO: updated {pages} pages, wrote {redirects} legacy redirect stubs; {len(changed)} of {len(urls)} "
+          f"sitemap pages changed since the last build (<lastmod> dated from real changes), "
+          f"{listed} listed for IndexNow.")
 
 
 if __name__ == "__main__":

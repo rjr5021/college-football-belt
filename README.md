@@ -552,6 +552,23 @@ no new dependencies, no accounts required to get the first three:
   `https://collegefootballbelt.com/feed.xml` to get notified the moment
   the belt changes hands without checking the site.
 
+`seo_enhance.py` (the stage after `build_site.py`) then does the search-engine
+polish: titles/descriptions, canonicals, Open Graph, JSON-LD, the redirect
+stubs for the pre-2018 URLs, and two things that matter for crawl budget on a
+9,000-page site (2026-09-19):
+
+- **Honest `<lastmod>`** — `historical_data/page_hashes.json` (committed
+  back by the workflow) remembers a hash of every page as built; a page's
+  sitemap date is the day its bytes last changed, so settled history keeps
+  an old date and only pages that really changed move. On an ordinary rebuild
+  with no new games, three pages change.
+- **IndexNow** — the same change list is written to `site/indexnow-changed.json`,
+  and the deploy job POSTs it to `api.indexnow.org` once the site is live
+  (Bing, DuckDuckGo, Yahoo and Yandex share the protocol; Google ignores it
+  and reads the sitemap). Ownership is proven by the key file the build
+  serves at `/<INDEXNOW_KEY>.txt` — the key in `seo_enhance.py` is public by
+  design. Bing Webmaster Tools then shows the submissions under "IndexNow".
+
 **Analytics are opt-in and need a one-time account you set up yourself** —
 `build_site.py` can't sign up for anything on your behalf. This project
 uses [GoatCounter](https://www.goatcounter.com/) (free, privacy-friendly,
