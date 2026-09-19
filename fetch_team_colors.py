@@ -128,7 +128,8 @@ def resolve(name, by_school):
     t = by_school.get(name)
     if t is None:
         return {"matched": False, "color": None, "alternate_color": None,
-                "logo": None, "mascot": None, "classification": None, "state": None}
+                "logo": None, "mascot": None, "classification": None, "state": None,
+                "city": None, "lat": None, "lon": None}
     logos = pick(t, "logos", default=[]) or []
     location = pick(t, "location", default={}) or {}
     return {
@@ -143,6 +144,14 @@ def resolve(name, by_school):
         # build_site.py. Free: CFBD's /teams already returns this in the same
         # call, no extra API cost.
         "state": pick(location, "state"),
+        # The home venue's city and coordinates (same /teams call, same
+        # `location` object) -- the belt's journey page (journey.html,
+        # 2026-09-18) measures every change of hands campus to campus
+        # with them. None for programs CFBD has no venue for; build_site.py
+        # falls back to a state centroid and says so.
+        "city": pick(location, "city"),
+        "lat": pick(location, "latitude"),
+        "lon": pick(location, "longitude"),
     }
 
 

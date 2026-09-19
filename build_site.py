@@ -35,6 +35,10 @@ import sys
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from email.utils import format_datetime
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:  # pragma: no cover -- Python < 3.9
+    ZoneInfo = None
 from urllib.parse import quote, urlencode
 
 from supplemental_games import is_supplemental, sources_html as supplemental_sources_html
@@ -360,6 +364,8 @@ NAV_MORE = [
         ("by-conference", "by-conference.html", "By conference"),
         ("venues", "venues/index.html", "Venues"),
         ("on-this-day", "on-this-day.html", "On this day"),
+        ("journey", "journey.html", "The belt&rsquo;s journey"),
+        ("belt-on", "belt-on.html", "Belt on any date"),
     ]),
     ("Play", [
         ("my-team", "my-team.html", "My Team"),
@@ -367,6 +373,7 @@ NAV_MORE = [
         ("dod", "defend-or-dethrone.html", "Defend or Dethrone"),
         ("trivia", "trivia.html", "Trivia"),
         ("compare", "compare.html", "Compare teams"),
+        ("degrees", "degrees.html", "Belt degrees"),
     ]),
     ("Numbers", [
         ("outlook", "outlook.html", "Season outlook"),
@@ -378,6 +385,7 @@ NAV_MORE = [
         ("lean", "lean.html", "The lean&rsquo;s ledger"),
         ("sotb", "state-of-the-belt.html", "State of the Belt"),
         ("what-if", "what-if.html", "What if?"),
+        ("belt-tree", "belt-tree.html", "The belt tree"),
     ]),
     ("About", [
         ("about", "about.html", "About the belt"),
@@ -452,11 +460,12 @@ FOOTER_COLUMNS = [
     ("Lineage", [("lineage.html", "Full history"), ("all-games.html", "All games"), ("seasons.html", "Seasons"),
                  ("timeline.html", "Timeline"), ("rivalries/index.html", "Rivalries"), ("conferences/index.html", "Conference belts"),
                  ("states/index.html", "States"), ("decades/index.html", "Decades"), ("universes/index.html", "Alternate universes"),
-                 ("web.html", "Web of the belt"), ("coaches/index.html", "Coaches")]),
+                 ("web.html", "Web of the belt"), ("coaches/index.html", "Coaches"), ("journey.html", "The belt&rsquo;s journey"),
+                 ("belt-on.html", "Belt on any date")]),
     ("Tools", [("outlook.html", "Season outlook"), ("schedule.html", "Belt schedule"), ("polls.html", "Belt vs. the polls"), ("my-team.html", "My Team"),
                ("compare.html", "Compare teams"), ("preview.html", "Next belt game"), ("daily.html", "The Daily Belt"),
                ("state-of-the-belt.html", "State of the Belt"),
-               ("what-if.html", "What if?"),
+               ("what-if.html", "What if?"), ("belt-tree.html", "The belt tree"), ("degrees.html", "Belt degrees"),
                ("embed.html", "Embed badge"), ("api.html", "API"), ("data.html", "Data &amp; press"), ("feed.xml", "RSS feed"), ("belt.ics", "Calendar feed")]),
     ("About", [("about.html", "About"), ("ruleset.html", "Ruleset"), ("stories.html", "Stories"), ("records.html", "Records"),
                ("losers-belt.html", "Losers Belt"), ("shop.html", "Shop"), ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
@@ -1484,11 +1493,31 @@ details.moreStats .statCategory{ margin-top:18px; }
 .gamedayBanner.gamedaySafe{ background:var(--good-bg); border-color:var(--good); color:var(--good-text); }
 .gamedayBanner.gamedayDanger{ background:var(--bad-bg); border-color:var(--bad); color:var(--bad-text); }
 .gamedayTag{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:3px; border:1px solid currentColor; }
-.gamedayTag::before{ content:"\25CF"; display:inline-block; margin-right:4px; }
+.gamedayTag::before{ content:"●"; display:inline-block; margin-right:4px; }
 .gamedayScore{ font-size:14px; font-weight:600; color:var(--ink); }
 .gamedayClock{ font-size:12px; color:var(--ink-soft); }
 .gamedayState{ font-size:11px; font-weight:700; letter-spacing:.06em; margin-left:auto; }
 @keyframes gamedayPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.72; } }
+.gamedayBanner[hidden]{ display:none; }
+.heroCopy .gamedayBanner{ background:var(--paper); color:var(--ink); border-color:transparent; box-shadow:0 12px 30px -18px rgba(0,0,0,.6); animation:none; }
+.heroCopy .gamedayBanner.gamedaySafe{ border-left:5px solid var(--good); }
+.heroCopy .gamedayBanner.gamedayDanger{ border-left:5px solid var(--bad); }
+.heroCopy .gamedaySafe .gamedayTag, .heroCopy .gamedaySafe .gamedayState{ color:var(--good-text); }
+.heroCopy .gamedayDanger .gamedayTag, .heroCopy .gamedayDanger .gamedayState{ color:var(--bad-text); }
+.heroCopy .gamedayPre .gamedayTag, .heroCopy .gamedayPre .gamedayState{ color:var(--ink-soft); }
+.heroCopy .gamedayBanner .gamedayScore{ color:var(--ink); }
+.heroCopy .gamedayBanner .gamedayClock, .heroCopy .gamedayBanner .gamedayPlay{ color:var(--ink-soft); }
+.gamedayBanner:not(.gamedayFinal):not(.gamedayPre) .gamedayTag::before{ animation:gamedayPulse 1.6s ease-in-out infinite; }
+.gamedayBanner.gamedayPre{ background:var(--paper-2); border-color:var(--hairline-strong); color:var(--ink-soft); animation:none; }
+.gamedayBanner.gamedayFinal{ animation:none; }
+.gamedayBanner .gamedayTag:empty{ display:none; }
+.gamedayPlay{ flex-basis:100%; font-size:11.5px; line-height:1.4; color:var(--ink-soft); }
+.gamedayPlay[hidden]{ display:none; }
+main > .gamedayBanner{ margin:18px 0 0; }
+.watchNet{ font-weight:600; }
+.upNextWatch{ color:var(--ink); }
+.matchWatch{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.04em; color:#cf9f52; }
+.schedWatch{ display:block; font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-soft); margin-top:2px; }
 @media (prefers-reduced-motion: reduce){ .gamedayBanner{ animation:none; } }
 
 /* one-line thesis under the plate */
@@ -2035,6 +2064,91 @@ table.reignsTable tr.titleChange{ background: color-mix(in srgb, var(--brass) 7%
 .viewToggle{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); margin:2px 0 0; }
 .viewToggle a{ color:var(--brass-text); text-decoration:none; border-bottom:1px dotted var(--brass); }
 .viewToggle a:hover{ border-bottom-style:solid; }
+/* ---------- 2026-09-18 batch: belt on any date, belt degrees, the belt's journey, the belt tree ---------- */
+.boBar{ grid-template-columns:auto auto 1fr; }
+.boCard{ background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:24px 26px; margin-top:22px; }
+.boCard > .kicker{ display:block; margin-bottom:8px; }
+.boHolder{ font-family:"Big Shoulders Display",sans-serif; font-weight:900; font-size:clamp(30px,4.5vw,46px); line-height:1; margin:0 0 12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.boHolder .swatch{ width:16px; height:16px; margin:0; flex:0 0 auto; }
+.boHolder a{ color:inherit; text-decoration:none; }
+.boHolder a:hover{ color:var(--brass-text); }
+.boHeld{ font-weight:700; font-size:.6em; color:var(--ink-soft); }
+.boStats{ margin:18px 0 22px; gap:28px; }
+.boGames{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
+.boGame{ border-top:1px solid var(--hairline); padding-top:10px; }
+.boGame .kicker{ display:block; margin-bottom:4px; }
+.boGame p{ margin:0; font-size:14px; line-height:1.5; }
+.boGameDate{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--brass-text); text-decoration:none; }
+.boGameDate:hover{ text-decoration:underline; }
+#boCard[hidden], #degResult[hidden], #boBefore[hidden]{ display:none !important; }
+@media (max-width:640px){ .boGames{ grid-template-columns:1fr; } .boBar{ grid-template-columns:auto 1fr; } .boStats{ gap:18px; } }
+
+.degBar{ grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr); }
+.degBar .sinceQuicks, .degBar .sinceNote{ grid-column:1 / -1; }
+.degBar .sinceSelect{ min-width:0; max-width:100%; }
+.degPair{ background:transparent; cursor:pointer; padding:5px 10px; margin:2px 4px 2px 0; font-size:10px; }
+.degCards{ grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin:18px 0 20px; }
+.degChain{ list-style:none; margin:0 0 18px; padding:0 0 0 8px; border-left:2px solid var(--brass-line); }
+.degNode{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:22px; display:flex; align-items:center; gap:8px; padding:6px 0 6px 12px; }
+.degNode a{ color:inherit; text-decoration:none; }
+.degNode a:hover{ color:var(--brass-text); }
+.degNode .swatch{ width:12px; height:12px; margin:0; flex:0 0 auto; }
+.degLink{ display:flex; align-items:baseline; gap:10px; padding:2px 0 2px 14px; font-size:13.5px; color:var(--ink-soft); }
+.degArrow{ color:var(--brass); }
+.degLink a{ color:inherit; }
+.degCount{ font-family:"IBM Plex Mono",monospace; font-size:11px; }
+.degGrid{ margin-top:34px; }
+@media (max-width:700px){ .degBar{ grid-template-columns:auto 1fr; } }
+
+.jnCards{ margin-top:18px; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); }
+.jnMapWrap{ padding-bottom:10px; }
+.jnState{ pointer-events:none; }
+.jnPin{ fill:var(--ink); opacity:.28; }
+.jnPinApprox{ fill:none; stroke:var(--ink); stroke-width:1; opacity:.4; }
+.jnCenter circle{ fill:var(--brass); opacity:.25; }
+.jnCenter path{ fill:var(--brass-bright); stroke:var(--ink); stroke-width:.8; }
+.jnTrail{ stroke:var(--brass); stroke-width:1.4; stroke-linejoin:round; stroke-linecap:round; opacity:.55; }
+.jnHop{ stroke:var(--ink); stroke-width:2.2; stroke-linecap:round; }
+.jnDot{ fill:var(--brass-bright); stroke:var(--ink); stroke-width:1.5; }
+.jnDot.isMoving{ filter:drop-shadow(0 0 4px var(--brass-bright)); }
+.jnSpeed{ display:inline-flex; gap:4px; }
+.jnSpeed .journeyBtn.isActive{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.jnReadout{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; line-height:1.6; color:var(--ink-soft); margin:8px 0 0; min-height:1.6em; }
+.jnReadout a{ color:var(--brass-text); }
+.jnN{ color:var(--brass-text); }
+.jnArrow{ font-size:.85em; color:var(--ink-soft); margin:0 6px; font-weight:400; }
+.jnGrid{ margin-top:30px; }
+.jnAll{ margin-top:18px; }
+.jnAll summary{ cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--brass-text); padding:8px 0; }
+.jnAll .recordCard{ margin-top:10px; max-height:520px; overflow:auto; }
+
+.btAfter{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; margin:0 0 10px; }
+.btAfterCol{ background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:16px 18px; }
+.btAfterCol .kicker{ display:block; margin-bottom:8px; }
+.btAfterRow{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(50px,1fr) 48px; align-items:center; column-gap:10px; padding:6px 0; border-top:1px solid var(--hairline); font-size:13.5px; }
+.btAfterTeam{ display:flex; align-items:center; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.btAfterTeam a{ color:inherit; text-decoration:none; }
+.beltTree, .beltTree ul{ list-style:none; margin:0; padding:0; }
+.beltTree > li{ background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; padding:14px 18px; }
+.beltTree details > summary{ cursor:pointer; list-style:none; display:flex; flex-direction:column; gap:3px; padding:4px 0 4px 18px; position:relative; }
+.beltTree details > summary::-webkit-details-marker{ display:none; }
+.beltTree details > summary::before{ content:"▸"; position:absolute; left:0; top:4px; color:var(--brass); }
+.beltTree details[open] > summary::before{ content:"▾"; }
+.btNode{ display:flex; align-items:center; gap:6px; font-size:15px; flex-wrap:wrap; }
+.btNode a{ color:inherit; text-decoration:none; }
+.btNode .swatch{ margin:0; }
+.btReach{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--brass-text); }
+.btSub{ font-size:12.5px; color:var(--ink-soft); }
+.btWhen{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+.btWatch{ font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-soft); }
+.btBranches{ margin:8px 0 4px 6px; padding-left:14px; border-left:2px solid var(--brass-line); }
+.btBranch{ margin:10px 0; }
+.btOdds{ display:block; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; margin-bottom:4px; }
+.btKeep .btOdds b{ color:var(--good-text); }
+.btTake .btOdds b{ color:var(--bad-text); }
+.btLeaf{ padding-left:18px; }
+.btLeaf .btNode{ font-size:14px; }
+.btLeaf .btSub{ display:block; }
 """.strip()
 
 # A short hash of the stylesheet's own content, appended to every
@@ -3379,6 +3493,261 @@ def render_belt_faq(lineage, reigns, current, belt_games, next_game, belt_risk, 
     return section, ld
 
 
+# ---------------------------------------------------------- live belt game (2026-09-18)
+
+def kickoff_et(next_game):
+    """'7:30 PM ET' from the game's UTC kickoff -- the way TV listings say
+    it -- or '' when the slot is still TBD (CFBD then carries a placeholder
+    time) or there's no timestamp at all."""
+    raw = (next_game or {}).get("raw_date")
+    if not raw or (next_game or {}).get("start_time_tbd") or ZoneInfo is None:
+        return ""
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(ZoneInfo("America/New_York"))
+    except (ValueError, TypeError):
+        return ""
+    return f"{dt:%I:%M %p}".lstrip("0") + " ET"
+
+
+def watch_line(next_game, with_time=True):
+    """'NBC · 7:30 PM ET' (or just one of them) for the next game, as
+    HTML, from build_lineage.py's media listing + kickoff. '' when neither
+    is known. The kickoff carries data-utc so the page can restate it in
+    the visitor's own zone."""
+    bits = []
+    if (next_game or {}).get("watch"):
+        bits.append(f'<span class="watchNet">{esc(next_game["watch"])}</span>')
+    et = kickoff_et(next_game) if with_time else ""
+    if et:
+        bits.append(f'<span class="kickAt" data-utc="{esc(next_game["raw_date"])}">{et}</span>')
+    elif with_time and (next_game or {}).get("start_time_tbd"):
+        bits.append('<span class="kickAt">time TBA</span>')
+    return " &middot; ".join(bits)
+
+
+KICKOFF_LOCAL_JS = '''<script>
+(function(){
+  var els = document.querySelectorAll('.kickAt[data-utc]');
+  if (!els.length) return;
+  var fmt;
+  try { fmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); } catch (e) { return; }
+  Array.prototype.forEach.call(els, function(el){
+    var d = new Date(el.getAttribute('data-utc'));
+    if (isNaN(d.getTime())) return;
+    var local = fmt.format(d);
+    if (local && /ET$/.test(el.textContent) && !/E[DS]T/.test(local)) el.textContent = local + ' your time';
+  });
+})();
+</script>'''
+
+
+def live_scoreboard_html(next_game, holder, defenses, gameday=None, rel="", link=True):
+    """The live belt-game bar (2026-09-18, Bob: "live belt-game
+    scoreboard"). One element the visitor's browser keeps current straight
+    from ESPN's public scoreboard feed -- from 45 minutes before kickoff,
+    every minute through the game, and holding the final for a day after
+    -- because the site itself only rebuilds on the pipeline's schedule
+    and a Saturday-night belt game deserves a live score with the belt's
+    framing: SAFE / IN DANGER, then "X takes the belt" or "X defends,
+    Nth defense". Server-side it renders hidden and empty (or, when the
+    hourly game-day build ran mid-game, prefilled from
+    fetch_gameday_status.py's snapshot the way the old banner was);
+    LIVE_SCOREBOARD_JS below does the rest. Returns "" without a next
+    game to watch."""
+    if not next_game or not next_game.get("raw_date") or not next_game.get("opponent"):
+        return ""
+    opponent = next_game["opponent"]
+    attrs = (f'data-event="{esc(str(next_game.get("id") or ""))}" data-kick="{esc(next_game["raw_date"])}" '
+             f'data-date="{esc(next_game.get("date") or "")}" data-holder="{esc(holder)}" data-opp="{esc(opponent)}" '
+             f'data-home="{1 if next_game.get("is_home") else 0}" data-defenses="{int(defenses or 0)}"')
+    cls, tag, score, clock, state, hidden = "", "", "", "", "", " hidden"
+    if (gameday and gameday.get("status") == "in_progress" and gameday.get("holder") == holder
+            and gameday.get("opponent") == opponent):
+        hs, os_ = gameday.get("holder_score"), gameday.get("opponent_score")
+        safe = gameday.get("safe")
+        cls = " gamedaySafe" if safe else " gamedayDanger"
+        tag, state = "Live", "SAFE" if safe else "IN DANGER"
+        bits = []
+        if gameday.get("period"):
+            bits.append(f'Q{gameday["period"]}')
+        if gameday.get("clock"):
+            bits.append(str(gameday["clock"]))
+        clock = " ".join(bits)
+        score = (f'{esc(holder)} {hs}&ndash;{os_} {esc(opponent)}' if hs is not None and os_ is not None
+                 else f'{esc(holder)} vs. {esc(opponent)}')
+        hidden = ""
+    tag_name = "a" if link else "div"
+    href = f' href="{rel}preview.html"' if link else ""
+    return (f'<{tag_name} class="gamedayBanner{cls}" id="liveBelt"{href} {attrs}{hidden}>'
+            f'<span class="gamedayTag">{tag}</span><span class="gamedayScore">{score}</span>'
+            f'<span class="gamedayClock">{clock}</span><span class="gamedayState">{state}</span>'
+            f'<span class="gamedayPlay" hidden></span></{tag_name}>')
+
+
+LIVE_SCOREBOARD_JS = '''<script>
+(function(){
+  var el = document.getElementById('liveBelt');
+  if (!el || !window.fetch || !window.Promise) return;
+  var kick = Date.parse(el.getAttribute('data-kick') || '');
+  if (isNaN(kick)) return;
+  var holder = el.getAttribute('data-holder') || '', opp = el.getAttribute('data-opp') || '';
+  var holderHome = el.getAttribute('data-home') === '1';
+  var eventId = (el.getAttribute('data-event') || '').replace(/\\D/g, '');
+  var gameDate = (el.getAttribute('data-date') || '').replace(/-/g, '');
+  var defenses = parseInt(el.getAttribute('data-defenses') || '0', 10) || 0;
+  var OPEN_BEFORE = 45 * 60 * 1000, CLOSE_AFTER = 24 * 60 * 60 * 1000, MAX_WAIT = 6 * 60 * 60 * 1000;
+  var LIVE_EVERY = 60 * 1000, PRE_EVERY = 5 * 60 * 1000;
+  var SITE = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/';
+  var CORE = 'https://sports.core.api.espn.com/v2/sports/football/leagues/college-football/events/';
+  var part = { tag: el.querySelector('.gamedayTag'), score: el.querySelector('.gamedayScore'), clock: el.querySelector('.gamedayClock'), state: el.querySelector('.gamedayState'), play: el.querySelector('.gamedayPlay') };
+  var teams = null, done = false, fails = 0, timer = null, hiddenSince = 0;
+
+  function norm(s){ return String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, ''); }
+  function isTeam(t, name){
+    if (!t) return false;
+    var n = norm(name);
+    return [t.location, t.displayName, t.shortDisplayName, t.name, t.nickname].some(function(x){ return x && norm(x) === n; });
+  }
+  function ordinal(n){ var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function num(v){ var n = typeof v === 'number' ? v : parseInt(v, 10); return isNaN(n) ? null : n; }
+  function json(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+  function get(url){ return fetch(url, { cache: 'no-store' }).then(json); }
+  function paint(cls, tag, score, clock, state, play){
+    el.className = 'gamedayBanner ' + cls;
+    part.tag.textContent = tag;
+    part.score.textContent = score;
+    part.clock.textContent = clock || '';
+    part.state.textContent = state || '';
+    if (part.play) { part.play.textContent = play || ''; part.play.hidden = !play; }
+    el.hidden = false;
+  }
+  function scoreLine(hs, os){ return holder + ' ' + hs + '\\u2013' + os + ' ' + opp; }
+  function show(state, detail, hs, os, situation){
+    var have = hs !== null && os !== null;
+    if (state === 'post') {
+      done = true;
+      if (!have) { paint('gamedayFinal', 'Final', holder + ' vs. ' + opp, detail, ''); return; }
+      var what = hs > os ? holder + ' defends the belt \\u2014 ' + ordinal(defenses + 1) + ' defense of the reign'
+               : os > hs ? opp + ' takes the belt' : 'A tie \\u2014 the belt stays with ' + holder;
+      paint((hs >= os ? 'gamedaySafe' : 'gamedayDanger') + ' gamedayFinal', 'Final', scoreLine(hs, os), what, 'Site updates within a few hours');
+      return;
+    }
+    if (state === 'in') {
+      var safe = !have || hs >= os;
+      var st = !have ? '' : hs > os ? 'SAFE' : hs < os ? 'IN DANGER' : 'TIED \\u00b7 a tie keeps it';
+      paint(safe ? 'gamedaySafe' : 'gamedayDanger', 'Live', have ? scoreLine(hs, os) : holder + ' vs. ' + opp, detail, st, situation);
+      return;
+    }
+    paint('gamedayPre', 'Pregame', holder + ' vs. ' + opp, detail, 'Belt on the line');
+  }
+  function sides(competitors){
+    var h = null, o = null;
+    (competitors || []).forEach(function(c){
+      var t = c.team || {};
+      if (isTeam(t, holder)) h = c; else if (isTeam(t, opp)) o = c;
+    });
+    if (!h || !o) {
+      h = null; o = null;
+      (competitors || []).forEach(function(c){ if ((c.homeAway === 'home') === holderHome) h = c; else o = c; });
+    }
+    if (!h || !o || !h.team || !o.team) return null;
+    return { h: { id: String(h.team.id), abbr: h.team.abbreviation || holder, score: num(h.score) },
+             o: { id: String(o.team.id), abbr: o.team.abbreviation || opp, score: num(o.score) } };
+  }
+  function renderCompetition(c){
+    var t = sides(c.competitors);
+    if (!t) throw new Error('teams');
+    teams = t;
+    var type = (c.status && c.status.type) || {};
+    show(type.state || 'pre', type.shortDetail || type.detail || '', t.h.score, t.o.score, '');
+  }
+  function identify(){
+    var viaSummary = eventId ? get(SITE + 'summary?event=' + eventId).then(function(j){
+      var c = j && j.header && j.header.competitions && j.header.competitions[0];
+      if (!c) throw new Error('no competition');
+      renderCompetition(c);
+    }) : Promise.reject(new Error('no id'));
+    return viaSummary.catch(function(){
+      // no id on file, or ESPN doesn't know it: find the game on that day's scoreboard instead
+      if (!gameDate) throw new Error('no date');
+      function search(group){
+        return get(SITE + 'scoreboard?dates=' + gameDate + '&groups=' + group + '&limit=300').then(function(j){
+          var evs = (j && j.events) || [];
+          for (var i = 0; i < evs.length; i++) {
+            var c = evs[i].competitions && evs[i].competitions[0];
+            if (!c || !sides(c.competitors)) continue;
+            var names = (c.competitors || []).map(function(x){ return x.team || {}; });
+            if (names.some(function(t){ return isTeam(t, holder); }) && names.some(function(t){ return isTeam(t, opp); })) {
+              eventId = String(evs[i].id || '').replace(/\\D/g, '');
+              renderCompetition(c);
+              return true;
+            }
+          }
+          throw new Error('not on scoreboard');
+        });
+      }
+      return search(80).catch(function(){ return search(81); });
+    });
+  }
+  function situation(base){
+    return get(base + 'situation?lang=en&region=us').then(function(s){
+      var bits = [];
+      var ref = s && s.team && s.team.$ref;
+      var m = ref && String(ref).match(/teams\\/(\\d+)/);
+      if (m && teams) bits.push((m[1] === teams.h.id ? teams.h.abbr : m[1] === teams.o.id ? teams.o.abbr : '') + ' ball');
+      if (s && s.down >= 1) bits.push(ordinal(s.down) + ' & ' + (s.distance === 0 ? 'goal' : s.distance));
+      var lastRef = s && s.lastPlay && s.lastPlay.$ref;
+      if (!lastRef) return bits.join(', ');
+      return get(String(lastRef).replace(/^http:/, 'https:')).then(function(p){
+        var txt = (p && (p.text || p.shortText)) || '';
+        if (txt.length > 110) txt = txt.slice(0, 107) + '\\u2026';
+        return (bits.length ? bits.join(', ') + ' \\u00b7 ' : '') + txt;
+      }).catch(function(){ return bits.join(', '); });
+    }).catch(function(){ return ''; });
+  }
+  function poll(){
+    timer = null;
+    if (done || !eventId || !teams) return;
+    if (document.hidden) { hiddenSince = hiddenSince || Date.now(); schedule(LIVE_EVERY); return; }
+    var base = CORE + eventId + '/competitions/' + eventId + '/';
+    get(base + 'status?lang=en&region=us').then(function(st){
+      var type = (st && st.type) || {};
+      var state = type.state || 'pre', detail = type.shortDetail || type.detail || '';
+      fails = 0;
+      if (state === 'pre') { show('pre', detail, null, null, ''); schedule(PRE_EVERY); return; }
+      return Promise.all([
+        get(base + 'competitors/' + teams.h.id + '/score?lang=en&region=us'),
+        get(base + 'competitors/' + teams.o.id + '/score?lang=en&region=us'),
+        state === 'in' ? situation(base) : Promise.resolve('')
+      ]).then(function(r){
+        show(state, detail, num(r[0] && r[0].value), num(r[1] && r[1].value), r[2]);
+        if (!done) schedule(LIVE_EVERY);
+      });
+    }).catch(function(){
+      fails += 1;
+      if (fails < 30) schedule(Math.min(PRE_EVERY, LIVE_EVERY * fails));
+    });
+  }
+  function schedule(ms){ if (timer) clearTimeout(timer); timer = setTimeout(poll, ms); }
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden && hiddenSince && !done) { hiddenSince = 0; schedule(500); }
+  });
+  function start(){
+    var now = Date.now();
+    if (now > kick + CLOSE_AFTER) return;
+    if (now < kick - OPEN_BEFORE) {
+      var wait = kick - OPEN_BEFORE - now;
+      if (wait <= MAX_WAIT) setTimeout(start, wait + 1000);
+      return;
+    }
+    identify().then(function(){ if (!done) schedule(now < kick ? PRE_EVERY : LIVE_EVERY); }).catch(function(){});
+  }
+  window.__liveBelt = { start: start, poll: poll, state: function(){ return { eventId: eventId, teams: teams, done: done, fails: fails }; } };
+  start();
+})();
+</script>'''
+
+
 def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None, belt_risk=None, gameday=None):
     """The homepage (2026-09-16 redesign): the holder's colors paint a
     full-bleed hero with one call to action (the next belt game), the chain
@@ -3415,33 +3784,12 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         lede += f" {words.get(defenses, defenses)} defense{'s' if defenses != 1 else ''} since."
         share_lede += f" {defenses} defense{'s' if defenses != 1 else ''} since."
 
-    # ---- game-day mode (wishlist #3): a live score + SAFE/IN DANGER banner
-    # while fetch_gameday_status.py sees the holder's game in progress ----
-    gameday_html = ""
-    if gameday and gameday.get("status") == "in_progress" and gameday.get("holder") == holder:
-        hs = gameday.get("holder_score")
-        opp_score = gameday.get("opponent_score")
-        opp = gameday.get("opponent") or ""
-        safe = gameday.get("safe")
-        state_class = "gamedaySafe" if safe else "gamedayDanger"
-        state_txt = "SAFE" if safe else "IN DANGER"
-        clock_bits = []
-        if gameday.get("period"):
-            clock_bits.append(f'Q{gameday["period"]}')
-        if gameday.get("clock"):
-            clock_bits.append(gameday["clock"])
-        clock_txt = f' &middot; {" ".join(clock_bits)}' if clock_bits else ""
-        if hs is not None and opp_score is not None:
-            score_txt = f'{esc(holder)} {hs}&ndash;{opp_score} {esc(opp)}'
-        else:
-            score_txt = f'{esc(holder)} vs. {esc(opp)}'
-        gameday_html = f'''
-      <a class="gamedayBanner {state_class}" href="preview.html">
-        <span class="gamedayTag">Live</span>
-        <span class="gamedayScore">{score_txt}</span>
-        <span class="gamedayClock">{clock_txt}</span>
-        <span class="gamedayState">{state_txt}</span>
-      </a>'''
+    # ---- game-day mode (wishlist #3, now live in the browser): the belt
+    # game's score bar, kept current from ESPN's public feed from 45 min
+    # before kickoff to the final (live_scoreboard_html / LIVE_SCOREBOARD_JS);
+    # fetch_gameday_status.py's hourly snapshot prefills it when the build
+    # itself ran mid-game ----
+    gameday_html = live_scoreboard_html(next_game, holder, defenses, gameday, rel="", link=True)
 
     # ---- the Up Next card: the one call to action on the page ----
     if next_game and next_game.get("date"):
@@ -3473,6 +3821,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         if where:
             when_bits.append(esc(where) + (" (neutral site)" if is_neutral else ""))
         when_txt = " &middot; ".join(when_bits)
+        tv_html = watch_line(next_game)         # "NBC · 7:30 PM ET" (where to watch, 2026-09-18)
         odds_html = ""
         if belt_risk and belt_risk.get("next_game", {}).get("opponent") == opponent:
             defend_prob = belt_risk["next_game"].get("defend_prob")
@@ -3507,7 +3856,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
           {holder_chip}
           <span class="vs">{vs_word}</span>
           {opp_chip}
-          <div class="upNextWho"><span class="team">{esc(opponent)}</span><span class="when">{when_txt}</span></div>
+          <div class="upNextWho"><span class="team">{esc(opponent)}</span><span class="when">{when_txt}</span>{f'<span class="when upNextWatch">{tv_html}</span>' if tv_html else ''}</div>
         </div>
         {odds_html}
         <div class="btnRow">
@@ -3728,6 +4077,8 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
 </main>
 
 {site_footer('', 'Colors on this page are the current holder&rsquo;s &mdash; the site recolors itself with every change of hands.')}
+{KICKOFF_LOCAL_JS}
+{LIVE_SCOREBOARD_JS if gameday_html else ''}
 '''
 
 
@@ -5055,7 +5406,7 @@ def team_belt_summary(reigns, team, today):
 
 
 def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk=None,
-                          lineage=None, belt_games=None, current_poll=None):
+                          lineage=None, belt_games=None, current_poll=None, gameday=None):
     """The next-belt-game preview (2026-09-16 redesign): a split header in
     both teams' colors, a stakes strip that answers "what happens if each
     side wins" before any prose, the AI-written preview as a column with the
@@ -5290,6 +5641,8 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
     day_abbr = game_date.strftime("%a").upper()
     when_line = fmt_date(next_game["date"])
     raw = next_game.get("raw_date") or ""
+    watch_html = watch_line(next_game, with_time=False)   # the network; the local kickoff line below has the time
+    live_html = live_scoreboard_html(next_game, holder, defenses, gameday, rel="", link=False)
     venue_bits = [b for b in (next_game.get("venue_name"), next_game.get("venue_city"), next_game.get("venue_state")) if b]
     venue_txt = esc(", ".join(venue_bits[:2])) if venue_bits else ("Neutral site" if next_game.get("neutral") else "")
 
@@ -5311,6 +5664,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 <main class="wrap">
   <div class="crumbRow" style="padding-inline:0"><a href="index.html">Belt</a> <span class="sep">/</span> <a href="season-{next_game.get("season", game_date.year)}.html">{next_game.get("season", game_date.year)} season</a> <span class="sep">/</span> Up next</div>
   <h1 class="srOnly">Up next: {title}, {when_line} &mdash; the belt is on the line</h1>
+  {live_html}
 
   <div class="matchHead">
     <div class="matchSide home">
@@ -5322,6 +5676,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
       <span class="kicker">Belt on the line</span>
       <span class="matchDay">{day_abbr}</span>
       <span class="matchWhen">{when_line}<br>{venue_txt}</span>
+      {f'<span class="matchWatch">{watch_html}</span>' if watch_html else ''}
       <span class="matchLocal" id="kickoffLocal" data-utc="{esc(raw)}" hidden></span>
     </div>
     <div class="matchSide away">
@@ -5424,6 +5779,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 </main>
 
 {footer}
+{LIVE_SCOREBOARD_JS if live_html else ''}
 '''
 
 
@@ -6870,21 +7226,20 @@ def _state_rings(entry):
     return rings
 
 
-def build_state_paths(shapes):
-    """Project every state's ring(s) through Albers, then scale/flip the
-    whole set into one shared SVG coordinate space. Returns
-    ({abbr: {"name":..., "d": "<path d>"}}, (viewbox_w, viewbox_h))."""
-    projected = {}
+def albers_svg_transform(shapes):
+    """The shared map coordinate space: project every state outline
+    through Albers, fit the whole set into a 1000x620 viewBox, and return
+    (to_svg, (width, height)) where to_svg(lon, lat) gives SVG
+    coordinates. build_state_paths draws the states with it; journey.html
+    places campuses with the same function so pins land on the right
+    state."""
     all_x, all_y = [], []
-    for abbr, entry in shapes.items():
-        rings = []
+    for entry in shapes.values():
         for ring in _state_rings(entry):
-            proj_ring = [albers_project(lon, lat) for lon, lat in ring]
-            rings.append(proj_ring)
-            all_x.extend(x for x, _ in proj_ring)
-            all_y.extend(y for _, y in proj_ring)
-        projected[abbr] = rings
-
+            for lon, lat in ring:
+                x, y = albers_project(lon, lat)
+                all_x.append(x)
+                all_y.append(y)
     min_x, max_x = min(all_x), max(all_x)
     min_y, max_y = min(all_y), max(all_y)
     pad = 0.02 * max(max_x - min_x, max_y - min_y)
@@ -6896,16 +7251,25 @@ def build_state_paths(shapes):
     off_x = (width - (max_x - min_x) * scale) / 2
     off_y = (height - (max_y - min_y) * scale) / 2
 
-    def to_svg(x, y):
+    def to_svg(lon, lat):
+        x, y = albers_project(lon, lat)
         sx = (x - min_x) * scale + off_x
         sy = height - ((y - min_y) * scale + off_y)  # SVG y grows downward
         return sx, sy
 
+    return to_svg, (width, height)
+
+
+def build_state_paths(shapes):
+    """Project every state's ring(s) through Albers, then scale/flip the
+    whole set into one shared SVG coordinate space. Returns
+    ({abbr: {"name":..., "d": "<path d>"}}, (viewbox_w, viewbox_h))."""
+    to_svg, (width, height) = albers_svg_transform(shapes)
     out = {}
-    for abbr, rings in projected.items():
+    for abbr, entry in shapes.items():
         parts = []
-        for ring in rings:
-            pts = [to_svg(x, y) for x, y in ring]
+        for ring in _state_rings(entry):
+            pts = [to_svg(lon, lat) for lon, lat in ring]
             parts.append("M " + " L ".join(f"{px:.1f},{py:.1f}" for px, py in pts) + " Z")
         out[abbr] = {"name": shapes[abbr]["name"], "d": " ".join(parts)}
     return out, (width, height)
@@ -8975,8 +9339,10 @@ def generate_schedule_page(belt_risk, lineage, colors, next_game=None):
                 pct = g["p_belt_game"] * 100
                 pct_txt = "100%" if pct >= 99.5 else (f"{pct:.0f}%" if pct >= 1 else f"{pct:.1f}%")
                 involves_holder = holder in (g["home"], g["away"])
+                watch = watch_line(g)
+                watch_html = f'<span class="schedWatch">{watch}</span>' if watch else ""
                 rows += (f'<li class="outlookRow schedRow{" isHolder" if involves_holder else ""}">'
-                         f'<span class="outlookTeam">{matchup(g)}</span>'
+                         f'<span class="outlookTeam">{matchup(g)}{watch_html}</span>'
                          f'<span class="schedFav mono">{favored(g)}</span>'
                          f'<span class="outlookBar"><span class="outlookFill" style="width:{max(1.5, pct):.1f}%"></span></span>'
                          f'<span class="outlookPct tabular">{pct_txt}</span></li>')
@@ -9018,6 +9384,7 @@ def generate_schedule_page(belt_risk, lineage, colors, next_game=None):
 </main>
 
 {site_footer('', 'Schedules and Elo ratings from the College Football Data API; the simulation is this site&rsquo;s own.')}
+{KICKOFF_LOCAL_JS}
 '''
 
 
@@ -10211,6 +10578,933 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
 {script}
 '''
 
+
+
+# ---------------------------------------------------------- the belt on any date (2026-09-18)
+
+BELT_ORIGIN_DATE = "1869-11-06"
+
+
+def _game_holder(g):
+    """The side defending the belt in a belt game -- for the very first
+    game (outcome "established", no holder yet) the winner stands in."""
+    return g.get("holder") or g["new_holder"]
+
+
+def _holder_points(g):
+    """(holder's points, opponent's points) for a belt game."""
+    home_s, away_s = (int(x) for x in g["score"].split("-"))
+    return (home_s, away_s) if g["home"] == _game_holder(g) else (away_s, home_s)
+
+
+def belt_timeline_payload(lineage, colors, belt_games):
+    """The whole chain of custody, compact enough to embed in a page:
+    teams (name, slug, color), reigns as [team, start_day, end_day|-1,
+    won_from|-1, defenses] and belt games as [day, game_id, holder,
+    opponent, holder_pts, opp_pts, outcome] -- days counted from the
+    first game (1869-11-06), outcome 0 = defended, 1 = changed hands,
+    2 = tie, 3 = established. Shared by belt-on.html and degrees.html."""
+    origin = date.fromisoformat(BELT_ORIGIN_DATE)
+    teams = sorted({r["team"] for r in lineage["reigns"]} | {_game_holder(g) for g in belt_games} | {g["opponent"] for g in belt_games})
+    index = {t: i for i, t in enumerate(teams)}
+    holders = {r["team"] for r in lineage["reigns"]}
+    codes = {"retained": 0, "changed": 1, "retained (tie)": 2, "established": 3}
+
+    def day(iso):
+        return (date.fromisoformat(iso) - origin).days
+
+    reigns = []
+    for r in lineage["reigns"]:
+        reigns.append([index[r["team"]], day(r["start_date"]), day(r["end_date"]) if r.get("end_date") else -1,
+                       index.get(r.get("won_from"), -1), int(r.get("defenses") or 0)])
+    games = []
+    for g in belt_games:
+        hp, op = _holder_points(g)
+        outcome = codes.get(g["outcome"])
+        if outcome is None:
+            outcome = 2 if hp == op else (1 if g["new_holder"] != _game_holder(g) else 0)
+        games.append([day(g["date"]), g["game_id"], index[_game_holder(g)], index[g["opponent"]], hp, op, outcome])
+    return {
+        "origin": BELT_ORIGIN_DATE,
+        "today": (date.today() - origin).days,
+        "teams": teams,
+        "slugs": [team_slug(t) if (t in holders or t in CHALLENGER_PAGES) else "" for t in teams],
+        "colors": [team_color(colors, t)[0] for t in teams],
+        "reigns": reigns,
+        "games": games,
+    }
+
+
+def generate_belt_on_page(lineage, colors, belt_games):
+    """belt-on.html (2026-09-18): pick any date since the first game and
+    see who was holding the belt that day -- which reign, how deep into
+    it, how many defenses so far, the belt game just before and the one
+    just after -- with a line to share. Everything is answered in the
+    browser from the embedded chain of custody (no fetch), and the date
+    lives in the URL hash so a birthday can be linked."""
+    payload = belt_timeline_payload(lineage, colors, belt_games)
+    reigns = lineage["reigns"]
+    today = date.today()
+    n_days = (today - date.fromisoformat(BELT_ORIGIN_DATE)).days
+    current = reigns[-1]
+    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+    body = f'''
+  {page_intro("Belt on any date", "Who had the belt on&hellip;",
+              f"Pick a day &mdash; your birthday, the night you graduated, the first game you remember &mdash; and see who was holding "
+              f"the College Football Belt, how long they had held it, and what happened next. Every one of the "
+              f"{n_days:,} days since Rutgers beat Princeton on November 6, 1869 has an answer.")}
+  <div class="sinceBar boBar">
+    <label class="sinceLabel" for="boDate">Date</label>
+    <input class="sinceSelect" type="date" id="boDate" min="{BELT_ORIGIN_DATE}" max="{today.isoformat()}" value="{today.isoformat()}">
+    <div class="sinceQuicks">
+      <button type="button" class="chipLink sinceQuick" data-q="today">Today</button>
+      <button type="button" class="chipLink sinceQuick" data-q="random">Random day</button>
+      <button type="button" class="chipLink sinceQuick" data-q="y-25">25 years ago</button>
+      <button type="button" class="chipLink sinceQuick" data-q="y-50">50 years ago</button>
+      <button type="button" class="chipLink sinceQuick" data-q="y-100">100 years ago</button>
+    </div>
+    <p class="sinceNote" id="boNote">The URL updates as you pick, so a date can be linked and shared.</p>
+  </div>
+
+  <section class="boCard" id="boCard" hidden aria-live="polite">
+    <span class="kicker">On <span id="boWhen"></span></span>
+    <h2 class="boHolder"><span class="swatch" id="boSwatch"></span><a id="boTeam" href="#"></a> <span class="boHeld">held the belt</span></h2>
+    <p class="lede" id="boLede"></p>
+    <div class="miniStats boStats">
+      <div><span class="n tabular" id="boDay"></span><span class="l">Day of the reign</span></div>
+      <div><span class="n tabular" id="boDef"></span><span class="l">Defenses so far</span></div>
+      <div><span class="n tabular" id="boReignNo"></span><span class="l">Reign in belt history</span></div>
+      <div><span class="n tabular" id="boLeft"></span><span class="l" id="boLeftLabel">Days it would hold on</span></div>
+    </div>
+    <div class="boGames">
+      <div class="boGame"><span class="kicker">The belt game before</span><p id="boPrev"></p></div>
+      <div class="boGame"><span class="kicker">The belt game after</span><p id="boNext"></p></div>
+    </div>
+    <div class="btnRow boShare">
+      <button type="button" class="btn ghost" id="boCopy">Copy the line</button>
+      <a class="btn ghost" id="boX" href="#" target="_blank" rel="noopener">Post on X</a>
+      <a class="btn ghost" id="boReignLink" href="#">This reign &rarr;</a>
+    </div>
+  </section>
+  <p class="noteBox" id="boBefore" hidden>There was no belt yet. It was established on November 6, 1869, when Rutgers beat Princeton 6&ndash;4 in the first college football game &mdash; pick that day or any day since.</p>
+  <p class="noteBox">How it is answered: the belt is held from the day it is won until the day it is lost, so the holder on any date is simply the
+    program that won it most recently before then &mdash; the same chain of custody as <a href="lineage.html">the full history</a>, with
+    every game linked. {esc(current["team"])} has held it since {fmt_date(current["start_date"])}.</p>'''
+
+    script = '''<script id="boData" type="application/json">__DATA__</script>
+<script>
+(function(){
+  var D; try { D = JSON.parse(document.getElementById('boData').textContent); } catch (e) { return; }
+  var T = D.teams, S = D.slugs, C = D.colors, R = D.reigns, G = D.games;
+  var ORIGIN = Date.UTC(1869, 10, 6), DAY = 86400000, TODAY = D.today;
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var input = document.getElementById('boDate'), card = document.getElementById('boCard'), before = document.getElementById('boBefore');
+  var $ = function(id){ return document.getElementById(id); };
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function isoOf(day){ var d = new Date(ORIGIN + day * DAY); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function dayOf(iso){ var p = (iso || '').split('-'); if (p.length !== 3) return null; var t = Date.UTC(+p[0], +p[1] - 1, +p[2]); return isNaN(t) ? null : Math.round((t - ORIGIN) / DAY); }
+  function fmt(day){ var d = new Date(ORIGIN + day * DAY); return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear(); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function ordinal(n){ var s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function teamHtml(i){ return S[i] ? '<a href="teams/' + S[i] + '.html">' + esc(T[i]) + '</a>' : esc(T[i]); }
+  function reignAt(day){ var lo = 0, hi = R.length - 1, ans = -1; while (lo <= hi) { var mid = (lo + hi) >> 1; if (R[mid][1] <= day) { ans = mid; lo = mid + 1; } else hi = mid - 1; } return ans; }
+  function lastGameAtOrBefore(day){ var lo = 0, hi = G.length - 1, ans = -1; while (lo <= hi) { var mid = (lo + hi) >> 1; if (G[mid][0] <= day) { ans = mid; lo = mid + 1; } else hi = mid - 1; } return ans; }
+  function gameLine(g, ri){
+    var hp = g[4], op = g[5], code = g[6];
+    var what = code === 1 ? esc(T[g[3]]) + ' <strong>took the belt</strong> from ' + esc(T[g[2]]) + ', ' + op + '\\u2013' + hp
+             : code === 3 ? esc(T[g[2]]) + ' <strong>established the belt</strong> over ' + esc(T[g[3]]) + ', ' + hp + '\\u2013' + op
+             : code === 2 ? esc(T[g[2]]) + ' <strong>tied</strong> ' + esc(T[g[3]]) + ', ' + hp + '\\u2013' + op + ' \\u2014 the belt stayed put'
+             : esc(T[g[2]]) + ' <strong>defended</strong> against ' + esc(T[g[3]]) + ', ' + hp + '\\u2013' + op;
+    return '<a class="boGameDate" href="games/' + g[1] + '.html">' + fmt(g[0]) + '</a> &middot; ' + what;
+  }
+  function render(day, push){
+    if (day === null) return;
+    if (day > TODAY) day = TODAY;
+    if (day < 0) { card.hidden = true; before.hidden = false; return; }
+    before.hidden = true;
+    var ri = reignAt(day), r = R[ri], team = r[0];
+    var start = r[1], end = r[2] < 0 ? TODAY : r[2], ongoing = r[2] < 0;
+    var dayN = day - start + 1, length = end - start;
+    // defenses so far: belt games in this reign on or before the day, after the one that won it
+    var defs = 0, gi = lastGameAtOrBefore(day);
+    for (var k = gi; k >= 0 && G[k][0] >= start; k--) { if (G[k][2] === team && (G[k][6] === 0 || G[k][6] === 2)) defs++; }
+    var teamReignNo = 0; for (var j = 0; j <= ri; j++) if (R[j][0] === team) teamReignNo++;
+    var programsSoFar = {}; for (var m = 0; m <= ri; m++) programsSoFar[R[m][0]] = 1;
+    var nPrograms = Object.keys(programsSoFar).length;
+    $('boWhen').textContent = fmt(day);
+    $('boTeam').textContent = T[team];
+    $('boTeam').href = S[team] ? 'teams/' + S[team] + '.html' : '#';
+    $('boSwatch').style.background = C[team] || 'transparent';
+    var how = r[3] >= 0 ? 'won from ' + teamHtml(r[3]) + ' on ' + fmt(start) : 'established on ' + fmt(start);
+    var poss = esc(T[team]) + (/s$/i.test(T[team]) ? '\\u2019' : '\\u2019s');
+    var lede = 'Day ' + dayN.toLocaleString() + ' of ' + (ongoing ? 'a reign still going today' : 'a ' + length.toLocaleString() + '-day reign') + ' \\u2014 ' + poss + ' ' + ordinal(teamReignNo) + ' time with the belt, ' + how + '. ' +
+               'It was the ' + ordinal(ri + 1) + ' reign in belt history; ' + nPrograms + ' different program' + (nPrograms === 1 ? '' : 's') + ' had held it by then.';
+    $('boLede').innerHTML = lede;
+    $('boDay').textContent = dayN.toLocaleString();
+    $('boDef').textContent = defs;
+    $('boReignNo').textContent = ordinal(ri + 1);
+    if (ongoing && day === TODAY) { $('boLeft').textContent = '\\u2014'; $('boLeftLabel').textContent = 'Still holding it today'; }
+    else if (ongoing) { $('boLeft').textContent = (TODAY - day).toLocaleString(); $('boLeftLabel').textContent = 'Days ago \\u2014 still holding it'; }
+    else { $('boLeft').textContent = (end - day).toLocaleString(); $('boLeftLabel').textContent = 'Days until it changed hands'; }
+    $('boPrev').innerHTML = gi >= 0 ? gameLine(G[gi]) : 'None yet.';
+    $('boNext').innerHTML = gi + 1 < G.length ? gameLine(G[gi + 1]) : 'Not played yet \\u2014 <a href="preview.html">the next belt game</a> is on the schedule.';
+    $('boReignLink').href = 'reigns/' + (ri + 1) + '.html';
+    var iso = isoOf(day);
+    var line = 'On ' + fmt(day) + ', the College Football Belt belonged to ' + T[team] + ' \\u2014 day ' + dayN.toLocaleString() + ' of ' + (ongoing ? 'a reign that is still going' : 'a ' + length.toLocaleString() + '-day reign') + '. Who had it on your birthday? ' + location.origin + location.pathname + '#d=' + iso;
+    card.setAttribute('data-line', line);
+    $('boX').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(line);
+    card.hidden = false;
+    if (input.value !== iso) input.value = iso;
+    if (push !== false) { try { history.replaceState(null, '', '#d=' + iso); } catch (e) {} }
+    document.querySelectorAll('.boBar .sinceQuick').forEach(function(b){ b.classList.remove('isActive'); });
+  }
+  input.addEventListener('change', function(){ render(dayOf(input.value)); });
+  input.addEventListener('input', function(){ var d = dayOf(input.value); if (d !== null && input.value.length === 10) render(d); });
+  document.querySelector('.boBar').addEventListener('click', function(e){
+    var b = e.target.closest('.sinceQuick'); if (!b) return;
+    var q = b.getAttribute('data-q'), day;
+    if (q === 'today') day = TODAY;
+    else if (q === 'random') day = Math.floor(Math.random() * (TODAY + 1));
+    else { var yrs = parseInt(q.slice(2), 10); var d = new Date(ORIGIN + TODAY * DAY); d.setUTCFullYear(d.getUTCFullYear() - yrs); day = Math.round((d.getTime() - ORIGIN) / DAY); }
+    render(day); b.classList.add('isActive');
+  });
+  $('boCopy').addEventListener('click', function(){
+    var line = card.getAttribute('data-line') || '';
+    var done = function(){ $('boCopy').textContent = 'Copied'; setTimeout(function(){ $('boCopy').textContent = 'Copy the line'; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).then(done, function(){ window.prompt('Copy this line', line); });
+    else window.prompt('Copy this line', line);
+  });
+  var m = (location.hash || '').match(/d=(\\d{4}-\\d{2}-\\d{2})/);
+  render(m ? dayOf(m[1]) : TODAY, !m);
+  window.addEventListener('hashchange', function(){ var mm = (location.hash || '').match(/d=(\\d{4}-\\d{2}-\\d{2})/); if (mm) render(dayOf(mm[1]), false); });
+  window.__beltOn = { render: render, dayOf: dayOf, reignAt: reignAt };
+})();
+</script>'''.replace("__DATA__", data.replace("</", "<\\/"))
+
+    return f'''{page_head("Who Had the Belt on Any Date — The College Football Belt",
+                     "Pick any date since 1869 and see who was holding the College Football Belt that day, how deep into the reign they were, and the belt games on either side of it.", "",
+                     share_meta("belt-on", "Who had the belt on your birthday?", "Belt on any date", f"{n_days:,} days, every one with a holder", "Pick a date. Get the answer, with the games on either side."))}
+
+{site_header('', 'belt-on')}
+
+<main class="wrap">{body}
+</main>
+
+{site_footer('', 'Answered from the chain of custody itself: the holder on any day is whoever won the belt most recently before it.')}
+{script}
+'''
+
+
+# ---------------------------------------------------------- belt degrees (2026-09-18)
+
+def build_handoff_graph(lineage, belt_games):
+    """Every program that has held the belt, joined to every program it
+    has ever taken the belt from or lost it to -- one undirected edge per
+    pair, carrying every game the belt passed between them (either
+    direction). Returns (teams, index, edges) with edges as
+    {(a, b): [game, ...]} keyed a < b by index."""
+    teams = sorted({r["team"] for r in lineage["reigns"]})
+    index = {t: i for i, t in enumerate(teams)}
+    edges = {}
+    for g in belt_games:
+        if g["outcome"] != "changed":
+            continue
+        a, b = index.get(g["holder"]), index.get(g["new_holder"])
+        if a is None or b is None or a == b:
+            continue
+        edges.setdefault((min(a, b), max(a, b)), []).append(g)
+    return teams, index, edges
+
+
+def _bfs_all(n, adj):
+    """Shortest-path distances from every node (small graph: ~100 nodes)."""
+    dist = []
+    for s in range(n):
+        d = [-1] * n
+        d[s] = 0
+        q = [s]
+        for u in q:
+            for v in adj[u]:
+                if d[v] < 0:
+                    d[v] = d[u] + 1
+                    q.append(v)
+        dist.append(d)
+    return dist
+
+
+def generate_degrees_page(lineage, colors, belt_games):
+    """degrees.html (2026-09-18): six degrees of the belt. Every holder is
+    connected to every program it has ever taken the belt from or lost it
+    to; pick any two and the page finds the shortest chain of real changes
+    of hands between them, each link a game you can open. Built from the
+    same handoffs as the web-of-the-belt chord diagram; the path search
+    runs in the browser on the embedded graph."""
+    teams, index, edges = build_handoff_graph(lineage, belt_games)
+    n = len(teams)
+    adj = [[] for _ in range(n)]
+    for (a, b) in edges:
+        adj[a].append(b)
+        adj[b].append(a)
+    dist = _bfs_all(n, adj)
+    origin = date.fromisoformat(BELT_ORIGIN_DATE)
+    reigns_by_team = Counter(r["team"] for r in lineage["reigns"])
+    holders = set(teams)
+
+    # ---- build-time stats ----
+    degree = sorted(((len(adj[i]), teams[i]) for i in range(n)), key=lambda x: (-x[0], x[1]))
+    reachable = [[d for d in row if d > 0] for row in dist]
+    diameter = max(max(row) for row in dist)
+    far_pairs = sorted({(min(i, j), max(i, j)) for i in range(n) for j in range(n) if dist[i][j] == diameter})
+    far_pairs = [(teams[a], teams[b]) for a, b in far_pairs]
+    all_d = [d for row in reachable for d in row]
+    avg_dist = sum(all_d) / len(all_d) if all_d else 0
+    within = Counter(all_d)
+    n_edges = len(edges)
+    n_handoffs = sum(len(v) for v in edges.values())
+    unreachable = sum(1 for row in dist for d in row if d < 0) // 2
+    # each program's average distance to everyone else: the "center" of the belt
+    centers = sorted(((sum(row) / max(1, len(row)), teams[i]) for i, row in enumerate(reachable) if row), key=lambda x: (x[0], x[1]))
+    # the busiest corridor
+    busiest = sorted(edges.items(), key=lambda kv: (-len(kv[1]), kv[0]))[:8]
+
+    def swatch(team):
+        return f'<span class="swatch" style="background:{team_color(colors, team)[0]}"></span>'
+
+    hub_rows = "".join(
+        f'<a class="recordRow" href="teams/{team_slug(t)}.html"><span class="recordRank">{i + 1}</span>'
+        f'<span class="recordMain">{swatch(t)}{esc(t)}</span><span class="recordValue">{d} program{"s" if d != 1 else ""}</span>'
+        f'<span class="recordSub">{reigns_by_team[t]} reign{"s" if reigns_by_team[t] != 1 else ""}</span></a>'
+        for i, (d, t) in enumerate(degree[:10]))
+    center_rows = "".join(
+        f'<a class="recordRow" href="teams/{team_slug(t)}.html"><span class="recordRank">{i + 1}</span>'
+        f'<span class="recordMain">{swatch(t)}{esc(t)}</span><span class="recordValue">{avg:.2f} degrees</span>'
+        f'<span class="recordSub">average distance to every other holder</span></a>'
+        for i, (avg, t) in enumerate(centers[:10]))
+    corridor_rows = ""
+    meetings = rivalry_pairs(belt_games)
+    for (a, b), games in busiest:
+        latest = max(games, key=lambda g: g["date"])
+        pair = tuple(sorted((teams[a], teams[b])))
+        has_page = len(meetings.get(pair, [])) >= RIVALRY_MIN_GAMES
+        open_tag = f'<a class="recordRow" href="rivalries/{rivalry_slug(*pair)}.html">' if has_page else '<div class="recordRow">'
+        corridor_rows += (open_tag +
+                          f'<span class="recordRank">{len(games)}&times;</span>'
+                          f'<span class="recordMain">{swatch(teams[a])}{esc(teams[a])} <span class="jnArrow">&harr;</span> {swatch(teams[b])}{esc(teams[b])}</span>'
+                          f'<span class="recordValue">last {latest["date"][:4]}</span>'
+                          f'<span class="recordSub">the belt has passed between them {len(games)} times</span>' + ('</a>' if has_page else '</div>'))
+    far_html = " ".join(f'<button type="button" class="chipLink degPair" data-a="{esc(a)}" data-b="{esc(b)}">{esc(a)} &harr; {esc(b)}</button>' for a, b in far_pairs[:6])
+    cumulative, dist_bits = 0, []
+    for k in sorted(within):
+        cumulative += within[k]
+        if k < diameter:
+            dist_bits.append(f'{cumulative * 100 // max(1, len(all_d))}% of pairs within {k}')
+    dist_hist = " &middot; ".join(dist_bits)
+
+    options = "".join(f'<option value="{esc(t)}">{esc(t)}</option>' for t in teams)
+    payload = {
+        "teams": teams,
+        "slugs": [team_slug(t) for t in teams],
+        "colors": [team_color(colors, t)[0] for t in teams],
+        "edges": [[a, b, [[(date.fromisoformat(g["date"]) - origin).days, g["game_id"], index[g["new_holder"]],
+                           *_holder_points(g)] for g in sorted(games, key=lambda g: g["date"])]]
+                  for (a, b), games in sorted(edges.items())],
+    }
+    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+    body = f'''
+  {page_intro("Belt degrees", "Six degrees of the belt",
+              f"Every program that has held the belt took it from someone and lost it to someone. That makes a web: {n} holders, "
+              f"{n_edges} pairs that have traded it, {n_handoffs} changes of hands. Pick any two programs and follow the shortest "
+              f"chain of real games between them. No two holders are more than {diameter} handoffs apart.")}
+  <div class="sinceBar degBar">
+    <label class="sinceLabel" for="degFrom">From</label>
+    <select class="sinceSelect" id="degFrom"><option value="">Pick a program</option>{options}</select>
+    <label class="sinceLabel" for="degTo">To</label>
+    <select class="sinceSelect" id="degTo"><option value="">Pick a program</option>{options}</select>
+    <div class="sinceQuicks">
+      <button type="button" class="chipLink sinceQuick" id="degRandom">Random pair</button>
+      <button type="button" class="chipLink sinceQuick" id="degSwap">Swap</button>
+    </div>
+    <p class="sinceNote">Farthest apart ({diameter} degrees): {far_html}</p>
+  </div>
+
+  <section id="degResult" hidden aria-live="polite">
+    <div class="statCards degCards">
+      <div class="statCard"><span class="kicker">Degrees of separation</span><span class="big tabular" id="degN"></span><p id="degNote"></p></div>
+      <div class="statCard"><span class="kicker">Between them directly</span><span class="big tabular" id="degDirect"></span><p id="degDirectNote"></p></div>
+    </div>
+    <ol class="degChain" id="degChain"></ol>
+    <p class="btnRow"><button type="button" class="btn ghost" id="degCopy">Copy the chain</button><a class="btn ghost" id="degX" href="#" target="_blank" rel="noopener">Post on X</a></p>
+  </section>
+
+  <div class="recordsGrid degGrid">
+    <section class="recordCard"><h2>Most connected</h2><p class="recordCardSub">Programs that have traded the belt with the most different opponents</p>{hub_rows}</section>
+    <section class="recordCard"><h2>Center of the web</h2><p class="recordCardSub">Closest, on average, to every other holder</p>{center_rows}</section>
+    <section class="recordCard"><h2>Busiest corridors</h2><p class="recordCardSub">The pairs the belt has passed between most often</p>{corridor_rows}</section>
+  </div>
+  <p class="noteBox">How it works: two programs are one degree apart if the belt has ever passed directly between them, in either direction, in any era.
+    The page finds the shortest such chain (a breadth-first search over {n_edges} pairs) and shows the most recent game for each link.
+    On average two holders are {avg_dist:.1f} degrees apart{" (" + dist_hist + ")" if dist_hist else ""}.
+    {f"{unreachable} pair{'s' if unreachable != 1 else ''} can&rsquo;t be connected at all." if unreachable else "Every holder can be reached from every other."}
+    The same handoffs drawn as one picture: <a href="web.html">the web of the belt</a>.</p>'''
+
+    script = '''<script id="degData" type="application/json">__DATA__</script>
+<script>
+(function(){
+  var D; try { D = JSON.parse(document.getElementById('degData').textContent); } catch (e) { return; }
+  var T = D.teams, S = D.slugs, C = D.colors, E = D.edges;
+  var ORIGIN = Date.UTC(1869, 10, 6), DAY = 86400000;
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var idx = {}; T.forEach(function(t, i){ idx[t] = i; });
+  var adj = T.map(function(){ return []; }), between = {};
+  E.forEach(function(e){ adj[e[0]].push(e[1]); adj[e[1]].push(e[0]); between[e[0] + ':' + e[1]] = e[2]; });
+  var from = document.getElementById('degFrom'), to = document.getElementById('degTo'), result = document.getElementById('degResult');
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function fmt(day){ var d = new Date(ORIGIN + day * DAY); return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear(); }
+  function games(a, b){ return between[Math.min(a, b) + ':' + Math.max(a, b)] || []; }
+  function path(a, b){
+    if (a === b) return [a];
+    var prev = {}; prev[a] = -1; var q = [a];
+    for (var i = 0; i < q.length; i++) {
+      var u = q[i];
+      for (var k = 0; k < adj[u].length; k++) { var v = adj[u][k]; if (prev[v] === undefined) { prev[v] = u; if (v === b) { i = q.length; break; } q.push(v); } }
+    }
+    if (prev[b] === undefined) return null;
+    var out = [b]; while (out[0] !== a) out.unshift(prev[out[0]]);
+    return out;
+  }
+  function render(push){
+    var a = idx[from.value], b = idx[to.value];
+    if (a === undefined || b === undefined) { result.hidden = true; return; }
+    var p = path(a, b), chain = '', line;
+    if (!p) {
+      $('degN').textContent = '\\u221e'; $('degNote').textContent = 'The belt has never found a way between these two.';
+      chain = ''; line = T[a] + ' and ' + T[b] + ' can\\u2019t be connected through the College Football Belt.';
+    } else {
+      var deg = p.length - 1;
+      $('degN').textContent = deg;
+      $('degNote').textContent = deg === 0 ? 'Same program.' : deg === 1 ? 'The belt has passed directly between them.' : 'Handoffs from ' + T[a] + ' to ' + T[b] + ' by the shortest route.';
+      var parts = [T[a]];
+      for (var i = 0; i < p.length; i++) {
+        var t = p[i];
+        chain += '<li class="degNode"><span class="swatch" style="background:' + (C[t] || 'transparent') + '"></span><a href="teams/' + S[t] + '.html">' + esc(T[t]) + '</a></li>';
+        if (i + 1 < p.length) {
+          var gs = games(t, p[i + 1]), g = gs[gs.length - 1];
+          // g = [day, id, winner, holder_pts, opp_pts]: in a change of hands the winner is the challenger
+          var winner = g[2], loser = winner === t ? p[i + 1] : t;
+          var score = g[4] + '\\u2013' + g[3];
+          chain += '<li class="degLink"><span class="degArrow" aria-hidden="true">\\u2193</span><span class="degLinkText">' + fmt(g[0]) + ': <a href="games/' + g[1] + '.html">' + esc(T[winner]) + ' took it from ' + esc(T[loser]) + ', ' + score + '</a>' +
+                   (gs.length > 1 ? ' <span class="degCount">(' + gs.length + ' handoffs between them)</span>' : '') + '</span></li>';
+          parts.push(T[p[i + 1]]);
+        }
+      }
+      line = T[a] + ' \\u2192 ' + T[b] + ' in ' + deg + ' degree' + (deg === 1 ? '' : 's') + ' of the College Football Belt: ' + parts.join(' \\u2192 ') + '. ' + location.origin + location.pathname + '#from=' + S[a] + '&to=' + S[b];
+    }
+    var direct = games(a, b);
+    $('degDirect').textContent = a === b ? '\\u2014' : direct.length;
+    $('degDirectNote').textContent = a === b ? '' : direct.length ? 'time' + (direct.length === 1 ? '' : 's') + ' the belt has passed directly between them (last ' + fmt(direct[direct.length - 1][0]).replace(/^\\w+ \\d+, /, '') + ').' : 'The belt has never passed directly between them.';
+    $('degChain').innerHTML = chain;
+    result.setAttribute('data-line', line);
+    $('degX').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(line);
+    result.hidden = false;
+    if (push !== false) { try { history.replaceState(null, '', '#from=' + S[a] + '&to=' + S[b]); } catch (e) {} }
+  }
+  from.addEventListener('change', render); to.addEventListener('change', render);
+  $('degRandom').addEventListener('click', function(){ var a = Math.floor(Math.random() * T.length), b; do { b = Math.floor(Math.random() * T.length); } while (b === a); from.value = T[a]; to.value = T[b]; render(); });
+  $('degSwap').addEventListener('click', function(){ var v = from.value; from.value = to.value; to.value = v; render(); });
+  document.querySelectorAll('.degPair').forEach(function(btn){ btn.addEventListener('click', function(){ from.value = btn.getAttribute('data-a'); to.value = btn.getAttribute('data-b'); render(); }); });
+  $('degCopy').addEventListener('click', function(){
+    var line = result.getAttribute('data-line') || '';
+    var done = function(){ $('degCopy').textContent = 'Copied'; setTimeout(function(){ $('degCopy').textContent = 'Copy the chain'; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).then(done, function(){ window.prompt('Copy this', line); });
+    else window.prompt('Copy this', line);
+  });
+  function fromHash(){
+    var m = (location.hash || '').match(/from=([a-z0-9-]+)&to=([a-z0-9-]+)/);
+    if (!m) return false;
+    var a = S.indexOf(m[1]), b = S.indexOf(m[2]);
+    if (a < 0 || b < 0) return false;
+    from.value = T[a]; to.value = T[b]; render(false); return true;
+  }
+  if (!fromHash()) { from.value = T[idx['Rutgers'] !== undefined ? idx['Rutgers'] : 0]; to.value = T[T.length - 1]; render(false); }
+  window.addEventListener('hashchange', fromHash);
+  window.__degrees = { path: path, idx: idx, adj: adj };
+})();
+</script>'''.replace("__DATA__", data.replace("</", "<\\/"))
+
+    return f'''{page_head("Belt Degrees — Six Degrees of the College Football Belt",
+                     f"Pick any two programs that have held the College Football Belt and follow the shortest chain of real changes of hands between them: no two holders are more than {diameter} apart.", "",
+                     share_meta("degrees", "Six degrees of the belt", "Belt degrees", f"{n} holders, none more than {diameter} handoffs apart", "Pick two programs. Follow the belt between them, game by game."))}
+
+{site_header('', 'degrees')}
+
+<main class="wrap">{body}
+</main>
+
+{site_footer('', 'Every link is a real change of hands from the belt&rsquo;s own record; the path finder runs in your browser.')}
+{script}
+'''
+
+
+# ---------------------------------------------------------- the belt's journey (2026-09-18)
+
+EARTH_RADIUS_MI = 3958.8
+EARTH_CIRCUMFERENCE_MI = 24901.0
+# Campuses CFBD has no venue for (see fetch_team_colors.py): the four
+# historic programs that held the belt and no longer play at this level.
+HISTORIC_CAMPUSES = {
+    "Carlisle": (40.2015, -77.1948, "Carlisle, PA"),
+    "Olympic Club": (37.7885, -122.4088, "San Francisco, CA"),
+    "Saint Mary's (CA)": (37.8408, -122.1095, "Moraga, CA"),
+    "Swarthmore": (39.9040, -75.3545, "Swarthmore, PA"),
+}
+
+
+def great_circle_miles(lat1, lon1, lat2, lon2):
+    """Haversine distance between two points, in statute miles."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dphi = p2 - p1
+    dlam = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlam / 2) ** 2
+    return 2 * EARTH_RADIUS_MI * math.asin(math.sqrt(min(1.0, a)))
+
+
+def state_centroids(shapes):
+    """{abbr: (lat, lon)} -- the vertex average of each state's largest
+    outline, plenty for a "somewhere in Ohio" fallback pin."""
+    out = {}
+    for abbr, entry in (shapes or {}).items():
+        rings = _state_rings(entry)
+        if not rings:
+            continue
+        ring = max(rings, key=len)
+        out[abbr] = (sum(lat for _, lat in ring) / len(ring), sum(lon for lon, _ in ring) / len(ring))
+    return out
+
+
+def campus_coords(colors, team, centroids=None):
+    """(lat, lon, place label, approximate?) for a program's home field:
+    CFBD's venue coordinates when fetch_team_colors.py has them, the
+    hand-kept table for the four historic programs, else the centre of the
+    program's state (flagged approximate), else None."""
+    entry = colors.get(team) or {}
+    lat, lon = entry.get("lat"), entry.get("lon")
+    if lat is not None and lon is not None:
+        label = ", ".join(b for b in (entry.get("city"), entry.get("state")) if b) or team
+        return float(lat), float(lon), label, False
+    if team in HISTORIC_CAMPUSES:
+        lat, lon, label = HISTORIC_CAMPUSES[team]
+        return lat, lon, label, False
+    st = entry.get("state")
+    if st and centroids and st in centroids:
+        lat, lon = centroids[st]
+        return lat, lon, f"{STATE_NAMES.get(st, st)} (approximate)", True
+    return None
+
+
+def build_journey(lineage, colors, belt_games, centroids):
+    """One hop per change of hands: from the old holder's campus to the
+    new one's, with the miles between them (None when either end can't
+    be placed) and the game that moved it."""
+    reigns = lineage["reigns"]
+    change_index = build_change_game_index(belt_games)
+    places = {}
+    for r in reigns:
+        if r["team"] not in places:
+            places[r["team"]] = campus_coords(colors, r["team"], centroids)
+    hops = []
+    for i in range(1, len(reigns)):
+        prev, cur = reigns[i - 1], reigns[i]
+        a, b = places.get(prev["team"]), places.get(cur["team"])
+        g = change_index.get((cur["start_date"], cur["team"]))
+        miles = great_circle_miles(a[0], a[1], b[0], b[1]) if (a and b) else None
+        hops.append({"n": i, "from": prev["team"], "to": cur["team"], "date": cur["start_date"],
+                     "game_id": g["game_id"] if g else None, "miles": miles,
+                     "approx": bool((a and a[3]) or (b and b[3]))})
+    return hops, places
+
+
+def generate_journey_page(lineage, colors, belt_games):
+    """journey.html (2026-09-18): the belt's journey, campus to campus.
+    Every change of hands moves the belt from one home field to another;
+    add those straight-line hops up and the belt has crossed the country
+    many times over. Totals, the longest and shortest hops, the days-
+    weighted "home" of the belt, and an animated replay of every hop on
+    the same map map.html draws. Returns None without the state outlines
+    (historical_data/us_state_shapes.json)."""
+    shapes = load_state_shapes()
+    if not shapes:
+        return None
+    paths, (vb_w, vb_h) = build_state_paths(shapes)
+    to_svg = albers_svg_transform(shapes)[0]
+    centroids = state_centroids(shapes)
+    hops, places = build_journey(lineage, colors, belt_games, centroids)
+    reigns = lineage["reigns"]
+    today = date.today()
+    origin = date.fromisoformat(BELT_ORIGIN_DATE)
+    holders = {r["team"] for r in reigns}
+
+    known = [h for h in hops if h["miles"] is not None]
+    for h in known:
+        h["miles"] = float(round(h["miles"]))   # whole miles everywhere, so the totals here and in the replay agree
+    unknown = len(hops) - len(known)
+    total = sum(h["miles"] for h in known)
+    laps = total / EARTH_CIRCUMFERENCE_MI
+    longest = sorted(known, key=lambda h: -h["miles"])[:10]
+    shortest = sorted((h for h in known if h["miles"] > 0), key=lambda h: h["miles"])[:5]
+    avg = total / len(known) if known else 0
+    years = (today - origin).days / 365.25
+    per_year = total / years if years else 0
+    # miles by decade
+    by_decade = Counter()
+    for h in known:
+        by_decade[int(h["date"][:4]) // 10 * 10] += h["miles"]
+    top_decade = max(by_decade.items(), key=lambda kv: kv[1]) if by_decade else None
+    # the belt's centre of gravity: every campus weighted by the days it held the belt
+    wlat = wlon = wdays = 0.0
+    for r in reigns:
+        p = places.get(r["team"])
+        if not p:
+            continue
+        days = reign_duration_days(r, today)
+        wlat += p[0] * days
+        wlon += p[1] * days
+        wdays += days
+    center = (wlat / wdays, wlon / wdays) if wdays else None
+    nearest = None
+    if center:
+        nearest = min(((great_circle_miles(center[0], center[1], p[0], p[1]), t) for t, p in places.items() if p), default=None)
+    # farthest the belt has been from where it started
+    start_place = places.get(reigns[0]["team"])
+    farthest = None
+    if start_place:
+        farthest = max(((great_circle_miles(start_place[0], start_place[1], p[0], p[1]), t) for t, p in places.items() if p), default=None)
+    extremes = {}
+    for t, p in places.items():
+        if not p:
+            continue
+        for key, val in (("west", -p[1]), ("east", p[1]), ("north", p[0]), ("south", -p[0])):
+            if key not in extremes or val > extremes[key][0]:
+                extremes[key] = (val, t)
+
+    def swatch(team):
+        return f'<span class="swatch" style="background:{team_color(colors, team)[0]}"></span>'
+
+    def hop_row(h, rank=None, value=None):
+        link = f'games/{h["game_id"]}.html' if h["game_id"] else f'reigns/{h["n"] + 1}.html'
+        miles_txt = f'{h["miles"]:,.0f} mi' if h["miles"] is not None else "&mdash;"
+        approx = " <span class=\"currentTag\">approx.</span>" if h["approx"] else ""
+        return (f'<a class="recordRow" href="{link}"><span class="recordRank">{rank if rank is not None else h["n"]}</span>'
+                f'<span class="recordMain">{swatch(h["from"])}{esc(h["from"])} <span class="jnArrow">&rarr;</span> {swatch(h["to"])}{esc(h["to"])}</span>'
+                f'<span class="recordValue">{value if value is not None else miles_txt}{approx}</span>'
+                f'<span class="recordSub">{fmt_date(h["date"])}</span></a>')
+
+    longest_rows = "".join(hop_row(h, i + 1) for i, h in enumerate(longest))
+    shortest_rows = "".join(hop_row(h, i + 1) for i, h in enumerate(shortest))
+    all_rows = "".join(hop_row(h) for h in hops)
+    decade_rows = "".join(
+        f'<div class="recordRow"><span class="recordRank">{d}s</span><span class="recordMain">{m:,.0f} mi</span>'
+        f'<span class="recordValue">{sum(1 for h in known if int(h["date"][:4]) // 10 * 10 == d)} hop{"s" if sum(1 for h in known if int(h["date"][:4]) // 10 * 10 == d) != 1 else ""}</span></div>'
+        for d, m in sorted(by_decade.items()))
+
+    # ---- the map ----
+    path_svg = "".join(f'<path class="mapState jnState" d="{info["d"]}"><title>{esc(info["name"])}</title></path>'
+                       for abbr, info in sorted(paths.items()))
+    pins = ""
+    for t, p in sorted(places.items()):
+        if not p:
+            continue
+        x, y = to_svg(p[1], p[0])
+        pins += f'<circle class="jnPin{" jnPinApprox" if p[3] else ""}" cx="{x:.1f}" cy="{y:.1f}" r="3"><title>{esc(t)} &middot; {esc(p[2])}</title></circle>'
+    center_svg = ""
+    if center:
+        cx, cy = to_svg(center[1], center[0])
+        center_svg = (f'<g class="jnCenter" transform="translate({cx:.1f} {cy:.1f})"><circle r="9"/><path d="M0 -6 L1.8 -1.8 L6 0 L1.8 1.8 L0 6 L-1.8 1.8 L-6 0 L-1.8 -1.8 Z"/>'
+                      f'<title>The belt&rsquo;s center of gravity: every campus weighted by days held</title></g>')
+    hop_data = []
+    team_list = sorted(holders)
+    tindex = {t: i for i, t in enumerate(team_list)}
+    for h in hops:
+        a, b = places.get(h["from"]), places.get(h["to"])
+        if a and b:
+            ax, ay = to_svg(a[1], a[0])
+            bx, by = to_svg(b[1], b[0])
+            hop_data.append([round(ax, 1), round(ay, 1), round(bx, 1), round(by, 1), round(h["miles"]),
+                             (date.fromisoformat(h["date"]) - origin).days, tindex[h["from"]], tindex[h["to"]], h["game_id"] or 0])
+        else:
+            hop_data.append([None, None, None, None, None, (date.fromisoformat(h["date"]) - origin).days,
+                             tindex[h["from"]], tindex[h["to"]], h["game_id"] or 0])
+    start_xy = to_svg(start_place[1], start_place[0]) if start_place else None
+    payload = {"teams": team_list, "hops": hop_data, "start": [round(start_xy[0], 1), round(start_xy[1], 1)] if start_xy else None,
+               "total": round(total)}
+    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+    center_txt = ""
+    if center and nearest:
+        center_txt = (f'<div class="statCard"><span class="kicker">Center of gravity</span><span class="big">near {esc(nearest[1])}</span>'
+                      f'<p>Every campus weighted by the days it held the belt lands {nearest[0]:,.0f} miles from {esc(nearest[1])} &mdash; the star on the map.</p></div>')
+    far_txt = ""
+    if farthest:
+        far_txt = (f'<div class="statCard"><span class="kicker">Farthest from home</span><span class="big tabular">{farthest[0]:,.0f} mi</span>'
+                   f'<p>{esc(farthest[1])} is the farthest the belt has been from {esc(reigns[0]["team"])}, where it started.</p></div>')
+    extremes_txt = ""
+    if len(extremes) == 4:
+        extremes_txt = (f'<p class="noteBox">The belt&rsquo;s compass: farthest west it has lived is {esc(extremes["west"][1])}, farthest east '
+                        f'{esc(extremes["east"][1])}, farthest north {esc(extremes["north"][1])}, farthest south {esc(extremes["south"][1])}. '
+                        f'{"The busiest decade on the road was the " + str(top_decade[0]) + "s, " + f"{top_decade[1]:,.0f}" + " miles." if top_decade else ""}</p>')
+    unknown_txt = (f' {unknown} hop{"s" if unknown != 1 else ""} involving a campus that can&rsquo;t be placed {"are" if unknown != 1 else "is"} left out of the totals.'
+                   if unknown else "")
+
+    body = f'''
+  {page_intro("The belt&rsquo;s journey", "Everywhere the belt has gone",
+              f"Every change of hands moves the belt from one campus to another. Add up those {len(hops):,} hops, home field to home field, "
+              f"and the College Football Belt has traveled <strong>{total:,.0f} miles</strong> since {fmt_date(reigns[0]['start_date'])} &mdash; "
+              f"{laps:.1f} times around the Earth. Press play and watch it go.")}
+  <div class="statCards jnCards">
+    <div class="statCard"><span class="kicker">Miles traveled</span><span class="big tabular">{total:,.0f}</span><p>{laps:.1f}&times; around the Earth &middot; about {per_year:,.0f} miles a year</p></div>
+    <div class="statCard"><span class="kicker">Changes of hands</span><span class="big tabular">{len(hops):,}</span><p>{avg:,.0f} miles per hop on average</p></div>
+    <div class="statCard"><span class="kicker">Longest hop</span><span class="big tabular">{longest[0]["miles"]:,.0f} mi</span><p>{esc(longest[0]["from"])} &rarr; {esc(longest[0]["to"])}, {fmt_date(longest[0]["date"])}</p></div>
+    {far_txt}
+    {center_txt}
+  </div>
+
+  <div class="mapWrap jnMapWrap" id="jnMapWrap">
+    <svg class="mapSvg jnSvg" viewBox="0 0 {vb_w:.0f} {vb_h:.0f}" role="img" aria-label="Map of every hop the College Football Belt has made between campuses">
+      <g class="jnStates">{path_svg}</g>
+      <g class="jnPins">{pins}</g>
+      {center_svg}
+      <polyline class="jnTrail" id="jnTrail" points="" fill="none"></polyline>
+      <line class="jnHop" id="jnHop" x1="0" y1="0" x2="0" y2="0"></line>
+      <circle class="jnDot" id="jnDot" r="6" cx="-20" cy="-20"></circle>
+    </svg>
+    <div class="journeyBar">
+      <button class="journeyBtn" id="jnPlay" type="button">&#9654; Play the journey</button>
+      <button class="journeyBtn" id="jnPrev" type="button" aria-label="Previous hop">&larr;</button>
+      <button class="journeyBtn" id="jnNext" type="button" aria-label="Next hop">&rarr;</button>
+      <span class="jnSpeed" role="group" aria-label="Speed"><button class="journeyBtn" type="button" data-speed="1">1&times;</button><button class="journeyBtn isActive" type="button" data-speed="2">2&times;</button><button class="journeyBtn" type="button" data-speed="6">6&times;</button></span>
+      <input class="journeySlider" id="jnSlider" type="range" min="0" max="{len(hops)}" value="0" aria-label="Hop">
+    </div>
+    <p class="jnReadout" id="jnReadout" aria-live="polite">Press play to follow the belt from {esc(reigns[0]["team"])}.</p>
+  </div>
+
+  <div class="recordsGrid jnGrid">
+    <section class="recordCard"><h2>Longest hops</h2><p class="recordCardSub">Straight-line miles between the two campuses</p>{longest_rows}</section>
+    <section class="recordCard"><h2>Shortest hops</h2><p class="recordCardSub">Neighbors trading the belt</p>{shortest_rows}</section>
+    <section class="recordCard"><h2>Miles by decade</h2><p class="recordCardSub">How far the belt moved in each</p>{decade_rows}</section>
+  </div>
+  {extremes_txt}
+  <details class="jnAll"><summary>Every hop, in order ({len(hops):,})</summary><div class="recordCard">{all_rows}</div></details>
+  <p class="noteBox">How it is measured: each hop is the great-circle distance between the home fields of the program that lost the belt and the
+    one that took it (venue coordinates from the College Football Data API; the four historic programs it no longer tracks are placed by
+    hand), regardless of where the game itself was played.{unknown_txt} The map is the same Albers projection as
+    <a href="map.html">the state map</a>; the star is the belt&rsquo;s days-weighted center of gravity.</p>'''
+
+    script = '''<script id="jnData" type="application/json">__DATA__</script>
+<script>
+(function(){
+  var D; try { D = JSON.parse(document.getElementById('jnData').textContent); } catch (e) { return; }
+  var T = D.teams, H = D.hops, START = D.start;
+  var ORIGIN = Date.UTC(1869, 10, 6), DAY = 86400000;
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var trail = document.getElementById('jnTrail'), hopLine = document.getElementById('jnHop'), dot = document.getElementById('jnDot');
+  var slider = document.getElementById('jnSlider'), readout = document.getElementById('jnReadout'), playBtn = document.getElementById('jnPlay');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var speed = 2, playing = false, pos = 0, raf = null, tick = null;
+  var BASE_MS = 520;
+  function fmt(day){ var d = new Date(ORIGIN + day * DAY); return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear(); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function milesThrough(k){ var m = 0; for (var i = 0; i < k && i < H.length; i++) if (H[i][4] !== null) m += H[i][4]; return m; }
+  function lastPlaced(k){ for (var i = k - 1; i >= 0; i--) if (H[i][2] !== null) return [H[i][2], H[i][3]]; return START; }
+  function draw(k, frac){
+    // trail through hop k-1, the dot somewhere along hop k (frac 0..1); k === H.length means finished
+    var pts = START ? [START[0] + ',' + START[1]] : [];
+    for (var i = 0; i < k && i < H.length; i++) if (H[i][2] !== null) pts.push(H[i][2] + ',' + H[i][3]);
+    trail.setAttribute('points', pts.join(' '));
+    var h = H[k];
+    if (h && h[0] !== null) {
+      var f = frac === undefined ? 1 : frac;
+      var x = h[0] + (h[2] - h[0]) * f, y = h[1] + (h[3] - h[1]) * f;
+      hopLine.setAttribute('x1', h[0]); hopLine.setAttribute('y1', h[1]); hopLine.setAttribute('x2', x); hopLine.setAttribute('y2', y);
+      dot.setAttribute('cx', x); dot.setAttribute('cy', y);
+      dot.classList.toggle('isMoving', f < 1);
+    } else {
+      var p = lastPlaced(k) || [-20, -20];
+      hopLine.setAttribute('x1', p[0]); hopLine.setAttribute('y1', p[1]); hopLine.setAttribute('x2', p[0]); hopLine.setAttribute('y2', p[1]);
+      dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]);
+    }
+  }
+  function say(k){
+    if (k >= H.length) {
+      readout.innerHTML = '<strong>' + H.length.toLocaleString() + ' hops, ' + milesThrough(H.length).toLocaleString() + ' miles.</strong> The belt is with ' + esc(T[H[H.length - 1][7]]) + ' today.';
+      return;
+    }
+    var h = H[k];
+    var miles = h[4] === null ? 'distance unknown' : h[4].toLocaleString() + ' mi';
+    var link = h[8] ? '<a href="games/' + h[8] + '.html">' + fmt(h[5]) + '</a>' : fmt(h[5]);
+    readout.innerHTML = '<span class="jnN">#' + (k + 1) + '</span> ' + link + ' &middot; <strong>' + esc(T[h[6]]) + ' &rarr; ' + esc(T[h[7]]) + '</strong> &middot; ' + miles + ' &middot; ' + milesThrough(k + 1).toLocaleString() + ' miles so far';
+  }
+  function setPos(k, animate){
+    pos = Math.max(0, Math.min(H.length, k));
+    slider.value = String(pos);
+    if (pos >= H.length) { draw(H.length); say(H.length); return; }
+    if (animate && !reduced) {
+      var t0 = performance.now(), dur = BASE_MS / speed;
+      say(pos);
+      (function step(now){
+        var f = Math.min(1, (now - t0) / dur);
+        draw(pos, f);
+        if (f < 1) raf = requestAnimationFrame(step); else raf = null;
+      })(t0);
+    } else { draw(pos, 1); say(pos); }
+  }
+  function stop(){ playing = false; playBtn.innerHTML = '&#9654; Play the journey'; if (tick) { clearTimeout(tick); tick = null; } if (raf) { cancelAnimationFrame(raf); raf = null; } draw(pos, 1); }
+  function advance(){
+    if (!playing) return;
+    if (pos >= H.length) { stop(); return; }
+    setPos(pos, true);
+    tick = setTimeout(function(){ pos += 1; if (pos >= H.length) { setPos(H.length); stop(); } else advance(); }, (BASE_MS + 60) / speed);
+  }
+  function play(){
+    if (pos >= H.length) pos = 0;
+    playing = true; playBtn.innerHTML = '&#10074;&#10074; Pause';
+    advance();
+  }
+  playBtn.addEventListener('click', function(){ if (playing) stop(); else play(); });
+  document.getElementById('jnPrev').addEventListener('click', function(){ stop(); setPos(pos - 1); });
+  document.getElementById('jnNext').addEventListener('click', function(){ stop(); setPos(pos + 1); });
+  slider.addEventListener('input', function(){ stop(); setPos(parseInt(slider.value, 10) || 0); });
+  document.querySelectorAll('.jnSpeed [data-speed]').forEach(function(b){
+    b.addEventListener('click', function(){ speed = parseFloat(b.getAttribute('data-speed')) || 1; document.querySelectorAll('.jnSpeed [data-speed]').forEach(function(x){ x.classList.toggle('isActive', x === b); }); });
+  });
+  draw(0, 0);
+  window.__journey = { setPos: setPos, hops: H, miles: milesThrough };
+})();
+</script>'''.replace("__DATA__", data.replace("</", "<\\/"))
+
+    return f'''{page_head("The Belt's Journey — Every Mile the College Football Belt Has Traveled",
+                     f"Campus to campus, the College Football Belt has traveled {total:,.0f} miles across {len(hops):,} changes of hands since 1869 — {laps:.1f} times around the Earth. Watch every hop on the map.", "",
+                     share_meta("journey", f"{total:,.0f} miles, campus to campus", "The belt's journey", f"{laps:.1f} times around the Earth in {len(hops):,} changes of hands", "Every hop the belt has made since 1869, on one map"))}
+
+{site_header('', 'journey')}
+
+<main class="wrap">{body}
+</main>
+
+{site_footer('', 'Venue coordinates from the College Football Data API; straight-line distances, home field to home field.')}
+{script}
+'''
+
+
+# ---------------------------------------------------------- the belt tree (2026-09-18)
+
+def generate_belt_tree_page(belt_risk, lineage, colors, next_game=None):
+    """belt-tree.html (2026-09-18): the next few belt games as a
+    branching tree of what-ifs -- at each game the holder keeps the belt
+    or the challenger takes it, and each branch follows the right team's
+    schedule to ITS next game, with fetch_belt_odds.py's Elo odds on
+    every branch. So "who has the belt after the next four belt games"
+    is a sum over sixteen leaves, exact rather than simulated. Returns
+    None when belt_risk.json has no tree yet."""
+    season = (belt_risk or {}).get("season") or {}
+    tree = season.get("belt_tree")
+    if not tree or not tree.get("root") or "game" not in tree["root"]:
+        return None
+    root, depth, after = tree["root"], tree["depth"], tree.get("after") or []
+    holders = {r["team"] for r in lineage["reigns"]}
+    holder = root["holder"]
+    generated = (belt_risk or {}).get("generated") or ""
+    year = (next_game or {}).get("season") or date.today().year
+
+    def swatch(team):
+        return f'<span class="swatch" style="background:{team_color(colors, team)[0]}"></span>'
+
+    def pct(p):
+        return f"{p * 100:.0f}%" if p >= 0.095 else f"{p * 100:.1f}%"
+
+    def game_label(g):
+        # plain text: this sits inside a <summary>, where a nested link would be
+        # an interactive control inside an interactive control
+        gd = date.fromisoformat(g["date"])
+        where = "vs" if (g.get("holder_home") or g.get("neutral")) else "at"
+        when = f'{gd:%a} {fmt_month_day(gd)}'
+        watch = watch_line(g)
+        return (f'<span class="btWhen">{when}</span> {where} {esc(g["opponent"])}'
+                + (f' <span class="btWatch">{watch}</span>' if watch else ""))
+
+    def render(node, level=0):
+        """One node = the holder about to play; two <details> children."""
+        team = node["holder"]
+        reach = node["p"]
+        if "game" not in node:
+            why = "the season runs out here" if node.get("no_more_games") else f"after {depth} belt games"
+            return (f'<li class="btLeaf"><span class="btNode">{swatch(team)}<strong>{team_link(team, "", holders)}</strong> holds the belt <span class="btReach">{pct(reach)}</span></span>'
+                    f'<span class="btSub">{why}</span></li>')
+        head = f'{swatch(team)}<strong>{esc(team)}</strong>'
+        g = node["game"]
+        p_keep = node["p_keep"]
+        opp = g["opponent"]
+        keep, take = node["keep"], node["take"]
+        open_attr = " open" if level < 2 else ""
+        return f'''<li class="btGame">
+      <details{open_attr}>
+        <summary><span class="btNode">{head} <span class="btReach">{pct(reach)}</span></span><span class="btSub">Next belt game: {game_label(g)}</span></summary>
+        <ul class="btBranches">
+          <li class="btBranch btKeep"><span class="btOdds"><b>{pct(p_keep)}</b> {esc(team)} keeps it</span><ul>{render(keep, level + 1)}</ul></li>
+          <li class="btBranch btTake"><span class="btOdds"><b>{pct(1 - p_keep)}</b> {esc(opp)} takes it</span><ul>{render(take, level + 1)}</ul></li>
+        </ul>
+      </details>
+    </li>'''
+
+    tree_html = f'<ul class="beltTree">{render(root)}</ul>'
+
+    # who holds it after k belt games, k = 1..depth
+    after_cols = ""
+    for k in range(1, min(depth, len(after) - 1) + 1):
+        rows = ""
+        for entry in after[k][:6]:
+            t, p = entry["team"], entry["p"]
+            rows += (f'<div class="btAfterRow"><span class="btAfterTeam">{swatch(t)}{team_link(t, "", holders)}</span>'
+                     f'<span class="outlookBar"><span class="outlookFill" style="width:{max(1.5, p * 100):.1f}%"></span></span>'
+                     f'<span class="outlookPct tabular">{pct(p)}</span></div>')
+        after_cols += f'<div class="btAfterCol"><span class="kicker">After {k} belt game{"s" if k != 1 else ""}</span>{rows}</div>'
+
+    top = after[depth][0] if len(after) > depth and after[depth] else None
+    lede_stat = (f"{esc(top['team'])} is the most likely holder after the next {depth} belt games, at {pct(top['p'])}." if top else "")
+    n_leaves = 2 ** depth
+
+    body = f'''
+  {page_intro(f"The belt tree &middot; {year}", "Every way the next four belt games can go",
+              f"{esc(holder)} plays, and either keeps the belt or loses it. Whoever has it plays next, and the same fork again. "
+              f"Follow every branch {depth} belt games deep &mdash; {n_leaves} endings, each with its odds &mdash; and the question "
+              f"&ldquo;who has the belt a month from now?&rdquo; gets a real answer. {lede_stat}")}
+  <div class="sectionHead"><span class="tag">The odds</span><h2>Who holds the belt after&hellip;</h2></div>
+  <div class="btAfter">{after_cols}</div>
+  <div class="sectionHead"><span class="tag">The tree</span><h2>Branch by branch</h2>
+    <span class="sectionMeta">Open a branch to follow it</span></div>
+  {tree_html}
+  <p class="noteBox">How it works: at every node the holder plays its next scheduled game. The &ldquo;keeps it&rdquo; branch follows the holder&rsquo;s
+    schedule; the &ldquo;takes it&rdquo; branch follows the challenger&rsquo;s, because the belt now travels with them. Each branch&rsquo;s odds are
+    the win probability from CFBD&rsquo;s Elo ratings with a home-field bump &mdash; the same numbers behind the <a href="outlook.html">season
+    outlook</a> and the <a href="schedule.html">belt schedule</a> &mdash; and the percentage next to a program is the chance of reaching
+    that point, the branch odds multiplied together. Ties are ignored (they keep the belt where it is).
+    Refreshed every pipeline run{f" (last: {esc(generated)})" if generated else ""}; a for-fun estimate, not a betting product.</p>'''
+
+    return f'''{page_head(f"The Belt Tree {year} — Every Way the Next Belt Games Can Go",
+                     f"The next {depth} College Football Belt games as a tree of outcomes: at each game the holder keeps it or the challenger takes it, with the odds on every branch.", "",
+                     share_meta("belt-tree", "Every way the next four belt games can go", f"The belt tree {year}",
+                                f"{top['team']} {pct(top['p'])} to hold it after {depth} belt games" if top else f"{n_leaves} endings, each with its odds",
+                                f"{holder} keeps it or loses it, then the next fork, {depth} games deep"))}
+
+{site_header('', 'belt-tree')}
+
+<main class="wrap">{body}
+</main>
+
+{site_footer('', 'Schedules and Elo ratings from the College Football Data API; the tree is this site&rsquo;s own.')}
+{KICKOFF_LOCAL_JS}
+'''
 
 
 # ---------------------------------------------------------- the lean's ledger
@@ -14085,6 +15379,11 @@ def main():
     whatif_games = load_optional_json("whatif_games.json")           # build_alternate_lineages.py (optional)
     if not whatif_games or not whatif_games.get("games"):
         PAGES_ABSENT.add("what-if.html")
+    belt_tree_data = ((belt_risk or {}).get("season") or {}).get("belt_tree")   # fetch_belt_odds.py (optional)
+    if not belt_tree_data or "game" not in (belt_tree_data.get("root") or {}):
+        PAGES_ABSENT.add("belt-tree.html")
+    if not os.path.exists(STATE_SHAPES_PATH):
+        PAGES_ABSENT.add("journey.html")
 
     games_dir = os.path.join(OUT_DIR, "games")
     os.makedirs(games_dir, exist_ok=True)
@@ -14233,7 +15532,7 @@ def main():
                          f"until at least one exists)")
 
     preview_html = generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk, current_poll=(rankings or {}).get("current"),
-                                         lineage=lineage, belt_games=belt_games)
+                                         lineage=lineage, belt_games=belt_games, gameday=gameday)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
 
@@ -14250,6 +15549,25 @@ def main():
             f.write(generate_whatif_page(lineage, colors, belt_games, whatif_index))
         print(f"Wrote what-if.html + {len(whatif_index['chunks'])} decade files "
               f"({sum(c['games'] for c in whatif_index['chunks']):,} games) to {OUT_DIR}/{WHATIF_DIR}/")
+
+    # the 2026-09-18 batch: belt on any date, belt degrees, the belt's journey, the belt tree
+    with open(os.path.join(OUT_DIR, "belt-on.html"), "w", encoding="utf-8") as f:
+        f.write(generate_belt_on_page(lineage, colors, belt_games))
+    with open(os.path.join(OUT_DIR, "degrees.html"), "w", encoding="utf-8") as f:
+        f.write(generate_degrees_page(lineage, colors, belt_games))
+    journey_html = generate_journey_page(lineage, colors, belt_games) if "journey.html" not in PAGES_ABSENT else None
+    if journey_html:
+        with open(os.path.join(OUT_DIR, "journey.html"), "w", encoding="utf-8") as f:
+            f.write(journey_html)
+    else:
+        PAGES_ABSENT.add("journey.html")
+    belt_tree_html = generate_belt_tree_page(belt_risk, lineage, colors, next_game) if "belt-tree.html" not in PAGES_ABSENT else None
+    if belt_tree_html:
+        with open(os.path.join(OUT_DIR, "belt-tree.html"), "w", encoding="utf-8") as f:
+            f.write(belt_tree_html)
+    else:
+        PAGES_ABSENT.add("belt-tree.html")
+    print(f"Wrote belt-on.html, degrees.html{', journey.html' if journey_html else ''}{', belt-tree.html' if belt_tree_html else ''} to {OUT_DIR}/")
 
     with open(os.path.join(OUT_DIR, "story-longest-reigns.html"), "w", encoding="utf-8") as f:
         f.write(generate_story_longest_reigns(lineage, belt_games))
@@ -14505,6 +15823,7 @@ def main():
                                                   "state-of-the-belt.html")]
     if "what-if.html" not in PAGES_ABSENT:
         sitemap_urls.append(f"{SITE_URL}/what-if.html")
+    sitemap_urls += [f"{SITE_URL}/{p}" for p in ("belt-on.html", "degrees.html", "journey.html", "belt-tree.html") if p not in PAGES_ABSENT]
     sitemap_urls += [f"{SITE_URL}/{href}" for href, _, _, _ in STORIES
                      if href not in STORIES_SKIPPED and href not in ("story-longest-reigns.html", "story-most-defended.html")]
     if poll_model:

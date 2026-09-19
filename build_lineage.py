@@ -27,7 +27,16 @@ Outputs (into ./belt_data/, all regenerated fresh every run, none committed):
                       the season's unplayed games -- no extra API call);
                       null if nothing upcoming is in the fetched window
     upcoming_games.json  same idea, up to the next 3 games ("Belt Watch"
-                      on the homepage) -- [] if nothing's upcoming
+                      on the homepage) -- [] if nothing's upcoming. Each
+                      entry also carries the game's CFBD/ESPN id, whether
+                      the kickoff time is still TBD, and (2026-09-18)
+                      where to watch it: "tv" ("NBC"), "stream"
+                      ("Peacock") and "watch" (whichever is set), from one
+                      /games/media call per season
+    media.json        that /games/media answer for every game of the
+                      season, keyed by game id -- fetch_belt_odds.py joins
+                      it to the belt schedule so schedule.html can say
+                      what channel each game is on (no second call)
 
 Incremental fetching and the CFBD call budget: CFBD's FREE tier is capped at
 1,000 calls/MONTH (not a short burst limit -- see
@@ -525,8 +534,10 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
         if not date:
             continue
         candidates.append({
+            "id": pick(g, "id"),
             "date": date,
             "raw_date": raw_date,
+            "start_time_tbd": bool(pick(g, "start_time_tbd", "startTimeTBD", default=False)),
             "season": pick(g, "season"),
             "week": pick(g, "week"),
             "season_type": pick(g, "season_type", "seasonType", default="regular"),
@@ -542,12 +553,16 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
         is_home = nxt["home"] == holder
         v = venue_info.get(nxt["venue_id"]) or {}
         upcoming.append({
+            # CFBD's game id, which is ESPN's event id for every modern game
+            # -- the site's live scoreboard polls ESPN's public feed by it
+            "id": nxt["id"],
             "team": holder,
             "opponent": nxt["away"] if is_home else nxt["home"],
             "is_home": is_home,
             "neutral": nxt["neutral"],
             "date": nxt["date"],
             "raw_date": nxt["raw_date"],   # UTC kickoff, e.g. 2026-09-19T19:30:00.000Z -- for fetch_weather.py
+            "start_time_tbd": nxt["start_time_tbd"],   # True while TV hasn't picked the slot (raw_date is then a placeholder)
             "season": nxt["season"],
             "week": nxt["week"],
             "season_type": nxt["season_type"],
@@ -558,6 +573,51 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
             "venue_lon": v.get("lon"),
         })
     return upcoming
+
+
+def fetch_media(year, api_key, retries=3):
+    """Where to watch (2026-09-18): GET /games/media?year=N, one call for
+    the whole season, as {game_id: {"tv": ["NBC"], "web": ["Peacock"],
+    "radio": [...], ...}} -- every outlet CFBD lists for every game,
+    grouped by media type. Optional data: a failed call returns {} (and
+    says so) rather than failing the lineage over a TV listing."""
+    try:
+        rows = _get_json(f"{API_BASE}/games/media?year={year}", api_key,
+                         f"media {year}", retries=retries)
+    except Exception as e:  # network/HTTP -- the games simply stay unlabeled this run
+        print(f"  /games/media?year={year} failed ({e}); no channel listings this run",
+              file=sys.stderr)
+        return {}
+    media = {}
+    for row in rows or []:
+        gid = pick(row, "id")
+        outlet = pick(row, "outlet")
+        if gid is None or not outlet:
+            continue
+        kind = str(pick(row, "media_type", "mediaType", default="tv") or "tv").lower()
+        outlets = media.setdefault(gid, {}).setdefault(kind, [])
+        if outlet not in outlets:
+            outlets.append(outlet)
+    return media
+
+
+def watch_label(entry):
+    """One string for the site: the TV network(s) first ("NBC", or
+    "ABC / ESPN2" for a regional split), else the streaming outlet
+    ("ESPN+"), else a pay-per-view/mobile listing, else None."""
+    for kind in ("tv", "web", "ppv", "mobile"):
+        if entry and entry.get(kind):
+            return " / ".join(entry[kind])
+    return None
+
+
+def attach_media(games, media):
+    """Stamp tv / stream / watch onto each upcoming-game dict, by game id."""
+    for g in games:
+        entry = media.get(g.get("id")) or {}
+        g["tv"] = " / ".join(entry["tv"]) if entry.get("tv") else None
+        g["stream"] = " / ".join(entry["web"]) if entry.get("web") else None
+        g["watch"] = watch_label(entry)
 
 
 def compute_team_paths(raw, current_holder, d1_teams, venue_tz=None, venue_info=None):
@@ -1031,6 +1091,22 @@ def main():
     # homepage's look changes.
     upcoming_games = find_upcoming_games(raw, combined_current["team"], count=99,
                                           venue_tz=venue_tz, venue_info=venue_info)
+    # Where to watch (2026-09-18): one /games/media call per season on the
+    # holder's remaining schedule (normally just one) labels every
+    # upcoming game with its TV network / stream, and media.json keeps the
+    # whole season's listings for fetch_belt_odds.py's schedule page.
+    media = {}
+    for season in sorted({g["season"] for g in upcoming_games if g.get("season")})[:2]:
+        print(f"Fetching {season} TV/streaming listings from CFBD (1 call)...")
+        media.update(fetch_media(season, args.key))
+    attach_media(upcoming_games, media)
+    with open(os.path.join(OUT_DIR, "media.json"), "w") as f:
+        json.dump({"generated": today,
+                   "games": {str(gid): {"tv": " / ".join(e["tv"]) if e.get("tv") else None,
+                                        "stream": " / ".join(e["web"]) if e.get("web") else None,
+                                        "watch": watch_label(e)}
+                             for gid, e in media.items()}}, f)
+    print(f"  {len(media)} games have a channel listing -> belt_data/media.json")
     next_game = upcoming_games[0] if upcoming_games else None
     with open(os.path.join(OUT_DIR, "next_game.json"), "w") as f:
         json.dump(next_game, f, indent=2)
@@ -1038,8 +1114,9 @@ def main():
         json.dump(upcoming_games, f, indent=2)
     if next_game:
         side = "vs." if next_game["is_home"] else "at"
+        on_tv = f", on {next_game['watch']}" if next_game.get("watch") else ""
         print(f"\nNext game: {combined_current['team']} {side} {next_game['opponent']} "
-              f"on {next_game['date']} ({len(upcoming_games)} game(s) in the "
+              f"on {next_game['date']}{on_tv} ({len(upcoming_games)} game(s) in the "
               f"Belt Watch lookahead)")
     else:
         print("\nNo upcoming game found for the current holder in the fetched "

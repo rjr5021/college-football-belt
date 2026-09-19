@@ -39,6 +39,17 @@ loses, the belt moves to the winner and the trial continues down that
 team's schedule -- so every program gets a probability of holding the belt
 when the games run out (season.end_of_season). No extra API calls.
 
+The belt tree (2026-09-18, belt-tree.html): the next BELT_TREE_DEPTH
+belt games as an exact branching tree -- at every node the holder keeps
+the belt (the branch follows its next game) or the challenger takes it
+(the branch follows the challenger's next game), with the same Elo odds
+the Monte Carlo draws from. 2^depth leaves, so "who has the belt after
+the next K belt games" is a sum, not a simulation. No extra API calls.
+
+Where to watch (2026-09-18): every game in season.belt_game_odds carries
+its CFBD/ESPN id and, when build_lineage.py's belt_data/media.json has a
+listing for it, the TV network / stream ("watch") -- no call here either.
+
 Run this AFTER build_lineage.py in the pipeline -- reads
 belt_data/next_game.json and belt_data/games_raw.json, both written by
 that script. Safe to run when there's no current holder/upcoming game:
@@ -65,6 +76,7 @@ OUT_DIR = "belt_data"
 MONTE_CARLO_TRIALS = 20000
 HOME_FIELD_ELO = 65  # standard-ish home-field Elo bump (~2-3 points on a 65-pt scale)
 RNG_SEED = None      # None = real randomness; tests can pass a fixed seed
+BELT_TREE_DEPTH = 4  # belt games ahead the belt tree branches through (2^4 = 16 leaves)
 
 
 def pick(d, *names, default=None):
@@ -255,13 +267,94 @@ def find_all_remaining(games_raw):
         if not gdate:
             continue
         out.append({
+            "id": pick(g, "id"),
             "date": gdate,
             "home": home,
             "away": away,
             "neutral": bool(pick(g, "neutral_site", "neutralSite", default=False)),
+            "start_time_tbd": bool(pick(g, "start_time_tbd", "startTimeTBD", default=False)),
         })
     out.sort(key=lambda g: g["date"])
     return out
+
+
+def load_media():
+    """build_lineage.py's belt_data/media.json ({game id: {tv, stream,
+    watch}}), or {} when it isn't there -- the listings are a nicety."""
+    path = os.path.join(OUT_DIR, "media.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path) as f:
+            return (json.load(f) or {}).get("games") or {}
+    except (OSError, ValueError):
+        return {}
+
+
+def game_ref(g, media=None):
+    """The fields the site needs to name, date, link and label a game."""
+    listing = (media or {}).get(str(g.get("id"))) or {}
+    return {"id": g.get("id"), "date": g["date"][:10], "raw_date": g["date"],
+            "home": g["home"], "away": g["away"], "neutral": g["neutral"],
+            "start_time_tbd": bool(g.get("start_time_tbd")),
+            "watch": listing.get("watch"), "tv": listing.get("tv"), "stream": listing.get("stream")}
+
+
+def belt_tree(remaining_all, holder, elo, depth=BELT_TREE_DEPTH, media=None):
+    """The belt tree: the next `depth` belt games as an exact branching
+    tree. Each node is a holder about to play its next scheduled game;
+    its two children are "keeps it" (same holder, that team's following
+    game) and "takes it" (the challenger, and THE CHALLENGER's following
+    game), weighted by the Elo win probability the season walk uses. `p`
+    on a node is the chance of reaching it (the product of the branch
+    odds above it), so the leaves at any level sum to 1 and
+    `after[k]` -- who holds the belt after the next k belt games -- is
+    just those sums, by team, no sampling noise. A node whose holder has
+    no game left in the fetched window is a leaf ("no_more_games")."""
+    by_team = defaultdict(list)
+    for i, g in enumerate(remaining_all):
+        by_team[g["home"]].append(i)
+        by_team[g["away"]].append(i)
+
+    def node(cur, pos, level, prob):
+        lst = by_team.get(cur) or []
+        j = bisect_right(lst, pos)
+        out = {"holder": cur, "p": round(prob, 5), "level": level}
+        if j >= len(lst):
+            out["no_more_games"] = True
+            return out
+        if level >= depth:
+            return out
+        gi = lst[j]
+        g = remaining_all[gi]
+        opp = g["away"] if g["home"] == cur else g["home"]
+        p_keep = holder_win_prob(g, cur, elo)
+        out["game"] = dict(game_ref(g, media), opponent=opp, holder_home=(g["home"] == cur))
+        out["p_keep"] = round(p_keep, 4)
+        out["keep"] = node(cur, gi, level + 1, prob * p_keep)
+        out["take"] = node(opp, gi, level + 1, prob * (1 - p_keep))
+        return out
+
+    root = node(holder, -1, 0, 1.0)
+
+    # who holds the belt after each of the next k belt games (k = 0..depth):
+    # a node with a game is the holder BEFORE that game (i.e. after `level`
+    # games); a leaf keeps its holder through every deeper level.
+    acc = [Counter() for _ in range(depth + 1)]
+
+    def collect(n):
+        if "game" in n:
+            acc[n["level"]][n["holder"]] += n["p"]
+            collect(n["keep"])
+            collect(n["take"])
+        else:
+            for k in range(n["level"], depth + 1):
+                acc[k][n["holder"]] += n["p"]
+
+    collect(root)
+    after = [[{"team": t, "p": round(p, 4)} for t, p in acc[k].most_common() if p >= 0.00005]
+             for k in range(depth + 1)]
+    return {"depth": depth, "source": "elo", "root": root, "after": after}
 
 
 def monte_carlo_season(remaining_all, holder, elo, trials=MONTE_CARLO_TRIALS, rng=None):
@@ -302,7 +395,7 @@ def monte_carlo_season(remaining_all, holder, elo, trials=MONTE_CARLO_TRIALS, rn
     return end_counts, trials
 
 
-def belt_game_odds(remaining_all, belt_game_counts, trials, holder, elo, min_prob=0.005):
+def belt_game_odds(remaining_all, belt_game_counts, trials, holder, elo, min_prob=0.005, media=None):
     """Every unplayed game with a real chance of being a belt game (the
     schedule page, 2026-09-16): the share of simulated seasons in which the
     belt was on the line in that game, plus who would be defending it most
@@ -315,8 +408,7 @@ def belt_game_odds(remaining_all, belt_game_counts, trials, holder, elo, min_pro
         if p < min_prob:
             continue
         g = remaining_all[gi]
-        entry = {"date": g["date"][:10], "raw_date": g["date"], "home": g["home"], "away": g["away"],
-                 "neutral": g["neutral"], "p_belt_game": round(p, 4)}
+        entry = dict(game_ref(g, media), p_belt_game=round(p, 4))
         # who is favored, from the same Elo the walk used -- as the home side's win probability
         entry["p_home_win"] = round(holder_win_prob(g, g["home"], elo), 4)
         out.append(entry)
@@ -404,8 +496,10 @@ def main():
     # Season outlook: walk the whole rest of the season (every team's
     # unplayed games), so every program gets an end-of-season probability.
     remaining_all = find_all_remaining(games_raw)
+    media = load_media()   # TV/stream listings by game id (build_lineage.py), {} if absent
     end_counts, trials_run = monte_carlo_season(remaining_all, holder, elo)
-    schedule_odds = belt_game_odds(remaining_all, monte_carlo_season.belt_game_counts, trials_run, holder, elo)
+    schedule_odds = belt_game_odds(remaining_all, monte_carlo_season.belt_game_counts, trials_run, holder, elo, media=media)
+    tree = belt_tree(remaining_all, holder, elo, media=media)
     outlook = [{"team": t, "prob": round(n / trials_run, 4)}
                for t, n in end_counts.most_common() if n / trials_run >= 0.0005]
     holds_prob = end_counts[holder] / trials_run
@@ -436,12 +530,19 @@ def main():
             # every unplayed game with >= 0.5% chance of being a belt game
             # (schedule.html), chronological
             "belt_game_odds": schedule_odds,
+            # the next BELT_TREE_DEPTH belt games as an exact branching tree
+            # (belt-tree.html)
+            "belt_tree": tree,
         },
     }
     with open(out_path, "w") as f:
         json.dump(risk, f, indent=2)
 
     defend_pct = f"{defend_prob * 100:.0f}%" if defend_prob is not None else "n/a"
+    top_after = tree["after"][tree["depth"]][:3] if tree["after"] else []
+    if top_after:
+        print(f"  belt tree: after the next {tree['depth']} belt games -- "
+              + ", ".join(f"{t['team']} {t['p'] * 100:.0f}%" for t in top_after))
     print(f"Wrote {out_path}: {holder} {defend_pct} to defend vs {next_game['opponent']} "
           f"({defend_source}), {holds_prob * 100:.0f}% to hold the belt into the offseason "
           f"(wins out: {wins_out_prob * 100:.0f}%) across {len(remaining)} remaining game(s); "

@@ -637,6 +637,71 @@ own settings, worth doing deliberately rather than as a side effect of a
 script — but it's a short, well-documented `schtasks` setup if you want
 to go that route later.
 
+## Game day, live: the belt-game scoreboard, and where to watch
+
+The homepage and `preview.html` carry a live score bar for the holder's
+next game that the **visitor's browser** keeps current — the site itself
+still only rebuilds on the pipeline's schedule, so this covers the hours
+in between. From 45 minutes before kickoff it reads ESPN's public
+scoreboard feed (the same `site.api.espn.com` / `sports.core.api.espn.com`
+endpoints ESPN's own pages use; they allow cross-origin reads and need no
+key): one `summary` call to identify the game and both teams, then a
+handful of tiny `status` / `score` / `situation` reads every minute while
+the game is live, with the belt's own framing — SAFE / IN DANGER / TIED,
+possession, down and distance, the last play — and at the final either
+"X takes the belt" or "X defends the belt, Nth defense" plus a note that
+the site updates within a few hours. It holds the final for a day, makes
+no request outside that window, pauses while the tab is hidden, and
+degrades to nothing if ESPN is unreachable. `build_lineage.py` now writes
+each upcoming game's CFBD id (the same number ESPN uses) into
+`next_game.json` / `upcoming_games.json` for it; with no id on file the
+bar falls back to searching that day's scoreboard by team name.
+`fetch_gameday_status.py`'s hourly CFBD snapshot still prefills the bar
+when a build runs mid-game.
+
+Where to watch: `build_lineage.py` makes one `/games/media?year=` call
+per season on the holder's schedule (normally one call) and stamps `tv`
+("NBC"), `stream` ("Peacock") and `watch` (whichever is set) onto every
+upcoming game, plus `start_time_tbd`; the whole season's listings go to
+`belt_data/media.json`, which `fetch_belt_odds.py` joins to the schedule
+page's games by id. The homepage card, the preview page's center panel,
+the schedule page and the belt tree show the network and the kickoff in
+Eastern time, restated in the visitor's own zone by a few lines of JS.
+
+## Four more pages (2026-09-18): belt on any date, belt degrees, the belt's journey, the belt tree
+
+- **`belt-on.html`** — pick any date since November 6, 1869 and see who
+  held the belt that day: which reign, how deep into it, defenses so far,
+  the belt games on either side, a line to share. Answered in the browser
+  from the embedded chain of custody (the holder on any day is whoever won
+  it most recently before then); the date lives in the URL hash
+  (`#d=1988-10-16`) so a birthday can be linked.
+- **`degrees.html`** — six degrees of the belt: every holder is joined to
+  every program it has taken the belt from or lost it to, and the page
+  finds the shortest chain of real changes of hands between any two (a
+  breadth-first search over the embedded graph, each link the most recent
+  game between the pair). Build-time boards: most connected, center of
+  the web, busiest corridors, the farthest-apart pairs.
+- **`journey.html`** — the belt's journey, campus to campus: every change
+  of hands measured as the great-circle distance between the two
+  programs' home fields, totaled (with laps around the Earth), the longest
+  and shortest hops, miles by decade, the days-weighted center of gravity,
+  and an animated replay of every hop on the same Albers map as
+  `map.html`. Coordinates come from CFBD's `/teams` `location` (kept by
+  `fetch_team_colors.py` as `lat` / `lon` / `city` in `team_colors.json`,
+  same call as the colors); the four historic programs CFBD no longer
+  tracks are placed by hand in `HISTORIC_CAMPUSES`, and anything else
+  without coordinates falls back to its state's centroid and is flagged
+  approximate.
+- **`belt-tree.html`** — the next four belt games as an exact branching
+  tree: at every node the holder keeps the belt (the branch follows its
+  schedule) or the challenger takes it (the branch follows the
+  challenger's), with the Elo win probability on each fork, computed by
+  `fetch_belt_odds.py` (`BELT_TREE_DEPTH`, `season.belt_tree` in
+  `belt_risk.json`). "Who holds the belt after k belt games" is the sum
+  over the leaves, no sampling. The page is skipped (and left out of the
+  nav) until the tree exists.
+
 ## Merch shop (Fourthwall)
 
 `site/shop.html` is a native page in the site's own design — products
