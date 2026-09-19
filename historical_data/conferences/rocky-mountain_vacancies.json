@@ -4366,5 +4366,133 @@
     "effective_date": "1939-05-16",
     "detected_on": "2026-09-18",
     "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1939-05-16",
+    "last_activity_date": "1939-05-16",
+    "effective_date": "1939-05-17",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Colorado"
+  },
+  {
+    "team": "Colorado",
+    "reign_started": "1939-05-17",
+    "last_activity_date": "1939-05-17",
+    "effective_date": "1939-05-18",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Utah State"
+  },
+  {
+    "team": "Utah State",
+    "reign_started": "1939-05-18",
+    "last_activity_date": "1939-05-18",
+    "effective_date": "1939-05-19",
+    "detected_on": "2026-09-19",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1939-05-19",
+    "last_activity_date": "1939-05-19",
+    "effective_date": "1939-05-20",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Northern Colorado"
+  },
+  {
+    "team": "Northern Colorado",
+    "reign_started": "1939-05-20",
+    "last_activity_date": "1939-05-20",
+    "effective_date": "1939-05-21",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1939-05-21",
+    "last_activity_date": "1939-05-21",
+    "effective_date": "1939-05-22",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Colorado School of Mines"
+  },
+  {
+    "team": "Colorado School of Mines",
+    "reign_started": "1939-05-22",
+    "last_activity_date": "1939-05-22",
+    "effective_date": "1939-05-23",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Wyoming"
+  },
+  {
+    "team": "Wyoming",
+    "reign_started": "1939-05-23",
+    "last_activity_date": "1939-05-23",
+    "effective_date": "1939-05-24",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Montana State"
+  },
+  {
+    "team": "Montana State",
+    "reign_started": "1939-05-24",
+    "last_activity_date": "1939-05-24",
+    "effective_date": "1939-05-25",
+    "detected_on": "2026-09-19",
+    "reverted_to": "BYU"
+  },
+  {
+    "team": "BYU",
+    "reign_started": "1939-05-25",
+    "last_activity_date": "1939-05-25",
+    "effective_date": "1939-05-26",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1939-05-26",
+    "last_activity_date": "1939-05-26",
+    "effective_date": "1939-05-27",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Colorado State"
+  },
+  {
+    "team": "Colorado State",
+    "reign_started": "1939-05-27",
+    "last_activity_date": "1939-05-27",
+    "effective_date": "1939-05-28",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1939-05-28",
+    "last_activity_date": "1939-05-28",
+    "effective_date": "1939-05-29",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Denver"
+  },
+  {
+    "team": "Denver",
+    "reign_started": "1939-05-29",
+    "last_activity_date": "1939-05-29",
+    "effective_date": "1939-05-30",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Utah"
+  },
+  {
+    "team": "Utah",
+    "reign_started": "1939-05-30",
+    "last_activity_date": "1939-05-30",
+    "effective_date": "1939-05-31",
+    "detected_on": "2026-09-19",
+    "reverted_to": "Colorado College"
+  },
+  {
+    "team": "Colorado College",
+    "reign_started": "1939-05-31",
+    "last_activity_date": "1939-05-31",
+    "effective_date": "1939-06-01",
+    "detected_on": "2026-09-19",
+    "reverted_to": "BYU"
   }
 ]
