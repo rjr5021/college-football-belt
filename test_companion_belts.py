@@ -60,6 +60,22 @@ assert reigns[0]["team"] == "A" and reigns[0].get("retired") and reigns[0]["end_
 assert reigns[1]["team"] == "C" and reigns[1].get("reestablished") and reigns[1]["end_date"] is None
 assert vacancies[0]["reverted_to"] is None and vacancies[0].get("retired")
 
+# ---- 2b. the re-established flag survives a pass that has to forgive a gap
+#          (the first holder of the new segment goes quiet with nobody to hand
+#          it to, then comes back -- the resolver re-walks the segment)
+games2b = [
+    game(1, d(0), "A", "B", 10, 0),      # A establishes, then leaves for good
+    game(2, d(370), "C", "B", 21, 7),    # C re-establishes the belt
+    game(3, d(1300), "C", "B", 14, 3),   # ...goes quiet for 930 days, then defends it
+]
+belt_games, reigns, vacancies = be.resolve_vacancies(
+    games2b, "holder", start_holder=None, start_reign=None,
+    recent_teams={"B", "C"}, today=d(1400), first_game_date=d(0))
+print("2b.", [(r["team"], r.get("retired"), r.get("reestablished"), r["defenses"]) for r in reigns])
+assert [r["team"] for r in reigns] == ["A", "C"], reigns
+assert reigns[0].get("retired") and reigns[1].get("reestablished") and reigns[1]["defenses"] == 1
+assert len(vacancies) == 1 and vacancies[0].get("retired")
+
 # ---- 3. a dissolved world: the last holder keeps a closed, retired reign; nothing follows
 games3 = [game(1, d(0), "A", "B", 10, 0), game(2, d(7), "B", "A", 14, 3)]
 belt_games, reigns, vacancies = be.resolve_vacancies(

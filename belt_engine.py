@@ -280,9 +280,11 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
                                           gap_threshold_days=gap_threshold_days,
                                           gaps_to_forgive=gaps_to_forgive,
                                           first_game_date=first_game_date)
-        if reestablished_pending and reigns:
+        if reestablished_pending and reigns and holder is None:
+            # the first reign of a re-established segment; this pass may be
+            # re-run (gaps_to_forgive) before the segment is committed, so the
+            # flag is re-applied each pass and only cleared once it is kept
             reigns[0]["reestablished"] = True
-            reestablished_pending = False
         tip = reigns[-1]
         if tip.get("defenses", 0) > 0 or len(reigns) > 1 or belt_games:
             chain_teams = set()          # real forward progress happened in this pass
@@ -312,6 +314,7 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
             retired_tip = {**tip, "end_date": last_activity, "lost_to": None, "retired": True}
             all_belt_games += belt_games
             all_reigns += reigns[:-1] + [retired_tip]
+            reestablished_pending = False
             later = [g for g in games if g["date"] > last_activity]
             if later and reestablish:
                 print(f"Belt: {tip['team']} has no qualifying game after {last_activity} and nobody "
@@ -331,20 +334,19 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         v = {"team": tip["team"], "reign_started": tip["start_date"],
              "last_activity_date": last_activity, "effective_date": effective_date,
              "detected_on": today, "reverted_to": successor}
+        held = (f"caught it on {v['reign_started']}" if last_activity == v['reign_started']
+                else f"caught it on {v['reign_started']} and defended it through {last_activity}")
         if has_gap:
-            reason = ("went quiet for a long stretch (no qualifying game in well "
-                      "over a season) before showing up again later in the data")
-        elif last_activity == tip["start_date"]:
-            reason = "hasn't had a qualifying game since catching it"
+            reason = ("then went quiet for well over a season before showing up again "
+                      "later in the data")
         else:
-            reason = "hasn't had a qualifying game since"
-        print(f"Belt: {v['team']} {reason} on {v['reign_started']}"
-              f"{'' if last_activity == v['reign_started'] else f', defended it for real through {last_activity},'} "
-              f"-- closing that reign as of their last real activity and reverting "
-              f"the belt to {v['reverted_to']}, in effect since {v['effective_date']}.")
+            reason = "and has had no qualifying game since"
+        print(f"Belt: {v['team']} {held}, {reason} -- closing that reign as of their last real "
+              f"activity and reverting the belt to {v['reverted_to']}, in effect since {v['effective_date']}.")
         vacated_tip = {**tip, "end_date": last_activity, "lost_to": None, "vacated": True}
         all_belt_games += belt_games
         all_reigns += reigns[:-1] + [vacated_tip]
+        reestablished_pending = False
         vacancies.append(v)
         chain_teams.add(tip["team"])
 

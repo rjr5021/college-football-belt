@@ -344,7 +344,7 @@ NAV_PRIMARY = [
     ("home", "index.html", "The Belt"),
     ("history", "lineage.html", "History"),
     ("records", "records.html", "Records"),
-    ("map", "map.html", "Map"),
+    ("journey", "journey.html", "Journey"),
     ("stories", "stories.html", "Stories"),
     ("shop", "shop.html", "Shop"),
 ]
@@ -356,6 +356,7 @@ NAV_MORE = [
         ("rivalries", "rivalries/index.html", "Rivalries"),
         ("conferences", "conferences/index.html", "Conference belts"),
         ("states", "states/index.html", "States"),
+        ("map", "map.html", "The belt map"),
         ("decades", "decades/index.html", "Decades"),
         ("losers", "losers-belt.html", "Losers Belt"),
         ("universes", "universes/index.html", "Alternate universes"),
@@ -364,7 +365,6 @@ NAV_MORE = [
         ("by-conference", "by-conference.html", "By conference"),
         ("venues", "venues/index.html", "Venues"),
         ("on-this-day", "on-this-day.html", "On this day"),
-        ("journey", "journey.html", "The belt&rsquo;s journey"),
         ("belt-on", "belt-on.html", "Belt on any date"),
     ]),
     ("Play", [
@@ -459,7 +459,7 @@ def site_header(rel="", active=None, crumb=""):
 FOOTER_COLUMNS = [
     ("Lineage", [("lineage.html", "Full history"), ("all-games.html", "All games"), ("seasons.html", "Seasons"),
                  ("timeline.html", "Timeline"), ("rivalries/index.html", "Rivalries"), ("conferences/index.html", "Conference belts"),
-                 ("states/index.html", "States"), ("decades/index.html", "Decades"), ("universes/index.html", "Alternate universes"),
+                 ("states/index.html", "States"), ("map.html", "The belt map"), ("decades/index.html", "Decades"), ("universes/index.html", "Alternate universes"),
                  ("web.html", "Web of the belt"), ("coaches/index.html", "Coaches"), ("journey.html", "The belt&rsquo;s journey"),
                  ("belt-on.html", "Belt on any date")]),
     ("Tools", [("outlook.html", "Season outlook"), ("schedule.html", "Belt schedule"), ("polls.html", "Belt vs. the polls"), ("my-team.html", "My Team"),
@@ -4217,7 +4217,9 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
         elif r.get("won_from") and w is not None:
             won_inner = f"def. {esc(r['won_from'])} {w}&ndash;{l}"
         elif r.get("reestablished"):
-            won_inner = "Re-established the belt"
+            prev = reigns[i - 2] if i >= 2 else None
+            won_inner = (f"Re-established the belt (no games on record between {prev['end_date'][:4]} and {r['start_date'][:4]})"
+                         if prev and prev.get("end_date") else "Re-established the belt")
         else:
             won_inner = "Established the belt"
         won_txt = f'<a href="games/{gid}.html">{won_inner}</a>' if gid else won_inner
@@ -4949,12 +4951,19 @@ def generate_conference_belt_page(lineage, slug):
     won_from = current.get("won_from")
     reclaimed_after = current.get("reclaimed_after")
 
-    if retired:
-        when = fmt_date(retired.get("dissolved_date") or retired["last_game_date"])
+    if retired and retired.get("dissolved_date"):
+        when = fmt_date(retired["dissolved_date"])
         why = retired.get("note") or f"{conference} stopped playing"
         lede = (f"<strong>This belt is retired.</strong> {esc(current['team'])} held it when {esc(conference)} "
                 f"played its last game on {fmt_date(retired['last_game_date'])}, and the reign is closed as of "
                 f"{when}: {esc(why)}.")
+    elif retired:
+        # not a dissolved league -- the members simply stopped playing each other
+        # (or the last holders left) and nobody was left to inherit the belt
+        lede = (f"<strong>This belt is retired.</strong> {esc(current['team'])} held it after the last game "
+                f"between two {esc(conference)} members on {fmt_date(retired['last_game_date'])}, and with no "
+                f"earlier holder left to inherit it the reign is closed there. It would start over with the "
+                f"next game between two members.")
     elif reclaimed_after:
         lede = (f"{esc(reclaimed_after)} caught it but left {esc(conference)} &mdash; since "
                  f"this belt only passes among {esc(conference)} members, it reverted back to "
@@ -5007,7 +5016,12 @@ def generate_conference_belt_page(lineage, slug):
         elif r.get("won_from"):
             caught_txt = f"beat {esc(r['won_from'])}"
         elif r.get("reestablished"):
-            caught_txt = f"Re-established it ({esc(conference)} resumed play)"
+            prev = reigns[i - 2] if i >= 2 else None
+            if prev and prev.get("end_date"):
+                caught_txt = (f"Re-established it (no {esc(conference)} games on record between "
+                              f"{prev['end_date'][:4]} and {r['start_date'][:4]})")
+            else:
+                caught_txt = "Re-established it"
         else:
             caught_txt = "Established it (first game on record)"
 
@@ -5162,7 +5176,10 @@ def generate_conferences_index_page(conference_lineages):
         if active:
             sub = f"since {fmt_date(current['start_date'])} &middot; {totals['reigns']} reigns all-time"
         elif lineage.get("retired"):
-            sub = f"retired with the belt in {last[:4]} &middot; {totals['reigns']} reigns all-time"
+            # the belt closes on the day the conference dissolved (when known),
+            # which can fall in the year after its last game -- match the page
+            closed = (lineage["retired"] or {}).get("dissolved_date") or current.get("end_date") or last
+            sub = f"retired with the belt in {closed[:4]} &middot; {totals['reigns']} reigns all-time"
         else:
             sub = f"last played as a conference in {last[:4]} &middot; {totals['reigns']} reigns all-time"
         return f'''
