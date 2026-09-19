@@ -1,0 +1,77 @@
+name: Live belt-game X posts
+
+# Bob (2026-09-19): "can it setup automatic posts for the start of the
+# belt game, any scoring updates, halftime and the end of the game?"
+#
+# GitHub's schedule trigger can't fire more often than every 5 minutes
+# (an official limit -- anything tighter is silently dropped), which is
+# too slow for in-game score updates on its own. So this workflow's cron
+# just picks the job up every 5 minutes during the hours college
+# football is actually played; post_live_game.py itself then loops
+# internally (about every 20 seconds) for as long as the belt holder's
+# game is live, so the real update cadence is much faster than the
+# trigger interval. Outside a ~30-minutes-before-kickoff-to-a-few-hours-
+# after window on an actual belt-game day, the script exits immediately
+# with zero network calls -- so the other ~23 hours a day, and every
+# non-game day, this costs nothing extra.
+#
+# This repo is public, so none of this costs anything in GitHub Actions
+# minutes no matter how often it runs or how long a single game's job
+# stays open.
+#
+# `concurrency` below is what keeps this from turning into dozens of
+# overlapping jobs during one game: once a run is inside
+# post_live_game.py's polling loop, later 5-minute ticks queue up behind
+# it and GitHub automatically drops all but the newest queued one, so
+# effectively only one process is ever polling ESPN for a given game --
+# whichever one started the session, or, if that one's job eventually
+# times out or dies, whichever tick picks the game back up next (see
+# post_live_game.py's docstring on crash recovery).
+#
+# Needs the same four X_API_KEY / X_API_KEY_SECRET / X_ACCESS_TOKEN /
+# X_ACCESS_TOKEN_SECRET repository secrets as update-and-deploy.yml --
+# nothing new to add if post_to_x.py is already set up.
+
+on:
+  schedule:
+    # Every 5 minutes (GitHub's floor) from noon ET to ~1 AM ET the next
+    # day, every day of the week -- wide enough for a Tuesday MACtion
+    # game, a Friday game, or a bowl, not just Saturdays. Written in UTC;
+    # post_live_game.py's own in_live_window() check (against the real
+    # kickoff time) is what actually decides whether to do anything on
+    # any given tick, so the +/-1 hour DST wobble here doesn't matter.
+    - cron: '*/5 16-23 * * *'
+    - cron: '*/5 0-5 * * *'
+  workflow_dispatch: {}   # lets you start a session by hand from the Actions tab
+
+permissions:
+  contents: write   # needed to commit social_cache/x_live_state.json as it posts
+
+concurrency:
+  group: live-belt-game
+  cancel-in-progress: false
+
+jobs:
+  post-live:
+    runs-on: ubuntu-latest
+    # A bit above post_live_game.py's own MAX_SESSION (5.5h), as a hard
+    # backstop -- GitHub kills anything over 6h on a standard runner
+    # regardless of this setting.
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for and post live game updates
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python3 post_live_game.py
