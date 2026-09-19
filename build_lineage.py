@@ -108,6 +108,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from belt_engine import filter_division1_games  # noqa: F401 -- build_losers_lineage.py imports it from here
+from classification import division1_evidence, division1_game
 from supplemental_games import merge_supplemental
 
 API_BASE = "https://api.collegefootballdata.com"
@@ -486,6 +487,17 @@ def normalize(raw, venue_tz=None):
     return out
 
 
+def _probe(g):
+    """The classification-relevant fields of a raw CFBD game row, in the
+    normalized names classification.division1_game reads."""
+    return {"season": pick(g, "season"),
+            "home": pick(g, "home_team", "homeTeam"), "away": pick(g, "away_team", "awayTeam"),
+            "home_conference": pick(g, "home_conference", "homeConference"),
+            "away_conference": pick(g, "away_conference", "awayConference"),
+            "home_division": pick(g, "home_division", "homeDivision", "home_classification", "homeClassification"),
+            "away_division": pick(g, "away_division", "awayDivision", "away_classification", "awayClassification")}
+
+
 def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
     """The current holder's next `count` scheduled games, straight from
     this run's freshly-fetched season data -- CFBD returns the full season
@@ -502,6 +514,7 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
     left to give anyway, but this never returns more than that."""
     venue_tz = venue_tz or {}
     venue_info = venue_info or {}
+    known_d1 = division1_evidence(_probe(g) for g in raw)
     candidates = []
     for g in raw:
         home = pick(g, "home_team", "homeTeam")
@@ -512,6 +525,8 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
         ap = pick(g, "away_points", "awayPoints")
         if hp is not None and ap is not None:
             continue  # already played
+        if not division1_game(_probe(g), known_d1):
+            continue  # a game against a team below Division I is not a belt game (the Division I rule)
         raw_date = pick(g, "start_date", "startDate")
         if not raw_date:
             continue
@@ -963,9 +978,22 @@ def main():
     d1_teams = None  # fetched lazily below (compute_team_paths)
     combined_current = None
 
+    # The Division I rule (2026-09-19, ruleset.md "Non-FBS opponents"): every
+    # game before the 1978 split counts; from 1978 on only a game between two
+    # Division I teams (FBS or FCS) that season can move the belt. A loss to
+    # a Division II/III/NAIA team is not a belt game, because the record has
+    # no schedules below Division I to follow the belt with. The frozen
+    # baseline needs nothing -- the belt has never met a lower-division team
+    # since 1978 -- so this only ever governs the live seasons.
+    known_d1 = division1_evidence(games_all)
+    games_d1 = [g for g in games_all if division1_game(g, known_d1)]
+    if len(games_d1) != len(games_all):
+        print(f"{len(games_all) - len(games_d1)} of those are against teams below Division I and cannot move "
+              f"the belt (the Division I rule); {len(games_d1)} games can")
+
     for scope in scopes_to_run:
         baseline = baselines[scope]
-        games = games_all   # NO Division 1 restriction -- exactly as this always worked
+        games = games_d1
         if baseline is None:
             print(f"\n[{scope}] No historical baseline -- doing a full "
                   f"{args.start_year}-{args.end_year} walk ({len(games)} games).")

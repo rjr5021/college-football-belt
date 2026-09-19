@@ -75,14 +75,26 @@ the belt.
 
 ## Non-FBS (or non-modern-classification) opponents
 
-If the holder loses to a team from a lower division — an FCS program, or in
-the pre-modern era a club, athletic-association or military service team —
-the belt goes with it, exactly as it would against any other opponent.
-Division/classification is a modern administrative label; it isn't a rule of the game the belt is
-based on. (Mechanically, this is already how the underlying data pull
-works: games are pulled across every classification with no FBS-only
-filter, so a belt-relevant upset by a lower-division team would already be
-caught — it doesn't require a separate rule to implement, only to state.)
+If the holder loses to an FCS program, the belt goes with it, exactly as it
+would against any other opponent — the FBS/FCS line is a modern
+administrative label, not a rule of the game the belt is based on. The same
+went for the club, athletic-association and military service teams of the
+pre-modern era, and still does: before the 1978 split, every game on record
+counts.
+
+From 1978 on, though, only a game between two Division I teams (FBS or FCS,
+as they were classified that season) can move the belt. This is a limit of
+the record, not a judgment about the football: the data source has no
+schedules below Division I before 2021, so a belt that went to a Division
+II, III or NAIA team could not be followed — it would simply vanish until
+that team next met a Division I opponent, years later. A Reddit reader
+found exactly that on the What if? page in September 2026 (a flipped
+Baylor–Wofford 2013 sent the belt to Division II UNC Pembroke, whose next
+game on record was in 2021). So a holder's loss to a lower-division team is
+not a belt game, and the holder keeps the belt. In the real lineage this has
+never come up — no holder has met a team below Division I since 1978 — so
+the rule changes nothing about the history; it governs the live seasons,
+the What if? page and the alternate universes.
 
 ## Club and service teams can hold the belt
 

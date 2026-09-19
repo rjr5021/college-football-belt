@@ -3940,7 +3940,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         <div class="heroStats">
           <div><span class="n tabular">{days_held:,}</span><span class="l">Days held</span></div>
           <div><span class="n tabular">{defenses}</span><span class="l">Defense{"s" if defenses != 1 else ""}</span></div>
-          <div><span class="n tabular">{team_reign_num}</span><span class="l"><a href="{holder_url}">Career reign{"s" if team_reign_num != 1 else ""}</a></span></div>
+          <div><span class="n tabular">{team_reign_num}</span><span class="l"><a href="{holder_url}">All-time reign{"s" if team_reign_num != 1 else ""}</a></span></div>
         </div>
       </div>
       {up_next_html}
@@ -10693,7 +10693,10 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
     counts. A flip makes the loser the winner (a flipped tie hands the belt to the challenger); the replay then follows the
     new holder&rsquo;s actual schedule, game by game, on the same record the rest of the site is built from. Reality holds
     until your first flip, and &ldquo;history heals itself&rdquo; the first day both lines have the same holder &mdash; from
-    then on they are identical, because the games are.</p>'''
+    then on they are identical, because the games are. One limit, the same one the real belt lives by: from the 1978 split
+    on, only games between two Division I teams (FBS or FCS) can move the belt &mdash; the record has no schedules below
+    Division I to follow it with, so a loss to a Division II team leaves the belt where it is. Before 1978 every game on
+    record counts, club and service teams included.</p>'''
 
     return f'''{page_head("What If? — Rewrite the College Football Belt",
                      "Flip any belt game since 1869 and watch the lineal championship recalculate from that day forward: new holders, new reigns, and whether history heals itself.", "",
@@ -12515,7 +12518,7 @@ def generate_story_giant_killers(lineage, belt_games):
         chapters.append(_chapter(f'{esc(r.get("lost_to") or "")} ends {possessive(r["team"])} {fmt_duration(s, e)}', paras, f"No. {k}"))
     paras = [f'Add up the length of every reign a program has ended and you get a different kind of leaderboard &mdash; not who held the belt longest, but who took the most away.']
     paras.append(" ".join(f'{team_link(t)} has ended {ended_count[t]} {_plural(ended_count[t], "reign")} worth {d:,} days.' for t, d in top_killers[:5]))
-    chapters.append(_chapter("The career giant killers", paras))
+    chapters.append(_chapter("The all-time giant killers", paras))
     lede = (f'Every long reign ends the same way: someone wins on a Saturday nobody expected. These are the ten longest reigns ever ended, and the programs that ended them.')
     top_i, top_r = longest[0]
     stat = _stat(f"{reign_duration_days(top_r, today):,}", f"days &mdash; the longest reign ever ended, {esc(top_r['team'])}&rsquo;s, by {esc(top_r.get('lost_to') or '')}")

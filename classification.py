@@ -220,6 +220,58 @@ def conference_classification(name, seasons):
     return max(counts, key=lambda c: (counts[c], latest[c]))
 
 
+def division1_game(g, known_d1=None):
+    """Whether a game can move the belt at all (2026-09-19, the "Division I
+    rule"): every game on record before the 1978 split -- the pre-modern
+    record includes the club and service teams that held the belt in the
+    1930s -- and, from 1978 on, only a game between two Division I teams
+    (FBS or FCS) that season. A Reddit reader flipped Baylor-Wofford 2013 on
+    the what-if page and watched the belt fall to Division II UNC Pembroke,
+    whose next game on record was in 2021: the data source has no schedules
+    below Division I before 2021, so a belt that goes there cannot be
+    followed, and a loss to a lower-division team is not a belt game -- the
+    holder keeps the belt. Judged by the data source's per-game
+    classification when it is present (the live seasons), else by the
+    conference each side was in that season; a side with neither is
+    Division I only if `known_d1` (see division1_evidence) says the team
+    was that season."""
+    season = g.get("season")
+    if season is None or season < FCS_FIRST_SEASON:
+        return True
+    for side in ("home", "away"):
+        div = g.get(f"{side}_division")
+        if div:
+            if str(div).lower() in (FBS, FCS):
+                continue
+            return False
+        label = g.get(f"{side}_conference")
+        if classify(canonical_conference(label), season) in (FBS, FCS):
+            continue
+        if not label and known_d1 is not None and (g.get(side), season) in known_d1:
+            continue      # no conference on this row, but the team is Division I elsewhere that season
+        return False
+    return True
+
+
+def division1_evidence(games):
+    """{(team, season)} for every side that any game shows to be Division I
+    that season -- the fallback division1_game uses for a row that carries
+    no conference at all, so a stray unlabeled game between two Division I
+    teams is not thrown away (it matters most for the real belt's live
+    seasons, where a missed game means a wrong holder)."""
+    known = set()
+    for g in games:
+        season = g.get("season")
+        if season is None or season < FCS_FIRST_SEASON:
+            continue
+        for side in ("home", "away"):
+            div = g.get(f"{side}_division")
+            if (div and str(div).lower() in (FBS, FCS)) or \
+                    classify(canonical_conference(g.get(f"{side}_conference")), season) in (FBS, FCS):
+                known.add((g.get(side), season))
+    return known
+
+
 def fcs_first_season(games, min_games=100):
     """The first season the data source actually covers FCS-vs-FCS play
     (it has almost no I-AA results before 2003 even though the subdivision

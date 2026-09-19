@@ -733,6 +733,23 @@ reigns, a missing North Dakota State and defunct conferences held "to the
 present," and the membership rule followed a Reddit reader's catch that
 the Independents belt had Notre Dame "leaving" twice.
 
+## The Division I rule
+
+`classification.division1_game(g)` decides whether a game can move the
+belt at all: every game before the 1978 split (the pre-modern record
+includes the club and service teams that held the belt in the 1930s), and
+from 1978 on only a game between two Division I teams -- FBS or FCS that
+season, by the data source's per-game classification when present, else
+by the conference each side was in. A loss to a Division II/III/NAIA team
+is not a belt game; the holder keeps the belt. The reason is coverage, not
+philosophy: the data source has no schedules below Division I before
+2021, so a belt that went there could not be followed (a Reddit reader
+flipped Baylor-Wofford 2013 on the what-if page and watched the belt sit
+with UNC Pembroke for eight years). `build_lineage.py` applies it to the
+live seasons and to Belt Watch's upcoming games, `build_alternate_lineages.py`
+to the what-if record and every universe; the real lineage has never met a
+lower-division team since 1978, so nothing historical changed.
+
 ## Merch shop (Fourthwall)
 
 `site/shop.html` is a native page in the site's own design — products

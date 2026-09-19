@@ -60,6 +60,7 @@ import time
 from datetime import date
 
 from belt_engine import FIRST_GAME_DATE, resolve_vacancies, walk_winner
+from classification import division1_evidence, division1_game
 
 DATA_DIR = "belt_data"
 HIST_DIR = "historical_data"
@@ -257,9 +258,13 @@ def first_poll_no1(season):
 
 
 def run_universe(u, games, today):
-    """Walk one universe over `games` (chronological, every division).
-    Returns (belt_games, reigns, vacancies, origin_note)."""
+    """Walk one universe over `games` (chronological; every game before the
+    1978 split, Division I vs Division I from then on -- the Division I
+    rule, classification.division1_game). Returns (belt_games, reigns,
+    vacancies, origin_note)."""
     tie_rule = u.get("tie_rule", "holder")
+    known_d1 = division1_evidence(games)
+    games = [g for g in games if division1_game(g, known_d1)]
     if u.get("exclude_postseason"):
         games = [g for g in games if (g.get("season_type") or "regular") != "postseason"]
     seasons_present = sorted({g["season"] for g in games})
@@ -414,8 +419,18 @@ def write_whatif_games(games, today):
     teams = {}
     rows = []
     origin = date.fromisoformat(FIRST_GAME_DATE)
+    dropped = 0
+    known_d1 = division1_evidence(games)
     for g in games:
         if g.get("home_points") is None or g.get("away_points") is None or g["date"] < FIRST_GAME_DATE:
+            continue
+        if not division1_game(g, known_d1):
+            # the Division I rule (2026-09-19): from 1978 on a game against a
+            # team below Division I cannot move the belt -- the record has no
+            # schedules down there to follow it with (a flipped Baylor-Wofford
+            # 2013 once stranded the belt with Division II UNC Pembroke for
+            # eight years). Same rule the real belt's live walk applies.
+            dropped += 1
             continue
         for t in (g["home"], g["away"]):
             if t not in teams:
@@ -426,7 +441,8 @@ def write_whatif_games(games, today):
                "teams": list(teams), "games": rows}
     with open(WHATIF_PATH, "w", encoding="utf-8") as f:
         json.dump(payload, f, separators=(",", ":"), ensure_ascii=False)
-    print(f"Wrote {WHATIF_PATH} ({len(rows):,} games, {len(teams)} teams) for the what-if page")
+    print(f"Wrote {WHATIF_PATH} ({len(rows):,} games, {len(teams)} teams) for the what-if page"
+          f" -- {dropped:,} games against teams below Division I (1978 on) left out under the Division I rule")
 
 
 def main():
