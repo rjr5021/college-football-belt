@@ -11052,13 +11052,17 @@ def generate_degrees_page(lineage, colors, belt_games):
 
 EARTH_RADIUS_MI = 3958.8
 EARTH_CIRCUMFERENCE_MI = 24901.0
-# Campuses CFBD has no venue for (see fetch_team_colors.py): the four
-# historic programs that held the belt and no longer play at this level.
+# Campuses CFBD has no venue for (see fetch_team_colors.py): the historic
+# programs, clubs and service teams that held the belt and no longer play
+# at this level (the 1931-32 chain comes from the supplemental games).
 HISTORIC_CAMPUSES = {
     "Carlisle": (40.2015, -77.1948, "Carlisle, PA"),
     "Olympic Club": (37.7885, -122.4088, "San Francisco, CA"),
     "Saint Mary's (CA)": (37.8408, -122.1095, "Moraga, CA"),
     "Swarthmore": (39.9040, -75.3545, "Swarthmore, PA"),
+    "Loyola Marymount": (33.9697, -118.4169, "Los Angeles, CA"),
+    "San Diego Marines": (32.7409, -117.1978, "Marine Corps Base San Diego, CA"),
+    "West Coast Army": (37.7989, -122.4662, "Presidio of San Francisco, CA"),
 }
 
 
