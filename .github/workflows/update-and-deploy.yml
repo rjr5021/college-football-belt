@@ -336,3 +336,38 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Ping IndexNow (Bing, DuckDuckGo, Yahoo, Yandex) with the pages that changed
+        # seo_enhance.py wrote indexnow-changed.json (this build's changed URLs)
+        # and the key file the engines verify ownership with (/<key>.txt).
+        # Read the list back from the live site -- which also proves the deploy
+        # propagated -- and POST it once. Google ignores IndexNow (it reads the
+        # sitemap as before). Never fails the deploy.
+        run: |
+          python3 - <<'EOF'
+          import json, time, urllib.request, urllib.error
+          src = "https://collegefootballbelt.com/indexnow-changed.json"
+          payload = None
+          for attempt in range(8):
+              try:
+                  with urllib.request.urlopen(f"{src}?t={int(time.time())}", timeout=30) as r:
+                      payload = json.load(r)
+                  break
+              except Exception as e:
+                  print(f"waiting for the deploy to propagate ({e})")
+                  time.sleep(15)
+          urls = (payload or {}).get("urlList") or []
+          if not urls:
+              print("IndexNow: nothing to submit")
+              raise SystemExit(0)
+          body = json.dumps({k: payload[k] for k in ("host", "key", "keyLocation", "urlList")}).encode("utf-8")
+          req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+                                       headers={"Content-Type": "application/json; charset=utf-8"})
+          try:
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  print(f"IndexNow: HTTP {r.status} -- {len(urls)} changed URLs submitted")
+          except urllib.error.HTTPError as e:
+              print(f"IndexNow: HTTP {e.code} {e.read()[:200]!r} -- not fatal")
+          except Exception as e:
+              print(f"IndexNow: {e} -- not fatal")
+          EOF
