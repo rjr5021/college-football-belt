@@ -16,11 +16,13 @@ name: Update and deploy
 #      / generate_recaps.py just no-op.
 #   4. OPTIONAL, to auto-post to X (@CollegeFBBelt) after every belt game
 #      (both a change of holder AND a successful defense) plus a preview
-#      post the Friday before each upcoming game -> same place -> four
-#      more repository secrets: X_API_KEY, X_API_KEY_SECRET,
-#      X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET, from the app's Keys & Tokens
-#      page at developer.x.com. Skip any of the four and post_to_x.py just
-#      no-ops -- nothing else on the site depends on it.
+#      post the Friday before each upcoming game and a "game day -- the
+#      belt is on the line" post at 10 AM ET on the day of each belt game
+#      -> same place -> four more repository secrets: X_API_KEY,
+#      X_API_KEY_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET, from the
+#      app's Keys & Tokens page at developer.x.com. Skip any of the four
+#      and post_to_x.py just no-ops -- nothing else on the site depends
+#      on it.
 #   5. OPTIONAL, same idea but for Instagram (@CollegeFBBelt) -> same
 #      place -> two more repository secrets: IG_ACCESS_TOKEN,
 #      IG_BUSINESS_ACCOUNT_ID, from the app's Instagram API setup page at
@@ -104,6 +106,33 @@ on:
     # just gets picked up at the next one of these seven, same as any
     # in-progress week always has been. Use "Run workflow" below for an
     # on-demand check any time none of this fits.
+    #
+    # Game-day morning (2026-09-19, Bob: "an automatic X post on the day
+    # of each belt game, 10 ET... signifies it's game day and the belt is
+    # on the line with some preview and game details") -- a daily 10:00 AM
+    # ET check-in for the whole season, every day of the week because a
+    # belt game can land on any of them (Thursday/Friday games, MACtion
+    # Tuesdays, bowls, the Monday title game). Same full pipeline as every
+    # other run -- so the site is also freshly rebuilt each morning with
+    # that day's odds, kickoff/TV listings and forecast -- and then
+    # post_to_x.py posts the game-day post only if today (Eastern) is the
+    # holder's game day, and only once per game. Unlike the lines above,
+    # this one is meant to land at a TRUE 10 AM ET year-round, which takes
+    # two UTC times: 14:00 in daylight time (Aug-Oct), 15:00 in standard
+    # time (Dec-Jan), and BOTH in November, which straddles the switch
+    # (first Sunday). post_to_x.py gets the cron string that fired the
+    # run (X_FIRED_CRON below) and posts only from the line that equals
+    # 10:00 AM America/New_York on that date -- so on a November day
+    # exactly one of the two fires the post and the other is an ordinary
+    # rebuild. Feb-Jul (no games) get no morning run at all. Cost: one
+    # extra pipeline run a day in season, two in November.
+    #   - 10:00 AM EDT, Aug-Oct
+    - cron: '0 14 * 8-10 *'
+    #   - 10:00 AM ET, November (14:00 UTC before the clocks go back, 15:00 after)
+    - cron: '0 14 * 11 *'
+    - cron: '0 15 * 11 *'
+    #   - 10:00 AM EST, Dec-Jan
+    - cron: '0 15 * 12,1 *'
   workflow_dispatch:      # lets you trigger a run manually from the Actions tab
     inputs:
       full_refetch_game_details:
@@ -183,6 +212,18 @@ on:
         required: false
         type: boolean
         default: false
+      post_gameday:
+        description: >-
+          Post the "game day -- the belt is on the line" X post now, if
+          today (Eastern) is the belt holder's game day and it hasn't
+          gone out yet. Normally the 10 AM ET scheduled run does this on
+          its own; tick this to send it by hand (e.g. that run failed, or
+          you want it out at a different time today). Never posts twice
+          for the same game, and does nothing on a day with no belt game.
+          Leave unchecked for an ordinary manual run.
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -225,6 +266,18 @@ jobs:
           # github.event.schedule tells us which cron line fired this run
           # (unset for workflow_dispatch/push, so those never post one).
           X_POST_PREVIEW: ${{ github.event.schedule == '0 18 * * 5' }}
+          # The cron line that fired this run, verbatim (empty for a push
+          # or a manual run) -- post_to_x.py's game-day post fires only
+          # from the one line that lands on 10:00 AM America/New_York on
+          # that date, out of the four "game-day morning" lines above (see
+          # the schedule comment and post_to_x.py's docstring for why the
+          # script, not this file, makes that call).
+          X_FIRED_CRON: ${{ github.event.schedule }}
+          # Only set (to the string "true") on a manual "Run workflow" run
+          # with the post_gameday checkbox ticked -- sends the game-day post
+          # now (if today is game day and it hasn't gone out), skipping
+          # only the 10 AM tick check above.
+          X_POST_GAMEDAY: ${{ github.event.inputs.post_gameday }}
           # Only set (to the string "true") on a manual "Run workflow" run
           # with the full-refetch checkbox ticked -- see the input above
           # and update_all.py's own docstring/FULL_REFETCH_GAME_DETAILS.

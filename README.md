@@ -877,3 +877,47 @@ hand or via Windows Task Scheduler) plus any static host — Netlify,
 Vercel, Cloudflare Pages — works exactly as well. GitHub Actions just
 happens to fold the "where does it run" question and the "where does it
 live" question into the same free answer.
+
+## Automatic X posts: post_to_x.py (+ post_on_this_day_to_x.py)
+
+Everything @CollegeFBBelt posts on X is automated, and all of it runs
+inside the workflows above (nothing posts from your own computer). The
+four X secrets from step 4 of the workflow comment are the only setup;
+without them every posting script just prints a note and exits. What
+goes out, and when:
+
+- **Result posts** — one for every belt game, change *or* successful
+  defense, from whichever `update-and-deploy.yml` run first sees the final
+  score (the Saturday check-ins land within about four hours of any
+  kickoff window). `social_cache/x_last_posted.json` remembers the last
+  game posted, so nothing posts twice.
+- **Friday preview + poll** — the Friday 2 PM ET run (`X_POST_PREVIEW`)
+  posts the upcoming game with the site's prediction and defend odds,
+  then a "does the belt stay put?" poll that runs until kickoff. Once per
+  game, whatever else triggers a run that day.
+- **Game-day post (10 AM ET)** — added 2026-09-19. On the morning of every
+  belt game: "🏈 GAME DAY — the belt is on the line", the matchup (with
+  AP/CFP ranks), kickoff time, TV and venue, what the holder is defending
+  (which defense of which reign, how many days), the site's lean and
+  defend odds, and the preview link — everything that fits in 280
+  characters, dropping the kickoff forecast, then the wordier stakes
+  line, first. It comes from a daily 10 AM ET check-in the workflow runs
+  all season (every day, because bowls and weeknight games land on any
+  day), which also rebuilds the site with that morning's odds and TV
+  listings. GitHub's cron can't follow daylight-saving time, so the
+  workflow has both a 14:00 UTC and a 15:00 UTC line where the season
+  needs them and `post_to_x.py` posts only from the one that is really
+  10:00 AM Eastern on that date (`X_FIRED_CRON`). Once per game. To send
+  it by hand — say the 10 AM run failed — Actions → "Update and deploy"
+  → Run workflow → tick **post_gameday**: it posts only if today is the
+  holder's game day and the post hasn't gone out. `test_gameday_post.py`
+  covers the wording, the 280-character fitting and the DST tick logic
+  with synthetic data (no `belt_data/` or network needed).
+- **On This Day** — its own daily workflow (`post-on-this-day.yml`),
+  reading the site's public `api/games.json`; see that file's comment.
+- **Bio sync** — whenever the holder changes, the account bio's "Current
+  champion" line follows (`sync_bio()` in `post_to_x.py`).
+
+`post_to_instagram.py` mirrors the result and Friday preview posts to
+Instagram with the same wording (its own `social_cache/ig_last_posted.json`);
+the game-day post is X-only for now.

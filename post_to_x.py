@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Posts automated updates to X (@CollegeFBBelt). Three independent things
+Posts automated updates to X (@CollegeFBBelt). Five independent things
 this does, any or all in a single run:
 
   1. RESULT posts -- one for every belt game since the last run, win or
@@ -12,7 +12,12 @@ this does, any or all in a single run:
   3. POLL posts -- a two-option "does the holder keep it?" poll, posted
      right after the Friday preview (same X_POST_PREVIEW gate, its own
      once-per-game cache key), open until kickoff.
-  4. BIO sync -- keeps the account bio's "Current champion: X" line in
+  4. GAME-DAY posts -- "it's game day, the belt is on the line", at 10:00
+     AM Eastern on the day of every belt game: matchup, kickoff time, TV,
+     venue, what the holder is defending (reign, days, defenses), the
+     site's prediction + defend odds, the kickoff forecast, and the
+     preview link. See "How the game-day post picks its moment" below.
+  5. BIO sync -- keeps the account bio's "Current champion: X" line in
      step with lineage.json's current_holder, whenever it changes (see
      sync_bio() below). Uses the legacy v1.1 API under the hood since
      profile updates aren't exposed on v2's tweepy.Client.
@@ -64,6 +69,27 @@ recomputing it. A preview only ever posts once per upcoming game either
 way (tracked by social_cache/x_last_posted.json's
 "last_posted_preview_key"), so even a Friday push wouldn't double-post.
 
+How the game-day post picks its moment (2026-09-19, Bob: "an automatic X
+post on the day of each belt game, 10 ET")
+-----------------------------------------------------------------------
+GitHub Actions cron runs on fixed UTC clock times, and 10:00 AM Eastern is
+14:00 UTC in daylight time but 15:00 UTC in standard time -- and the
+season straddles the switch (first Sunday of November). So the workflow
+has a cron line for each (14:00 UTC Aug-Oct, 15:00 UTC Dec-Jan, both in
+November) and passes the cron string that fired the run through as
+X_FIRED_CRON; is_post_time_tick() then asks "does that cron's UTC time
+equal GAMEDAY_POST_TIME_ET (10:00 AM America/New_York) on today's date?"
+On any November day exactly one of the two lines answers yes, so the post
+lands at a true 10 AM ET year-round -- no drift, and the check depends on
+the cron's nominal time rather than the wall clock, so a late-starting
+run (GitHub queues scheduled runs under load) still passes. Then it
+posts only if today (Eastern) is the date of belt_data/next_game.json's
+game, and only once per game ("last_posted_gameday_key" in the cache).
+A manual "Run workflow" with the post_gameday box ticked sets
+X_POST_GAMEDAY=true instead, which skips the tick check but keeps the
+game-day and once-per-game checks (so it's safe to use as a same-day
+retry if the 10 AM run failed).
+
 social_cache/x_last_posted.json is meant to be git-committed by the
 GitHub Actions workflow, the same way historical_data/, ai_preview_cache/
 and recap_cache/ already are -- otherwise this whole "already posted"
@@ -72,9 +98,10 @@ memory resets on every run and the same things get posted repeatedly.
 
 import json
 import os
+import re
 import sys
 import time
-from datetime import datetime
+from datetime import date, datetime, time as dtime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BELT_DATA_DIR = os.path.join(HERE, "belt_data")
@@ -82,11 +109,25 @@ LINEAGE_PATH = os.path.join(BELT_DATA_DIR, "lineage.json")
 NEXT_GAME_PATH = os.path.join(BELT_DATA_DIR, "next_game.json")
 AI_PREVIEW_PATH = os.path.join(BELT_DATA_DIR, "ai_preview.json")
 BELT_RISK_PATH = os.path.join(BELT_DATA_DIR, "belt_risk.json")
+WEATHER_PATH = os.path.join(BELT_DATA_DIR, "weather.json")
+RANKINGS_PATH = os.path.join(BELT_DATA_DIR, "rankings.json")
 CACHE_DIR = os.path.join(HERE, "social_cache")
 CACHE_PATH = os.path.join(CACHE_DIR, "x_last_posted.json")
 SITE_URL = "https://collegefootballbelt.com"
 
 REQUIRED_ENV = ["X_API_KEY", "X_API_KEY_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SECRET"]
+
+# When the game-day post goes out, in the belt's home time zone. Changing
+# this also means moving the matching cron lines in update-and-deploy.yml
+# (they have to land on this clock time in UTC -- see the docstring).
+GAMEDAY_POST_TIME_ET = dtime(10, 0)
+EASTERN = "America/New_York"
+
+# X's hard length limit for a post, in X's own weighted count (see
+# tweet_length): 280 for every account, and X Premium's longer posts get
+# folded behind "Show more" anyway, so everything here fits in 280.
+TWEET_MAX = 280
+URL_WEIGHT = 23   # every link counts as 23 no matter how long (t.co wrapping)
 
 # Kept in sync with the account's actual bio on X -- see sync_bio() below.
 # Longest holder seen in lineage.json so far ("West Virginia Wesleyan") still
@@ -418,6 +459,314 @@ def post_poll(client, cache):
     save_cache(cache)
 
 
+# ----------------------------------------------------------- game-day post
+
+def eastern_tz():
+    """America/New_York as a tzinfo. tzdata is in requirements.txt (for
+    build_lineage.py's venue-local dates), so this works on GitHub's
+    runners and on Windows alike; if the zone database is somehow missing
+    the caller treats that as 'skip the game-day post', never as a
+    pipeline failure."""
+    from zoneinfo import ZoneInfo
+    return ZoneInfo(EASTERN)
+
+
+def tweet_length(text):
+    """X's weighted character count, the one its 280 limit is measured
+    in: every link counts as 23 (X wraps them in t.co), code points in
+    X's 'light' ranges (Latin letters, digits, punctuation, en/em dashes,
+    the middle dot) count 1, everything else -- emoji above all -- counts
+    2. Slightly conservative for emoji written as multi-code-point
+    sequences (each part counts 2 here), which is the safe direction."""
+    length = 0
+    for chunk in re.split(r"(https?://\S+)", text):
+        if chunk.startswith(("http://", "https://")):
+            length += URL_WEIGHT
+            continue
+        for ch in chunk:
+            cp = ord(ch)
+            if (cp <= 0x10FF or 0x2000 <= cp <= 0x200D
+                    or 0x2010 <= cp <= 0x201F or 0x2032 <= cp <= 0x2037):
+                length += 1
+            else:
+                length += 2
+    return length
+
+
+def parse_cron_utc_time(cron):
+    """(hour, minute) of a five-field cron string whose minute and hour
+    are plain numbers -- '0 14 * 1,8-12 *' -> (14, 0). None for anything
+    else (a range like '0 17-23 * * 6', a step, a '*'): those lines are
+    the game-day-mode and result check-ins, never the 10 AM tick."""
+    parts = (cron or "").split()
+    if len(parts) != 5 or not (parts[0].isdigit() and parts[1].isdigit()):
+        return None
+    return int(parts[1]), int(parts[0])
+
+
+def is_post_time_tick(fired_cron, today_et, tz):
+    """Is the cron line that fired this run the one that lands on
+    GAMEDAY_POST_TIME_ET (10:00 AM Eastern) on today's date? Two lines
+    exist because 10 AM ET is 14:00 UTC in daylight time and 15:00 UTC in
+    standard time; on any given day exactly one of them is right, and
+    this decides which by the cron's nominal time -- so a run that GitHub
+    started late still counts."""
+    hm = parse_cron_utc_time(fired_cron)
+    if hm is None:
+        return False
+    post_utc = datetime.combine(today_et, GAMEDAY_POST_TIME_ET, tzinfo=tz).astimezone(timezone.utc)
+    return hm == (post_utc.hour, post_utc.minute)
+
+
+def kickoff_et(next_game, tz):
+    """'7:30 PM ET' from the game's UTC kickoff, the way TV listings say
+    it (same rule as build_site.kickoff_et), or None while the slot is
+    still TBD -- CFBD then carries a placeholder time we shouldn't print."""
+    raw = next_game.get("raw_date")
+    if not raw or next_game.get("start_time_tbd"):
+        return None
+    try:
+        dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt = dt.astimezone(tz)
+    return f"{dt:%I:%M %p}".lstrip("0") + " ET"
+
+
+def team_reign_number(lineage, team):
+    """How many reigns `team` has had, counting the current one -- the
+    site's 'team_reign_number' (api/current.json), e.g. Notre Dame's 9th."""
+    return sum(1 for r in lineage.get("reigns", []) if r.get("team") == team)
+
+
+def lean_line(ai_preview, belt_risk, holder, opponent):
+    """'The Lean: Notre Dame 42-17 · 97% to defend' -- the site's own
+    prediction (generate_ai_preview.py, 'The Lean' on the preview page)
+    and the model's defend probability (fetch_belt_odds.py), whichever
+    of the two exist. None when neither does. belt_risk is only trusted
+    when it's about THIS opponent, same rule as the Friday preview."""
+    pick = None
+    if ai_preview and ai_preview.get("predicted_winner"):
+        winner = ai_preview["predicted_winner"]
+        nums = re.findall(r"\d+", ai_preview.get("predicted_score") or "")
+        if len(nums) == 2 and winner in (holder, opponent):
+            hi, lo = sorted((int(nums[0]), int(nums[1])), reverse=True)
+            pick = f"{winner} {hi}-{lo}"
+        else:
+            pick = ai_preview.get("predicted_score") or winner
+    pct = None
+    if belt_risk and (belt_risk.get("next_game") or {}).get("opponent") == opponent:
+        prob = belt_risk["next_game"].get("defend_prob")
+        if prob is not None:
+            pct = round(prob * 100)
+    if pick and pct is not None:
+        # name the holder when the pick is the challenger, so "97% to
+        # defend" can't read as the challenger's number
+        who = "" if pick.startswith(holder) else f"{holder} "
+        return f"The Lean: {pick} \u00b7 {who}{pct}% to defend"
+    if pick:
+        return f"The Lean: {pick}"
+    if pct is not None:
+        return f"{holder} is a {pct}% favorite to defend the belt"
+    return None
+
+
+def weather_line(weather):
+    """'Kickoff forecast: 61°F, clear' (+ wind when it's a factor, + rain
+    chance when it's real) from fetch_weather.py's weather.json, or None
+    when there's no forecast (venue unknown, game out of range, fetch
+    failed -- the file is then literally null)."""
+    if not weather or weather.get("temp_f") is None:
+        return None
+    bits = [f"{round(weather['temp_f'])}\u00b0F"]
+    if weather.get("condition") and weather["condition"] != "Unknown":
+        bits.append(weather["condition"].lower())
+    wind = weather.get("wind_mph")
+    if wind is not None and wind >= 15:
+        bits.append(f"wind {round(wind)} mph")
+    rain = weather.get("precip_chance")
+    if rain is not None and rain >= 40:
+        bits.append(f"{round(rain)}% chance of rain")
+    return "Kickoff forecast: " + ", ".join(bits)
+
+
+def ranked(team, rankings):
+    """'No. 3 Notre Dame' when the latest poll on file ranks the team
+    (fetch_rankings.py's rankings.json 'current' block: the CFP rankings
+    once they exist, the AP poll before that), else the bare name."""
+    current = (rankings or {}).get("current") or {}
+    poll = current.get("cfp") or current.get("ap") or {}
+    rank = poll.get(team)
+    return f"No. {rank} {team}" if rank else team
+
+
+def stakes_lines(next_game, lineage, today):
+    """(long, short, tiny) versions of the stakes line -- the same fact at
+    three lengths, so the post can keep it next to the lean even for
+    long-named teams -- or (None, None, None) when lineage.json's current
+    reign isn't the holder next_game names (a stale next_game.json right
+    after a belt change: say nothing rather than something wrong).
+      long:  'Notre Dame: 3rd defense of its 9th reign (294 days). Michigan
+              State takes the belt with a win.'
+      short: 'Notre Dame: 3rd defense of a 294-day reign. Michigan State
+              takes the belt with a win.'
+      tiny:  'Notre Dame: 3rd defense of a 294-day reign.'"""
+    holder, opponent = next_game["team"], next_game["opponent"]
+    reign = lineage["reigns"][-1] if lineage.get("reigns") else None
+    if not reign or reign.get("team") != holder:
+        return None, None, None
+    days = (today - date.fromisoformat(reign["start_date"])).days
+    defenses = (reign.get("defenses") or 0) + 1
+    nth_defense = "first" if defenses == 1 else ordinal(defenses)
+    reigns_so_far = team_reign_number(lineage, holder)
+    nth_reign = "first" if reigns_so_far == 1 else ordinal(reigns_so_far)
+    challenger = f"{opponent} takes the belt with a win."
+    day_word = "day" if days == 1 else "days"
+    long = (f"{holder}: {nth_defense} defense of its {nth_reign} reign "
+            f"({days} {day_word}). {challenger}")
+    tiny = f"{holder}: {nth_defense} defense of a {days}-day reign."
+    short = f"{tiny} {challenger}"
+    return long, short, tiny
+
+
+def compose_gameday_tweet(next_game, lineage, ai_preview=None, belt_risk=None,
+                          weather=None, rankings=None, today=None, tz=None):
+    """The 10 AM game-day post. Always: the header, the matchup (with
+    'No. N' from the latest poll), kickoff time / TV / venue, and the
+    preview link. Then as much of the rest as fits X's 280, in this order
+    of preference: the stakes sentence (what the holder is defending,
+    what the challenger gets -- a shorter wording is tried before giving
+    it up), the site's lean + defend odds, the kickoff forecast. Never
+    exceeds TWEET_MAX; if even the four fixed lines don't fit (absurdly
+    long names), the venue goes."""
+    tz = tz or eastern_tz()
+    today = today or datetime.now(tz).date()
+    holder, opponent = next_game["team"], next_game["opponent"]
+    h, o = ranked(holder, rankings), ranked(opponent, rankings)
+
+    if next_game.get("neutral"):
+        matchup = f"{h} vs. {o} (neutral site)"
+    elif next_game.get("is_home"):
+        matchup = f"{o} at {h}"
+    else:
+        matchup = f"{h} at {o}"
+
+    when = kickoff_et(next_game, tz) or "Kickoff time TBA"
+    if next_game.get("watch"):
+        when = f"{when} on {next_game['watch']}"
+    venue = next_game.get("venue_name")
+    if not venue and next_game.get("venue_city"):
+        venue = ", ".join(x for x in (next_game.get("venue_city"), next_game.get("venue_state")) if x)
+
+    header = "\U0001F3C8 GAME DAY \u2014 the belt is on the line"
+    link = f"{SITE_URL}/preview.html"
+    long_stakes, short_stakes, tiny_stakes = stakes_lines(next_game, lineage, today)
+    lean = lean_line(ai_preview, belt_risk, holder, opponent)
+    forecast = weather_line(weather)
+
+    def assemble(details, *extras):
+        blocks = [header, "", matchup, details]
+        extras = [x for x in extras if x]
+        if extras:
+            blocks += ["", extras[0]]          # the stakes get their own paragraph
+        if len(extras) > 1:
+            blocks += [""] + extras[1:]        # lean + forecast share one
+        return "\n".join(blocks + ["", link])
+
+    details_full = f"{when} \u00b7 {venue}" if venue else when
+    preferences = [
+        (long_stakes, lean, forecast),
+        (long_stakes, lean, None),
+        (short_stakes, lean, None),
+        (tiny_stakes, lean, None),
+        (long_stakes, None, forecast),
+        (long_stakes, None, None),
+        (short_stakes, None, None),
+        (tiny_stakes, None, None),
+        (None, lean, forecast),
+        (None, lean, None),
+        (None, None, forecast),
+        (None, None, None),
+    ]
+    tried = set()
+    for combo in preferences:
+        text = assemble(details_full, *combo)
+        if text in tried:
+            continue
+        tried.add(text)
+        if tweet_length(text) <= TWEET_MAX:
+            return text
+    return assemble(when)   # no venue, nothing optional -- always short enough
+
+
+def gameday_cache_key(next_game):
+    return preview_cache_key(next_game)
+
+
+def post_gameday(client, lineage, cache):
+    """The game-day post, gated three ways (see the docstring): this run
+    has to be the 10 AM ET tick (or a manual X_POST_GAMEDAY=true ask),
+    today (Eastern) has to be the next belt game's date, and it posts at
+    most once per game. Never fatal to the pipeline: any surprise here is
+    printed and the rest of the run carries on."""
+    manual = os.environ.get("X_POST_GAMEDAY", "").lower() in ("1", "true", "yes")
+    fired_cron = os.environ.get("X_FIRED_CRON", "").strip()
+    if not manual and not fired_cron:
+        print("Not a scheduled run and no X_POST_GAMEDAY ask -- skipping the game-day post.")
+        return
+
+    try:
+        tz = eastern_tz()
+    except Exception as e:
+        print(f"Game-day post skipped -- no America/New_York zone data ({e}); "
+              f"pip install tzdata to fix (not fatal to the pipeline).")
+        return
+    now_et = datetime.now(tz)
+    today = now_et.date()
+
+    if not manual and not is_post_time_tick(fired_cron, today, tz):
+        print(f"Cron {fired_cron!r} isn't the {GAMEDAY_POST_TIME_ET:%I:%M %p} ET tick "
+              f"for {today} -- skipping the game-day post.")
+        return
+
+    next_game = load_json(NEXT_GAME_PATH)
+    if not next_game:
+        print("No upcoming game -- nothing to post for game day.")
+        return
+    if next_game.get("date") != today.isoformat():
+        print(f"Today ({today}, Eastern) isn't the next belt game's date "
+              f"({next_game.get('date')}) -- skipping the game-day post.")
+        return
+
+    key = gameday_cache_key(next_game)
+    if cache.get("last_posted_gameday_key") == key:
+        print("Already posted the game-day post for this game -- skipping.")
+        return
+
+    try:
+        text = compose_gameday_tweet(next_game, lineage, load_json(AI_PREVIEW_PATH),
+                                     load_json(BELT_RISK_PATH), load_json(WEATHER_PATH),
+                                     load_json(RANKINGS_PATH), today=today, tz=tz)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Game-day post skipped -- couldn't compose it ({e}); not fatal to the pipeline.")
+        return
+
+    try:
+        response = client.create_tweet(text=text)
+    except Exception as e:
+        print(f"X game-day post FAILED (not fatal to the pipeline): {e}")
+        return
+
+    print(f"Posted game-day post: {response}")
+    print(text)
+    cache["last_posted_gameday_key"] = key
+    save_cache(cache)
+
+
 # --------------------------------------------------------------- bio sync
 
 def sync_bio(api_v1, lineage, cache):
@@ -488,6 +837,7 @@ def main():
     post_results(client, lineage, cache)
     post_preview(client, cache)
     post_poll(client, cache)
+    post_gameday(client, lineage, cache)
     sync_bio(api_v1, lineage, cache)
 
 

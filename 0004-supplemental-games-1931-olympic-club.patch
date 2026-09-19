@@ -1,0 +1,925 @@
+From c8f46ca8dc632ab86b5fc789eae8e73820ab853c Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Thu, 17 Sep 2026 17:36:26 +0000
+Subject: [PATCH] Supplemental games: add games CFBD is missing (1931-32
+ Olympic Club correction)
+
+Adds historical_data/supplemental_games.json (6 cited games), a loader that
+merges them wherever the belt is walked, apply_supplemental_games.py to fold
+them into baseline.json, a Sources strip for hand-added game pages, a test,
+and the matching ruleset/README sections. Run apply_supplemental_games.py
+after applying to update baseline.json.
+---
+ README.md                               |  32 ++++
+ apply_supplemental_games.py             | 238 ++++++++++++++++++++++++
+ build_alternate_lineages.py             |   6 +
+ build_lineage.py                        |   7 +-
+ build_site.py                           |  20 +-
+ historical_data/supplemental_games.json | 121 ++++++++++++
+ ruleset.md                              |  75 +++++++-
+ supplemental_games.py                   | 173 +++++++++++++++++
+ test_supplemental_games.py              |  87 +++++++++
+ 9 files changed, 744 insertions(+), 15 deletions(-)
+ create mode 100644 apply_supplemental_games.py
+ create mode 100644 historical_data/supplemental_games.json
+ create mode 100644 supplemental_games.py
+ create mode 100644 test_supplemental_games.py
+
+diff --git a/README.md b/README.md
+index f3c6e9f..388d9d7 100644
+--- a/README.md
++++ b/README.md
+@@ -173,6 +173,38 @@ plus a synthetic multi-season simulation (with ties) comparing a full
+ bootstrap run against an incremental one two different ways. Both matched
+ exactly.
+ 
++## Games CFBD doesn't have (`historical_data/supplemental_games.json`)
++
++CFBD's pre-war record has holes, mostly club and service teams. When a
++missing game changes who held the belt, it goes in
++`historical_data/supplemental_games.json` with its date, score and
++newspaper citations, using an id in the reserved 90,000,000-99,999,999
++range (never a CFBD id, never an ESPN box-score link). The rule itself is
++public in `ruleset.md` ("Games missing from the data source").
++
++- `supplemental_games.py` validates the file and merges its games into
++  the game stream at read time: `build_lineage.py` (fetched seasons only,
++  so a `--full-refetch` includes them) and `build_alternate_lineages.py`.
++  They are never written into `all_games.json.gz`, so an archive
++  `--bootstrap` can't lose them. If CFBD later adds the same game, CFBD's
++  copy wins and a note says the entry can be deleted.
++- `apply_supplemental_games.py` folds them into `baseline.json`. It
++  re-walks the archive from 1869, refuses to write unless the archive alone
++  reproduces the current baseline exactly, prints every changed belt game
++  and reign (`--dry-run` to preview), and drops cached historical notes for
++  games whose belt outcome changed so they're rewritten. No CFBD calls.
++  Re-run it whenever the JSON file changes.
++- `build_site.py` shows the citations in a supplemental game's Sources
++  strip in place of the CFBD attribution.
++- `test_supplemental_games.py` checks the file, the merge, that archive +
++  supplemental reproduces `baseline.json`, and the 1931-32 chain.
++
++First entries (2026-09-17): Loyola (CA) 13, Olympic Club 0 on Nov. 21,
++1931, reported by Ray of
++[rutgersstartedthis.com](https://rutgersstartedthis.com), plus the five
++other missing games the belt went through before Stanford won it on Oct. 15, 1932. Four reigns were
++inserted after #65, so every reign from #66 on moved up by four.
++
+ ## Box scores and recaps for individual games
+ 
+ You asked whether past belt games could show a box score and/or a summary.
+diff --git a/apply_supplemental_games.py b/apply_supplemental_games.py
+new file mode 100644
+index 0000000..89a45bc
+--- /dev/null
++++ b/apply_supplemental_games.py
+@@ -0,0 +1,238 @@
++#!/usr/bin/env python3
++"""
++One-time fix (repeatable any time historical_data/supplemental_games.json
++changes): fold the supplemental games -- completed games CFBD doesn't have
++-- into the committed historical baseline, historical_data/baseline.json.
++
++First use (2026-09-17): the 1931 Olympic Club correction. CFBD is missing
++Loyola (CA) 13, Olympic Club 0 on Nov. 21, 1931, so the lineage had
++Olympic Club holding the belt for ten months, until Stanford beat them on
++Sept. 17, 1932. With the missing games in, the belt actually went:
++
++    Olympic Club   won 1931-11-07 from Saint Mary's (CA)
++    Loyola (CA)    won 1931-11-21, 13-0          <- missing from CFBD
++    San Diego Marines won 1931-11-29, 7-0        <- missing
++                   defended 1932-09-12, 1932-09-18  <- missing
++    Fresno State   won 1932-09-24, 12-0          <- missing
++    West Coast Army won 1932-10-01, 7-6          <- missing
++                   defended 1932-10-08 (in CFBD)
++    Stanford       won 1932-10-15, 26-0 (in CFBD)
++    USC            won 1932-10-22 -- back on the existing lineage
++
++Why a re-walk and not a hand edit: the baseline is a frozen walk of the
++game-by-game archive (historical_data/all_games.json.gz). This script
++re-walks that archive from 1869 with the exact same walk() build_lineage.py
++uses, and FIRST checks that the archive alone reproduces today's baseline
++byte for byte. Only if that holds does it re-walk with the supplemental
++games merged in and write the result, so every reign/defense count after
++the correction is computed, not typed. No CFBD API calls.
++
++Usage (from the project folder):
++    python3 apply_supplemental_games.py --dry-run   # show what would change
++    python3 apply_supplemental_games.py             # write baseline.json
++
++Safe to run more than once: if the baseline already includes the
++supplemental games it says so and changes nothing.
++
++After running: build_lineage.py normally (no --full-refetch needed), then
++the rest of the pipeline -- or just update_all.py. Reign numbers from #66
++on shift by +4 with the 1931 correction (four reigns are inserted), so
++reigns/N.html URLs for those reigns change on the next build.
++
++Only the "combined" scope (the real belt) is patched. The FBS/FCS-only
++scopes filter to current Division 1 teams, which drops every one of these
++games anyway, and the Losers Belt / conference belts don't pass through them.
++"""
++
++import argparse
++import gzip
++import json
++import os
++import sys
++
++from build_lineage import FIRST_GAME_DATE, split_at_season, walk
++from supplemental_games import SUPPLEMENTAL_PATH, load_entries, merge_supplemental
++
++HIST_DIR = "historical_data"
++# AI-written text cached per game_id that states what the game meant for
++# the belt. A game whose belt outcome changes needs its text regenerated.
++GAME_TEXT_CACHES = [os.path.join("recap_cache", "historical_notes.json"),
++                    os.path.join("recap_cache", "recaps.json")]
++BASELINE_PATH = os.path.join(HIST_DIR, "baseline.json")
++ARCHIVE_PATH = os.path.join(HIST_DIR, "all_games.json.gz")
++# Must match build_alternate_lineages.FIELDS (the archive's row layout).
++# Duplicated rather than imported so this script doesn't pull in that
++# module's heavier dependencies.
++FIELDS = ("id", "date", "season", "week", "season_type", "home", "away",
++          "home_points", "away_points", "neutral",
++          "home_conference", "away_conference", "venue_id")
++
++
++def load_archive_games(before_season):
++    if not os.path.exists(ARCHIVE_PATH):
++        sys.exit(f"Can't find {ARCHIVE_PATH}. It's built once by "
++                 f"build_alternate_lineages.py --bootstrap (the "
++                 f"'bootstrap_alternate_universes' workflow option).")
++    with gzip.open(ARCHIVE_PATH, "rt", encoding="utf-8") as f:
++        archive = json.load(f)
++    seasons = archive.get("seasons", {})
++    have = {int(s) for s in seasons}
++    missing = [y for y in range(1869, before_season) if y not in have]
++    if missing:
++        sys.exit(f"{ARCHIVE_PATH} is missing {len(missing)} season(s) before "
++                 f"{before_season} ({missing[:5]}...) -- can't re-walk the "
++                 f"full history. Run build_alternate_lineages.py --bootstrap first.")
++    games = []
++    for s, rows in seasons.items():
++        if int(s) < before_season:
++            games.extend(dict(zip(FIELDS, row)) for row in rows)
++    games.sort(key=lambda g: (g["date"], (g.get("season_type") or "regular") != "regular",
++                              g.get("id") or 0))
++    return games
++
++
++def rewalk(games, live_start_year):
++    belt_games, reigns = walk(games, "holder")
++    return split_at_season(belt_games, reigns, live_start_year)
++
++
++def reign_label(r):
++    return f"{r['team']} ({r['start_date']} to {r.get('end_date') or 'open'}, {r['defenses']} def.)"
++
++
++def describe_diff(old_games, old_reigns, new_games, new_reigns):
++    old_ids = {g["game_id"] for g in old_games}
++    new_ids = {g["game_id"] for g in new_games}
++    added = [g for g in new_games if g["game_id"] not in old_ids]
++    removed = [g for g in old_games if g["game_id"] not in new_ids]
++    old_by_id = {g["game_id"]: g for g in old_games}
++    changed = [g for g in new_games if g["game_id"] in old_by_id and g != old_by_id[g["game_id"]]]
++
++    def line(g):
++        return (f"    {g['date']}  {g['away']} at {g['home']} {g['score']}  "
++                f"[{g['outcome']}, holder {g['holder']} -> {g['new_holder']}]")
++
++    print(f"\nBelt games: {len(old_games)} -> {len(new_games)}")
++    for title, rows in (("Added", added), ("No longer belt games", removed),
++                        ("Same game, different outcome/holder", changed)):
++        if rows:
++            print(f"  {title} ({len(rows)}):")
++            for g in rows:
++                print(line(g))
++
++    # reigns: find the first and last index where the lists differ
++    i = 0
++    while i < min(len(old_reigns), len(new_reigns)) and old_reigns[i] == new_reigns[i]:
++        i += 1
++    j = 0
++    while (j < min(len(old_reigns), len(new_reigns)) - i
++           and old_reigns[-1 - j] == new_reigns[-1 - j]):
++        j += 1
++    print(f"\nClosed reigns: {len(old_reigns)} -> {len(new_reigns)} "
++          f"(first difference at reign #{i + 1})")
++    print("  Before:")
++    for n, r in enumerate(old_reigns[i:len(old_reigns) - j], start=i + 1):
++        print(f"    #{n} {reign_label(r)}")
++    print("  After:")
++    for n, r in enumerate(new_reigns[i:len(new_reigns) - j], start=i + 1):
++        print(f"    #{n} {reign_label(r)}")
++    shift = len(new_reigns) - len(old_reigns)
++    if shift:
++        print(f"  Every reign after that is unchanged but renumbered by {shift:+d}.")
++    return changed
++
++
++def drop_stale_game_text(game_ids, dry_run):
++    """Remove cached notes/recaps for games whose belt outcome changed, so
++    the next pipeline run rewrites them from the corrected facts."""
++    ids = {str(g) for g in game_ids}
++    for path in GAME_TEXT_CACHES:
++        if not ids or not os.path.exists(path):
++            continue
++        with open(path) as f:
++            cache = json.load(f)
++        stale = sorted(k for k in ids if k in cache)
++        if not stale:
++            continue
++        print(f"{path}: {'would drop' if dry_run else 'dropping'} {len(stale)} cached "
++              f"entr{'y' if len(stale) == 1 else 'ies'} with outdated belt facts ({', '.join(stale)})")
++        if dry_run:
++            continue
++        for k in stale:
++            del cache[k]
++        with open(path, "w") as f:
++            json.dump(cache, f, indent=2, sort_keys=True)
++
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument("--dry-run", action="store_true",
++                    help="print what would change without writing baseline.json")
++    args = ap.parse_args()
++
++    if not os.path.exists(BASELINE_PATH):
++        sys.exit(f"Can't find {BASELINE_PATH} -- run this from the project folder.")
++    entries = load_entries()
++    if not entries:
++        sys.exit(f"No supplemental games found in {SUPPLEMENTAL_PATH}. Nothing to do.")
++
++    with open(BASELINE_PATH) as f:
++        baseline = json.load(f)
++    lsy = baseline["live_start_year"]
++    current = (baseline["historical_belt_games"], baseline["historical_reigns"],
++               baseline["open_reign"])
++    frozen = [e for e in entries if e["season"] < lsy]
++    if len(frozen) < len(entries):
++        print(f"{len(entries) - len(frozen)} supplemental game(s) are in the live "
++              f"window (season >= {lsy}); build_lineage.py merges those itself.")
++
++    print(f"Loading {ARCHIVE_PATH} (seasons 1869-{lsy - 1})...")
++    archive_games = load_archive_games(lsy)
++    if not archive_games or archive_games[0]["date"] != FIRST_GAME_DATE:
++        sys.exit(f"Archive doesn't start at {FIRST_GAME_DATE} -- refusing to re-walk.")
++    print(f"{len(archive_games):,} archived games.")
++
++    merged = merge_supplemental(archive_games, seasons=range(1869, lsy))
++    patched = rewalk(merged, lsy)
++    if patched == current:
++        print(f"{BASELINE_PATH} already includes the supplemental games. Nothing to do.")
++        return
++
++    # Safety check: the archive by itself must reproduce the baseline as it
++    # stands now. If it doesn't, the baseline has drifted from the archive
++    # (a hand edit, a different tie rule, a stale archive) and splicing a
++    # fresh re-walk over it would silently change more than intended.
++    if rewalk(archive_games, lsy) != current:
++        sys.exit("STOP: re-walking the archive WITHOUT the supplemental games doesn't "
++                 f"reproduce the current {BASELINE_PATH}, so it isn't safe to replace it "
++                 "with a re-walk. Nothing was changed. (If the baseline already holds an "
++                 "older version of the supplemental games, restore baseline.json from git "
++                 "before that change and rerun.)")
++    print("Check passed: the archive alone reproduces the current baseline exactly.")
++
++    new_games, new_reigns, new_open = patched
++    changed = describe_diff(current[0], current[1], new_games, new_reigns)
++    if new_open != current[2]:
++        print(f"\nOpen reign at the {lsy} boundary changes too:\n"
++              f"    before: {current[2]}\n    after:  {new_open}")
++    else:
++        print(f"\nThe lineage rejoins the existing chain; the open reign at the "
++              f"{lsy} boundary ({new_open['team']}) is unchanged.")
++
++    print()
++    drop_stale_game_text([g["game_id"] for g in changed], args.dry_run)
++    if args.dry_run:
++        print("\n--dry-run: nothing written.")
++        return
++
++    baseline["historical_belt_games"] = new_games
++    baseline["historical_reigns"] = new_reigns
++    baseline["open_reign"] = new_open
++    with open(BASELINE_PATH, "w") as f:
++        json.dump(baseline, f, indent=2)
++    print(f"\nWrote {BASELINE_PATH}. Now run build_lineage.py (no --full-refetch "
++          f"needed), then the rest of the pipeline -- or just update_all.py.")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/build_alternate_lineages.py b/build_alternate_lineages.py
+index ebd661d..40bcb10 100644
+--- a/build_alternate_lineages.py
++++ b/build_alternate_lineages.py
+@@ -398,6 +398,12 @@ def main():
+         games.extend(expand(archive["seasons"][str(s)]))
+     live_seasons = sorted({g["season"] for g in live})
+     games.extend(g for g in live if g["season"] > (seasons[-1] if seasons else 0))
++    # Games CFBD doesn't have (historical_data/supplemental_games.json) --
++    # merged here, never written into the archive, so a --bootstrap
++    # rebuild can't drop them. merge_supplemental re-sorts; the sort below
++    # is kept for the no-supplemental case.
++    from supplemental_games import merge_supplemental
++    games = merge_supplemental(games)
+     games.sort(key=lambda g: (g["date"], (g.get("season_type") or "regular") != "regular", g.get("id") or 0))
+     coverage = {"archived_through": seasons[-1] if seasons else None, "live_seasons": live_seasons,
+                 "missing_seasons": missing, "games": len(games)}
+diff --git a/build_lineage.py b/build_lineage.py
+index 4c6c824..4ee0665 100644
+--- a/build_lineage.py
++++ b/build_lineage.py
+@@ -107,6 +107,7 @@ from belt_engine import (
+     save_json as engine_save_json,
+     split_winner_baseline,
+ )
++from supplemental_games import merge_supplemental
+ 
+ API_BASE = "https://api.collegefootballdata.com"
+ FIRST_GAME_DATE = "1869-11-06"
+@@ -927,7 +928,11 @@ def main():
+         print(f"Baselines found for every scope running this pass ({', '.join(scopes_to_run)}) "
+               f"-- fetching only seasons {seasons} fresh (~{2 * len(seasons)} calls).")
+     raw = fetch_seasons(range(fetch_from, args.end_year + 1), args.key)
+-    games_all = normalize(raw, venue_tz)
++    # Games CFBD doesn't have (historical_data/supplemental_games.json, see
++    # ruleset.md). Only the fetched seasons -- older ones are already baked
++    # into the baseline by apply_supplemental_games.py.
++    games_all = merge_supplemental(normalize(raw, venue_tz),
++                                   seasons=range(fetch_from, args.end_year + 1))
+     print(f"{len(games_all)} completed games in chronological order (any classification)")
+ 
+     d1_teams = None  # fetched lazily below, only if fbs/fcs actually run this time
+diff --git a/build_site.py b/build_site.py
+index 72c24e1..8220fc9 100644
+--- a/build_site.py
++++ b/build_site.py
+@@ -36,6 +36,8 @@ from datetime import date, datetime, timedelta, timezone
+ from email.utils import format_datetime
+ from urllib.parse import quote, urlencode
+ 
++from supplemental_games import is_supplemental, sources_html as supplemental_sources_html
++
+ OUT_DIR = "site"
+ DATA_DIR = "belt_data"
+ 
+@@ -2683,7 +2685,9 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
+              f'<a href="../reigns/{g["reign_number"]}.html">Reign #{g["reign_number"]}</a> &middot; Game {g["game_number"]:,} of {total_games:,}')
+     footer_note = ("Part of the lineage since 1869. Score"
+                    + (" and line score" if g.get("line_score") else "")
+-                   + " sourced from the College Football Data API.")
++                   + (" added by hand from contemporary newspaper reports; this game is missing from the College Football Data API."
++                      if is_supplemental(g["game_id"]) else
++                      " sourced from the College Football Data API."))
+     # Sources strip: CFBD's modern game ids are ESPN's, so a box score link
+     # is free for ~2001 onward; everything gets the CFBD attribution + a
+     # pointer to the downloadable dataset the game is a row of
+@@ -2694,7 +2698,11 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
+         gid_int = 0
+     if gid_int >= ESPN_ID_FLOOR:
+         src_bits.append(f'<a href="https://www.espn.com/college-football/game/_/gameId/{gid_int}" target="_blank" rel="noopener">Box score at ESPN</a>')
+-    src_bits.append(f'<a href="https://collegefootballdata.com/" target="_blank" rel="noopener">Game record: College Football Data</a> <span class="mono">(id {esc(str(g["game_id"]))})</span>')
++    supplemental_src = supplemental_sources_html(g["game_id"], esc, rel="../")
++    if supplemental_src:
++        src_bits.append(supplemental_src)
++    else:
++        src_bits.append(f'<a href="https://collegefootballdata.com/" target="_blank" rel="noopener">Game record: College Football Data</a> <span class="mono">(id {esc(str(g["game_id"]))})</span>')
+     src_bits.append(f'<a href="../data.html">This game in the downloadable dataset</a>')
+     sources_html = f'<p class="sourcesLine"><span class="kicker">Sources</span> {" &middot; ".join(src_bits)}</p>'
+ 
+@@ -5220,11 +5228,15 @@ RULESET_MD_PATH = "ruleset.md"
+ 
+ 
+ def inline_md(text):
+-    """Escape text, then turn **bold** / *italic* into real tags. Order
+-    matters -- escape the raw text first, then add trusted markup on top,
++    """Escape text, then turn [links](https://...), **bold** and *italic*
++    into real tags. Order matters -- escape the raw text first, then add trusted markup on top,
+     and resolve **bold** before single *italic* so a bold span's asterisks
+     aren't half-eaten by the italic pattern first."""
+     t = esc(text)
++    # [label](https://...) links -- only http(s) targets, and the URL was
++    # already escaped with the rest of the text, so it's safe in href
++    t = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
++               r'<a href="\2" target="_blank" rel="noopener">\1</a>', t)
+     t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
+     t = re.sub(r"\*(.+?)\*", r"<em>\1</em>", t)
+     return t
+diff --git a/historical_data/supplemental_games.json b/historical_data/supplemental_games.json
+new file mode 100644
+index 0000000..b0f655c
+--- /dev/null
++++ b/historical_data/supplemental_games.json
+@@ -0,0 +1,121 @@
++{
++  "about": "Completed games that the College Football Data API does not have, entered by hand from cited contemporary sources. Merged into the game stream by supplemental_games.py wherever the belt is walked (build_lineage.py, build_alternate_lineages.py) and applied to the committed baseline by apply_supplemental_games.py. Ids live in the reserved 90,000,000-99,999,999 range so they can never collide with a CFBD id. See ruleset.md, 'Games missing from the data source'.",
++  "games": [
++    {
++      "id": 90000001,
++      "date": "1931-11-21",
++      "season": 1931,
++      "week": 11,
++      "season_type": "regular",
++      "home": "Loyola Marymount",
++      "away": "Olympic Club",
++      "home_points": 13,
++      "away_points": 0,
++      "neutral": false,
++      "added": "2026-09-17",
++      "reason": "Missing from CFBD. Ends Olympic Club's 1931 reign two weeks after it began (CFBD's record has it running to Stanford, 1932-09-17). Reported by Ray of rutgersstartedthis.com.",
++      "note": "Olympic Club split its roster that week: half sailed for Hawaii and half stayed to play this previously scheduled game. It was an official Olympic Club game, so it counts.",
++      "sources": [
++        {"label": "\"Loyola Beats Olympic Club,\" Fresno Morning Republican, Nov. 22, 1931, p. 20", "url": "https://www.newspapers.com/clip/59494261/loyola-beats-olympic-club/"},
++        {"label": "1931 Olympic Club Winged O football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_Olympic_Club_Winged_O_football_team"},
++        {"label": "1931 Loyola Lions football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_Loyola_Lions_football_team"}
++      ]
++    },
++    {
++      "id": 90000002,
++      "date": "1931-11-29",
++      "season": 1931,
++      "week": 12,
++      "season_type": "regular",
++      "home": "San Diego Marines",
++      "away": "Loyola Marymount",
++      "home_points": 7,
++      "away_points": 0,
++      "neutral": false,
++      "added": "2026-09-17",
++      "reason": "Missing from CFBD. Loyola's only belt loss after taking it from Olympic Club.",
++      "sources": [
++        {"label": "\"Marines Upset Loyola,\" Los Angeles Times, Nov. 30, 1931, p. 9", "url": "https://www.newspapers.com/clip/22793755/marines-upset-loyola-aerial-efforts-of/"},
++        {"label": "1931 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_San_Diego_Marines_Devil_Dogs_football_team"},
++        {"label": "1931 Loyola Lions football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1931_Loyola_Lions_football_team"}
++      ]
++    },
++    {
++      "id": 90000003,
++      "date": "1932-09-12",
++      "season": 1932,
++      "week": 1,
++      "season_type": "regular",
++      "home": "San Diego Marines",
++      "away": "Santa Barbara Athletic Club",
++      "home_points": 11,
++      "away_points": 0,
++      "neutral": false,
++      "added": "2026-09-17",
++      "reason": "Missing from CFBD. A San Diego Marines defense.",
++      "note": "Date as listed on Wikipedia; the cited Los Angeles Times report ran the same day, so the game may have been played Sunday, Sept. 11. Either date leaves the lineage unchanged.",
++      "sources": [
++        {"label": "\"Marine Grids Winners,\" Los Angeles Times, Sept. 12, 1932, p. 6", "url": "https://www.newspapers.com/clip/59537602/marine-grids-winners/"},
++        {"label": "1932 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_San_Diego_Marines_Devil_Dogs_football_team"}
++      ]
++    },
++    {
++      "id": 90000004,
++      "date": "1932-09-18",
++      "season": 1932,
++      "week": 1,
++      "season_type": "regular",
++      "home": "San Diego Marines",
++      "away": "West Coast Army",
++      "home_points": 7,
++      "away_points": 6,
++      "neutral": false,
++      "added": "2026-09-17",
++      "reason": "Missing from CFBD. A San Diego Marines defense.",
++      "note": "The West Coast Army season page lists this as 'September 17?'; the Marines page gives Sept. 18 at 2:30 p.m. Either date leaves the lineage unchanged.",
++      "sources": [
++        {"label": "\"San Diego Marines Beat Army Eleven,\" News-Pilot (San Pedro), Sept. 19, 1932, p. 2", "url": "https://www.newspapers.com/clip/59537844/san-diego-marines-beat-army-eleven/"},
++        {"label": "1932 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_San_Diego_Marines_Devil_Dogs_football_team"},
++        {"label": "1932 West Coast Army football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_West_Coast_Army_football_team"}
++      ]
++    },
++    {
++      "id": 90000005,
++      "date": "1932-09-24",
++      "season": 1932,
++      "week": 2,
++      "season_type": "regular",
++      "home": "Fresno State",
++      "away": "San Diego Marines",
++      "home_points": 12,
++      "away_points": 0,
++      "neutral": false,
++      "added": "2026-09-17",
++      "reason": "Missing from CFBD. Fresno State takes the belt from the San Diego Marines.",
++      "sources": [
++        {"label": "\"Bulldogs Spring Upset By Taking Opener, 12 To 0,\" Fresno Bee/The Republican, Sept. 25, 1932, p. 11", "url": "https://www.newspapers.com/clip/59561196/bulldogs-spring-upset-by-taking-opener/"},
++        {"label": "1932 Fresno State Bulldogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_Fresno_State_Bulldogs_football_team"},
++        {"label": "1932 San Diego Marines Devil Dogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_San_Diego_Marines_Devil_Dogs_football_team"}
++      ]
++    },
++    {
++      "id": 90000006,
++      "date": "1932-10-01",
++      "season": 1932,
++      "week": 3,
++      "season_type": "regular",
++      "home": "Fresno State",
++      "away": "West Coast Army",
++      "home_points": 6,
++      "away_points": 7,
++      "neutral": false,
++      "added": "2026-09-17",
++      "reason": "Missing from CFBD. West Coast Army takes the belt from Fresno State, then loses it at Stanford on Oct. 15 (already in CFBD).",
++      "sources": [
++        {"label": "\"Football Finds,\" Fresno Bee/The Republican, Oct. 2, 1932, p. 13", "url": "https://www.newspapers.com/clip/59582621/football-finds/"},
++        {"label": "1932 West Coast Army football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_West_Coast_Army_football_team"},
++        {"label": "1932 Fresno State Bulldogs football team (Wikipedia)", "url": "https://en.wikipedia.org/wiki/1932_Fresno_State_Bulldogs_football_team"}
++      ]
++    }
++  ]
++}
+diff --git a/ruleset.md b/ruleset.md
+index 14cc322..9c52c2f 100644
+--- a/ruleset.md
++++ b/ruleset.md
+@@ -1,8 +1,9 @@
+ # The College Football Belt: Ruleset
+ 
+-*Every belt game behind this site is cited and computed from play-by-play
+-records, never hand-assembled. This page is the complete set of rules that
+-computation runs on. If a divergence ever shows up between this site and
++*Every belt game behind this site is computed from the full game-by-game
++record, never hand-assembled; the rare game missing from that record is
++added from cited sources (see "Games missing from the data source"). This
++page is the complete set of rules that computation runs on. If a divergence ever shows up between this site and
+ another tracker, it almost always traces back to one of the decisions below.*
+ 
+ ## Origin
+@@ -68,14 +69,30 @@ the belt.
+ ## Non-FBS (or non-modern-classification) opponents
+ 
+ If the holder loses to a team from a lower division — an FCS program, or in
+-the pre-modern era a club or athletic-association team — the belt goes with
+-it, exactly as it would against any other opponent. Division/classification
+-is a modern administrative label; it isn't a rule of the game the belt is
++the pre-modern era a club, athletic-association or military service team —
++the belt goes with it, exactly as it would against any other opponent.
++Division/classification is a modern administrative label; it isn't a rule of the game the belt is
+ based on. (Mechanically, this is already how the underlying data pull
+ works: games are pulled across every classification with no FBS-only
+ filter, so a belt-relevant upset by a lower-division team would already be
+ caught — it doesn't require a separate rule to implement, only to state.)
+ 
++## Club and service teams can hold the belt
++
++The same logic runs in both directions. A club or service team that wins
++the belt holds it like anyone else: its later games are belt games, it can
++defend against other non-college teams, and it only loses the belt by
++losing on the field. This has happened: the Olympic Club of San Francisco
++took the belt from Saint Mary's in November 1931, and the San Diego Marines
++and West Coast Army both held it before Stanford won it on October 15, 1932.
++
++Who suits up doesn't change this either. In November 1931 the Olympic Club
++split its squad, sending half to Hawaii while the other half played a
++scheduled game at Loyola (Los Angeles). That half lost, and the belt went
++to Loyola. An official game on a team's schedule counts no matter who
++played in it, the same way a college's loss with its starters injured
++still counts.
++
+ ## The early era (pre-1900)
+ 
+ Football in the 1870s–1890s was often played by athletic-club and
+@@ -89,18 +106,56 @@ above.
+ ## Sourcing and methodology
+ 
+ The full chain — every reign, every belt game, every score — is computed
+-mechanically from the College Football Data API's complete game-by-game
+-record, not researched or hand-entered. Given the rules on this page and
+-every final score in order, the result is fully determined; there is no
+-editorial judgment applied game to game. Game dates reflect the local
++mechanically from the College Football Data API's game-by-game
++record, not researched or hand-entered. The only exception is the short,
++cited list of games that record is missing (next section), and those are
++walked through the same rules as everything else. Given the rules on this
++page and every final score in order, the result is fully determined; there
++is no editorial judgment applied game to game. Game dates reflect the local
+ kickoff time at the game's venue, not a UTC timestamp, so a late West Coast
+ night game is dated the evening it was actually played rather than the
+ following morning UTC.
+ 
++## Games missing from the data source
++
++The College Football Data API's record is close to complete for college
++teams, but it has gaps in the pre-war era, mostly games involving club,
++service and small-college teams. When a gap changes who held the belt,
++the missing game is added by hand, and only under these conditions:
++
++- The final score and date come from a contemporary source, normally a
++  newspaper report from the day after the game, and that citation is shown
++  on the game's page.
++- The game is added exactly as played. Its result goes through the same
++  rules as every other game, so every reign, defense and total after it is
++  recomputed, not edited.
++- Added games are kept in their own file, separate from the data source.
++  If the data source later adds the same game, its copy is used instead.
++- A game is added because it was played, never to make the lineage come
++  out a particular way. Whatever follows from it follows.
++
++The first correction came in September 2026 from Ray, who runs
++[rutgersstartedthis.com](https://rutgersstartedthis.com), another lineal
++belt tracker. The data source
++was missing Loyola's 13–0 win over the Olympic Club on November 21, 1931,
++so this site had the Olympic Club holding the belt until September 1932.
++Adding that game, and the five other missing games the belt then passed
++through, added four reigns (Loyola, the San Diego Marines, Fresno State
++and West Coast Army) and shortened the Olympic Club's reign to two weeks.
++The lineage rejoins the previous chain when USC beat Stanford on October
++22, 1932, so nothing after that date changed.
++
++*If you know of a missing game that affects the belt, email
++hello@collegefootballbelt.com with a source.*
++
+ ## Open items
+ 
+ - **Origin cross-check against the pre-2018 collegefootballbelt.com site**,
+   pending Internet Archive access.
++- **Two dates in the 1932 correction are uncertain by a day**: the San
++  Diego Marines' wins over the Santa Barbara Athletic Club (listed as
++  September 12, possibly played the 11th) and West Coast Army (September 18,
++  listed by one source as the 17th). Neither changes the lineage.
+ - **Pre-1900 inclusion boundary**: the current rule includes any game with a
+   final score, which is the maximally inclusive reading. If the original
+   site drew a narrower line, the cross-check above may prompt a revision.
+diff --git a/supplemental_games.py b/supplemental_games.py
+new file mode 100644
+index 0000000..0e2f2a9
+--- /dev/null
++++ b/supplemental_games.py
+@@ -0,0 +1,173 @@
++#!/usr/bin/env python3
++"""
++Supplemental games: completed games the College Football Data API doesn't
++have, entered by hand from cited sources in
++historical_data/supplemental_games.json.
++
++The belt is computed from CFBD's record, and CFBD's pre-war coverage of
++club, service and small-college teams has holes. When a hole changes the
++lineage (the first one: Loyola (CA) 13, Olympic Club 0 on Nov. 21, 1931,
++plus the five games that follow from it), the missing game goes in the
++JSON file with its sources, and this module merges it into the game
++stream wherever the belt is walked:
++
++    build_lineage.py            (so a --full-refetch rebuild includes it)
++    build_alternate_lineages.py (so the alternate universes include it)
++    apply_supplemental_games.py (one-time splice into baseline.json)
++
++Supplemental games are never written into historical_data/all_games.json.gz
++-- a --bootstrap rebuild of that archive would silently drop them. They're
++merged at read time instead.
++
++If CFBD ever adds one of these games itself, the CFBD copy wins and the
++supplemental copy is skipped with a warning (same season, same two teams,
++dates within two days). The entry can then be deleted from the JSON file.
++
++Ids: 90,000,000-99,999,999 is reserved for these. CFBD's own ids are
++either small (pre-2001, max ~64k) or ESPN ids (>= 100,000,000), and
++build_site.py only links ESPN box scores for ids >= 100,000,000, so a
++supplemental id never collides and never gets a bogus ESPN link.
++"""
++
++import json
++import os
++import sys
++from datetime import date
++
++HIST_DIR = "historical_data"
++SUPPLEMENTAL_PATH = os.path.join(HIST_DIR, "supplemental_games.json")
++ID_MIN, ID_MAX = 90_000_000, 99_999_999
++
++REQUIRED = ("id", "date", "season", "week", "season_type", "home", "away",
++            "home_points", "away_points", "neutral", "sources")
++
++_cache = {}
++
++
++def load_entries(path=SUPPLEMENTAL_PATH):
++    """The validated raw entries (with sources/notes), [] if no file."""
++    if path in _cache:
++        return _cache[path]
++    if not os.path.exists(path):
++        _cache[path] = []
++        return []
++    with open(path) as f:
++        data = json.load(f)
++    entries = data.get("games", []) if isinstance(data, dict) else data
++    seen = set()
++    for e in entries:
++        missing = [k for k in REQUIRED if k not in e]
++        if missing:
++            sys.exit(f"{path}: entry {e.get('id')} is missing {missing}")
++        gid = e["id"]
++        if not isinstance(gid, int) or not ID_MIN <= gid <= ID_MAX:
++            sys.exit(f"{path}: id {gid!r} is outside the reserved "
++                     f"{ID_MIN:,}-{ID_MAX:,} range")
++        if gid in seen:
++            sys.exit(f"{path}: duplicate id {gid}")
++        seen.add(gid)
++        d = date.fromisoformat(e["date"])  # raises on a bad date
++        if e["season"] not in (d.year, d.year - 1):
++            sys.exit(f"{path}: id {gid} has season {e['season']} but date {e['date']}")
++        if not isinstance(e["home_points"], int) or not isinstance(e["away_points"], int):
++            sys.exit(f"{path}: id {gid} needs integer scores")
++        if e["home"] == e["away"]:
++            sys.exit(f"{path}: id {gid} has the same team on both sides")
++        if not e["sources"]:
++            sys.exit(f"{path}: id {gid} has no sources -- every supplemental game must cite one")
++    _cache[path] = entries
++    return entries
++
++
++def normalized(entry):
++    """One entry in the exact shape build_lineage.normalize() produces
++    (plus venue_id, which the alternate-lineage archive rows carry)."""
++    return {
++        "id": entry["id"],
++        "date": entry["date"],
++        "season": entry["season"],
++        "week": entry["week"],
++        "season_type": entry["season_type"],
++        "home": entry["home"],
++        "away": entry["away"],
++        "home_points": entry["home_points"],
++        "away_points": entry["away_points"],
++        "neutral": bool(entry["neutral"]),
++        "home_conference": entry.get("home_conference"),
++        "away_conference": entry.get("away_conference"),
++        "home_division": entry.get("home_division"),
++        "away_division": entry.get("away_division"),
++        "venue_id": None,
++    }
++
++
++def _sort_key(g):
++    return (g["date"], (g.get("season_type") or "regular") != "regular", g.get("id") or 0)
++
++
++def _already_in(entry, games):
++    teams = {entry["home"], entry["away"]}
++    d = date.fromisoformat(entry["date"])
++    for g in games:
++        if g.get("season") != entry["season"] or {g["home"], g["away"]} != teams:
++            continue
++        if abs((date.fromisoformat(g["date"]) - d).days) <= 2:
++            return g
++    return None
++
++
++def merge_supplemental(games, seasons=None, path=SUPPLEMENTAL_PATH, quiet=False):
++    """Return `games` plus every supplemental game whose season is in
++    `seasons` (all of them when seasons is None), re-sorted the way
++    normalize() sorts. `games` itself is not modified."""
++    entries = load_entries(path)
++    if not entries:
++        return games
++    wanted = None if seasons is None else set(int(s) for s in seasons)
++    added = []
++    for e in entries:
++        if wanted is not None and e["season"] not in wanted:
++            continue
++        dup = _already_in(e, games)
++        if dup is not None:
++            print(f"NOTE: supplemental game {e['id']} ({e['away']} at {e['home']}, "
++                  f"{e['date']}) is now in CFBD as id {dup.get('id')} -- using CFBD's "
++                  f"copy. It can be removed from {path}.", file=sys.stderr)
++            continue
++        added.append(normalized(e))
++    if not added:
++        return games
++    if not quiet:
++        print(f"Merged {len(added)} supplemental game(s) from {path} "
++              f"(games CFBD doesn't have -- see ruleset.md)")
++    return sorted(list(games) + added, key=_sort_key)
++
++
++def is_supplemental(game_id):
++    try:
++        return ID_MIN <= int(game_id) <= ID_MAX
++    except (TypeError, ValueError):
++        return False
++
++
++def entry_for(game_id, path=SUPPLEMENTAL_PATH):
++    """The full entry (sources, note) for a supplemental game id, or None."""
++    if not is_supplemental(game_id):
++        return None
++    for e in load_entries(path):
++        if e["id"] == int(game_id):
++            return e
++    return None
++
++
++def sources_html(game_id, esc, rel=""):
++    """The Sources-strip links for a supplemental game's page (its cited
++    sources plus a pointer to the ruleset), or None for a CFBD game --
++    build_site.py shows its usual CFBD attribution in that case."""
++    e = entry_for(game_id)
++    if e is None:
++        return None
++    links = [f'<a href="{esc(s["url"])}" target="_blank" rel="noopener">{esc(s["label"])}</a>'
++             for s in e["sources"] if s.get("url")]
++    links.append(f'<a href="{rel}ruleset.html">Added by hand: not in College Football Data</a>')
++    return " &middot; ".join(links)
+diff --git a/test_supplemental_games.py b/test_supplemental_games.py
+new file mode 100644
+index 0000000..b6c0a80
+--- /dev/null
++++ b/test_supplemental_games.py
+@@ -0,0 +1,87 @@
++"""Tests for historical_data/supplemental_games.json and its plumbing.
++
++1. The file validates (reserved ids, sources present, sane dates/scores).
++2. merge_supplemental() skips a supplemental game once CFBD has its own
++   copy (same teams, date within two days), and leaves the input alone.
++3. Walking the full archive WITH the supplemental games reproduces the
++   committed baseline exactly -- i.e. apply_supplemental_games.py has been
++   run and nothing has drifted since.
++4. The 1931-32 correction comes out as expected: Olympic Club -> Loyola
++   Marymount -> San Diego Marines -> Fresno State -> West Coast Army ->
++   Stanford -> USC, rejoining the old chain on 1932-10-22.
++5. build_site.py's Sources strip gets citations for a supplemental game
++   and nothing (so the usual CFBD line) for a CFBD game.
++
++Run from the project folder: python3 test_supplemental_games.py
++"""
++import gzip
++import html
++import json
++import os
++import sys
++
++HERE = os.path.dirname(os.path.abspath(__file__))
++os.chdir(HERE)
++sys.path.insert(0, HERE)
++
++import supplemental_games as sg
++from apply_supplemental_games import FIELDS
++from build_lineage import split_at_season, walk
++
++# 1. validation
++entries = sg.load_entries()
++assert entries, "expected supplemental games in historical_data/supplemental_games.json"
++print(f"1. {len(entries)} supplemental games validate")
++
++# 2. dedupe against a CFBD copy
++e = entries[0]
++fake_cfbd = dict(sg.normalized(e), id=12345, date=e["date"])
++games = [fake_cfbd]
++merged = sg.merge_supplemental(games, seasons=[e["season"]], quiet=True)
++assert [g["id"] for g in merged if g["home"] == e["home"] and g["away"] == e["away"]] == [12345], \
++    "a game CFBD already has must not be added twice"
++assert games == [fake_cfbd], "merge_supplemental must not modify its input"
++assert sg.merge_supplemental([], seasons=[1800], quiet=True) == [], "season filter"
++print("2. CFBD copies win; input untouched; season filter works")
++
++# 3. archive + supplemental == committed baseline
++with open("historical_data/baseline.json") as f:
++    baseline = json.load(f)
++lsy = baseline["live_start_year"]
++with gzip.open("historical_data/all_games.json.gz", "rt", encoding="utf-8") as f:
++    archive = json.load(f)
++archive_games = [dict(zip(FIELDS, row)) for s, rows in archive["seasons"].items()
++                 if int(s) < lsy for row in rows]
++archive_games.sort(key=lambda g: (g["date"], g["season_type"] != "regular", g["id"] or 0))
++all_games = sg.merge_supplemental(archive_games, seasons=range(1869, lsy), quiet=True)
++bg, rg = walk(all_games, "holder")
++hb, hr, op = split_at_season(bg, rg, lsy)
++assert hb == baseline["historical_belt_games"], "belt games differ from baseline -- run apply_supplemental_games.py"
++assert hr == baseline["historical_reigns"], "reigns differ from baseline -- run apply_supplemental_games.py"
++assert op == baseline["open_reign"], "open reign differs from baseline"
++print(f"3. archive + supplemental reproduces baseline.json ({len(hb)} belt games, {len(hr)} closed reigns)")
++
++# 4. the 1931-32 chain
++window = [r for r in hr if "1931-11-01" <= r["start_date"] <= "1932-10-22"]
++got = [(r["team"], r["start_date"], r["defenses"]) for r in window]
++want = [
++    ("Olympic Club", "1931-11-07", 0),
++    ("Loyola Marymount", "1931-11-21", 0),
++    ("San Diego Marines", "1931-11-29", 2),
++    ("Fresno State", "1932-09-24", 0),
++    ("West Coast Army", "1932-10-01", 1),
++    ("Stanford", "1932-10-15", 0),
++    ("USC", "1932-10-22", 12),
++]
++assert got == want, f"1931-32 chain:\n  got  {got}\n  want {want}"
++print("4. 1931-32 chain is Olympic Club -> Loyola -> Marines -> Fresno State -> West Coast Army -> Stanford -> USC")
++
++# 5. sources strip
++esc = lambda t: html.escape(str(t))
++s = sg.sources_html(90000001, esc, rel="../")
++assert s and "newspapers.com/clip/59494261" in s and "../ruleset.html" in s
++assert sg.sources_html(17906, esc) is None
++assert sg.sources_html("not-an-id", esc) is None
++print("5. sources strip OK")
++
++print("\nALL SUPPLEMENTAL-GAMES TESTS PASSED")
+-- 
+2.43.0
+
