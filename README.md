@@ -715,14 +715,23 @@ season (`classification.py`: a hand-kept conference -> FBS/FCS map with
 era rules, pure renames folded together, dissolution dates for leagues
 that folded). The FBS belt is the real belt through 1977 and FBS-vs-FBS
 from 1978; the FCS belt starts with the data source's first real FCS
-coverage (2003). `belt_engine.resolve_vacancies` handles a holder that
-leaves its belt's world (realignment, a move between subdivisions): the
-belt reverts to the most recent earlier holder that will actually play
-again, or retires with its last holder when nobody can inherit it -- and
-never invents a placeholder reign. The rules are written up in
-`ruleset.md` ("Companion belts"); the rewrite followed a reader's (Elliot's)
-report of one-day reigns, a missing North Dakota State and defunct
-conferences held "to the present."
+coverage (2003). Who belongs to each belt's world is read season by season
+from the conference label on every game a team played
+(`belt_engine.Membership`), and `belt_engine.resolve_vacancies_by_membership`
+does the rest: a holder that is still a member keeps the belt through any
+stretch without a qualifying game (an independent that goes years without
+meeting another independent is still an independent), a holder that left
+(realignment, a move between subdivisions, a program gone for good) vacates
+it as of its last game as a member and the belt reverts to the most recent
+earlier holder that is a member of the season it left for, and a belt
+nobody can inherit retires with its last holder -- never a placeholder
+reign. A silence across seasons the archive does not cover (FCS before
+2003) retires the belt on the last game we can see and re-establishes it
+with the next. The rules are written up in `ruleset.md` ("Companion
+belts"); the rewrite followed a reader's (Elliot's) report of one-day
+reigns, a missing North Dakota State and defunct conferences held "to the
+present," and the membership rule followed a Reddit reader's catch that
+the Independents belt had Notre Dame "leaving" twice.
 
 ## Merch shop (Fourthwall)
 

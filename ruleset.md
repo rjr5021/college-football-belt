@@ -173,18 +173,26 @@ never needs:
   start before 1978. In practice it starts in 2003, the first season the
   data source has any real coverage of I-AA games; it has almost none
   between 1978 and 2002.
-- **A holder that leaves vacates the belt.** When a holder's later games no
-  longer count — it changed conferences, moved between subdivisions — its
-  reign closes on its last qualifying game and the belt reverts to the most
-  recent earlier holder that is still in that world and still playing. The
-  belt never rests with a team that will never play another qualifying game.
+- **A holder that leaves vacates the belt; one that stays keeps it.**
+  Membership is read season by season from every game a team played, not
+  just the ones that count, so an independent that goes years without
+  meeting another independent is still an independent and simply keeps the
+  belt until it meets one — the belt waits, as the real belt does. A holder
+  that actually left — it changed conferences, moved between subdivisions,
+  or stopped fielding a team while its old world went on — vacates the belt
+  as of its last game as a member, and the belt reverts to the most recent
+  earlier holder that is a member of the season it left for. The belt never
+  rests with a team that is no longer part of its world.
 - **A belt whose world ends retires.** When a conference dissolves there is
   no one left to inherit its belt, so the final reign closes on the date the
   league formally dissolved (or the day after its last game, when no formal
   date is known) and the belt is retired with that holder. A league that only
   changed its name keeps one continuous belt under its current name; one
   that stopped sponsoring football and later resumed starts a fresh lineage
-  with its next game.
+  with its next game. A silence that crosses seasons the data source does
+  not cover (I-AA play before 2003) is treated the same way — the belt
+  retires on the last game we can see and a fresh lineage starts with the
+  next one on record — rather than pretending nothing happened in between.
 
 These rules replaced an earlier version in September 2026 after Elliot, a
 reader, pointed out that the FCS belt listed a run of one-day reigns, that
@@ -192,7 +200,11 @@ North Dakota State had somehow never held it, and that defunct conferences
 showed their last holder as still reigning "to the present." He was right
 on every count; the last one was a genuine bug, and the others came from
 judging every game by each program's classification today rather than in
-the season it was played.
+the season it was played. Days later a Reddit reader caught the next flaw:
+the FBS Independents belt showed Notre Dame "leaving" twice and the belt
+retiring with UConn, when both are still independents — the site had been
+inferring "left" from "hasn't played another member lately." Membership is
+now read from the games themselves.
 
 ## Open items
 

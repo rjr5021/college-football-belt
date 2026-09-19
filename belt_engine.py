@@ -20,12 +20,15 @@ belts that need the SAME vacancy-resolution machinery but the NORMAL
     for years" problem that originally motivated all of this for the
     Losers Belt -- small programs are small programs, whichever belt
     they're carrying).
-  - build_conference_lineage.py's per-conference belts, where a holder
-    leaving its conference (realignment) looks EXACTLY like "team never
-    shows up in the filtered game list again" to this engine -- no
-    special-casing needed, just pass `recent_teams` = the conference's
-    CURRENT roster instead of "teams active in the current+previous
-    season," and a departed team is correctly treated as vacated.
+  - build_conference_lineage.py's per-conference and FBS-only/FCS-only
+    belts, which use resolve_vacancies_by_membership: the same walk, but
+    "the holder left" is read from a season-by-season Membership built
+    from the conference label on every game a team played, instead of
+    being inferred from "the team never shows up in the filtered game
+    list again" (which mistook an independent between independent
+    opponents for a team that had left). The alternate universes
+    (build_alternate_lineages.py) still use resolve_vacancies with a
+    roster of recently active teams.
 
 See resolve_vacancies()'s docstring for the full mechanics (gap
 detection vs. terminal dormancy, the forgive-one-gap-at-a-time loop, and
@@ -174,6 +177,152 @@ def _predecessor(reign):
     """Whoever a reign's team caught the belt from -- `won_from` for a
     normal reign, or `predecessor` for one reopened by a vacancy."""
     return reign.get("predecessor") or reign.get("won_from")
+
+
+def season_of(date_str):
+    """The football season a date belongs to: January/February dates are
+    the previous season's bowls and title games."""
+    y, m = int(date_str[:4]), int(date_str[5:7])
+    return y - 1 if m <= 2 else y
+
+
+class Membership:
+    """Season-by-season membership of a belt's world -- one conference, or
+    one subdivision -- so the resolver can tell a holder that LEFT from one
+    that is merely between qualifying games.
+
+    Built from the conference label on EVERY game a team played each
+    season, not just the qualifying ones, so an independent that goes years
+    without meeting another independent is still, plainly, an independent.
+    (2026-09-19: a Reddit reader caught the FBS Independents belt showing
+    Notre Dame "leaving" twice and the belt retiring with UConn, when both
+    are still independents -- the resolver had been inferring "left the
+    conference" from "no later qualifying game".)
+
+      seasons        {team: set of seasons it was a member}
+      played         {team: {season: last game date that season, any label}}
+      world_through  the world's last season on record: the season in
+                     progress for a live conference, the final season of a
+                     dissolved one
+      covered        season -> bool: whether the archive can be trusted to
+                     hold this world's games that season (the data source
+                     has almost no FCS-vs-FCS results before 2003); None
+                     means every season is covered
+    """
+
+    def __init__(self, seasons, played, world_through, covered=None, elsewhere=None):
+        self.seasons = {t: set(s) for t, s in seasons.items()}
+        self.played = {t: dict(p) for t, p in played.items()}
+        self.world_through = world_through
+        self._covered = covered
+        # seasons a team demonstrably played under ANOTHER label; a season
+        # with no conference on record is neither here nor there
+        self.elsewhere = ({t: set(s) for t, s in elsewhere.items()} if elsewhere is not None
+                          else {t: {s for s in p if s not in self.seasons.get(t, ())} for t, p in self.played.items()})
+
+    def covered(self, season):
+        return True if self._covered is None else bool(self._covered(season))
+
+    def uncovered_between(self, season_a, season_b):
+        """True if any season strictly between the two is one the archive
+        does not cover -- a silence across it is a data gap, not a story."""
+        return any(not self.covered(s) for s in range(season_a + 1, season_b))
+
+    def is_member(self, team, season):
+        s = self.seasons.get(team, ())
+        if season in s:
+            return True
+        # the season in progress, before this team's first game of it: assume
+        # it is still where it was last season
+        return (season == self.world_through and season not in self.played.get(team, {})
+                and (season - 1) in s)
+
+    def left_after(self, team, after_season):
+        """The first season after `after_season` in which the team was
+        somewhere else (playing under another label) or gone for good (it
+        never plays again, and this world went on without it for at least
+        two seasons); None while it is still a member. A member between
+        qualifying games is not gone, and neither is one that suspended
+        football for a while and came back -- the belt waits, as the real
+        belt does."""
+        played = self.played.get(team, {})
+        elsewhere = self.elsewhere.get(team, set())
+        last_played = max(played) if played else after_season
+        for s in range(after_season + 1, self.world_through + 1):
+            if s in played:
+                if s in elsewhere:
+                    return s
+            elif s > last_played and last_played + 1 < self.world_through:
+                return s
+        # a team that played on after this world's last season did not leave
+        # it -- the world ended (a dissolved league retires with its holder)
+        return None
+
+    def last_member_game(self, team, before_season):
+        """The date of the team's last game in its last member season before
+        `before_season` -- the day it can be said to have left after."""
+        played = self.played.get(team, {})
+        candidates = [s for s in self.seasons.get(team, ()) if s < before_season and s in played]
+        if not candidates:
+            return None
+        return played[max(candidates)]
+
+    def clamp(self, through_season):
+        """Forget every season after `through_season` -- a league that
+        formally dissolved on a date even though its label lingers in the
+        data (the small-college Rocky Mountain Conference after 1938)."""
+        self.seasons = {t: {s for s in ss if s <= through_season} for t, ss in self.seasons.items()}
+        self.seasons = {t: ss for t, ss in self.seasons.items() if ss}
+        self.world_through = min(self.world_through, through_season)
+        return self
+
+    @classmethod
+    def from_index(cls, index, member_test, covered=None):
+        """Build one from index_labels(): `member_test(label, season)` says
+        whether a conference label means membership that season. A team's
+        membership in a season goes by the majority of its games' labels."""
+        labels, played = index
+        seasons, elsewhere, world_through = {}, {}, None
+        for t, per_season in labels.items():
+            mine, other = set(), set()
+            for s, counts in per_season.items():
+                labeled = {lab: n for lab, n in counts.items() if lab}
+                if not labeled:
+                    continue        # no conference on record that season: no evidence either way
+                yes = sum(n for lab, n in labeled.items() if member_test(lab, s))
+                if yes * 2 >= sum(labeled.values()):
+                    mine.add(s)
+                    if world_through is None or s > world_through:
+                        world_through = s
+                else:
+                    other.add(s)
+            if mine:
+                seasons[t] = mine
+            if other:
+                elsewhere[t] = other
+        return cls(seasons, played, world_through if world_through is not None else 0, covered, elsewhere)
+
+    @classmethod
+    def from_games(cls, games, member_test, covered=None):
+        return cls.from_index(index_labels(games), member_test, covered)
+
+
+def index_labels(games):
+    """One pass over every game on record: ({team: {season: {label: games}}},
+    {team: {season: last game date}}) -- the raw material Membership.from_index
+    turns into one world's membership, cheaply, once per belt."""
+    labels, played = {}, {}
+    for g in games:
+        s = g["season"]
+        for side in ("home", "away"):
+            t = g[side]
+            lab = g.get(f"{side}_conference")
+            counts = labels.setdefault(t, {}).setdefault(s, {})
+            counts[lab] = counts.get(lab, 0) + 1
+            p = played.setdefault(t, {})
+            if g["date"] > p.get(s, ""):
+                p[s] = g["date"]
+    return labels, played
 
 
 def _next_game_date(team, games_after):
@@ -359,6 +508,172 @@ def resolve_vacancies(games, tie_rule, start_holder, start_reign, recent_teams,
         reign = {"team": successor, "start_date": effective_date,
                  "won_from": None, "won_score": None, "defenses": 0,
                  "reclaimed_after": tip["team"], "predecessor": inherited}
+        gaps_to_forgive = 0
+
+
+def _heir(chronology, exclude, ok):
+    """The most recent earlier holder (newest first through the real
+    chronology) that `ok` accepts -- the team a vacated belt reverts to."""
+    tried = set(exclude)
+    for r in reversed(list(chronology)):
+        t = r["team"]
+        if t in tried:
+            continue
+        tried.add(t)
+        if ok(t):
+            return t
+    return None
+
+
+def resolve_vacancies_by_membership(games, tie_rule, start_holder, start_reign, membership,
+                                    today, context_reigns=(), gap_threshold_days=GAP_THRESHOLD_DAYS,
+                                    first_game_date=None, reestablish=True):
+    """resolve_vacancies for a belt whose world has a roster we can actually
+    see season by season (a `Membership`): a conference belt, or the FBS-only
+    / FCS-only belt. The difference from the roster version above is WHAT
+    counts as leaving:
+
+      1. A holder that is still a member keeps the belt through any stretch
+         without a qualifying game -- an independent that goes years without
+         meeting another independent, a program that skipped a season -- as
+         long as the archive covers those seasons. A silence that crosses
+         seasons the archive does NOT cover (FCS play before 2003) is a data
+         gap: the belt retires on the holder's last game and a fresh lineage
+         starts with the next game on record.
+      2. A holder that LEFT -- played a later season under another label, or
+         stopped playing while this world went on -- vacates the belt as of
+         its last game in its last member season, and the belt reverts to the
+         most recent earlier holder that is a member of the season it left
+         for. Nobody left to inherit it: the belt retires there, and is
+         re-established by the next qualifying game if there is one.
+
+    Each vacated reign carries `left_season` (the season the holder was
+    first elsewhere) and closes on `end_date`; the heir's synthetic reign
+    starts the next day and carries `reclaimed_after`. Returns
+    (belt_games, reigns, vacancies) exactly like resolve_vacancies.
+    """
+    games = sorted(games, key=lambda g: (g["date"], g.get("season_type") != "regular", g.get("id", 0)))
+    if first_game_date is None:
+        first_game_date = start_reign["start_date"] if start_reign else (games[0]["date"] if games else FIRST_GAME_DATE)
+    season_by_date = {g["date"]: g["season"] for g in games}
+    all_belt_games, all_reigns, vacancies = [], [], []
+    holder, reign = start_holder, start_reign
+    gaps_to_forgive = 0
+    reestablished_pending = False
+    iterations = 0
+
+    def retire(tip, reigns, belt_games, end_date, left_season=None, why=""):
+        """Close the belt with `tip` on `end_date`; returns the games a new lineage may start from."""
+        nonlocal holder, reign, first_game_date, gaps_to_forgive, reestablished_pending
+        vacancies.append({"team": tip["team"], "reign_started": tip["start_date"],
+                          "last_activity_date": tip.get("last_game_date", tip["start_date"]),
+                          "left_date": end_date, "left_season": left_season,
+                          "effective_date": (date.fromisoformat(end_date) + timedelta(days=1)).isoformat(),
+                          "detected_on": today, "reverted_to": None, "retired": True})
+        retired_tip = {**tip, "end_date": end_date, "lost_to": None, "retired": True}
+        if left_season is not None:
+            retired_tip["left_season"] = left_season
+        all_belt_games.extend(belt_games)
+        all_reigns.extend(reigns[:-1] + [retired_tip])
+        reestablished_pending = False
+        later = [g for g in games if g["date"] > end_date]
+        if later and reestablish:
+            print(f"Belt: {tip['team']} {why} -- retiring the belt as of {end_date}; a new lineage "
+                  f"starts with the next qualifying game on {later[0]['date']}.")
+            holder, reign = None, None
+            first_game_date = later[0]["date"]
+            gaps_to_forgive = 0
+            reestablished_pending = True
+            return later
+        print(f"Belt: {tip['team']} {why} -- the belt retires there, as of {end_date}.")
+        return None
+
+    while True:
+        iterations += 1
+        if iterations > 100000:
+            raise RuntimeError("resolve_vacancies_by_membership: no progress after 100000 passes -- this is a bug")
+        if not games:
+            return all_belt_games, all_reigns, vacancies
+        belt_games, reigns = walk_winner(games, tie_rule, start_holder=holder, start_reign=reign,
+                                          gap_threshold_days=gap_threshold_days,
+                                          gaps_to_forgive=gaps_to_forgive,
+                                          first_game_date=first_game_date)
+        if reestablished_pending and reigns and holder is None:
+            reigns[0]["reestablished"] = True
+        tip = reigns[-1]
+        team = tip["team"]
+        last_activity = tip.get("last_game_date", tip["start_date"])
+        tip_season = season_by_date.get(last_activity) or tip.get("start_season") or season_of(last_activity)
+        later_own = [g for g in games if g["date"] > last_activity and team in (g["home"], g["away"])]
+        next_own = later_own[0]["season"] if later_own else None
+        left = membership.left_after(team, tip_season)
+
+        if left is None or (next_own is not None and next_own < left):
+            # still a member through its next qualifying game (or to the present)
+            if next_own is None:
+                all_belt_games += belt_games
+                all_reigns += reigns
+                return all_belt_games, all_reigns, vacancies      # the reign in progress
+            if not membership.uncovered_between(tip_season, next_own):
+                gaps_to_forgive += 1        # a real silence: the holder carries the belt through it
+                continue
+            games_after = retire(tip, reigns, belt_games, last_activity,
+                                 why=f"has no game on record between the {tip_season} and "
+                                     f"{next_own} seasons, which the archive does not cover")
+            if games_after is None:
+                return all_belt_games, all_reigns, vacancies
+            games = games_after
+            continue
+
+        if membership.uncovered_between(tip_season, left):
+            # it left, but only after seasons the archive does not cover: what
+            # happened to the belt in between is unknowable, so this is the
+            # same data gap -- retire on the last game we can see
+            games_after = retire(tip, reigns, belt_games, last_activity,
+                                 why=f"has no game on record between the {tip_season} season and "
+                                     f"leaving before {left}, seasons the archive does not cover")
+            if games_after is None:
+                return all_belt_games, all_reigns, vacancies
+            games = games_after
+            continue
+
+        # the holder left: its reign closes on its last game as a member
+        end_date = membership.last_member_game(team, left) or last_activity
+        if end_date < last_activity:
+            end_date = last_activity
+        effective_date = (date.fromisoformat(end_date) + timedelta(days=1)).isoformat()
+        chronology = list(context_reigns) + all_reigns + reigns[:-1]
+        successor = None
+        if membership.covered(left):
+            successor = _heir(chronology, {team}, lambda t: membership.is_member(t, left))
+        gone = f"left before the {left} season (last game as a member {end_date})"
+        if successor is None:
+            games_after = retire(tip, reigns, belt_games, end_date, left_season=left,
+                                 why=f"{gone} and nobody earlier in the line is a member of that season")
+            if games_after is None:
+                return all_belt_games, all_reigns, vacancies
+            games = games_after
+            continue
+
+        v = {"team": team, "reign_started": tip["start_date"], "last_activity_date": last_activity,
+             "left_date": end_date, "left_season": left, "effective_date": effective_date,
+             "detected_on": today, "reverted_to": successor}
+        print(f"Belt: {team} {gone} -- the belt reverts to {successor}, in effect since {effective_date}.")
+        vacated_tip = {**tip, "end_date": end_date, "lost_to": None, "vacated": True, "left_season": left}
+        all_belt_games += belt_games
+        all_reigns += reigns[:-1] + [vacated_tip]
+        reestablished_pending = False
+        vacancies.append(v)
+
+        inherited = None
+        for r in reversed(chronology):
+            if r["team"] == successor:
+                inherited = _predecessor(r)
+                break
+        holder = successor
+        reign = {"team": successor, "start_date": effective_date, "start_season": left - 1,
+                 "won_from": None, "won_score": None, "defenses": 0,
+                 "reclaimed_after": team, "predecessor": inherited}
         gaps_to_forgive = 0
 
 

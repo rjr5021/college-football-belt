@@ -4233,7 +4233,8 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
             lost_txt = '<span class="mono">— belt retired —</span>'
             end_txt = fmt_date(r["end_date"])
         elif r.get("vacated"):
-            lost_txt = "vacated"
+            lost_txt = (f"vacated — left {scope.upper()} before {r['left_season']}"
+                        if r.get("left_season") and scope in ("fbs", "fcs") else "vacated")
             end_txt = fmt_date(r["end_date"])
         elif r.get("lost_to"):
             lost_inner = f"to {esc(r['lost_to'])}"
@@ -5032,7 +5033,8 @@ def generate_conference_belt_page(lineage, slug):
             passed_txt = '<span class="mono">— present —</span>'
             end_txt = "Present"
         elif r.get("vacated"):
-            passed_txt = f"vacated — left {esc(conference)}"
+            passed_txt = (f"vacated — left {esc(conference)} before the {r['left_season']} season"
+                          if r.get("left_season") else f"vacated — left {esc(conference)}")
             end_txt = fmt_date(r["end_date"])
         elif r.get("lost_to"):
             passed_txt = f"lost to {esc(r['lost_to'])}"
@@ -5106,9 +5108,11 @@ def generate_conference_belt_page(lineage, slug):
     </table>
     <p class="noResults" id="noResults">No reigns match &ldquo;<span id="noResultsTerm"></span>.&rdquo;</p>
   </div>
-  <p class="noteBox">Membership is judged game by game, so realignment moves a team&rsquo;s games with it. A holder that leaves
-    {esc(conference)} vacates the belt, which reverts to the most recent earlier holder still in the conference; if no one is left to
-    inherit it, the belt retires with its last holder. Days count the offseason; switch to games to measure a reign by belt games only.</p>
+  <p class="noteBox">Membership is judged season by season from every game a team played, so realignment moves a team&rsquo;s games with it.
+    A holder that stays in {esc(conference)} keeps the belt through any stretch without a game against another member; a holder that
+    leaves vacates the belt on its last game as a member, and it reverts to the most recent earlier holder that is a member of the season
+    it left for. If no one is left to inherit it, the belt retires with its last holder. Days count the offseason; switch to games to
+    measure a reign by belt games only.</p>
   <p class="viewToggle"><a href="index.html">&larr; See every conference belt</a></p>
 </main>
 
@@ -5160,13 +5164,11 @@ def generate_conferences_index_page(conference_lineages):
     write_outputs() for where last_game_date comes from: it's the full
     merged history's last entry, not just this run's fetch window, so this
     works correctly even on an ordinary incremental run."""
-    current_year = date.today().year
-
     def is_active(lineage):
-        if lineage.get("retired"):
-            return False
-        last = lineage.get("last_game_date")
-        return bool(last) and int(last[:4]) >= current_year - 2
+        # a belt is live unless it retired: its holder is still a member of a
+        # league that still exists, however long since the last belt game
+        # (the FBS Independents' last game between two members was in 2024)
+        return not lineage.get("retired")
 
     def card_for(slug, lineage, active):
         conference = lineage["conference"]

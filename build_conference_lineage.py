@@ -32,14 +32,21 @@ How it works now:
     Division I-AA game of 1978. Subdivision is decided per game from the
     conference each side was in that season (classification.py), so a
     program that moves up or down takes its games with it.
-  - A holder that leaves the belt's world (realignment, a move between
-    subdivisions, a program going dark) vacates it, and the belt reverts to
-    the most recent earlier holder that will actually play again. When no
-    one can inherit it -- a conference that dissolved -- the belt RETIRES
-    with its last real holder; the page shows the dissolution date
-    (classification.CONFERENCE_DISSOLVED) instead of "present". A
-    conference that dropped football and later came back starts a fresh
-    lineage with its next game.
+  - Membership is read season by season from the conference label on EVERY
+    game a team played (belt_engine.Membership), not inferred from whether
+    it keeps turning up in the qualifying games. A holder that is still a
+    member keeps the belt through any stretch without a qualifying game --
+    Notre Dame is an independent whether or not it meets another one this
+    year (a Reddit reader caught the old inference "vacating" it twice). A
+    holder that LEFT (realignment, a move between subdivisions, a program
+    going dark) vacates the belt as of its last game as a member, and the
+    belt reverts to the most recent earlier holder that is a member of the
+    season it left for. When no one can inherit it -- a conference that
+    dissolved -- the belt RETIRES with its last real holder; the page shows
+    the dissolution date (classification.CONFERENCE_DISSOLVED) instead of
+    "present". A silence that crosses seasons the data source does not
+    cover (FCS play before 2003) is a data gap, not a story: the belt
+    retires there and a fresh lineage starts with the next game on record.
 
 Outputs (belt_data/, regenerated every run, nothing committed):
     lineage_fbs.json, lineage_fcs.json          the FBS-only / FCS-only belts
@@ -59,15 +66,17 @@ import os
 import re
 import sys
 import time
-from collections import Counter, defaultdict
+from collections import Counter
 
-from belt_engine import resolve_vacancies, walk_winner
+from belt_engine import Membership, index_labels, resolve_vacancies_by_membership, walk_winner
 from classification import (
     CONFERENCE_DISSOLVED,
     CONFERENCES,
+    FBS,
     FCS_FIRST_SEASON,
     PRE_SPLIT_CONFERENCES,
     canonical_conference,
+    classify,
     conference_classification,
     conference_counts,
     fcs_first_season,
@@ -140,50 +149,68 @@ def load_all_games(include_live=True):
     return games
 
 
-def team_season_counts(games):
-    """{team: {season: games played}} over every game on record."""
-    out = defaultdict(lambda: defaultdict(int))
-    for g in games:
-        out[g["home"]][g["season"]] += 1
-        out[g["away"]][g["season"]] += 1
-    return out
+def _major_before_split(name):
+    """Whether a conference's games before the 1978 split can be trusted to
+    be in the archive: the data source's coverage of major-college football
+    is essentially complete, its coverage of the small colleges that became
+    I-AA is thin -- so a league that was I-A at the split (or one of the
+    pre-split majors) is covered, one that started I-AA is not."""
+    if name in PRE_SPLIT_CONFERENCES:
+        return True
+    entry = CONFERENCES.get(name)
+    if entry is None:
+        return False
+    if isinstance(entry, str):
+        return entry == FBS
+    return entry[0][2] == FBS
 
 
-def active_teams(qualifying, counts, live_start_year, min_games=4):
-    """The teams a live belt can rest with: everyone that has played a
-    qualifying game in the last two seasons on record AND has not since
-    left for a later season somewhere else. A holder that left the
-    conference (or moved up a subdivision) keeps playing -- just not in
-    games that count here -- so "at least `min_games` games in a later
-    season, none of them qualifying" is the departure signal, and a
-    holder whose new season has only just started (a week-one game
-    against an outside opponent) is not mistaken for one that left. A
-    program that dropped football is not recent; a dissolved conference's
-    members all went on to play elsewhere; either way the belt retires
-    rather than resting with a team that will never play."""
-    last_q = {}
-    for g in qualifying:
-        for t in (g["home"], g["away"]):
-            if g["season"] > last_q.get(t, -1):
-                last_q[t] = g["season"]
-    active = set()
-    for t, last in last_q.items():
-        if last < live_start_year:
-            continue
-        later = sum(n for s, n in counts.get(t, {}).items() if s > last)
-        if later < min_games:
-            active.add(t)
-    return active
+def conference_coverage(name, fcs_from):
+    """season -> bool: is the archive complete enough for this conference's
+    belt that season? FBS seasons always; FCS seasons only from the first
+    season the data source actually covers I-AA/FCS play (`fcs_from`)."""
+    def covered(season):
+        if season >= FCS_FIRST_SEASON:
+            return classify(name, season) == FBS or (fcs_from is not None and season >= fcs_from)
+        return _major_before_split(name)
+    return covered
+
+
+def scope_membership(scope, index, fcs_from):
+    """The FBS-only / FCS-only belt's world: a team is a member in a season
+    when its conference was in that subdivision (one undivided Division I
+    before 1978 counts as FBS)."""
+    def member(label, season):
+        if scope == FBS and season < FCS_FIRST_SEASON:
+            return True
+        return classify(canonical_conference(label), season) == scope
+    covered = None if scope == FBS else (lambda s: fcs_from is not None and s >= fcs_from)
+    return Membership.from_index(index, member, covered)
+
+
+def dissolved_last_season(dissolved_date):
+    """The last season a league that dissolved on `dissolved_date` played:
+    an offseason date (June 30, Aug 30) closes the previous season."""
+    y, m = int(dissolved_date[:4]), int(dissolved_date[5:7])
+    return y if m >= 9 else y - 1
+
+
+def conference_membership(name, index, fcs_from):
+    """One conference's world: a team is a member in a season when its games
+    that season carried the conference's label (renames folded together)."""
+    def member(label, season):
+        return canonical_conference(label) == name
+    return Membership.from_index(index, member, conference_coverage(name, fcs_from))
 
 
 # ------------------------------------------------------------- one belt
 
-def walk_belt(games, recent_teams, tie_rule, today, plain_through=None):
-    """resolve_vacancies over one belt's qualifying games, chronological.
-    With `plain_through`, the seasons up to and including it are walked
-    the way the real belt is -- no vacancies, the belt simply waits for
-    its holder -- and the vacancy rules apply only after that (the FBS
-    belt is the real belt until the 1978 split)."""
+def walk_belt(games, membership, tie_rule, today, plain_through=None):
+    """resolve_vacancies_by_membership over one belt's qualifying games,
+    chronological. With `plain_through`, the seasons up to and including
+    it are walked the way the real belt is -- no vacancies, the belt simply
+    waits for its holder -- and the vacancy rules apply only after that
+    (the FBS belt is the real belt until the 1978 split)."""
     if not games:
         return [], [], []
     if plain_through is not None:
@@ -194,14 +221,14 @@ def walk_belt(games, recent_teams, tie_rule, today, plain_through=None):
             if not late:
                 return belt_games, reigns, []
             open_reign = reigns[-1]
-            tail_games, tail_reigns, vacancies = resolve_vacancies(
+            tail_games, tail_reigns, vacancies = resolve_vacancies_by_membership(
                 late, tie_rule, start_holder=open_reign["team"], start_reign=open_reign,
-                recent_teams=recent_teams, today=today, context_reigns=reigns[:-1],
+                membership=membership, today=today, context_reigns=reigns[:-1],
                 first_game_date=late[0]["date"])
             return belt_games + tail_games, reigns[:-1] + tail_reigns, vacancies
-    belt_games, reigns, vacancies = resolve_vacancies(
+    belt_games, reigns, vacancies = resolve_vacancies_by_membership(
         games, tie_rule, start_holder=None, start_reign=None,
-        recent_teams=recent_teams, today=today, first_game_date=games[0]["date"])
+        membership=membership, today=today, first_game_date=games[0]["date"])
     return belt_games, reigns, vacancies
 
 
@@ -232,19 +259,19 @@ def lineage_doc(belt_games, reigns, vacancies, tie_rule, extra):
     return doc
 
 
-def build_scope(scope, games, counts, live_start_year, tie_rule, today):
+def build_scope(scope, games, index, fcs_from, tie_rule, today):
     qualifying = scope_games(games, scope)
     data_from = None
     if scope == "fcs":
         # the subdivision dates from 1978, the data source's coverage of it from ~2003
-        data_from = fcs_first_season(games)
+        data_from = fcs_from
         if data_from is None:
             return None
         qualifying = [g for g in qualifying if g["season"] >= data_from]
     if not qualifying:
         return None
-    recent = active_teams(qualifying, counts, live_start_year)
-    belt_games, reigns, vacancies = walk_belt(qualifying, recent, tie_rule, today,
+    membership = scope_membership(scope, index, fcs_from)
+    belt_games, reigns, vacancies = walk_belt(qualifying, membership, tie_rule, today,
                                               plain_through=FCS_FIRST_SEASON - 1 if scope == "fbs" else None)
     if scope == "fbs":
         note = ("Rutgers def. Princeton 6-4, first game ever played. Identical to the real belt "
@@ -261,7 +288,7 @@ def build_scope(scope, games, counts, live_start_year, tie_rule, today):
     return doc
 
 
-def build_conference(name, games, counts, live_start_year, tie_rule, today):
+def build_conference(name, games, index, fcs_from, tie_rule, today, latest_season=None):
     qualifying = [g for g in games
                   if canonical_conference(g.get("home_conference")) == name
                   and canonical_conference(g.get("away_conference")) == name
@@ -271,8 +298,27 @@ def build_conference(name, games, counts, live_start_year, tie_rule, today):
         return None
     classification = conference_classification(name, seasons)
     dissolved = CONFERENCE_DISSOLVED.get(name)
-    recent = active_teams(qualifying, counts, live_start_year)
-    belt_games, reigns, vacancies = walk_belt(qualifying, recent, tie_rule, today)
+    membership = conference_membership(name, index, fcs_from)
+    if dissolved:
+        # a league that formally dissolved on a date: nothing played under its
+        # label after that counts (the Rocky Mountain Conference lived on as a
+        # small-college league; the SAIAA label lingers on 1921 games)
+        through = dissolved_last_season(dissolved[0])
+        qualifying = [g for g in qualifying if g["season"] <= through]
+        seasons = [s for s in seasons if s <= through]
+        if len(qualifying) < MIN_CONFERENCE_GAMES or len(seasons) < MIN_CONFERENCE_SEASONS:
+            return None
+        membership.clamp(through)
+    belt_games, reigns, vacancies = walk_belt(qualifying, membership, tie_rule, today)
+    if latest_season is None:
+        latest_season = games[-1]["season"] if games else seasons[-1]
+    if reigns and not reigns[-1].get("retired") and reigns[-1].get("end_date") is None \
+            and (dissolved or membership.world_through < latest_season - 1):
+        # the league is gone -- formally dissolved, or no games under its label for
+        # two seasons -- and the belt retires with whoever held it at the end
+        last = reigns[-1]
+        last["end_date"] = last.get("last_game_date", last["start_date"])
+        last["retired"] = True
     aliases = sorted({c for g in qualifying for c in (g.get("home_conference"), g.get("away_conference"))
                       if c and c != name})
     doc = lineage_doc(belt_games, reigns, vacancies, tie_rule, {
@@ -315,13 +361,16 @@ def main():
     if not games:
         print("No games available -- skipping the companion belts this run.")
         return
-    live_start_year = max(g["season"] for g in games) - 1
-    counts = team_season_counts(games)
-    print(f"{len(games):,} games on record ({games[0]['season']}-{games[-1]['season']})")
+    latest_season = max(g["season"] for g in games)
+    live_start_year = latest_season - 1
+    index = index_labels(games)
+    fcs_from = fcs_first_season(games)
+    print(f"{len(games):,} games on record ({games[0]['season']}-{latest_season}); "
+          f"FCS-vs-FCS play covered from {fcs_from}")
 
     # ---- the FBS-only / FCS-only belts ----
     for scope in ("fbs", "fcs"):
-        doc = build_scope(scope, games, counts, live_start_year, args.tie_rule, today)
+        doc = build_scope(scope, games, index, fcs_from, args.tie_rule, today)
         if doc is None:
             print(f"[{scope}] no qualifying games -- skipped")
             continue
@@ -352,7 +401,7 @@ def main():
     built, skipped, stale = 0, 0, 0
     written = set()
     for name in sorted(names):
-        doc = build_conference(name, games, counts, live_start_year, args.tie_rule, today)
+        doc = build_conference(name, games, index, fcs_from, args.tie_rule, today, latest_season)
         if doc is None:
             skipped += 1
             continue
