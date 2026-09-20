@@ -8,9 +8,9 @@
   },
   "current_holder": "Notre Dame",
   "current_reign_since": "2025-11-29",
-  "current_defenses": 2,
+  "current_defenses": 3,
   "totals": {
-    "belt_games": 1637,
+    "belt_games": 1638,
     "reigns": 332,
     "distinct_teams": 105
   },
@@ -2999,7 +2999,7 @@
       "start_date": "2025-11-29",
       "won_from": "Stanford",
       "won_score": "20-49",
-      "defenses": 2,
+      "defenses": 3,
       "end_date": null,
       "lost_to": null
     }
@@ -27559,6 +27559,21 @@
       "outcome": "retained",
       "new_holder": "Notre Dame",
       "game_id": 401859184
+    },
+    {
+      "date": "2026-09-19",
+      "season": 2026,
+      "week": 3,
+      "season_type": "regular",
+      "holder": "Notre Dame",
+      "opponent": "Michigan State",
+      "home": "Notre Dame",
+      "away": "Michigan State",
+      "score": "27-10",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Notre Dame",
+      "game_id": 401858453
     }
   ]
 }

@@ -9,5 +9,17 @@
     "predicted_winner": "Notre Dame",
     "predicted_score": "Notre Dame 42, Michigan State 17",
     "generated": "2026-09-14"
+  },
+  {
+    "key": "Notre Dame|Purdue|2026-09-26",
+    "holder": "Notre Dame",
+    "opponent": "Purdue",
+    "date": "2026-09-26",
+    "is_home": false,
+    "neutral": false,
+    "predicted_winner": "Notre Dame",
+    "predicted_score": "Notre Dame 52, Purdue 17",
+    "generated": "2026-09-20",
+    "line": null
   }
 ]
