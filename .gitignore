@@ -2,7 +2,25 @@
 # update_all.py every run (locally or in CI) -- committing them would just
 # bloat the repo's history with constantly regenerated JSON/HTML for no
 # benefit. Nothing here is a source file.
-belt_data/
+#
+# THREE EXCEPTIONS (2026-09-19, live belt-game X posts -- Bob: "automatic
+# posts for the start of the belt game, any scoring updates, halftime and
+# the end of the game"): next_game.json, lineage.json and rankings.json ARE
+# committed. live-game.yml runs on its own 5-minute schedule with a fresh
+# checkout each time, completely separate from THIS workflow's job (the
+# only one that actually calls update_all.py to fetch/regenerate
+# belt_data/) -- running the full fetch pipeline every 5 minutes just to
+# refresh belt_data/ would blow through CFBD's 1,000-calls/month cap in
+# about an hour. So post_live_game.py instead reads these three small,
+# already-generated files, committed back by update-and-deploy.yml's own
+# commit step the same way historical_data/ etc. are below -- so it always
+# has at least whatever was current as of the most recent scheduled
+# pipeline run (at minimum the daily 10 AM ET one), even though its own
+# checkout never runs update_all.py itself.
+belt_data/*
+!belt_data/next_game.json
+!belt_data/lineage.json
+!belt_data/rankings.json
 site/
 
 # historical_data/ is DELIBERATELY NOT ignored -- it's the small, git-
