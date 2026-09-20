@@ -211,8 +211,24 @@ def in_live_window(next_game, now_utc):
 
 
 def fetch_espn_summary(event_id):
+    # 2026-09-19 debugging: this was sending a custom, obviously-not-a-
+    # browser User-Agent ("collegefootballbelt.com live poster"). That's
+    # fine from a visitor's own browser (see build_site.py's client-side
+    # live scoreboard, which hits this same endpoint) but from a GitHub
+    # Actions runner it got a flat 403 Forbidden on every single poll --
+    # ESPN's edge (Akamai) filtering out non-browser-looking requests
+    # from datacenter IPs. A realistic browser UA + the Accept headers a
+    # real browser would send fixes it.
     url = ESPN_SUMMARY_URL.format(event_id=event_id)
-    req = Request(url, headers={"User-Agent": "collegefootballbelt.com live poster"})
+    headers = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/128.0.0.0 Safari/537.36"),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.espn.com/",
+    }
+    req = Request(url, headers=headers)
     with urlopen(req, timeout=15) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
