@@ -75,12 +75,34 @@ time nowhere near now just print a note and exit 0.
 
 import json
 import os
+import socket
 import subprocess
 import sys
 import time
 from datetime import date, datetime, timedelta, timezone
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+
+# stdout isn't a TTY under GitHub Actions, so Python defaults to full
+# block buffering (~8KB) instead of line buffering -- a script that
+# prints only occasionally (like this one, once per event rather than
+# once per 20s poll) can have its print()s sit completely invisible in
+# the live log for the entire multi-hour run. Force line buffering so
+# every print shows up immediately (2026-09-19 debugging: run #26 sat
+# "in progress" for 15+ minutes during the ND-MSU game with nothing
+# past the initial env dump in the log, and no kickoff tweet went out --
+# this and the socket timeout below are the fix).
+sys.stdout.reconfigure(line_buffering=True)
+
+# tweepy's Client (used for client.create_tweet() below) doesn't set a
+# timeout of its own on the underlying requests session, so a stalled
+# connection to X's API can hang the request forever with no exception
+# raised -- freezing this whole polling loop silently (still "in
+# progress" in Actions, no error, no output, no post). Give every socket
+# call that doesn't specify its own timeout a hard ceiling instead, so a
+# stall raises (socket.timeout / TimeoutError) and gets caught by the
+# existing try/except around each network call, instead of hanging.
+socket.setdefaulttimeout(30)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BELT_DATA_DIR = os.path.join(HERE, "belt_data")
@@ -395,6 +417,11 @@ def run_once(client, next_game, lineage, rankings, cache, ptx):
         print("Couldn't parse ESPN's payload for this game -- skipping this poll.")
         return False
     state, is_half, holder_score, opp_score = parsed
+    print(f"[poll] ESPN state={state!r} half={is_half} "
+          f"{holder} {holder_score} - {opp_score} {opponent} "
+          f"(kickoff_posted={cache['kickoff_posted']} "
+          f"halftime_posted={cache['halftime_posted']} "
+          f"final_posted={cache['final_posted']})")
 
     def post(text, label):
         try:
