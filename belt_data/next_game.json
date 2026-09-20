@@ -1,0 +1,21 @@
+{
+  "id": 401858453,
+  "team": "Notre Dame",
+  "opponent": "Michigan State",
+  "is_home": true,
+  "neutral": false,
+  "date": "2026-09-19",
+  "raw_date": "2026-09-19T23:30:00.000Z",
+  "start_time_tbd": false,
+  "season": 2026,
+  "week": 3,
+  "season_type": "regular",
+  "venue_name": "Notre Dame Stadium",
+  "venue_city": "Notre Dame",
+  "venue_state": "IN",
+  "venue_lat": 41.698378,
+  "venue_lon": -86.2339425,
+  "tv": "NBC",
+  "stream": null,
+  "watch": "NBC"
+}
