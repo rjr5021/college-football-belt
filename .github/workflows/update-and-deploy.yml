@@ -314,6 +314,11 @@ jobs:
           if [ -d social_cache ]; then
             git add social_cache/
           fi
+                    for f in next_game.json lineage.json rankings.json; do
+            if [ -f "belt_data/$f" ]; then
+              git add "belt_data/$f"
+            fi
+          done
           if git diff --cached --quiet; then
             echo "No change to historical_data/, ai_preview_cache/, recap_cache/ or social_cache/ -- nothing to commit."
           else
