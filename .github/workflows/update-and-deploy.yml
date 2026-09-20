@@ -323,7 +323,23 @@ jobs:
             echo "No change to historical_data/, ai_preview_cache/, recap_cache/ or social_cache/ -- nothing to commit."
           else
             git commit -m "Advance historical baseline / AI preview + recap + social caches [skip ci]"
-            git push
+            # Another run may have pushed while this one was building (on a game
+            # day the live-game workflow commits its state every few minutes, and
+            # the hourly check-ins overlap it), which made a plain push fail with
+            # "fetch first" and took the deploy down with it (run #147, 2026-09-19).
+            # Rebase our one commit onto whatever landed and try again, a few times.
+            for attempt in 1 2 3 4 5; do
+              if git push; then
+                break
+              fi
+              echo "push rejected (attempt $attempt) -- rebasing onto the remote and retrying"
+              git pull --rebase origin main || { git rebase --abort; git pull --rebase -X theirs origin main; }
+              sleep 5
+            done
+            git fetch -q origin main
+            if [ -n "$(git log origin/main..HEAD --oneline)" ]; then
+              echo "::warning::Could not push the cache commit after 5 attempts; deploying anyway (the next run will redo it)."
+            fi
           fi
 
       - name: Upload the built site as a Pages artifact
