@@ -3404,7 +3404,7 @@ def render_belt_faq(lineage, reigns, current, belt_games, next_game, belt_risk, 
         a_next = (f'The next belt game is <strong>{esc(holder)} {vs_word} '
                   f'<a href="teams/{team_slug(opp)}.html">{esc(opp)}</a></strong> on {when}'
                   f'{f" at {esc(where)}" if where else ""}. If {esc(opp)} wins, the belt changes hands; '
-                  f'a tie or a {esc(holder)} win keeps it where it is.')
+                  f'if {esc(holder)} wins, it stays put.')
         risk_next = (belt_risk or {}).get("next_game") or {}
         if risk_next.get("opponent") == opp and risk_next.get("defend_prob") is not None:
             pct = round(risk_next["defend_prob"] * 100)
@@ -3432,9 +3432,9 @@ def render_belt_faq(lineage, reigns, current, belt_games, next_game, belt_risk, 
               f'voted on. <a href="about.html">More about the belt.</a>')
 
     # 4. how it changes hands
-    a_how = ('Beat the holder and the belt is yours; every other result leaves it where it is. Ties stay with the '
-             'holder, bowl and playoff games count like any other, and if the holder is idle (a bye, a canceled '
-             'season) the belt waits for its next game. Every reign is computed mechanically from the full game '
+    a_how = ('Beat the holder and the belt is yours; every other result leaves it where it is. Bowl and playoff '
+             'games count like any other; in the pre-overtime era a tie stayed with the holder (there hasn&rsquo;t been '
+             'one since 1996); and if the holder is idle (a bye, a canceled season) the belt waits for its next game. Every reign is computed mechanically from the full game '
              'record, with no editorial calls. <a href="ruleset.html">The full ruleset.</a>')
 
     # 5. the records
@@ -3634,7 +3634,7 @@ LIVE_SCOREBOARD_JS = '''<script>
     }
     if (state === 'in') {
       var safe = !have || hs >= os;
-      var st = !have ? '' : hs > os ? 'SAFE' : hs < os ? 'IN DANGER' : 'TIED \\u00b7 a tie keeps it';
+      var st = !have ? '' : hs > os ? 'SAFE' : hs < os ? 'IN DANGER' : 'TIED';
       paint(safe ? 'gamedaySafe' : 'gamedayDanger', 'Live', have ? scoreLine(hs, os) : holder + ' vs. ' + opp, detail, st, situation);
       return;
     }
@@ -3976,7 +3976,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       </div>
       <ul class="rulesList">
         <li><h3>Won on the field</h3><p>Beat the holder, take the belt. Every other result leaves it exactly where it was.</p></li>
-        <li><h3>Ties: holder retains</h3><p>Standard lineal convention. A tie isn&rsquo;t a loss, so it isn&rsquo;t treated like one.</p></li>
+        <li><h3>Ties: holder retained</h3><p>Standard lineal convention for the pre-overtime era &mdash; there hasn&rsquo;t been a tie since 1996. A tie wasn&rsquo;t a loss, so it wasn&rsquo;t treated like one.</p></li>
         <li><h3>Idle holder, belt carries</h3><p>A bye, a canceled season, a bowl opt-out &mdash; the belt just waits for the next game.</p></li>
         <li><h3>Computed, not researched</h3><p>Every reign is derived mechanically from the full game record &mdash; no editorial judgment per game.</p></li>
       </ul>
@@ -4686,8 +4686,8 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
       <p>The holder loses again, nothing changes &mdash; still the reigning worst team.</p>
     </div>
     <div class="rule-card">
-      <h3>Ties: holder retains</h3>
-      <p>Same convention as the real belt &mdash; a tie changes nothing either way.</p>
+      <h3>Ties: holder retained</h3>
+      <p>Same convention as the real belt &mdash; in the pre-overtime era a tie changed nothing either way (there hasn&rsquo;t been one since 1996).</p>
     </div>
     <div class="rule-card">
       <h3>Computed, not curated</h3>
@@ -10689,7 +10689,7 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
   <div class="sectionHead"><span class="tag">The line</span><h2>Every belt game, newest first</h2></div>
   <div class="wiList" id="wiList"><p class="emptyNote">Loading&hellip;</p></div>
   <div class="btnRow" style="margin-top:14px"><button type="button" class="btn ghost" id="wiMore" hidden>Show more</button></div>
-  <p class="noteBox">The rule is the real one: whoever beats the holder takes the belt, a tie stays with the holder, every game
+  <p class="noteBox">The rule is the real one: whoever beats the holder takes the belt, a tie (there were ties before overtime) stays with the holder, every game
     counts. A flip makes the loser the winner (a flipped tie hands the belt to the challenger); the replay then follows the
     new holder&rsquo;s actual schedule, game by game, on the same record the rest of the site is built from. Reality holds
     until your first flip, and &ldquo;history heals itself&rdquo; the first day both lines have the same holder &mdash; from
@@ -14164,7 +14164,7 @@ def generate_universe_pages(universes, lineage, colors, belt_games, out_dir):
     <a class="universeCard real" href="../lineage.html" style="--u:{team_color(colors, real_holder)[0]}">
       <span class="kicker">The real belt</span>
       <h2>{esc(real_holder)}</h2>
-      <p class="universeRule">Whoever beats the holder takes it; ties stay with the holder; bowls count; since Rutgers&ndash;Princeton, 1869.</p>
+      <p class="universeRule">Whoever beats the holder takes it; a pre-overtime tie stayed with the holder; bowls count; since Rutgers&ndash;Princeton, 1869.</p>
       <p class="universeMeta"><span>{len(real_reigns):,} reigns</span><span>{len(holders)} programs</span><span>the one that counts</span></p>
     </a>'''
     coverage = next(iter(universes.values())).get("coverage") or {}
@@ -15262,7 +15262,7 @@ def generate_llms_txt(lineage, belt_games):
 
 ## The rules
 
-Beat the holder and the belt is yours; every other result leaves it where it is. Ties stay with the holder, bowl and playoff games count, an idle holder (bye, canceled season) keeps the belt until its next game. Every reign is computed mechanically from the College Football Data API's game record. Full ruleset: {SITE_URL}/ruleset.html
+Beat the holder and the belt is yours; every other result leaves it where it is. Bowl and playoff games count, a pre-overtime tie stayed with the holder (none since 1996), an idle holder (bye, canceled season) keeps the belt until its next game. Every reign is computed mechanically from the College Football Data API's game record. Full ruleset: {SITE_URL}/ruleset.html
 
 ## The numbers
 

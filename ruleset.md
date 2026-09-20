@@ -29,9 +29,11 @@ situations.
 
 ## Ties
 
-Before overtime rules existed, college football had plenty of tied games.
-This site's rule: **the holder retains the belt on a tie.** A tie is not a
-loss, so it is not treated like one.
+Before overtime rules existed, college football had plenty of tied games;
+Division I adopted overtime in 1996 and there has not been a tie since, so
+this rule only ever applies to the historical record. The rule: **the
+holder retained the belt on a tie.** A tie was not a loss, so it was not
+treated like one.
 
 *Why this over the alternative: this is the standard lineal-title
 convention (see boxing's lineal titles, or the "you have to beat the man"
