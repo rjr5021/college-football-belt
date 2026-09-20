@@ -489,6 +489,49 @@ def run_once(client, next_game, lineage, rankings, cache, ptx):
     return False
 
 
+def _diagnose_espn_access(event_id):
+    """TEMPORARY (2026-09-19): site.api.espn.com/apis/site/v2/.../summary
+    is 403ing on every request from this GitHub Actions runner even with
+    a browser User-Agent, which points to an IP-range block rather than a
+    header check. Try a few other ESPN endpoints/header combos once, on
+    this same runner, so we know which (if any) actually works before
+    picking a fix -- remove this once that's settled."""
+    browser_headers = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/128.0.0.0 Safari/537.36"),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.espn.com/",
+    }
+    attempts = [
+        ("site.api summary, browser UA",
+         ESPN_SUMMARY_URL.format(event_id=event_id), browser_headers),
+        ("site.api summary, no headers",
+         ESPN_SUMMARY_URL.format(event_id=event_id), {}),
+        ("site.api scoreboard (no event id), browser UA",
+         "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard",
+         browser_headers),
+        ("sports.core status, browser UA",
+         f"https://sports.core.api.espn.com/v2/sports/football/leagues/college-football/"
+         f"events/{event_id}/competitions/{event_id}/status?lang=en&region=us",
+         browser_headers),
+        ("sports.core status, no headers",
+         f"https://sports.core.api.espn.com/v2/sports/football/leagues/college-football/"
+         f"events/{event_id}/competitions/{event_id}/status?lang=en&region=us", {}),
+    ]
+    print("[diag] --- ESPN endpoint access check (temporary) ---")
+    for label, url, headers in attempts:
+        try:
+            req = Request(url, headers=headers)
+            with urlopen(req, timeout=15) as resp:
+                body = resp.read(200)
+            print(f"[diag] {label}: HTTP {resp.status} OK, body starts: {body[:120]!r}")
+        except Exception as e:
+            print(f"[diag] {label}: FAILED -- {type(e).__name__}: {e}")
+    print("[diag] --- end ESPN endpoint access check ---")
+
+
 def main():
     missing = [k for k in REQUIRED_ENV if not os.environ.get(k)]
     if missing:
@@ -508,6 +551,8 @@ def main():
     if not next_game.get("id"):
         print("next_game.json has no ESPN event id -- can't check live status.")
         return
+
+    _diagnose_espn_access(next_game["id"])  # TEMPORARY -- see docstring above
 
     key = game_key(next_game)
     cache = load_cache()
