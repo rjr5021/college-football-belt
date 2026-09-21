@@ -41,6 +41,7 @@ except ImportError:  # pragma: no cover -- Python < 3.9
     ZoneInfo = None
 from urllib.parse import quote, urlencode
 
+from challenger import belt_story
 from supplemental_games import is_supplemental, sources_html as supplemental_sources_html
 
 OUT_DIR = "site"
@@ -127,6 +128,15 @@ SHOP_IMAGE_DIR = "merch"      # under site/: the copied thumbnails
 # the team pages are written, so each of those pages can link to its own
 # slice of the shop.
 SHOP_TEAMS = set()
+# The catalog itself, filled in main() at the same point as SHOP_TEAMS, so
+# holder_gear_card() can put the current holder's shirt on the pages people
+# actually read (2026-09-21: the shop page saw under 1% of arrivals in the
+# site's biggest traffic week, so the store only exists for whoever goes
+# looking for it).
+SHOP_PRODUCTS = []
+# game_id of the game that won the belt for the current holder -- the one
+# game page that carries the gear card (see render_page). Filled in main().
+CURRENT_BELT_GAME = [None]
 # records.html's per-cutoff-year boards, filled by generate_records_page()
 # and written to site/records-since.json by main() (one build-time
 # computation feeds both the page and its year picker).
@@ -312,6 +322,38 @@ def head_extras(rel=""):
     var filter = document.getElementById('teamSearch');
     if (qs && filter) { filter.value = qs; filter.dispatchEvent(new Event('input')); }
   });
+  /* Click measurement. GoatCounter's script counts pageviews and nothing
+     else, so until now there was no way to tell whether anyone who reached
+     the shop card went on to the store, or which social post an arrival came
+     from (the 2026-09-21 traffic baseline: shop.html got 29 of ~3,650
+     arrivals in the site's biggest week, click-throughs unknown). These are
+     sent as GoatCounter *events* (e:true), which are counted separately from
+     pageviews, so measuring this doesn't inflate the visit numbers.
+
+     Two kinds: an explicit data-gc="name" on a link we care about, and a
+     catch-all for any link leaving the site (recorded as outbound/<host>,
+     never the full URL). Nothing here reads or stores anything about the
+     visitor -- same no-cookie promise the privacy page makes. */
+  function beltEvent(name, title){
+    try {
+      if (window.goatcounter && window.goatcounter.count)
+        window.goatcounter.count({ path: name, title: title || name, event: true });
+    } catch (e) {}
+  }
+  window.beltEvent = beltEvent;
+  document.addEventListener('click', function(e){
+    var a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    var tag = a.getAttribute('data-gc');
+    if (tag) {
+      beltEvent(tag, (a.getAttribute('data-gc-title') || a.textContent || '').trim().slice(0, 90));
+      return;
+    }
+    var here = location.hostname.replace(/^www\./, ''), host;
+    try { host = new URL(a.href, location.href).hostname.replace(/^www\./, ''); } catch (e2) { return; }
+    if (!host || host === here) return;
+    beltEvent('outbound/' + host, host);
+  }, true);
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('__SW_PATH__').catch(function(){});
@@ -1731,7 +1773,25 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .shopTeamSection .sectionHead h2{ display:flex; align-items:center; gap:10px; }
 .shopTeamSection .sectionHead h2 a{ display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none; }
 .shopTeamSection .sectionHead h2 a:hover{ color:var(--brass-text); }
+/* challenger.py's computed facts: one line on the homepage's Up Next card, the set of them in the preview sidebar */
+.upNextStory{ margin:10px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft); border-left:2px solid var(--hairline-strong); padding-left:12px; }
+.oppStoryLine{ margin:10px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft); }
+.oppStoryLine:first-of-type{ margin-top:14px; }
+/* coach_belt_prose(): the computed paragraphs on a coach page */
+.coachProse{ font-size:15.5px; line-height:1.65; max-width:68ch; margin:14px 0 0; }
 @media (max-width:700px){ .shopFilterRow{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:10px 0; margin-inline:calc(-1 * var(--gutter)); padding-inline:var(--gutter); } .shopFilterRow::-webkit-scrollbar{ display:none; } .shopFilterRow .chipLink{ flex:0 0 auto; } .shopTeamFilter{ flex:0 0 auto; min-width:150px; } }
+/* holder_gear_card(): one shirt, on the pages people are already reading */
+.gearCard{ display:flex; align-items:center; gap:20px; margin-top:40px; padding:16px 20px 16px 16px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; text-decoration:none; color:inherit; transition:border-color .15s ease, transform .15s ease; }
+.gearCard:hover{ border-color:var(--brass); transform:translateY(-1px); }
+.gearCard img{ width:96px; height:128px; flex:0 0 auto; object-fit:contain; background:#e7e2d5; border-radius:8px; }
+.gearCardText{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.gearCardText strong{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:clamp(19px,2.1vw,24px); line-height:1.08; }
+.gearCardTag{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); }
+.gearCardItem{ font-size:14px; color:var(--ink-soft); }
+.gearCardPrice{ font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-soft); }
+.gearCardPrice::before{ content:" · "; }
+.gearCardLink{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--brass-text); }
+@media (max-width:560px){ .gearCard{ gap:14px; padding:14px; } .gearCard img{ width:74px; height:99px; } }
 .wiBar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin:18px 0 6px; }
 .wiFilter{ font-family:"IBM Plex Mono",monospace; font-size:12px; padding:10px 14px; border:1px solid var(--hairline-strong); border-radius:20px; background:var(--paper); color:var(--ink); min-width:220px; }
 .wiCount{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
@@ -2800,6 +2860,15 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
     src_bits.append(f'<a href="../data.html">This game in the downloadable dataset</a>')
     sources_html = f'<p class="sourcesLine"><span class="kicker">Sources</span> {" &middot; ".join(src_bits)}</p>'
 
+    # Just the one page: the game that won the belt for whoever holds it now.
+    # That is the page people land on in the hours after a change of hands
+    # (the recap, the result post's link), and the only one where the shirt
+    # is news rather than clutter -- 800-odd historical change-of-hands pages
+    # do not become storefronts.
+    gear_html = (holder_gear_card(new_holder, "../", "game-page",
+                                  f"{esc(new_holder)} won the belt here.", wrap=False)
+                 if str(g["game_id"]) == str(CURRENT_BELT_GAME[0]) else "")
+
     body = f'''<!doctype html>
 <html lang="en">
 <meta charset="UTF-8">
@@ -2849,6 +2918,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 {poll_note}
 {render_game_context(g, HOLDER_PROGRAMS)}
 {render_recap(g)}
+{gear_html}
 {render_line_score(g)}
 {render_team_stats(g)}
 {render_key_plays(g)}
@@ -3849,6 +3919,12 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
             watch_html = f'<div class="beltWatch">{rows}</div>'
         holder_chip = logo_chip(colors, holder, 40)
         opp_chip = logo_chip(colors, opponent, 40)
+        # one computed fact about this week's challenger (challenger.py) --
+        # the thing that makes a stranger's game worth a click. Different
+        # every week, because the opponent is.
+        story = belt_story(opponent, holder, lineage)
+        story_html = (f'<p class="upNextStory">{esc(story["ranked"][0])}</p>'
+                      if story.get("ranked") else "")
         up_next_html = f'''
       <aside class="upNext" aria-label="Next belt game">
         <div class="upNextHead"><span class="kicker">Belt on the line</span>{f'<span class="soonChip">{soon}</span>' if soon else ''}</div>
@@ -3859,6 +3935,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
           <div class="upNextWho"><span class="team">{esc(opponent)}</span><span class="when">{when_txt}</span>{f'<span class="when upNextWatch">{tv_html}</span>' if tv_html else ''}</div>
         </div>
         {odds_html}
+        {story_html}
         <div class="btnRow">
           <a class="btn grow" href="preview.html">Read the preview</a>
           <a class="btn ghost" href="preview.html#calendar">+ Calendar</a>
@@ -4054,6 +4131,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
   </section>
 
 {faq_html}
+{holder_gear_card(current["team"], "", "home", f"Wear the belt while {esc(current['team'])} has it.")}
 
   <div class="wrap">
     <div class="followStrip" id="alerts">
@@ -5766,6 +5844,11 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
         </div>'''
     opp_link = (f'<a class="moreLink" href="teams/{team_slug(opponent)}.html">Team page &amp; poster &rarr;</a>'
                 if opp_reigns else f'<a class="moreLink" href="all-games.html?q={quote(opponent)}">Every {esc(opponent)} belt game &rarr;</a>')
+    # the challenger's own history with the belt, computed (challenger.py).
+    # The three numbers above it say how much; these say what happened.
+    opp_story = belt_story(opponent, holder, lineage or {})
+    opp_story_html = ("".join(f'<p class="oppStoryLine">{esc(line)}</p>' for line in opp_story["lines"])
+                      if opp_story.get("lines") else "")
 
     kickoff_local = ""
     day_abbr = game_date.strftime("%a").upper()
@@ -5902,10 +5985,12 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
       <div class="sideCard">
         <span class="kicker">{esc(opponent)} &amp; the belt</span>
         {opp_stats}
+        {opp_story_html}
         {opp_link}
       </div>
     </aside>
   </div>
+{holder_gear_card(holder, "", "preview", f"{esc(holder)} has it going in.", wrap=False)}
 </main>
 
 {footer}
@@ -7969,7 +8054,51 @@ def shop_link(team, rel="../"):
     the shop is published."""
     if not SHOP_ENABLED or team not in SHOP_TEAMS:
         return ""
-    return f'\n    <a class="posterLink" href="{rel}shop.html#shop-{team_slug(team)}">Shop {esc(team)} gear &rarr;</a>'
+    return (f'\n    <a class="posterLink" href="{rel}shop.html#shop-{team_slug(team)}"'
+            f' data-gc="shop-open/team-page">Shop {esc(team)} gear &rarr;</a>')
+
+
+# Shirts before drinkware, wherever a group of products is shown.
+SHOP_ITEM_ORDER = {"Tee": 0, "Wrestling Tee": 1, "Pocket Tee": 2, "Koozie": 3}
+
+
+def holder_gear_card(team, rel="", placement="home", lede=None, wrap=True):
+    """One product card for `team`'s gear, for the pages people actually
+    read -- the homepage, the game preview, and the page of a game that
+    changed hands. The shop page itself is a destination nobody navigates
+    to on their own; this is the store showing up at the moment the shirt
+    means something (a new holder, a game about to be played for it).
+
+    Picks that school's first in-stock product in SHOP_ITEM_ORDER and
+    renders nothing at all when the catalog has no such product, the fetch
+    stage was skipped, or the shop is switched off -- so this is safe to
+    call unconditionally. `placement` only names the GoatCounter event, so
+    the dashboard can tell a homepage click from a preview one."""
+    if not SHOP_ENABLED or not team:
+        return ""
+    picks = [p for p in SHOP_PRODUCTS
+             if p.get("team") == team and p.get("available") and p.get("url") and p.get("img")]
+    if not picks:
+        return ""
+    p = sorted(picks, key=lambda x: (SHOP_ITEM_ORDER.get(x["item"], 9), x["item"]))[0]
+    img = p["img"] if p["img"].startswith("http") else f'{rel}{p["img"]}'
+    price = _price_label(p)
+    price_html = f'<span class="gearCardPrice">{esc(price)}</span>' if price else ""
+    lede = lede or f"{esc(team)} holds the belt."
+    card = f'''
+    <a class="gearCard" href="{esc(p["url"])}" target="_blank" rel="noopener"
+       data-gc="shop-click/{esc(placement)}" data-gc-title="{esc(p["name"])}">
+      <img src="{esc(img)}" alt="{esc(p["name"])}" loading="lazy" decoding="async" width="600" height="800">
+      <span class="gearCardText">
+        <span class="gearCardTag">From the shop</span>
+        <strong>{lede}</strong>
+        <span class="gearCardItem">{esc(team)} {esc(p["item"])}{price_html}</span>
+        <span class="gearCardLink">View &amp; buy on the store &rarr;</span>
+      </span>
+    </a>'''
+    # pages whose <main> is itself the .wrap (the preview, game pages) pass
+    # wrap=False so the card doesn't sit inside a second gutter
+    return f'\n  <div class="wrap">{card}\n  </div>' if wrap else card
 
 
 def copy_shop_thumbnails(products, out_dir):
@@ -8036,7 +8165,7 @@ def generate_shop_page(lineage=None, colors=None, products=None):
             (t for t in by_team if t),
             key=lambda t: (0 if t == current_holder else 1, -reign_counts.get(t, 0), t),
         )
-        item_order = {"Tee": 0, "Wrestling Tee": 1, "Pocket Tee": 2, "Koozie": 3}   # shirts first, drinkware last
+        item_order = SHOP_ITEM_ORDER   # shirts first, drinkware last
 
         def cards_for(group):
             cards = []
@@ -8053,7 +8182,8 @@ def generate_shop_page(lineage=None, colors=None, products=None):
                     desc = desc.split(". ")[0].rstrip(".") + "."
                 desc_html = f'\n      <p class="productCardDesc">{esc(desc)}</p>' if desc else ""
                 cards.append(f'''
-    <a class="{cls}" href="{esc(p["url"])}" target="_blank" rel="noopener">
+    <a class="{cls}" href="{esc(p["url"])}" target="_blank" rel="noopener"
+       data-gc="shop-click/shop-page" data-gc-title="{esc(p["name"])}">
       <img src="{esc(p["img"])}" alt="{esc(p["name"])}" loading="lazy" decoding="async" width="600" height="800">
       <h3>{esc(p["item"])}</h3>{desc_html}
       <span class="productCardPrice">{esc(price)}</span>
@@ -10634,9 +10764,187 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
   filter.addEventListener('input', function(){ renderList(true); });
   $('wiShare').addEventListener('click', function(){
     var u = current, text = 'What if? ' + (u.rejoined ? 'History heals itself after ' + dur(u.rejoined.day - flips[0].day) + '.' : name(u.reigns[u.reigns.length - 1].team) + ' would hold the College Football Belt today.') + ' ' + location.href;
-    var done = function(){ $('wiCopied').hidden = false; };
+    var done = function(){ $('wiCopied').textContent = 'Link copied.'; $('wiCopied').hidden = false; };
     if (navigator.share) navigator.share({ text: text }).catch(function(){});
     else if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, done);
+  });
+
+  /* ---- the picture of your universe ----
+     A link to this page is a link; what actually travels on Reddit is a
+     screenshot. So the page draws its own: the flips, what they changed,
+     and the site's name, at 1200x630 -- read the same whether it is posted
+     as a card or opened full size. Everything is drawn from the universe
+     already on screen, in the browser, with no upload and no server. */
+  var CARD_W = 1200, CARD_H = 630;
+
+  function flipText(){
+    // current.games holds objects; key() takes the raw array rows, so the
+    // key is rebuilt here from the fields rather than reusing it
+    var out = [], fl = flipKeySet();
+    current.games.forEach(function(g){
+      if (!fl[g.day + '.' + g.home + '.' + g.away]) return;
+      var other = function(t){ return t === g.home ? g.away : g.home; };
+      var line;
+      if (g.holder < 0) line = name(g.next) + ' takes the first belt instead';
+      else if (g.next === g.holder) line = name(g.holder) + ' defends against ' + name(other(g.holder));
+      else line = name(g.next) + ' takes it from ' + name(g.holder);
+      out.push({ when: fmtDay(g.day), what: line });
+    });
+    return out;
+  }
+
+  function cardFacts(){
+    var u = current, first = flips[0], end = u.rejoined ? u.rejoined.day : D.today;
+    var holderToday = u.rejoined ? D.holderNow : u.reigns[u.reigns.length - 1].team;
+    var alt = u.reigns.filter(function(r){ return r.start >= first.day && r.start <= end; }).length;
+    var real = 0; D.real.forEach(function(r){ if (r[0] >= first.day && r[0] <= end && r[6] !== r[7]) real++; });
+    var facts = [];
+    facts.push(['Holds the belt today', name(holderToday)
+      + (holderToday === D.holderNow ? ' — same as reality' : ' — in reality, ' + name(D.holderNow))]);
+    facts.push([u.rejoined ? 'History heals itself after' : 'Diverged for',
+      dur((u.rejoined ? u.rejoined.day : D.today) - first.day)]);
+    facts.push(['Changes of hands', alt + ' here vs ' + real + ' in reality']);
+    return facts;
+  }
+
+  function cardFeature(){
+    /* The one big thing this universe did, for the middle of the card:
+       teams that hold the belt here and never did in reality is the most
+       fun answer the page produces; failing that, the longest reign the
+       rewrite created. */
+    var u = current, first = flips[0], end = u.rejoined ? u.rejoined.day : D.today;
+    var altReigns = u.reigns.filter(function(r){ return r.start >= first.day && r.start <= end; });
+    var everReal = {}; D.real.forEach(function(r){ everReal[r[7]] = true; });
+    var ft = [];
+    altReigns.forEach(function(r){ if (!everReal[r.team] && ft.indexOf(r.team) < 0) ft.push(r.team); });
+    if (ft.length) {
+      return ['Hold the belt here, never did in reality',
+              ft.slice(0, 6).map(name).join(', ') + (ft.length > 6 ? ', and ' + (ft.length - 6) + ' more' : '')];
+    }
+    var longest = null;
+    altReigns.forEach(function(r){
+      var d = (r.end === null ? D.today : r.end) - r.start;
+      if (!longest || d > longest.d) longest = { r: r, d: d };
+    });
+    if (longest) {
+      return ['Longest reign in the rewrite',
+              name(longest.r.team) + ' — ' + dur(longest.d) + ', ' + longest.r.defenses
+                + ' defense' + (longest.r.defenses === 1 ? '' : 's')];
+    }
+    return null;
+  }
+
+  function wrapLines(ctx, text, maxWidth, maxLines){
+    var words = String(text).split(' '), lines = [], line = '';
+    for (var i = 0; i < words.length; i++) {
+      var probe = line ? line + ' ' + words[i] : words[i];
+      if (ctx.measureText(probe).width > maxWidth && line) { lines.push(line); line = words[i]; }
+      else line = probe;
+      if (lines.length === maxLines) return lines;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  function drawCard(){
+    var c = document.createElement('canvas');
+    c.width = CARD_W; c.height = CARD_H;
+    var x = c.getContext('2d');
+    var PAPER = '#e7e2d5', INK = '#211a12', SOFT = '#5b5140', BRASS = '#8a6a34';
+    var mono = '"IBM Plex Mono", ui-monospace, monospace';
+    var display = '"Big Shoulders Display", "Arial Narrow", sans-serif';
+
+    x.fillStyle = PAPER; x.fillRect(0, 0, CARD_W, CARD_H);
+    x.strokeStyle = 'rgba(33,26,18,.25)'; x.lineWidth = 2;
+    x.strokeRect(24, 24, CARD_W - 48, CARD_H - 48);
+
+    /* Fixed layout, because the card has to be legible as a thumbnail:
+       kicker, headline, the flips, then the three consequences side by
+       side along the bottom. Everything is measured and clipped to its
+       box rather than flowing, so a 40-flip universe and a one-flip one
+       produce the same shape. */
+    var pad = 64;
+    x.fillStyle = BRASS; x.font = '600 20px ' + mono;
+    x.fillText('THE COLLEGE FOOTBALL BELT  ·  WHAT IF?', pad, 108);
+
+    x.fillStyle = INK; x.font = '800 56px ' + display;
+    var heading = flips.length + (flips.length === 1 ? ' flip' : ' flips') + ', starting ' + fmtDay(flips[0].day);
+    x.fillText(heading, pad, 172);
+
+    var shownFlips = flipText(), maxRows = 3;
+    var extra = Math.max(0, shownFlips.length - maxRows);
+    var rowY = 222;
+    shownFlips.slice(0, maxRows).forEach(function(f){
+      x.fillStyle = SOFT; x.font = '500 21px ' + mono;
+      x.fillText(f.when, pad, rowY);
+      x.fillStyle = INK; x.font = '700 29px ' + display;
+      x.fillText(wrapLines(x, f.what, CARD_W - pad * 2 - 200, 1)[0] || '', pad + 200, rowY);
+      rowY += 38;
+    });
+    if (extra) {
+      x.fillStyle = SOFT; x.font = '500 21px ' + mono;
+      x.fillText('+ ' + extra + ' more ' + (extra === 1 ? 'flip' : 'flips'), pad, rowY);
+      rowY += 38;
+    }
+
+    // the one big thing, in the space between -- placed under whatever the
+    // flip block actually used, then clamped so the card keeps its shape
+    var feature = cardFeature();
+    if (feature) {
+      var fy = Math.min(Math.max(rowY + 44, 372), 396);
+      x.fillStyle = BRASS; x.font = '600 16px ' + mono;
+      x.fillText(feature[0].toUpperCase(), pad, fy);
+      x.fillStyle = INK; x.font = '800 40px ' + display;
+      x.fillText(wrapLines(x, feature[1], CARD_W - pad * 2, 1)[0] || '', pad, fy + 44);
+    }
+
+    // the three consequences, in columns along the bottom
+    var colW = (CARD_W - pad * 2 - 40) / 3, labelY = 478;
+    cardFacts().forEach(function(f, i){
+      var cx = pad + i * (colW + 20);
+      x.fillStyle = BRASS; x.font = '600 16px ' + mono;
+      x.fillText(f[0].toUpperCase(), cx, labelY);
+      x.fillStyle = INK; x.font = '700 26px ' + display;
+      wrapLines(x, f[1], colW, 2).forEach(function(l, j){ x.fillText(l, cx, labelY + 34 + j * 30); });
+    });
+
+    x.fillStyle = SOFT; x.font = '500 19px ' + mono;
+    x.fillText('collegefootballbelt.com/what-if.html', pad, CARD_H - 34);
+    return c;
+  }
+
+  function cardFileName(){
+    return 'what-if-' + dayIso(flips[0].day) + '.png';
+  }
+
+  $('wiImage').addEventListener('click', function(){
+    if (!flips.length) return;
+    var btn = this, label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Drawing…';
+    var fonts = (document.fonts && document.fonts.load)
+      ? Promise.all([document.fonts.load('800 58px "Big Shoulders Display"'),
+                     document.fonts.load('700 30px "Big Shoulders Display"'),
+                     document.fonts.load('500 22px "IBM Plex Mono"')]).catch(function(){})
+      : Promise.resolve();
+    fonts.then(function(){
+      var canvas = drawCard();
+      canvas.toBlob(function(blob){
+        btn.disabled = false; btn.textContent = label;
+        if (!blob) return;
+        var file = null;
+        try { file = new File([blob], cardFileName(), { type: 'image/png' }); } catch (e) {}
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file] }).catch(function(){});
+          return;
+        }
+        var url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url; a.download = cardFileName();
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 10000);
+        $('wiCopied').hidden = false;
+        $('wiCopied').textContent = 'Image saved.';
+      }, 'image/png');
+    });
   });
   $('wiRandom').addEventListener('click', function(){
     var pool = current.games.filter(function(g){ return g.holder >= 0 && !g.flipped && g.day >= D.today - 365 * 40; });
@@ -10684,6 +10992,7 @@ def generate_whatif_page(lineage, colors, belt_games, whatif_index):
   <section id="wiSummary" class="wiSummary" hidden></section>
   <div class="btnRow" id="wiShareRow" hidden>
     <button type="button" class="btn" id="wiShare">Share this universe</button>
+    <button type="button" class="btn ghost" id="wiImage">Save it as an image</button>
     <span class="emptyNote" id="wiCopied" hidden>Link copied.</span>
   </div>
   <div class="sectionHead"><span class="tag">The line</span><h2>Every belt game, newest first</h2></div>
@@ -14570,6 +14879,155 @@ def build_coach_index(coaches, lineage, belt_games):
     return index
 
 
+def coach_belt_prose(e, rank, total_coaches, today):
+    """The computed paragraphs on a coach page.
+
+    Search Console's first week (2026-09-21) showed the only non-brand
+    queries reaching this site were coach names -- Woody Hayes, Bobby
+    Dodd, Danny Ford, Kevin Sumlin -- landing on pages that were a stat
+    row and two lists. This is the same fix that worked on the game
+    pages: say, in sentences, what this particular coach did with the
+    belt, computed from his own games. Every page gets a different
+    paragraph because every coach's record is different; none of it is
+    written by hand or by a model.
+
+    Returns a string of <p> blocks (possibly empty for a coach with no
+    games, which build_coach_index never produces)."""
+    games = sorted(e["games"], key=lambda x: x["g"]["date"])
+    if not games:
+        return ""
+    takes = [x for x in games if x["role"] == "challenger" and x["won"]]
+    lost_as_holder = [x for x in games if x["role"] == "holder" and not x["tie"]
+                      and x["g"]["outcome"] == "changed"]
+    # the belt's own first game has no holder to have challenged -- it is
+    # where the belt came from, not a near miss
+    missed = [x for x in games if x["role"] == "challenger" and not x["won"]
+              and not x["tie"] and x["g"].get("holder")]
+    first_year, last_year = e["first"][:4], e["last"][:4]
+    schools = sorted(e["teams"], key=lambda t: min(e["teams"][t]))
+    n_games = len(games)
+
+    def margin(x):
+        h, a = (int(v) for v in x["g"]["score"].split("-"))
+        return abs(h - a)
+
+    def score_of(x):
+        """(winner's points, loser's points) for this coach's team's game."""
+        h, a = (int(v) for v in x["g"]["score"].split("-"))
+        mine = h if x["team"] == x["g"]["home"] else a
+        theirs = a if x["team"] == x["g"]["home"] else h
+        return mine, theirs
+
+    paras = []
+
+    # 1. the arc: when, where, how much
+    where = (f"at {team_link(schools[0], '../', HOLDER_PROGRAMS)}" if len(schools) == 1
+             else "at " + _join_words(team_link(t, "../", HOLDER_PROGRAMS) for t in schools))
+    span = (f"in {first_year}" if first_year == last_year
+            else f"between {first_year} and {last_year}")
+    if e["reigns"]:
+        rank_bit = ""
+        if rank and total_coaches > 4 and rank <= 25:
+            most = "the most" if rank == 1 else f"the {_ordinal_word(rank)}-most"
+            rank_bit = f", {most} of any head coach in the belt&rsquo;s history"
+        # "took the belt no times" is the belt's own first reign, which was
+        # established rather than won off anybody (Rutgers, 1869) -- and any
+        # later reign whose winning game has no coach on record
+        got_it = (f"He took the belt {_count_word(len(takes))} and held it for "
+                  if takes else "He held it for ")
+        paras.append(
+            f"{esc(e['name'])} was on a sideline for {n_games} belt {_plural(n_games, 'game')} {span}, "
+            f"{where}. {got_it}"
+            f"{e['days']:,} days across {_count_word(len(e['reigns']), 'reign')}{rank_bit}.")
+    else:
+        paras.append(
+            f"{esc(e['name'])} was on a sideline for {n_games} belt {_plural(n_games, 'game')} {span}, "
+            f"{where}, and never won the belt as a head coach.")
+
+    # 2. the wins: the first one, and the biggest
+    if takes:
+        first_take = takes[0]
+        mine, theirs = score_of(first_take)
+        opener = "He won it on" if len(takes) == 1 else "The first came on"
+        bits = [f"{opener} {fmt_date(first_take['g']['date'])}, "
+                f"{esc(first_take['team'])} {mine}&ndash;{theirs} over "
+                f'<a href="../games/{first_take["g"]["game_id"]}.html">{esc(first_take["g"]["holder"])}</a>.']
+        big = max(takes, key=margin)
+        if big is not first_take and margin(big) >= 14:
+            bm, bt = score_of(big)
+            bits.append(f"The most lopsided was {bm}&ndash;{bt} over "
+                        f'<a href="../games/{big["g"]["game_id"]}.html">{esc(big["g"]["holder"])}</a> '
+                        f"in {big['g']['date'][:4]}.")
+        paras.append(" ".join(bits))
+
+    # 3. the defenses, and how the reigns ended.
+    #    Two different counts live here and they must not be conflated: the
+    #    reign's own defense total (which can include games coached by
+    #    somebody else, since a reign is credited to whoever was in charge
+    #    the season it began) and the defenses this coach was actually on
+    #    the sideline for (holder_w). The reign total is attributed to the
+    #    reign, never to the man.
+    if e["reigns"]:
+        longest_i, longest_r = max(e["reigns"], key=lambda ir: reign_duration_days(ir[1], today))
+        days = reign_duration_days(longest_r, today)
+        reign_defenses = longest_r.get("defenses") or 0
+        bits = [f"His longest reign ran {days:,} {_plural(days, 'day')} with "
+                f'<a href="../reigns/{longest_i + 1}.html">{esc(longest_r["team"])}</a>, '
+                f"beginning {fmt_date(longest_r['start_date'])}"
+                + (f", and was defended {_count_word(reign_defenses)} along the way."
+                   if reign_defenses else ", and ended at the first challenge.")]
+        if e["holder_w"]:
+            bits.append(f"He coached {_count_word(e['holder_w'], 'successful defense')} himself.")
+        if lost_as_holder:
+            last_loss = lost_as_holder[-1]
+            mine, theirs = score_of(last_loss)
+            lead = ("The belt left his hands when " if len(lost_as_holder) == 1 else
+                    f"The belt left his hands {_count_word(len(lost_as_holder))}, last when ")
+            bits.append(
+                f"{lead}"
+                f'<a href="../games/{last_loss["g"]["game_id"]}.html">'
+                f'{esc(last_loss["g"]["new_holder"])} won {theirs}&ndash;{mine}</a> '
+                f"on {fmt_date(last_loss['g']['date'])}.")
+        else:
+            bits.append("The belt never changed hands in a game he coached.")
+        paras.append(" ".join(bits))
+
+    # 4. the near misses -- the whole point of the challenger side
+    if missed:
+        closest = min(missed, key=margin)
+        mine, theirs = score_of(closest)
+        paras.append(
+            f"He also coached {_count_word(len(missed), 'game')} with the belt on the other "
+            f"sideline and came away without it. The closest was {theirs}&ndash;{mine} to "
+            f'<a href="../games/{closest["g"]["game_id"]}.html">{esc(closest["g"]["holder"])}</a> '
+            f"on {fmt_date(closest['g']['date'])}.")
+
+    return "".join(f'<p class="editorial coachProse">{p}</p>' for p in paras)
+
+
+_COUNT_WORDS = {0: "no", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+                6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
+                11: "eleven", 12: "twelve"}
+
+_ORDINAL_WORDS = {1: "", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth",
+                  7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth"}
+
+
+def _count_word(n, noun="time"):
+    """"three reigns" / "17 games" -- words for small counts, digits above."""
+    word = _COUNT_WORDS.get(n, f"{n:,}")
+    if noun == "time" and n == 1:
+        return "once"
+    if noun == "time" and n == 2:
+        return "twice"
+    return f"{word} {_plural(n, noun)}"
+
+
+def _ordinal_word(n):
+    """"second" / "11th" -- for "the Nth-most of any coach"."""
+    return _ORDINAL_WORDS.get(n) or ordinal(n)
+
+
 def generate_coach_pages(coach_index, lineage, colors, out_dir):
     """coaches/<slug>.html + coaches/index.html. Returns slugs written."""
     if not coach_index:
@@ -14579,6 +15037,12 @@ def generate_coach_pages(coach_index, lineage, colors, out_dir):
     holders = {r["team"] for r in lineage["reigns"]}
     written = []
     ranked = sorted(coach_index.values(), key=lambda e: (-e["days"], -len(e["games"]), e["name"]))
+    # rank by days with the belt, for the "Nth-most of any head coach" line;
+    # coaches who never held it are unranked rather than ranked last
+    days_rank = {}
+    for i, e in enumerate(r for r in ranked if r["days"]):
+        days_rank[e["name"]] = i + 1
+    total_ranked = len(days_rank)
     for e in ranked:
         teams_sorted = sorted(e["teams"].items(), key=lambda kv: min(kv[1]))
         main_team = max(e["teams"].items(), key=lambda kv: len(kv[1]))[0]
@@ -14631,6 +15095,7 @@ def generate_coach_pages(coach_index, lineage, colors, out_dir):
     </div>
   </section>
   <p class="editorial" style="font-size:16px;margin-top:22px">Coached {team_bits} in seasons with a belt game. {n_games} belt {_plural(n_games, "game")} in all: {e["holder_w"] + e["holder_l"] + e["holder_t"]} with the belt in hand, {e["chal_w"] + e["chal_l"] + e["chal_t"]} trying to take it.</p>
+{coach_belt_prose(e, days_rank.get(e["name"]), total_ranked, today)}
 
   <div class="twoUp">
     <section>
@@ -15509,6 +15974,15 @@ def main():
         PAGES_ABSENT.add("shop.html")
     shop_products = load_shop_catalog(lineage) if SHOP_ENABLED else []   # fetch_shop_products.py (optional)
     SHOP_TEAMS.update(p["team"] for p in shop_products if p["team"])      # so team pages link to their shop slice
+    if SHOP_ENABLED:
+        # thumbnails are copied here rather than next to generate_shop_page()
+        # below because this is what sets each product's site-relative
+        # picture, and holder_gear_card() needs it before the homepage, the
+        # preview and the game pages are written
+        copy_shop_thumbnails(shop_products, os.path.join(OUT_DIR, SHOP_IMAGE_DIR))
+    SHOP_PRODUCTS[:] = shop_products                                      # holder_gear_card()
+    last_change = next((g for g in reversed(belt_games) if g["outcome"] == "changed"), None)
+    CURRENT_BELT_GAME[0] = last_change["game_id"] if last_change else None
     conf_membership = load_optional_json("conference_membership.json")   # build_alternate_lineages.py (schema 2)
     belt_venues = load_optional_json("belt_venues.json")
     if not conf_membership or conf_membership.get("note") or not conf_membership.get("seasons"):
@@ -15838,7 +16312,6 @@ def main():
         f.write(privacy_html)
 
     if SHOP_ENABLED:
-        copy_shop_thumbnails(shop_products, os.path.join(OUT_DIR, SHOP_IMAGE_DIR))
         shop_html = generate_shop_page(lineage, colors, shop_products)
         with open(os.path.join(OUT_DIR, "shop.html"), "w", encoding="utf-8") as f:
             f.write(shop_html)

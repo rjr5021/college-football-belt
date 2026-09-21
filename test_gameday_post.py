@@ -98,7 +98,11 @@ assert t.startswith("\U0001F3C8 GAME DAY — the belt is on the line\n\n")
 assert "No. 22 Michigan State at No. 3 Notre Dame\n7:30 PM ET on NBC · Notre Dame Stadium" in t
 assert "Notre Dame: 3rd defense of a 294-day reign. Michigan State takes the belt with a win." in t
 assert "The Lean: Notre Dame 42-17 · 97% to defend" in t
-assert t.endswith("\n\nhttps://collegefootballbelt.com/preview.html")
+# the link carries its campaign tag (share_links.py) so the game-day post's
+# clicks are separable from every other post's in GoatCounter; X wraps it in
+# t.co either way, so the tag is free against the 280 (asserted above)
+assert t.endswith("\n\nhttps://collegefootballbelt.com/preview.html"
+                  "?utm_source=x&utm_medium=social&utm_campaign=x-gameday")
 assert "forecast" not in t, "no room for the forecast next to the lean today"
 
 t = compose(rankings=None)

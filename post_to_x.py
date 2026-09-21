@@ -103,6 +103,9 @@ import sys
 import time
 from datetime import date, datetime, time as dtime, timezone
 
+from challenger import belt_story, short_line
+from share_links import tag as tag_link
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 BELT_DATA_DIR = os.path.join(HERE, "belt_data")
 LINEAGE_PATH = os.path.join(BELT_DATA_DIR, "lineage.json")
@@ -210,7 +213,7 @@ def compose_result_tweet(game, reign_number, defense_number):
     holder, opponent = game.get("holder"), game.get("opponent")
     new_holder = game["new_holder"]
     date = pretty_date(game["date"])
-    game_url = f"{SITE_URL}/games/{game['game_id']}.html"
+    game_url = tag_link(f"{SITE_URL}/games/{game['game_id']}.html", "result")
 
     if game["outcome"] == "established":
         winner_score = team_score(game, new_holder)
@@ -321,7 +324,7 @@ def post_results(client, lineage, cache):
 
 # ----------------------------------------------------------- preview post
 
-def compose_preview_tweet(next_game, ai_preview, belt_risk=None):
+def compose_preview_tweet(next_game, ai_preview, belt_risk=None, lineage=None):
     holder, opponent = next_game["team"], next_game["opponent"]
     date = pretty_date(next_game["date"])
     if next_game.get("neutral"):
@@ -352,9 +355,20 @@ def compose_preview_tweet(next_game, ai_preview, belt_risk=None):
             lines.append("")
             lines.append(f"{holder} is a {round(defend_prob * 100)}% favorite to defend it")
 
+    # One computed fact about the challenger (challenger.py) -- the reason
+    # to care about a game between two teams you don't follow. Added last
+    # and only if the post still fits X's 280, so it never costs the
+    # matchup, the prediction or the odds their place.
     lines.append("")
-    lines.append(f"{SITE_URL}/preview.html")
-    return "\n".join(lines)
+    lines.append(tag_link(f"{SITE_URL}/preview.html", "preview"))
+    text = "\n".join(lines)
+    if lineage:
+        fact = short_line(belt_story(opponent, holder, lineage))
+        if fact:
+            with_fact = "\n".join(lines[:-2] + ["", fact] + lines[-2:])
+            if tweet_length(with_fact) <= TWEET_MAX:
+                return with_fact
+    return text
 
 
 def preview_cache_key(next_game):
@@ -378,7 +392,7 @@ def post_preview(client, cache):
 
     ai_preview = load_json(AI_PREVIEW_PATH)
     belt_risk = load_json(BELT_RISK_PATH)
-    text = compose_preview_tweet(next_game, ai_preview, belt_risk)
+    text = compose_preview_tweet(next_game, ai_preview, belt_risk, load_json(LINEAGE_PATH))
 
     try:
         response = client.create_tweet(text=text)
@@ -419,7 +433,8 @@ def compose_poll(next_game):
     else:
         matchup = f"{holder} at {opponent}"
     text = (f"\U0001F3C8 Belt on the line: {matchup}, {date}.\n\n"
-            f"Your call \u2014 does the belt stay put?\n\n{SITE_URL}/preview.html")
+            f"Your call \u2014 does the belt stay put?\n\n"
+            + tag_link(f"{SITE_URL}/preview.html", "poll"))
     minutes = 24 * 60
     raw = next_game.get("raw_date")
     if raw:
@@ -661,7 +676,7 @@ def compose_gameday_tweet(next_game, lineage, ai_preview=None, belt_risk=None,
         venue = ", ".join(x for x in (next_game.get("venue_city"), next_game.get("venue_state")) if x)
 
     header = "\U0001F3C8 GAME DAY \u2014 the belt is on the line"
-    link = f"{SITE_URL}/preview.html"
+    link = tag_link(f"{SITE_URL}/preview.html", "gameday")
     long_stakes, short_stakes, tiny_stakes = stakes_lines(next_game, lineage, today)
     lean = lean_line(ai_preview, belt_risk, holder, opponent)
     forecast = weather_line(weather)

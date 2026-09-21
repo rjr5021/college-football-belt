@@ -80,6 +80,8 @@ import subprocess
 import sys
 import time
 from datetime import date, datetime, timedelta, timezone
+
+from share_links import tag as tag_link
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -347,7 +349,8 @@ def compose_kickoff_tweet(next_game, lineage, rankings, ptx):
         # in post_to_x.py ("a 294-day reign", not "a 294-days reign").
         stakes = f"\n\n{holder}: {nth} defense of a {days}-day reign."
     return (f"\U0001F3C8 KICKOFF — the belt is on the line\n\n"
-            f"{matchup} is underway.{stakes}\n\n{SITE_URL}/preview.html")
+            f"{matchup} is underway.{stakes}\n\n"
+            + tag_link(f"{SITE_URL}/preview.html", "live-kickoff"))
 
 
 def compose_score_tweet(next_game, holder, opponent, prev_h, prev_o,
@@ -367,7 +370,7 @@ def compose_score_tweet(next_game, holder, opponent, prev_h, prev_o,
 
     score_line = f"{holder_disp} {holder_score} – {opp_score} {opp_disp}"
     status = belt_status_line(holder_score, opp_score)
-    link = f"{SITE_URL}/preview.html"
+    link = tag_link(f"{SITE_URL}/preview.html", "live-score")
 
     candidates = []
     if play and play.get("text"):
@@ -385,7 +388,7 @@ def compose_halftime_tweet(next_game, holder, opponent, holder_score, opp_score,
     return (f"\U0001F3DF️ HALFTIME\n\n"
             f"{holder_disp} {holder_score} – {opp_score} {opp_disp}\n\n"
             f"{belt_status_line(holder_score, opp_score)}\n"
-            f"{SITE_URL}/preview.html")
+            + tag_link(f"{SITE_URL}/preview.html", "live-half"))
 
 
 def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx):
@@ -397,19 +400,21 @@ def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx)
         stakes = f"\n\n{ptx.ordinal(defenses)} defense of the reign." if defenses else ""
         return (f"\U0001F6E1️ FINAL — {holder} defends the belt\n\n"
                 f"{holder} {holder_score}, {opponent} {opp_score}.{stakes}\n\n"
-                f"{SITE_URL}/preview.html")
+                + tag_link(f"{SITE_URL}/preview.html", "live-final"))
     if opp_score > holder_score:
         reign_number = ptx.team_reign_number(lineage, opponent) + 1
         return (f"\U0001F3C6 THE BELT HAS CHANGED HANDS\n\n"
                 f"{opponent} defeats {holder} {opp_score}-{holder_score}.\n\n"
                 f"{opponent} is the {ptx.ordinal(reign_number)} holder of the "
-                f"College Football Belt.\n\n{SITE_URL}/preview.html")
+                f"College Football Belt.\n\n"
+                + tag_link(f"{SITE_URL}/preview.html", "live-final"))
     # An outright tie in modern FBS/FCS is essentially impossible (every
     # game goes to overtime), but this exists rather than silently
     # skipping the final post on the off chance of one.
     return (f"\U0001F6E1️ FINAL (TIE) — {holder} keeps the belt\n\n"
             f"{holder} {holder_score}, {opponent} {opp_score}. A tie doesn't "
-            f"change hands.\n\n{SITE_URL}/preview.html")
+            f"change hands.\n\n"
+            + tag_link(f"{SITE_URL}/preview.html", "live-final"))
 
 
 # ----------------------------------------------------------------- loop

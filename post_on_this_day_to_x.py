@@ -81,6 +81,8 @@ import os
 import sys
 from datetime import date, datetime, timedelta, timezone
 
+from share_links import tag as tag_link
+
 try:
     from zoneinfo import ZoneInfo
     EASTERN = ZoneInfo("America/New_York")
@@ -290,10 +292,11 @@ def compose_otd_reply(game, extra_count):
     """The link(s) that used to live in the main tweet body, now posted
     as a reply instead -- see this module's docstring. Kept separate from
     compose_otd_tweet() so the two are easy to reason about independently."""
-    game_url = f"{SITE_URL}/games/{game['game_id']}.html"
+    game_url = tag_link(f"{SITE_URL}/games/{game['game_id']}.html", "on-this-day")
     if extra_count:
         return (f"Full game: {game_url}\n\n"
-                f"Every belt game on this date across history: {SITE_URL}/on-this-day.html")
+                "Every belt game on this date across history: "
+                + tag_link(f"{SITE_URL}/on-this-day.html", "on-this-day"))
     return f"Full game: {game_url}"
 
 
