@@ -95,7 +95,7 @@ GOOGLE_SITE_VERIFICATION = ""
 # 3. Ad placement itself (which pages, how many, where on the page) is
 #    configured from the AdSense dashboard under Auto ads -- not here --
 #    once the script above is live on the site.
-ADSENSE_PUBLISHER_ID = "pub-4807241949046212"
+ADSENSE_PUBLISHER_ID = "pub-3317069252410560"
 
 # Merch shop (Fourthwall) -- a real store, live 2026-09. shop.html is built
 # from the store's own catalog rather than from a table kept here:
