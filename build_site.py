@@ -42,6 +42,7 @@ except ImportError:  # pragma: no cover -- Python < 3.9
 from urllib.parse import quote, urlencode
 
 from challenger import belt_story
+from classification import canonical_conference, classify
 from supplemental_games import is_supplemental, sources_html as supplemental_sources_html
 
 OUT_DIR = "site"
@@ -134,6 +135,25 @@ SHOP_TEAMS = set()
 # site's biggest traffic week, so the store only exists for whoever goes
 # looking for it).
 SHOP_PRODUCTS = []
+# Which companion belts the homepage row shows, in this order (Bob,
+# 2026-09-21). A fixed list rather than "whichever plays soonest": these
+# are the ones a reader recognizes, and a row whose membership changes
+# week to week reads as noise. Any of them with no scheduled game that
+# can move it is dropped from the row entirely, and the row disappears
+# when none of them have one.
+HOMEPAGE_BELTS = (
+    ("scope", "fbs"),
+    ("scope", "fcs"),
+    ("losers", None),
+    ("conference", "Big Ten"),
+    ("conference", "SEC"),
+    ("conference", "ACC"),
+    ("conference", "Big 12"),
+    # the four named ones are all FBS; this last slot is whichever FCS
+    # conference belt plays soonest, so the row always has one of the
+    # smaller leagues in it without naming a favourite
+    ("fcs-conference", None),
+)
 # game_id of the game that won the belt for the current holder -- the one
 # game page that carries the gear card (see render_page). Filled in main().
 CURRENT_BELT_GAME = [None]
@@ -1773,6 +1793,17 @@ a.recordRow:hover .recordMain{ text-decoration:underline; text-decoration-color:
 .shopTeamSection .sectionHead h2{ display:flex; align-items:center; gap:10px; }
 .shopTeamSection .sectionHead h2 a{ display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none; }
 .shopTeamSection .sectionHead h2 a:hover{ color:var(--brass-text); }
+/* next_game_for_belt(): what's next for the companion belts */
+.nextBeltGame{ margin:14px 0 0; font-size:14px; line-height:1.55; color:var(--ink-soft); border-left:2px solid var(--brass-line); padding-left:12px; }
+.nextBeltGame .kicker{ display:block; margin-bottom:2px; }
+.cardNext{ margin-top:6px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.02em; color:var(--brass-text); }
+.otherBelts{ margin-top:40px; }
+.otherBeltsGrid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px; margin-top:16px; }
+.otherBelt{ display:block; padding:14px 16px; background:var(--paper-2); border:1px solid var(--hairline); border-radius:10px; text-decoration:none; color:inherit; transition:border-color .15s ease; }
+.otherBelt:hover{ border-color:var(--brass); }
+.otherBeltName{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-text); }
+.otherBeltHolder{ display:block; font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:21px; line-height:1.15; margin:3px 0 2px; }
+.otherBeltNext{ font-size:13px; color:var(--ink-soft); }
 /* challenger.py's computed facts: one line on the homepage's Up Next card, the set of them in the preview sidebar */
 .upNextStory{ margin:10px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft); border-left:2px solid var(--hairline-strong); padding-left:12px; }
 .oppStoryLine{ margin:10px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft); }
@@ -3818,7 +3849,8 @@ LIVE_SCOREBOARD_JS = '''<script>
 </script>'''
 
 
-def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None, belt_risk=None, gameday=None):
+def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_games=None,
+                      belt_risk=None, gameday=None, other_belts=()):
     """The homepage (2026-09-16 redesign): the holder's colors paint a
     full-bleed hero with one call to action (the next belt game), the chain
     of custody is a real timeline, and the long tail of pages lives in an
@@ -3949,6 +3981,40 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         <p class="lede" style="margin:0">The holder&rsquo;s next game isn&rsquo;t on the schedule yet. The belt waits.</p>
         <div class="btnRow"><a class="btn ghost" href="seasons.html">Season by season</a><a class="btn ghost" href="my-team.html">My team&rsquo;s path</a></div>
       </aside>'''
+
+    # ---- the other belts, and what's next for each ----
+    # The companion belts have their own holders and their own next games;
+    # this is the only place on the site they appear together. Belts with
+    # no qualifying game left are still listed (the holder is the point);
+    # the "next" line is simply absent for them.
+    cards = []
+    for label, holder_name, href, nxt in other_belts:
+        # a belt with no game that can move it is left out entirely, per
+        # Bob (2026-09-21) -- this row is about what's in play, and the
+        # whole row disappears when none of them are
+        if not holder_name or not nxt:
+            continue
+        side = "vs." if (nxt["is_home"] or nxt.get("neutral")) else "at"
+        when = fmt_month_day(date.fromisoformat(nxt["date"]))
+        line = f'{side} {esc(nxt["opponent"])} &middot; {when}'
+        cards.append(f'''
+      <a class="otherBelt" href="{href}">
+        <span class="otherBeltName">{esc(label)}</span>
+        <span class="otherBeltHolder">{esc(holder_name)}</span>
+        <span class="otherBeltNext">{line}</span>
+      </a>''')
+    other_belts_html = ""
+    if cards:
+        other_belts_html = f'''
+  <div class="wrap otherBelts">
+    <div class="sectionHead">
+      <span class="tag">The other belts</span>
+      <h2>The other belts, and what&rsquo;s next for each</h2>
+      <a class="sectionLink" href="conferences/index.html">All conference belts &rarr;</a>
+    </div>
+    <div class="otherBeltsGrid">{"".join(cards)}
+    </div>
+  </div>'''
 
     # ---- chain of custody: the last CHAIN_LEN reigns as a timeline ----
     chain_reigns = reigns[-CHAIN_LEN:]
@@ -4131,6 +4197,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
   </section>
 
 {faq_html}
+{other_belts_html}
 {holder_gear_card(current["team"], "", "home", f"Wear the belt while {esc(current['team'])} has it.")}
 
   <div class="wrap">
@@ -4243,6 +4310,13 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
     reigns = lineage["reigns"]
     totals = lineage["totals"]
     current = reigns[-1]
+    # the FBS-only and FCS-only belts each have their own next game: the
+    # holder's next game against another team of that subdivision. The
+    # combined belt's own next game is the homepage's Up Next card, so
+    # this page doesn't repeat it.
+    next_game_html = ("" if scope == "combined" else next_belt_game_html(
+        next_game_for_belt(current["team"], subdivision_world(scope)),
+        current["team"], f"{scope.upper()}-only"))
     # the winning score comes from the scope's own belt games; only the
     # combined scope has games/<id>.html pages to link to (2026-09-19: the
     # fbs/fcs pages used to skip the index entirely and so said
@@ -4367,6 +4441,7 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
     {totals["reigns"]:,} of them, computed from {totals["belt_games"]:,} belt games across
     {totals["distinct_teams"]} programs. Type a team name to filter; tap a team to jump to the
     game that won it.{scope_intro}{retired_txt}</p>
+{next_game_html}
   {switcher_html}
 
   <div class="historyTop">
@@ -4646,6 +4721,15 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
         lede += (f" Lost {defenses} more game{'s' if defenses != 1 else ''} since &mdash; "
                  f"still the reigning worst team in the country.")
 
+    # what's next for this belt. The losers belt runs backwards: it moves
+    # when the holder WINS, so the opponent catches it with a loss --
+    # next_belt_game_html(losers=True) says that rather than the usual.
+    world = division1_world() if scope == "combined" else subdivision_world(scope)
+    next_game_html = next_belt_game_html(
+        next_game_for_belt(current["team"], world), current["team"],
+        "Losers Belt" if scope == "combined" else scope.upper() + " Losers Belt",
+        losers=True)
+
     durations = [(r, reign_duration_days(r, today)) for r in reigns]
     longest_reign, longest_days = max(durations, key=lambda p: p[1])
     most_defended = max(reigns, key=lambda r: r["defenses"])
@@ -4783,6 +4867,7 @@ def generate_losers_belt_page(lineage, scope="combined", available_scopes=("comb
     <div>
       <h2 style="font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:clamp(22px,3.4vw,30px);margin:0 0 8px">{esc(current["team"])} holds the Losers Belt.</h2>
       <p class="lede">{lede}</p>
+{next_game_html}
       <div class="heroFacts">
         <div><span class="n tabular">{days_held:,}</span><span class="l">Days Held</span></div>
         <div><span class="n tabular">{defenses}</span><span class="l">Losses Since</span></div>
@@ -5082,6 +5167,12 @@ def generate_conference_belt_page(lineage, slug):
     </div>'''
 
     change_index = build_change_game_index(lineage["belt_games"])
+    # what's next for THIS belt -- the holder's next game against another
+    # member. Nothing at all when the belt is retired or the schedule has
+    # no such game left (most conference belts, most weeks).
+    next_game_html = "" if retired else next_belt_game_html(
+        next_game_for_belt(current["team"], conference_world(conference)),
+        current["team"], conference, rel="../")
     rows_html = ""
     for i, r in enumerate(reigns, 1):
         is_current = r is current
@@ -5151,6 +5242,7 @@ def generate_conference_belt_page(lineage, slug):
     whoever beats the holder, exactly like the real belt, but only games between two
     {esc(conference)} members COUNT &mdash; and only for the seasons both sides were actually
     in {esc(conference)} at the time. {lede}</p>
+{next_game_html}
 
   <div class="historyTop">
     <div class="historyStats">
@@ -5262,11 +5354,20 @@ def generate_conferences_index_page(conference_lineages):
             sub = f"retired with the belt in {closed[:4]} &middot; {totals['reigns']} reigns all-time"
         else:
             sub = f"last played as a conference in {last[:4]} &middot; {totals['reigns']} reigns all-time"
+        # the next game that can move this particular belt, so the index
+        # answers "which conference belts are actually in play this week"
+        nxt = next_game_for_belt(current["team"], conference_world(conference)) if active else None
+        if nxt:
+            side = "vs." if (nxt["is_home"] or nxt.get("neutral")) else "at"
+            nxt_html = (f'<div class="cardNext">Next: {side} {esc(nxt["opponent"])} '
+                        f'&middot; {fmt_month_day(date.fromisoformat(nxt["date"]))}</div>')
+        else:
+            nxt_html = ""
         return f'''
     <a class="record-card" href="{slug}.html" style="display:block;text-decoration:none;color:inherit">
       <div class="l">{esc(conference)}</div>
       <div class="v">{esc(current["team"])}</div>
-      <div class="sub">{sub}</div>
+      <div class="sub">{sub}</div>{nxt_html}
     </a>'''
 
     def section_html(classification):
@@ -8056,6 +8157,88 @@ def shop_link(team, rel="../"):
         return ""
     return (f'\n    <a class="posterLink" href="{rel}shop.html#shop-{team_slug(team)}"'
             f' data-gc="shop-open/team-page">Shop {esc(team)} gear &rarr;</a>')
+
+
+# Every scheduled-but-unplayed game in the fetched window
+# (build_lineage.unplayed_games -> belt_data/upcoming_all.json), filled in
+# main(). Empty when that file is absent, which is what makes every
+# next_game_for_belt() call below degrade to silence rather than an error.
+UPCOMING_ALL = []
+
+
+def next_game_for_belt(holder, counts):
+    """The next scheduled game that could move a companion belt.
+
+    The championship belt's "next game" is any game its holder plays;
+    every other belt is restricted to a smaller world, so its next game is
+    its holder's next game *inside that world* -- another ACC team for the
+    ACC belt, another FBS team for the FBS belt. `counts(game, side)`
+    answers "is this team, in this game, part of the belt's world", and a
+    game qualifies only when both sides are.
+
+    Returns the game dict (with an added "opponent" and "is_home"), or
+    None -- no holder, no data file, or nothing left on the schedule that
+    can move this particular belt. Callers render nothing for None, which
+    is the state most conference belts are in most weeks."""
+    if not holder or not UPCOMING_ALL:
+        return None
+    for g in UPCOMING_ALL:                       # already in date order
+        if holder == g["home"]:
+            opponent, is_home = g["away"], True
+        elif holder == g["away"]:
+            opponent, is_home = g["home"], False
+        else:
+            continue
+        if counts(g, "home") and counts(g, "away"):
+            return {**g, "opponent": opponent, "is_home": is_home}
+    return None
+
+
+def conference_world(conference):
+    """counts() for one conference belt: both teams labeled that league,
+    in the season the game is played. CFBD's labels are season-accurate,
+    so a team that moved leagues this year is counted where it is now."""
+    target = canonical_conference(conference)
+
+    def counts(g, side):
+        return canonical_conference(g.get(f"{side}_conference")) == target
+    return counts
+
+
+def subdivision_world(subdivision):
+    """counts() for the FBS-only or FCS-only belt: both teams in a
+    conference of that subdivision that season."""
+    def counts(g, side):
+        label = canonical_conference(g.get(f"{side}_conference"))
+        return classify(label, g.get("season")) == subdivision
+    return counts
+
+
+def division1_world():
+    """counts() for the losers belt, which is Division I either way (both
+    subdivisions count, nothing below them does)."""
+    def counts(g, side):
+        label = canonical_conference(g.get(f"{side}_conference"))
+        return classify(label, g.get("season")) in ("fbs", "fcs")
+    return counts
+
+
+def next_belt_game_html(game, holder, label, rel="", losers=False):
+    """The one-line "what's next for this belt" note. Nothing at all when
+    there is no qualifying game -- a reader seeing no line is right that
+    nothing on the schedule can move this belt."""
+    if not game:
+        return ""
+    side = "vs." if (game["is_home"] or game.get("neutral")) else "at"
+    when = fmt_date(game["date"])
+    watch = game.get("watch")
+    bits = [f'{esc(holder)} {side} {esc(game["opponent"])}', when]
+    if watch:
+        bits.append(esc(watch))
+    stake = (f'{esc(game["opponent"])} catches it with a loss'
+             if losers else f'{esc(game["opponent"])} takes it with a win')
+    return (f'<p class="nextBeltGame"><span class="kicker">Next {esc(label)} game</span>'
+            f'{" &middot; ".join(bits)} &mdash; {stake}.</p>')
 
 
 # Shirts before drinkware, wherever a group of products is shown (the shop
@@ -15990,6 +16173,9 @@ def main():
         PAGES_ABSENT.add("coaches/index.html")
     if not SHOP_ENABLED:
         PAGES_ABSENT.add("shop.html")
+    # every unplayed game in the fetched window (build_lineage.unplayed_games)
+    # -- what every companion belt's "next game" line is computed from
+    UPCOMING_ALL[:] = (load_optional_json("upcoming_all.json") or {}).get("games") or []
     shop_products = load_shop_catalog(lineage) if SHOP_ENABLED else []   # fetch_shop_products.py (optional)
     SHOP_TEAMS.update(p["team"] for p in shop_products if p["team"])      # so team pages link to their shop slice
     if SHOP_ENABLED:
@@ -16054,7 +16240,54 @@ def main():
             f.write(html_out)
         written += 1
 
-    homepage_html = generate_homepage(lineage, colors, belt_games, next_game, upcoming_games, belt_risk, gameday)
+    # the companion belts for the homepage row: FBS-only, FCS-only, the
+    # losers belt, and the conference belt of the holder's own conference
+    # if it has one -- each with its own next game (next_game_for_belt)
+    other_belts = []
+    for kind, name in HOMEPAGE_BELTS:
+        if kind == "losers":
+            ll = losers_lineages.get("combined")
+            if not (ll and ll.get("reigns")):
+                continue
+            h = ll["reigns"][-1]["team"]
+            other_belts.append(("Losers Belt", h, "losers-belt.html",
+                                next_game_for_belt(h, division1_world())))
+        elif kind == "scope":
+            sl = championship_lineages.get(name)
+            if not (sl and sl.get("reigns")):
+                continue
+            h = sl["reigns"][-1]["team"]
+            other_belts.append((f"{name.upper()}-only belt", h,
+                                CHAMPIONSHIP_LINEAGE_FILENAMES.get(name, "lineage.html"),
+                                next_game_for_belt(h, subdivision_world(name))))
+        elif kind == "fcs-conference":
+            # whichever FCS conference belt has a game soonest
+            soonest = None
+            for slug, cl in (conference_lineages or {}).items():
+                if not cl.get("reigns") or cl.get("retired"):
+                    continue
+                if (cl.get("classification") or "fbs") != "fcs":
+                    continue
+                h = cl["reigns"][-1]["team"]
+                nxt = next_game_for_belt(h, conference_world(cl["conference"]))
+                if nxt and (soonest is None or nxt["date"] < soonest[0]):
+                    soonest = (nxt["date"], f"{cl['conference']} belt", h,
+                               f"conferences/{slug}.html", nxt)
+            if soonest:
+                other_belts.append(soonest[1:])
+        else:                                   # a named conference belt
+            hit = next(((slug, cl) for slug, cl in (conference_lineages or {}).items()
+                        if cl.get("conference") == name and cl.get("reigns")
+                        and not cl.get("retired")), None)
+            if not hit:
+                continue
+            slug, cl = hit
+            h = cl["reigns"][-1]["team"]
+            other_belts.append((f"{name} belt", h, f"conferences/{slug}.html",
+                                next_game_for_belt(h, conference_world(name))))
+
+    homepage_html = generate_homepage(lineage, colors, belt_games, next_game, upcoming_games,
+                                      belt_risk, gameday, other_belts)
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(homepage_html)
 

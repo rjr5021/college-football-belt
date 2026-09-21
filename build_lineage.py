@@ -576,6 +576,64 @@ def find_upcoming_games(raw, holder, count=3, venue_tz=None, venue_info=None):
     return upcoming
 
 
+def unplayed_games(raw, venue_tz=None, venue_info=None):
+    """Every scheduled-but-unplayed game in the fetched window, with the
+    conference labels needed to tell which belt each one could move.
+
+    find_upcoming_games() above answers "what's next for the championship
+    holder". The companion belts each have a holder of their own, and
+    their next game is the holder's next game *against another member of
+    that world* -- another ACC team for the ACC belt, another FBS team for
+    the FBS belt. That's a different question per belt, and build_site.py
+    is where every belt's current holder is already known, so this just
+    hands it the raw material: no extra API call, the same `raw` season
+    data this run already fetched, minus the games that have been played.
+
+    Conference labels are CFBD's own, season-accurate, which is what
+    classification.py needs -- a team that changed leagues this year is
+    labeled with the league it is in now."""
+    venue_tz = venue_tz or {}
+    venue_info = venue_info or {}
+    out = []
+    for g in raw:
+        hp = pick(g, "home_points", "homePoints")
+        ap = pick(g, "away_points", "awayPoints")
+        if hp is not None and ap is not None:
+            continue                      # already played
+        home = pick(g, "home_team", "homeTeam")
+        away = pick(g, "away_team", "awayTeam")
+        raw_date = pick(g, "start_date", "startDate")
+        if not (home and away and raw_date):
+            continue
+        venue_id = pick(g, "venue_id", "venueId")
+        date, _ = local_date(raw_date, venue_tz.get(venue_id))
+        if not date:
+            continue
+        v = venue_info.get(venue_id) or {}
+        probe = _probe(g)
+        out.append({
+            "id": pick(g, "id"),
+            "date": date,
+            "raw_date": raw_date,
+            "start_time_tbd": bool(pick(g, "start_time_tbd", "startTimeTBD", default=False)),
+            "season": pick(g, "season"),
+            "week": pick(g, "week"),
+            "season_type": pick(g, "season_type", "seasonType", default="regular"),
+            "home": home,
+            "away": away,
+            "neutral": bool(pick(g, "neutral_site", "neutralSite", default=False)),
+            "home_conference": probe["home_conference"],
+            "away_conference": probe["away_conference"],
+            "home_division": probe["home_division"],
+            "away_division": probe["away_division"],
+            "venue_name": v.get("name"),
+            "venue_city": v.get("city"),
+            "venue_state": v.get("state"),
+        })
+    out.sort(key=lambda c: (c["date"], c["raw_date"]))
+    return out
+
+
 def fetch_media(year, api_key, retries=3):
     """Where to watch (2026-09-18): GET /games/media?year=N, one call for
     the whole season, as {game_id: {"tv": ["NBC"], "web": ["Peacock"],
@@ -1060,6 +1118,13 @@ def main():
         json.dump(next_game, f, indent=2)
     with open(os.path.join(OUT_DIR, "upcoming_games.json"), "w") as f:
         json.dump(upcoming_games, f, indent=2)
+    # the same window, every team -- what the companion belts' own "next
+    # game" lines are computed from (build_site.next_belt_game)
+    all_upcoming = unplayed_games(raw, venue_tz=venue_tz, venue_info=venue_info)
+    attach_media(all_upcoming, media)
+    with open(os.path.join(OUT_DIR, "upcoming_all.json"), "w") as f:
+        json.dump({"generated": today, "games": all_upcoming}, f)
+    print(f"  {len(all_upcoming)} scheduled game(s) still unplayed -> belt_data/upcoming_all.json")
     if next_game:
         side = "vs." if next_game["is_home"] else "at"
         on_tv = f", on {next_game['watch']}" if next_game.get("watch") else ""
