@@ -280,6 +280,45 @@ def game_meta(g, total):
     return title, desc
 
 
+HTML_TAG_RE = re.compile(r"<html[^>]*>", re.I)
+
+
+def wrap_head_body(doc):
+    """Give the page an explicit <head> and <body>.
+
+    HTML5 lets both be omitted -- every browser and Googlebot build them
+    from the content, which is why the site got away without them for a
+    week and why Google indexed 1,934 pages regardless. Bing's URL
+    Inspection is stricter: on 2026-09-21 it reported "Title tag missing"
+    and "Meta Description tag missing" for the homepage, both of which
+    are demonstrably there, three lines into the file. The only structural
+    thing the page lacked was the elements themselves.
+
+    build_site.py's templates each start `<!doctype html>` / `<html
+    lang="en">` / `<meta charset>` / `<title>`, and every one of them puts
+    the site header (`<header class="siteHead">`) at the top of the visible
+    page, so that tag is the head/body boundary -- verified across all
+    2,948 content pages: nothing between `<html>` and `<header` is anything
+    but meta/title/link/style/script/comment. A page where that boundary
+    can't be found (the legacy redirect stubs, which this pass skips
+    anyway) is left exactly as it is rather than guessed at.
+    """
+    if re.search(r"<head[\s>]", doc, re.I):
+        return doc                       # already has one; nothing to do
+    m = HTML_TAG_RE.search(doc)
+    if not m:
+        return doc                       # no <html> to hang a <head> off
+    cut = doc.find("<header")
+    if cut == -1:
+        return doc                       # no reliable boundary -- leave it alone
+    head = doc[m.end():cut]
+    if "</head>" in head or "<body" in head.lower():
+        return doc                       # partially wrapped already; don't double up
+    tail = "\n</body>\n</html>\n"
+    return (doc[:m.end()] + "\n<head>" + head.rstrip()
+            + "\n</head>\n<body>\n" + doc[cut:].rstrip() + tail)
+
+
 def enhance_head(doc, rel_path, extra_head=(), title=None, desc=None):
     head_end = doc.find("<header")
     if head_end == -1:
@@ -483,7 +522,9 @@ def process_pages(lineage):
             elif rel in STATIC_PAGES:
                 title, desc = STATIC_PAGES[rel]
 
-            new = enhance_head(doc, rel, extra, title, desc)
+            # the head inserts first, then the wrap, so anything inserted
+            # lands inside the <head> this adds rather than after it
+            new = wrap_head_body(enhance_head(doc, rel, extra, title, desc))
             if new != doc:
                 with open(path, "w", encoding="utf-8") as f:
                     f.write(new)
