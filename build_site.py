@@ -8058,8 +8058,13 @@ def shop_link(team, rel="../"):
             f' data-gc="shop-open/team-page">Shop {esc(team)} gear &rarr;</a>')
 
 
-# Shirts before drinkware, wherever a group of products is shown.
+# Shirts before drinkware, wherever a group of products is shown (the shop
+# page's own grids).
 SHOP_ITEM_ORDER = {"Tee": 0, "Wrestling Tee": 1, "Pocket Tee": 2, "Koozie": 3}
+# What the single "From the shop" card picks, which is a different question:
+# the wrestling tee is the one that looks like a title belt, so it is the one
+# that belongs next to a sentence about holding the belt (Bob, 2026-09-21).
+GEAR_CARD_ORDER = {"Wrestling Tee": 0, "Tee": 1, "Pocket Tee": 2, "Koozie": 3}
 
 
 def holder_gear_card(team, rel="", placement="home", lede=None, wrap=True):
@@ -8069,18 +8074,19 @@ def holder_gear_card(team, rel="", placement="home", lede=None, wrap=True):
     to on their own; this is the store showing up at the moment the shirt
     means something (a new holder, a game about to be played for it).
 
-    Picks that school's first in-stock product in SHOP_ITEM_ORDER and
-    renders nothing at all when the catalog has no such product, the fetch
-    stage was skipped, or the shop is switched off -- so this is safe to
-    call unconditionally. `placement` only names the GoatCounter event, so
-    the dashboard can tell a homepage click from a preview one."""
+    Picks that school's first in-stock product in GEAR_CARD_ORDER (the
+    wrestling tee first) and renders nothing at all when the catalog has no
+    such product, the fetch stage was skipped, or the shop is switched off
+    -- so this is safe to call unconditionally. `placement` only names the
+    GoatCounter event, so the dashboard can tell a homepage click from a
+    preview one."""
     if not SHOP_ENABLED or not team:
         return ""
     picks = [p for p in SHOP_PRODUCTS
              if p.get("team") == team and p.get("available") and p.get("url") and p.get("img")]
     if not picks:
         return ""
-    p = sorted(picks, key=lambda x: (SHOP_ITEM_ORDER.get(x["item"], 9), x["item"]))[0]
+    p = sorted(picks, key=lambda x: (GEAR_CARD_ORDER.get(x["item"], 9), x["item"]))[0]
     img = p["img"] if p["img"].startswith("http") else f'{rel}{p["img"]}'
     price = _price_label(p)
     price_html = f'<span class="gearCardPrice">{esc(price)}</span>' if price else ""
