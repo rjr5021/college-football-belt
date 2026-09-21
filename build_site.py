@@ -14971,26 +14971,38 @@ def coach_belt_prose(e, rank, total_coaches, today):
         longest_i, longest_r = max(e["reigns"], key=lambda ir: reign_duration_days(ir[1], today))
         days = reign_duration_days(longest_r, today)
         reign_defenses = longest_r.get("defenses") or 0
-        bits = [f"His longest reign ran {days:,} {_plural(days, 'day')} with "
-                f'<a href="../reigns/{longest_i + 1}.html">{esc(longest_r["team"])}</a>, '
-                f"beginning {fmt_date(longest_r['start_date'])}"
-                + (f", and was defended {_count_word(reign_defenses)} along the way."
-                   if reign_defenses else ", and ended at the first challenge.")]
+        paras.append(
+            f"His longest reign ran {days:,} {_plural(days, 'day')} with "
+            f'<a href="../reigns/{longest_i + 1}.html">{esc(longest_r["team"])}</a>, '
+            f"beginning {fmt_date(longest_r['start_date'])}"
+            + (f", and was defended {_count_word(reign_defenses)} along the way."
+               if reign_defenses else ", and ended at the first challenge."))
+
+        # Career totals go in their own sentence, explicitly framed as
+        # career totals. Run together with the reign above they read as if
+        # they described it, which put a date before the reign's own start
+        # on Walter Camp's page (he coached Yale through an earlier reign
+        # somebody else began).
+        career = []
         if e["holder_w"]:
-            bits.append(f"He coached {_count_word(e['holder_w'], 'successful defense')} himself.")
+            career.append(f"Across his career he coached "
+                          f"{_count_word(e['holder_w'], 'successful defense')}")
         if lost_as_holder:
             last_loss = lost_as_holder[-1]
             mine, theirs = score_of(last_loss)
-            lead = ("The belt left his hands when " if len(lost_as_holder) == 1 else
-                    f"The belt left his hands {_count_word(len(lost_as_holder))}, last when ")
-            bits.append(
-                f"{lead}"
-                f'<a href="../games/{last_loss["g"]["game_id"]}.html">'
-                f'{esc(last_loss["g"]["new_holder"])} won {theirs}&ndash;{mine}</a> '
-                f"on {fmt_date(last_loss['g']['date'])}.")
+            changed = (f"the belt changed hands under him "
+                       f"{_count_word(len(lost_as_holder))}"
+                       + (", last " if len(lost_as_holder) > 1 else ", "))
+            career.append(
+                (changed if career else changed[0].upper() + changed[1:])
+                + f'when <a href="../games/{last_loss["g"]["game_id"]}.html">'
+                  f'{esc(last_loss["g"]["new_holder"])} won {theirs}&ndash;{mine}</a> '
+                  f"on {fmt_date(last_loss['g']['date'])}")
+        elif career:
+            career.append("never lost the belt in a game he coached")
         else:
-            bits.append("The belt never changed hands in a game he coached.")
-        paras.append(" ".join(bits))
+            career.append("The belt never changed hands in a game he coached")
+        paras.append((career[0] if len(career) == 1 else career[0] + ", and " + career[1]) + ".")
 
     # 4. the near misses -- the whole point of the challenger side
     if missed:
