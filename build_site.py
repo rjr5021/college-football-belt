@@ -42,7 +42,7 @@ except ImportError:  # pragma: no cover -- Python < 3.9
 from urllib.parse import quote, urlencode
 
 from challenger import belt_story
-from classification import canonical_conference, classify
+from classification import canonical_conference, classify, division1_game
 from supplemental_games import is_supplemental, sources_html as supplemental_sources_html
 
 OUT_DIR = "site"
@@ -3997,8 +3997,10 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         side = "vs." if (nxt["is_home"] or nxt.get("neutral")) else "at"
         when = fmt_month_day(date.fromisoformat(nxt["date"]))
         line = f'{side} {esc(nxt["opponent"])} &middot; {when}'
+        # measured like the shop card is: if nobody clicks this row, that
+        # is worth knowing rather than guessing at (the 2026-09-21 baseline)
         cards.append(f'''
-      <a class="otherBelt" href="{href}">
+      <a class="otherBelt" href="{href}" data-gc="belt-row/{esc(label.lower().replace(" ", "-"))}">
         <span class="otherBeltName">{esc(label)}</span>
         <span class="otherBeltHolder">{esc(holder_name)}</span>
         <span class="otherBeltNext">{line}</span>
@@ -8646,6 +8648,49 @@ def generate_compare_page(lineage, colors, belt_games):
 '''
 
 
+def belt_reach(holder, games):
+    """Every team the belt could possibly reach on the schedule that's
+    left, and the shortest chain of games that would get it there.
+
+    The one-hop version this replaces answered "does your team play the
+    holder, or play somebody who plays the holder" -- which said no to
+    Rutgers in September 2026 even though Purdue plays Notre Dame, Penn
+    State plays Purdue, and Rutgers plays Penn State. Three links, and the
+    honest answer is yes.
+
+    The walk is exact rather than heuristic. Go through the remaining
+    games in date order holding a set of teams that could have the belt by
+    then; when one of them plays somebody new, that somebody joins the set
+    (there is a world where they win). The set only ever grows, so one
+    pass gives every team the earliest chain that reaches it. It also
+    fixes something the one-hop version got wrong: it never checked
+    whether the middle team still had the belt when your game came round.
+    Here that's automatic, because the chain IS the belt's path.
+
+    Only Division I games count, the same rule the real belt runs on.
+    Returns {team: [ {date, winner, loser, is_home, id}, ... ]} with the
+    holder mapped to an empty chain."""
+    reach = {holder: []}
+    for g in games:                       # already in date order
+        if not division1_game(g):
+            continue
+        home, away = g.get("home"), g.get("away")
+        if not home or not away:
+            continue
+        in_home, in_away = home in reach, away in reach
+        if in_home == in_away:            # both already reachable, or neither
+            continue
+        held, newcomer = (home, away) if in_home else (away, home)
+        reach[newcomer] = reach[held] + [{
+            "date": g["date"],
+            "winner": newcomer,
+            "loser": held,
+            "is_home": newcomer == home,
+            "id": g.get("id"),
+        }]
+    return reach
+
+
 def generate_my_team_page(team_paths, colors):
     """"My team and the path to the belt" -- wishlist item #1, 2026-09-16,
     Bob: "Let me pick a team once (localStorage, no account needed) and
@@ -8664,6 +8709,26 @@ def generate_my_team_page(team_paths, colors):
     pattern as every other optional feature on this site."""
     holder = team_paths["holder"]
     teams = team_paths["teams"]
+    # The full chain for every team the belt can still reach (belt_reach),
+    # which supersedes the one-hop "indirect" list this payload used to
+    # carry -- so indirect is dropped here rather than shipped unused.
+    #
+    # Each step is [date, winner, is_home] and nothing more: the loser of
+    # step 1 is the holder and of every later step the previous winner, so
+    # naming it again in every step would be redundant. That matters --
+    # written out in full, with indirect still in, the payload measured
+    # about 100 KB against today's 28 KB, on a site where 85% of readers
+    # are on a phone. This encoding keeps it at roughly what it is now.
+    chains = belt_reach(holder, UPCOMING_ALL)
+    teams = {
+        name: {
+            "is_holder": bool(entry.get("is_holder")),
+            "direct": entry.get("direct") or [],
+            "chain": [[st["date"], st["winner"], 1 if st["is_home"] else 0]
+                      for st in (chains.get(name) or [])],
+        }
+        for name, entry in teams.items()
+    }
     teams_sorted = sorted(teams.keys())
 
     logos = {t: team_logo(colors, t) for t in teams_sorted if team_logo(colors, t)}
@@ -8760,14 +8825,29 @@ def generate_my_team_page(team_paths, colors):
           html += cardHtml('Your shot', 'You play ' + data.holder + (g.is_home ? ' at home' : ' on the road') +
             ' on ' + fmtDate(g.date) + '. Win, and the belt is yours.');
         }});
-      }} else if (entry.indirect.length) {{
-        html += '<p class="myTeamEmpty" style="margin-bottom:14px;">' + team + ' doesn\\'t play ' + data.holder +
-          ' this season, but here\\'s how it could still reach you:</p>';
-        entry.indirect.slice(0, 5).forEach(function(p) {{
-          html += cardHtml('If the belt moves', 'If ' + p.via + ' beats ' + data.holder + ' on ' + fmtDate(p.via_date) +
-            ' and holds onto it, you play them' + (p.your_is_home ? ' at home' : ' on the road') +
-            ' on ' + fmtDate(p.your_date) + ' &mdash; that\\'s your game.');
+      }} else if (entry.chain && entry.chain.length) {{
+        /* The belt's actual path to this team: every game that has to go a
+           particular way, in order, ending with the game they play for it.
+           One link is a team that plays the holder; three was Rutgers in
+           September 2026 -- Purdue over Notre Dame, Penn State over Purdue,
+           then Penn State at Rutgers on November 21.
+           Each step is [date, winner, isHome]; the loser is whoever won the
+           step before, or the holder at the start. */
+        var n = entry.chain.length, prev = data.holder;
+        var word = (n === 1 ? 'one game' : (n === 2 ? 'two games' : n + ' games'));
+        html += '<p class="myTeamEmpty" style="margin-bottom:14px;">' + team + ' does not play ' +
+          data.holder + ' this season, but the belt can still reach it &mdash; it takes ' + word +
+          ', in this order:</p>';
+        entry.chain.forEach(function(step, i) {{
+          var when = fmtDate(step[0]), winner = step[1], last = (i === n - 1);
+          html += cardHtml(last ? 'Your game' : 'Step ' + (i + 1),
+            last ? 'You beat ' + prev + (step[2] ? ' at home' : ' on the road') + ' on ' + when +
+                   ' &mdash; and the belt is yours.'
+                 : winner + ' beats ' + prev + ' on ' + when + '.', last);
+          prev = winner;
         }});
+        html += '<p class="myTeamEmpty" style="margin-top:14px;">Every one of those has to go that way. ' +
+          'Miss one and the belt goes somewhere else &mdash; which is rather the point of it.</p>';
       }} else {{
         html += '<p class="myTeamEmpty">No path to the belt visible on ' + team + '\\'s schedule right now &mdash; ' +
           data.holder + ' would need to lose it to someone ' + team + ' plays later, and that game isn\\'t on the board yet. Check back as the schedule fills in.</p>';
@@ -16261,7 +16341,13 @@ def main():
                                 CHAMPIONSHIP_LINEAGE_FILENAMES.get(name, "lineage.html"),
                                 next_game_for_belt(h, subdivision_world(name))))
         elif kind == "fcs-conference":
-            # whichever FCS conference belt has a game soonest
+            # Whichever FCS conference belt has a game soonest -- but not one
+            # whose game is already on the row. The FCS-only belt and the
+            # conference belt of the same holder are very often the same team
+            # playing the same game (2026-09-21: Montana State vs Northern
+            # Arizona filled both the FCS-only and Big Sky cards), and two
+            # cards saying the same thing is worse than one.
+            shown = {b[3]["id"] for b in other_belts if b[3] and b[3].get("id")}
             soonest = None
             for slug, cl in (conference_lineages or {}).items():
                 if not cl.get("reigns") or cl.get("retired"):
@@ -16270,7 +16356,9 @@ def main():
                     continue
                 h = cl["reigns"][-1]["team"]
                 nxt = next_game_for_belt(h, conference_world(cl["conference"]))
-                if nxt and (soonest is None or nxt["date"] < soonest[0]):
+                if not nxt or nxt.get("id") in shown:
+                    continue
+                if soonest is None or nxt["date"] < soonest[0]:
                     soonest = (nxt["date"], f"{cl['conference']} belt", h,
                                f"conferences/{slug}.html", nxt)
             if soonest:
