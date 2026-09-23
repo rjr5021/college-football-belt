@@ -8648,47 +8648,77 @@ def generate_compare_page(lineage, colors, belt_games):
 '''
 
 
+# How many links deep the path search goes. Past this the answer stops
+# meaning anything -- by four or five games most of Division I is
+# reachable -- and the walk is O(MAX_BELT_HOPS x games), so this is a
+# readability limit rather than a performance one.
+MAX_BELT_HOPS = 12
+
+
 def belt_reach(holder, games):
-    """Every team the belt could possibly reach on the schedule that's
-    left, and the shortest chain of games that would get it there.
+    """The fewest games that could carry the belt to each team, and which.
 
-    The one-hop version this replaces answered "does your team play the
-    holder, or play somebody who plays the holder" -- which said no to
-    Rutgers in September 2026 even though Purdue plays Notre Dame, Penn
-    State plays Purdue, and Rutgers plays Penn State. Three links, and the
-    honest answer is yes.
+    The question a fan asks is "how close is my team", and the honest unit
+    is upsets, not calendar days: Rutgers can have the belt by October 23
+    if five specific results go a certain way, or by November 21 if three
+    do. Three is the answer worth printing, so this minimises games and
+    uses the date only to break ties.
 
-    The walk is exact rather than heuristic. Go through the remaining
-    games in date order holding a set of teams that could have the belt by
-    then; when one of them plays somebody new, that somebody joins the set
-    (there is a world where they win). The set only ever grows, so one
-    pass gives every team the earliest chain that reaches it. It also
-    fixes something the one-hop version got wrong: it never checked
-    whether the middle team still had the belt when your game came round.
-    Here that's automatic, because the chain IS the belt's path.
+    That makes it a shortest-path problem with one constraint -- each game
+    in a chain has to come after the one before it, because the belt can
+    only be passed forward in time. So the search runs level by level:
+    `at_most[h]` maps each team to the earliest date the belt could be
+    with it using h games or fewer, built from `at_most[h - 1]` so no
+    level can take two steps. A team's first appearance is its minimum,
+    and keeping the *earliest* such date at every level is what leaves the
+    most schedule open to the teams behind it.
 
-    Only Division I games count, the same rule the real belt runs on.
-    Returns {team: [ {date, winner, loser, is_home, id}, ... ]} with the
-    holder mapped to an empty chain."""
-    reach = {holder: []}
-    for g in games:                       # already in date order
-        if not division1_game(g):
-            continue
-        home, away = g.get("home"), g.get("away")
-        if not home or not away:
-            continue
-        in_home, in_away = home in reach, away in reach
-        if in_home == in_away:            # both already reachable, or neither
-            continue
-        held, newcomer = (home, away) if in_home else (away, home)
-        reach[newcomer] = reach[held] + [{
-            "date": g["date"],
-            "winner": newcomer,
-            "loser": held,
-            "is_home": newcomer == home,
-            "id": g.get("id"),
+    An earlier version of this walked the schedule once in date order,
+    which answers a different question -- the soonest the belt could
+    arrive -- and told Rutgers five games when the answer was three.
+
+    Only Division I games count, the same rule the belt itself runs on.
+    Returns {team: [ {date, winner, loser, is_home, id}, ... ]}, holder
+    mapped to an empty chain."""
+    playable = [g for g in games
+                if g.get("home") and g.get("away") and division1_game(g)]
+    at_most = [{holder: ""}]           # "" sorts before any ISO date: available from the start
+    parents = [{}]                     # per level: team -> (game, came_from)
+    for _ in range(MAX_BELT_HOPS):
+        prev, level, parent = at_most[-1], dict(at_most[-1]), {}
+        for g in playable:
+            day = g["date"]
+            for side, other in ((g["home"], g["away"]), (g["away"], g["home"])):
+                # the belt can be with `side` going into this game, and
+                # `other` can take it off them
+                if prev.get(side, None) is not None and side in prev and prev[side] < day:
+                    if other not in level or day < level[other]:
+                        level[other] = day
+                        parent[other] = (g, side)
+        if level == prev and not parent:
+            break                      # nothing new is reachable; stop early
+        at_most.append(level)
+        parents.append(parent)
+
+    first_level = {}                   # team -> the level it first became reachable at
+    for h, level in enumerate(at_most):
+        for team in level:
+            first_level.setdefault(team, h)
+
+    def chain_for(team):
+        h = first_level.get(team)
+        if not h:                      # the holder (0), or unreachable (None)
+            return []
+        game, came_from = parents[h][team]
+        return chain_for(came_from) + [{
+            "date": game["date"],
+            "winner": team,
+            "loser": came_from,
+            "is_home": team == game["home"],
+            "id": game.get("id"),
         }]
-    return reach
+
+    return {team: chain_for(team) for team in first_level}
 
 
 def generate_my_team_page(team_paths, colors):
