@@ -34,7 +34,9 @@ CAMPAIGNS = {
     "live-score": "x-live-score",        # post_live_game.py
     "live-half": "x-live-half",          # post_live_game.py
     "live-final": "x-live-final",        # post_live_game.py
-    "on-this-day": "x-on-this-day",  # post_on_this_day_to_x.py
+    "state": "x-state",              # post_to_x.py -- Sunday, where the belt sits
+    "challenger": "x-challenger",    # post_to_x.py -- Thursday, who is coming for it
+    "on-this-day": "x-on-this-day",  # post_on_this_day_to_x.py -- Tuesday, from the archive
     "instagram": "ig-post",          # post_to_instagram.py (bio/caption links)
 }
 

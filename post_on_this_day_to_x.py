@@ -79,7 +79,7 @@ of a plain text post, same as the rest of this module's approach.)
 import json
 import os
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta, datetime, timedelta, timezone
 
 from share_links import tag as tag_link
 
@@ -180,13 +180,61 @@ def compute_reign_number(game, belt_games):
 
 # --------------------------------------------------------- match finding
 
-def find_matches(belt_games, today):
-    """Every belt game that happened on today's month+day in a past year,
-    most recent year first -- mirrors build_site.py's render_on_this_day()."""
+def in_window(game_date, today, days):
+    """Does `game_date` fall in the `days`-long calendar window that starts
+    on today's month+day? Compared on (month, day) only, so it matches
+    across every past year, and it wraps a December start into January."""
+    start = (today.month, today.day)
+    here = (game_date.month, game_date.day)
+    for step in range(days):
+        probe = today + timedelta(days=step)
+        if here == (probe.month, probe.day):
+            return True
+    return here == start and days > 0
+
+
+# How recent is "not the archive". The weekly post is looking back, so a
+# game from the reign that is still running -- or the one before it -- is
+# not what anyone means by "from the archive"; the Sunday state-of-the-belt
+# post covers current events. The daily mode never applied this (12
+# candidates a day, and excluding any of them often left none).
+ARCHIVE_MIN_YEARS_AGO = 3
+
+# The season window, as (month, day). It used to live in this workflow's
+# cron day-of-month fields; once the schedule moved to Tuesdays that
+# stopped being expressible, because cron ORs day-of-month against
+# day-of-week rather than ANDing them. Kickoff week through the national
+# championship, with a few days of slack at each end.
+SEASON_START = (8, 20)
+SEASON_END = (1, 20)
+
+
+def in_season(today):
+    """Aug 20 through Jan 20, wrapping the new year."""
+    here = (today.month, today.day)
+    return here >= SEASON_START or here <= SEASON_END
+
+
+def find_matches(belt_games, today, days=1):
+    """Every belt game in the calendar window starting today, most recent
+    year first.
+
+    days=1 is the original behaviour -- today's month+day in a past year,
+    mirroring build_site.py's render_on_this_day(). days=7 is the weekly
+    post (2026-09-23): the archive post moved from daily to Tuesday, and
+    picking the best game from a seven-day window beats posting whatever
+    one calendar date happens to hold. Sept 23-29, for instance, has 114
+    belt games on file and 17 changes of hands.
+    """
     matches = [g for g in belt_games
-               if date.fromisoformat(g["date"]).month == today.month
-               and date.fromisoformat(g["date"]).day == today.day
+               if in_window(date.fromisoformat(g["date"]), today, days)
                and date.fromisoformat(g["date"]) != today]
+    if days > 1:
+        older = [g for g in matches
+                 if today.year - int(g["date"][:4]) >= ARCHIVE_MIN_YEARS_AGO]
+        # ...unless that leaves nothing, in which case a recent game beats
+        # no post at all.
+        matches = older or matches
     matches.sort(key=lambda g: g["date"], reverse=True)
     return matches
 
@@ -195,7 +243,7 @@ OUTCOME_TIER = {"established": 3, "changed": 2, "retained (tie)": 1, "retained":
 
 
 def score_match(game, today):
-    """A (tier, milestone, year) tuple, compared lexicographically by
+    """A (tier, milestone, close, year) tuple, compared lexicographically by
     max() below -- outcome tier always wins first (the belt's one-ever
     "established" game beats every "retained" no matter how round the
     anniversary; a hands-change beats a defense the same way), a milestone
@@ -204,8 +252,23 @@ def score_match(game, today):
     year = int(game["date"][:4])
     years_ago = today.year - year
     tier = OUTCOME_TIER.get(game["outcome"], 0)
-    milestone = 1 if years_ago in MILESTONE_YEARS else 0
-    return (tier, milestone, year)
+    game_date = date.fromisoformat(game["date"])
+    # Only on the actual anniversary. Over the weekly window this bonus
+    # was promoting a round-numbered game from Thursday over a far better
+    # one from Tuesday -- "60 years ago today" isn't true of either, and
+    # the round number isn't interesting once it isn't today.
+    on_the_day = (game_date.month, game_date.day) == (today.month, today.day)
+    milestone = 1 if (years_ago in MILESTONE_YEARS and on_the_day) else 0
+    # A belt that changed hands by a field goal or less is a better story
+    # than one that changed hands by three touchdowns, and over a weekly
+    # window there are enough candidates for this to have something to
+    # choose between. Ranks under the milestone, above plain recency.
+    try:
+        h, a = (int(x) for x in game["score"].split("-"))
+        close = 1 if abs(h - a) <= 3 else 0
+    except (KeyError, ValueError, AttributeError):
+        close = 0
+    return (tier, milestone, close, year)
 
 
 def pick_headline(matches, today):
@@ -230,7 +293,7 @@ def _win_verb(margin):
     return "edged"
 
 
-def compose_otd_tweet(game, belt_games, today, extra_count):
+def compose_otd_tweet(game, belt_games, today, extra_count, window_days=1):
     """Tighter/punchier than the original two-line hook+body: one combined
     lead sentence per outcome type instead of a generic hook ("the belt
     survived another test") followed by the actual facts -- gets to the
@@ -244,8 +307,19 @@ def compose_otd_tweet(game, belt_games, today, extra_count):
     other_team = game["away"] if game["new_holder"] == game["home"] else game["home"]
     other_score = team_score(game, other_team)
 
-    milestone = years_ago in MILESTONE_YEARS
-    lede_year = f"{years_ago} years ago today" if milestone else f"On this day in {year}"
+    game_date = date.fromisoformat(game["date"])
+    same_day = (game_date.month, game_date.day) == (today.month, today.day)
+    milestone = years_ago in MILESTONE_YEARS and same_day
+    if milestone:
+        # the year as well as the count -- "75 years ago today" alone made
+        # the reader do the subtraction, and the post has room
+        lede_year = f"{years_ago} years ago today, in {year}"
+    elif same_day:
+        lede_year = f"On this day in {year}"
+    else:
+        # the weekly window picked a game from elsewhere in the week, so
+        # date it properly rather than claiming it happened today
+        lede_year = f"{game_date:%B %-d}, {year}"
 
     if game["outcome"] == "established":
         verb = _win_verb(abs(int(winner_score) - int(other_score)))
@@ -274,9 +348,10 @@ def compose_otd_tweet(game, belt_games, today, extra_count):
     if extra_count:
         years_span = today.year - FOUNDING_YEAR
         has_have = "has" if extra_count == 1 else "have"
+        when = "on this date" if window_days <= 1 else "in this week of the calendar"
         lines.append("")
         lines.append(f"{extra_count} other belt game{'s' if extra_count != 1 else ''} {has_have} happened "
-                      f"on this date across {years_span} years of history.")
+                      f"{when} across {years_span} years of history.")
     # No link in the main post body on purpose -- see this module's
     # docstring ("Reply-for-links"). The link(s) go in a follow-up reply
     # instead; this just points there.
@@ -288,20 +363,32 @@ def compose_otd_tweet(game, belt_games, today, extra_count):
     return "\n".join(lines)
 
 
-def compose_otd_reply(game, extra_count):
+def compose_otd_reply(game, extra_count, window_days=1):
     """The link(s) that used to live in the main tweet body, now posted
     as a reply instead -- see this module's docstring. Kept separate from
     compose_otd_tweet() so the two are easy to reason about independently."""
     game_url = tag_link(f"{SITE_URL}/games/{game['game_id']}.html", "on-this-day")
-    if extra_count:
-        return (f"Full game: {game_url}\n\n"
-                "Every belt game on this date across history: "
-                + tag_link(f"{SITE_URL}/on-this-day.html", "on-this-day"))
-    return f"Full game: {game_url}"
+    if not extra_count:
+        return f"Full game: {game_url}"
+    more = ("Every belt game on this date across history: " if window_days <= 1
+            else "Every belt game on every date, across history: ")
+    return (f"Full game: {game_url}\n\n"
+            + more + tag_link(f"{SITE_URL}/on-this-day.html", "on-this-day"))
 
 
-def otd_cache_key(today):
-    return today.isoformat()
+# The archive post runs weekly as of 2026-09-23 (Tuesday 7 PM ET). Set
+# OTD_WINDOW_DAYS=1 to get the old daily, one-calendar-date behaviour back.
+WINDOW_DAYS = int(os.environ.get("OTD_WINDOW_DAYS") or 7)
+
+
+def otd_cache_key(today, window_days=WINDOW_DAYS):
+    """One post per window. Weekly, that is the ISO year+week, so a rerun
+    of Tuesday's job -- or a retry on Wednesday -- can't post a second
+    one; daily, it stays the plain date it always was."""
+    if window_days <= 1:
+        return today.isoformat()
+    iso = today.isocalendar()
+    return f"{iso[0]}-W{iso[1]:02d}"
 
 
 # ----------------------------------------------------------------- main
@@ -329,6 +416,10 @@ def main():
         except ValueError:
             print(f"OTD_FORCE_DATE={force_date!r} isn't a valid YYYY-MM-DD date -- ignoring, using the real date.")
 
+    if not in_season(today) and not force_date:
+        print(f"{today} is outside the Aug 20 - Jan 20 season window -- nothing to post.")
+        return
+
     cache = load_cache()
     if cache.get("last_posted_date") == otd_cache_key(today):
         print(f"Already posted (or checked) the On This Day tweet for {today} -- skipping.")
@@ -340,17 +431,19 @@ def main():
         print(f"Skipping On This Day post -- couldn't fetch {GAMES_API_URL}: {e}")
         return
 
-    matches = find_matches(belt_games, today)
+    matches = find_matches(belt_games, today, WINDOW_DAYS)
     if not matches:
-        print(f"No belt games on {today.strftime('%B %-d')} in any past year -- nothing to post today.")
+        span = ("on " + today.strftime("%B %-d") if WINDOW_DAYS <= 1
+                else f"in the week from {today:%B %-d}")
+        print(f"No belt games {span} in any past year -- nothing to post.")
         cache["last_posted_date"] = otd_cache_key(today)
         save_cache(cache)
         return
 
     headline = pick_headline(matches, today)
     extra_count = len(matches) - 1
-    text = compose_otd_tweet(headline, belt_games, today, extra_count)
-    reply_text = compose_otd_reply(headline, extra_count)
+    text = compose_otd_tweet(headline, belt_games, today, extra_count, WINDOW_DAYS)
+    reply_text = compose_otd_reply(headline, extra_count, WINDOW_DAYS)
 
     client = tweepy.Client(
         consumer_key=os.environ["X_API_KEY"],

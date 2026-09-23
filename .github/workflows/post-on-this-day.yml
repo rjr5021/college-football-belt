@@ -24,22 +24,28 @@ name: Post On This Day to X
 
 on:
   schedule:
-    # Daily at 9am US/Eastern, Aug 20 - Jan 20 -- kickoff week through the
-    # National Championship, with a few days of buffer on each end. Split
-    # into three cron lines because a single line can't express "day 20
-    # of one month through day 20 of a month three months later":
-    #   - Aug 20-31
-    - cron: '0 14 20-31 8 *'
-    #   - all of Sep / Oct / Nov / Dec
-    - cron: '0 14 * 9,10,11,12 *'
-    #   - Jan 1-20
-    - cron: '0 14 1-20 1 *'
-    # Written for EST (UTC-5, winter clock), same as update-and-deploy.yml.
-    # During EDT (UTC-4, in effect for the Aug 20 - ~Nov 1 part of this
-    # window) these actually fire at 10am ET, one hour later -- GitHub
-    # Actions cron has no timezone/DST awareness at all, so there's no
-    # fixed UTC time that stays correct across the whole window. Same
-    # documented limitation as update-and-deploy.yml, same one-hour gap.
+    # Tuesday evening, ~7:10pm US/Eastern, in season. This post went from
+    # daily to weekly on 2026-09-23: it was seven of roughly fifteen posts
+    # a week and the only unconditional one, and picking the best game
+    # from a seven-day window beats posting whatever one calendar date
+    # happens to hold (Sept 23-29 alone has 114 belt games on file).
+    #
+    # Two lines because 7:10pm ET is 23:10 UTC Tuesday in daylight time
+    # and 00:10 UTC WEDNESDAY in standard time -- note the day-of-week
+    # field differs between them for that reason. Both fire in the weeks
+    # around the switch; the ISO-week cache key in the script keeps that
+    # to one post, so the cost is that half the season posts at 6:10pm ET
+    # rather than 7:10. Same one-hour DST wobble this file has always
+    # documented, on a post where an hour doesn't matter.
+    #   - Tue 7:10pm EDT
+    - cron: '10 23 * 8-12,1 2'
+    #   - Tue 7:10pm EST (Wednesday in UTC)
+    - cron: '10 0 * 8-12,1 3'
+    # The Aug 20 - Jan 20 season window that used to live in the day-of-
+    # month fields is enforced in the script now (SEASON_START / SEASON_END
+    # in post_on_this_day_to_x.py): cron treats day-of-month and
+    # day-of-week as OR, not AND, so "Tuesdays, but only after Aug 20"
+    # cannot be written as a cron line at all.
   workflow_dispatch:      # lets you trigger today's post manually from the Actions tab, any time of year
     inputs:
       test_date:
@@ -92,4 +98,4 @@ jobs:
           else
             git commit -m "Advance On This Day post marker [skip ci]"
             git push
-          fi
+          fi

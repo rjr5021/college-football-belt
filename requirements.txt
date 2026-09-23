@@ -13,8 +13,9 @@ Pillow
 
 # post_to_x.py and follow_batch.py need this to talk to X (Twitter) --
 # API v2 (tweepy.Client) for posting/following, plus the legacy v1.1 API
-# (tweepy.API + OAuth1UserHandler) for the bio sync, since profile updates
-# aren't exposed on v2. OPTIONAL in the sense that both scripts no-op
+# (tweepy.API + OAuth1UserHandler) for the bio sync and for uploading the
+# cards attached to the preview / game-day / final posts -- neither
+# profile updates nor media_upload() are exposed on v2. OPTIONAL in the sense that both scripts no-op
 # cleanly if the X_* env vars aren't set -- but the import has to succeed
 # either way, so this stays a normal (non-optional) requirement.
 tweepy

@@ -1,26 +1,41 @@
 #!/usr/bin/env python3
 """
-Posts automated updates to X (@CollegeFBBelt). Five independent things
+Posts automated updates to X (@CollegeFBBelt). Seven independent things
 this does, any or all in a single run:
 
   1. RESULT posts -- one for every belt game since the last run, win or
      lose: both a genuine belt CHANGE and a successful DEFENSE get their
      own post (a defense is not silently skipped -- see below for why).
-  2. PREVIEW posts -- one post for the upcoming game, meant to go out the
-     Friday before it, pointing at the site's AI-written preview + weather
-     forecast + prediction.
-  3. POLL posts -- a two-option "does the holder keep it?" poll, posted
-     right after the Friday preview (same X_POST_PREVIEW gate, its own
-     once-per-game cache key), open until kickoff.
-  4. GAME-DAY posts -- "it's game day, the belt is on the line", at 10:00
+     On a Saturday this replies to post_live_game.py's final post rather
+     than repeating it standalone -- see live_final_tweet_id().
+  2. STATE-OF-THE-BELT posts -- Sunday 10:00 AM Eastern, every week of
+     the season: where the belt sits after the weekend. Three branches
+     (it moved / it was defended / nobody played for it), so it works on
+     a bye week as readily as on a week the belt changed hands.
+  3. CHALLENGER posts -- Thursday 7:10 PM Eastern: the single most
+     surprising computed fact about whoever is coming for the belt this
+     week, from challenger.py.
+  4. PREVIEW posts -- Friday 6:10 PM Eastern, for the upcoming game,
+     pointing at the site's AI-written preview + weather forecast +
+     prediction. Carries a card (generate_post_image.py).
+  5. POLL posts -- a two-option "does the holder keep it?" poll, Saturday
+     9:10 AM Eastern, open until kickoff.
+  6. GAME-DAY posts -- "it's game day, the belt is on the line", at 10:00
      AM Eastern on the day of every belt game: matchup, kickoff time, TV,
      venue, what the holder is defending (reign, days, defenses), the
      site's prediction + defend odds, the kickoff forecast, and the
-     preview link. See "How the game-day post picks its moment" below.
-  5. BIO sync -- keeps the account bio's "Current champion: X" line in
+     preview link. Carries a card. See "How a scheduled post picks its
+     moment" below.
+  7. BIO sync -- keeps the account bio's "Current champion: X" line in
      step with lineage.json's current_holder, whenever it changes (see
      sync_bio() below). Uses the legacy v1.1 API under the hood since
-     profile updates aren't exposed on v2's tweepy.Client.
+     profile updates aren't exposed on v2's tweepy.Client -- the same
+     handle media_upload() needs for the cards.
+
+The weekly shape above was set on 2026-09-23. It replaced a cadence of
+roughly fifteen posts on a belt-game week, seven of them an unconditional
+daily archive post (post_on_this_day_to_x.py, now weekly), with nine that
+each have a reason to exist. Monday is deliberately empty.
 
 Usage:
     export X_API_KEY=...
@@ -57,20 +72,8 @@ history and post hundreds of tweets. It just records the most recent
 game as the starting point and posts nothing that run -- posting starts
 fresh from the next new game onward.
 
-How preview-posting decides "is this Friday"
------------------------------------------------
-This does NOT guess the day of the week itself. GitHub Actions' schedule
-trigger tells a running workflow which cron line fired it (a run started
-by any other means -- workflow_dispatch, a push -- leaves that unset), so
-the workflow passes that through as X_POST_PREVIEW=true only on the one
-cron line timed for Friday evening ET; every other trigger leaves it
-unset/false, and this script simply trusts that flag rather than
-recomputing it. A preview only ever posts once per upcoming game either
-way (tracked by social_cache/x_last_posted.json's
-"last_posted_preview_key"), so even a Friday push wouldn't double-post.
-
-How the game-day post picks its moment (2026-09-19, Bob: "an automatic X
-post on the day of each belt game, 10 ET")
+How a scheduled post picks its moment (2026-09-19, Bob: "an automatic X
+post on the day of each belt game, 10 ET"; generalised 2026-09-23)
 -----------------------------------------------------------------------
 GitHub Actions cron runs on fixed UTC clock times, and 10:00 AM Eastern is
 14:00 UTC in daylight time but 15:00 UTC in standard time -- and the
@@ -85,6 +88,15 @@ the cron's nominal time rather than the wall clock, so a late-starting
 run (GitHub queues scheduled runs under load) still passes. Then it
 posts only if today (Eastern) is the date of belt_data/next_game.json's
 game, and only once per game ("last_posted_gameday_key" in the cache).
+The state-of-the-belt, challenger, preview and poll posts all go through
+the same check, via slot_gate(), with their own clock time and a weekday
+to match on. The weekday is checked in Eastern rather than read off the
+cron line, because a cron line and the post it sends can disagree about
+what day it is: Thursday 7:10 PM ET is 23:10 UTC Thursday in summer and
+00:10 UTC FRIDAY in winter. The Sunday post needs no cron line of its
+own -- the game-day lines already fire at 10:00 ET every day of the
+season, and the weekday check picks the Sunday out of them.
+
 A manual "Run workflow" with the post_gameday box ticked sets
 X_POST_GAMEDAY=true instead, which skips the tick check but keeps the
 game-day and once-per-game checks (so it's safe to use as a same-day
@@ -116,6 +128,9 @@ WEATHER_PATH = os.path.join(BELT_DATA_DIR, "weather.json")
 RANKINGS_PATH = os.path.join(BELT_DATA_DIR, "rankings.json")
 CACHE_DIR = os.path.join(HERE, "social_cache")
 CACHE_PATH = os.path.join(CACHE_DIR, "x_last_posted.json")
+# post_live_game.py's cache, read-only from here: it carries the id of
+# the final post it made, so the result post can reply to it.
+LIVE_STATE_PATH = os.path.join(CACHE_DIR, "x_live_state.json")
 SITE_URL = "https://collegefootballbelt.com"
 
 REQUIRED_ENV = ["X_API_KEY", "X_API_KEY_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SECRET"]
@@ -124,6 +139,23 @@ REQUIRED_ENV = ["X_API_KEY", "X_API_KEY_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOK
 # this also means moving the matching cron lines in update-and-deploy.yml
 # (they have to land on this clock time in UTC -- see the docstring).
 GAMEDAY_POST_TIME_ET = dtime(10, 0)
+
+# The rest of the week (2026-09-23). Same rule as above: changing any of
+# these means moving the matching cron lines in update-and-deploy.yml so
+# they still land on this clock time in UTC. Monday is deliberately empty.
+# Sunday rides the daily 10 AM ET game-day tick that already exists for
+# the whole season -- same clock time, and the weekday check below picks
+# the Sunday out of it, so it needs no cron line of its own.
+STATE_POST_TIME_ET = dtime(10, 0)        # Sunday -- where the belt sits
+# The other three are at :10 rather than :00 on purpose. Two cron lines
+# in one workflow that name the same minute are ambiguous about which
+# schedule string GitHub reports as github.event.schedule, and the daily
+# 10 AM lines already occupy :00 at 14:00 and 15:00 UTC. Ten past also
+# happens to look less machine-made in a timeline.
+PREVIEW_POST_TIME_ET = dtime(18, 10)     # Friday -- the week's belt game
+CHALLENGER_POST_TIME_ET = dtime(19, 10)  # Thursday -- who's coming for it
+POLL_POST_TIME_ET = dtime(9, 10)         # Saturday -- does it stay put?
+THURSDAY, FRIDAY, SATURDAY, SUNDAY = 3, 4, 5, 6   # date.weekday(): Monday is 0
 EASTERN = "America/New_York"
 
 # X's hard length limit for a post, in X's own weighted count (see
@@ -279,6 +311,34 @@ def find_new_result_games(lineage, cache):
     return new_games, last_id
 
 
+def live_final_tweet_id(game):
+    """The id of the live final post for `game`, or None.
+
+    Saturday posts this twice by design: post_live_game.py within a few
+    minutes of the whistle, and this script an hour or two later once the
+    pipeline has ingested the result. Rather than drop one, the slower
+    post replies to the faster one -- the timeline shows a single final,
+    with the permanent game-page link hanging off it.
+
+    None here is the ordinary case, not a failure: a Thursday game or a
+    bowl outside the live window never had a live post, a live run can
+    fail, and this script's checkout can predate the live job's cache
+    commit. All three fall back to a standalone post, which is exactly
+    what it did before any of this existed.
+    """
+    state = load_json(LIVE_STATE_PATH)
+    if not state or not state.get("final_tweet_id"):
+        return None
+    holder = game.get("holder") or game.get("new_holder")
+    if not holder:
+        return None
+    # Same shape as post_live_game.game_key(): holder|opponent|date, built
+    # from next_game.json there and from the lineage row here.
+    if state.get("game_key") != f"{holder}|{game.get('opponent')}|{game.get('date')}":
+        return None
+    return state["final_tweet_id"]
+
+
 def post_results(client, lineage, cache):
     new_games, last_id = find_new_result_games(lineage, cache)
     if cache.get("last_posted_game_id") is None:
@@ -305,9 +365,14 @@ def post_results(client, lineage, cache):
             reign_number = sum(1 for d in reign_starts if d <= game["date"])
 
         text = compose_result_tweet(game, reign_number, defense_numbers.get(game["game_id"]))
+        reply_to = live_final_tweet_id(game)
+        if reply_to:
+            print(f"Replying to the live final post ({reply_to}) rather than "
+                  f"posting this result standalone.")
 
         try:
-            response = client.create_tweet(text=text)
+            response = client.create_tweet(
+                text=text, **({"in_reply_to_tweet_id": reply_to} if reply_to else {}))
         except Exception as e:
             print(f"X post FAILED for game {game['game_id']} (not fatal to "
                   f"the pipeline): {e}")
@@ -363,7 +428,9 @@ def compose_preview_tweet(next_game, ai_preview, belt_risk=None, lineage=None):
     lines.append(tag_link(f"{SITE_URL}/preview.html", "preview"))
     text = "\n".join(lines)
     if lineage:
-        fact = short_line(belt_story(opponent, holder, lineage))
+        # skip=1: Thursday's challenger post already led with rank 0,
+        # so the preview takes the next-best fact rather than repeating it.
+        fact = short_line(belt_story(opponent, holder, lineage), skip=1)
         if fact:
             with_fact = "\n".join(lines[:-2] + ["", fact] + lines[-2:])
             if tweet_length(with_fact) <= TWEET_MAX:
@@ -375,9 +442,56 @@ def preview_cache_key(next_game):
     return f"{next_game['team']}|{next_game['opponent']}|{next_game['date']}"
 
 
-def post_preview(client, cache):
-    if os.environ.get("X_POST_PREVIEW", "").lower() not in ("1", "true", "yes"):
-        print("Not the scheduled Friday preview run -- skipping the preview post.")
+# ------------------------------------------------------- cards on the posts
+
+def card_media_id(api_v1, kind, **kw):
+    """Upload the card for post type `kind` and return its media_id, or
+    None -- in which case the caller posts text-only.
+
+    There are three places this can come up empty and none of them is
+    fatal: generate_post_image may not be importable (no Pillow on some
+    future runner), card() returns None if it couldn't draw the thing,
+    and media_upload can fail on its own (rate limit, network, X having a
+    bad afternoon). A post with no picture is a worse post; a picture
+    that takes the post down with it is no post at all.
+
+    media_upload lives on the legacy v1.1 API only -- tweepy.Client (v2)
+    doesn't expose it -- which is the same api_v1 object sync_bio()
+    already needs, so this adds no new credentials or scopes.
+    """
+    if api_v1 is None:
+        return None
+    try:
+        import generate_post_image
+    except Exception as e:
+        print(f"No card for the {kind} post ({e}) -- posting without one.")
+        return None
+    path = generate_post_image.card(kind, **kw)
+    if not path:
+        return None
+    try:
+        media = api_v1.media_upload(filename=path)
+    except Exception as e:
+        print(f"Card upload FAILED for the {kind} post ({e}) -- posting without one.")
+        return None
+    print(f"Uploaded the {kind} card ({path}) as media_id {media.media_id}")
+    return media.media_id
+
+
+def media_kw(media_id):
+    """create_tweet(**media_kw(mid)) -- the keyword, or nothing at all."""
+    return {"media_ids": [media_id]} if media_id else {}
+
+
+def post_preview(client, cache, api_v1=None):
+    # X_POST_PREVIEW stays set by the workflow on both Friday lines because
+    # post_to_instagram.py reads it as "is this the Friday preview run".
+    # This script needs the sharper answer -- which of the two lines is
+    # actually 6:10 PM Eastern today -- so it uses the same tick check the
+    # game-day, challenger and poll posts use, with its own manual flag.
+    ok, _today, _tz = slot_gate("preview", "X_POST_PREVIEW_MANUAL",
+                                PREVIEW_POST_TIME_ET, FRIDAY)
+    if not ok:
         return
 
     next_game = load_json(NEXT_GAME_PATH)
@@ -392,10 +506,13 @@ def post_preview(client, cache):
 
     ai_preview = load_json(AI_PREVIEW_PATH)
     belt_risk = load_json(BELT_RISK_PATH)
-    text = compose_preview_tweet(next_game, ai_preview, belt_risk, load_json(LINEAGE_PATH))
+    lineage = load_json(LINEAGE_PATH)
+    text = compose_preview_tweet(next_game, ai_preview, belt_risk, lineage)
+    media_id = card_media_id(api_v1, "preview", next_game=next_game, lineage=lineage,
+                             rankings=load_json(RANKINGS_PATH))
 
     try:
-        response = client.create_tweet(text=text)
+        response = client.create_tweet(text=text, **media_kw(media_id))
     except Exception as e:
         print(f"X preview post FAILED (not fatal to the pipeline): {e}")
         return
@@ -449,11 +566,14 @@ def compose_poll(next_game):
 
 
 def post_poll(client, cache):
-    """The Friday engagement poll, right after the preview post and gated
-    by the same X_POST_PREVIEW flag; one per upcoming game (cache key), so
-    a rerun of the Friday job never posts a second poll for the same
-    game. Not fatal to the pipeline if X refuses it."""
-    if os.environ.get("X_POST_PREVIEW", "").lower() not in ("1", "true", "yes"):
+    """The engagement poll. Moved to its own Saturday 9 AM ET slot on
+    2026-09-23: it used to fire off the Friday preview run, in the same
+    minute as the preview itself, which put two posts from this account
+    back to back and gave the poll the worse half of the attention. One
+    per upcoming game (cache key), so a rerun never posts a second poll
+    for the same game. Not fatal to the pipeline if X refuses it."""
+    ok, _today, _tz = slot_gate("poll", "X_POST_POLL", POLL_POST_TIME_ET, SATURDAY)
+    if not ok:
         return
     next_game = load_json(NEXT_GAME_PATH)
     if not next_game:
@@ -519,18 +639,64 @@ def parse_cron_utc_time(cron):
     return int(parts[1]), int(parts[0])
 
 
-def is_post_time_tick(fired_cron, today_et, tz):
-    """Is the cron line that fired this run the one that lands on
-    GAMEDAY_POST_TIME_ET (10:00 AM Eastern) on today's date? Two lines
-    exist because 10 AM ET is 14:00 UTC in daylight time and 15:00 UTC in
-    standard time; on any given day exactly one of them is right, and
-    this decides which by the cron's nominal time -- so a run that GitHub
-    started late still counts."""
+def is_post_time_tick(fired_cron, today_et, tz, post_time=None, weekday=None):
+    """Is the cron line that fired this run the one meant to send a post
+    scheduled for `post_time` Eastern (default: the game-day 10 AM slot)?
+
+    Every slot needs at least two cron lines, because a fixed Eastern
+    clock time is two different UTC times across the year -- 10 AM ET is
+    14:00 UTC in daylight time and 15:00 UTC in standard time. Rather
+    than guess, each line fires and this decides which one was actually
+    right for today's date. A run GitHub started late still counts: the
+    comparison is against the cron's nominal time, not the wall clock.
+
+    `weekday` (date.weekday(), Monday 0) is the second half of it, and it
+    is checked in EASTERN, not UTC. Thursday 7 PM ET is 23:00 UTC on
+    Thursday in summer but 00:00 UTC on FRIDAY in winter, so the cron's
+    own day-of-week field disagrees with itself twice a year and cannot
+    be trusted on its own.
+    """
     hm = parse_cron_utc_time(fired_cron)
     if hm is None:
         return False
-    post_utc = datetime.combine(today_et, GAMEDAY_POST_TIME_ET, tzinfo=tz).astimezone(timezone.utc)
+    if weekday is not None and today_et.weekday() != weekday:
+        return False
+    post_utc = datetime.combine(today_et, post_time or GAMEDAY_POST_TIME_ET,
+                                tzinfo=tz).astimezone(timezone.utc)
     return hm == (post_utc.hour, post_utc.minute)
+
+
+def slot_gate(label, manual_env, post_time, weekday):
+    """(ok, today_et, tz) for a post that runs on one weekly slot.
+
+    Factored out because four posts now need exactly this: a zone, a
+    manual override for "Run workflow", and the tick check above. Returns
+    ok=False (having said why) rather than raising, so a missing tzdata
+    costs one post and not the pipeline.
+    """
+    manual = os.environ.get(manual_env, "").lower() in ("1", "true", "yes")
+    fired_cron = os.environ.get("X_FIRED_CRON", "").strip()
+    if not manual and not fired_cron:
+        print(f"Not a scheduled run and no {manual_env} ask -- skipping the {label} post.")
+        return False, None, None
+    try:
+        tz = eastern_tz()
+    except Exception as e:
+        print(f"{label} post skipped -- no America/New_York zone data ({e}); "
+              f"pip install tzdata to fix (not fatal to the pipeline).")
+        return False, None, None
+    today = datetime.now(tz).date()
+    if manual:
+        return True, today, tz
+    if not is_post_time_tick(fired_cron, today, tz, post_time, weekday):
+        print(f"Cron {fired_cron!r} isn't the {post_time:%I:%M %p} ET "
+              f"{DAY_NAMES[weekday]} tick for {today} -- skipping the {label} post.")
+        return False, today, tz
+    return True, today, tz
+
+
+DAY_NAMES = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+             "Saturday", "Sunday")
 
 
 def kickoff_et(next_game, tz):
@@ -720,7 +886,7 @@ def gameday_cache_key(next_game):
     return preview_cache_key(next_game)
 
 
-def post_gameday(client, lineage, cache):
+def post_gameday(client, lineage, cache, api_v1=None):
     """The game-day post, gated three ways (see the docstring): this run
     has to be the 10 AM ET tick (or a manual X_POST_GAMEDAY=true ask),
     today (Eastern) has to be the next belt game's date, and it posts at
@@ -770,8 +936,11 @@ def post_gameday(client, lineage, cache):
         print(f"Game-day post skipped -- couldn't compose it ({e}); not fatal to the pipeline.")
         return
 
+    media_id = card_media_id(api_v1, "gameday", next_game=next_game, lineage=lineage,
+                             rankings=load_json(RANKINGS_PATH))
+
     try:
-        response = client.create_tweet(text=text)
+        response = client.create_tweet(text=text, **media_kw(media_id))
     except Exception as e:
         print(f"X game-day post FAILED (not fatal to the pipeline): {e}")
         return
@@ -779,6 +948,171 @@ def post_gameday(client, lineage, cache):
     print(f"Posted game-day post: {response}")
     print(text)
     cache["last_posted_gameday_key"] = key
+    save_cache(cache)
+
+
+# ----------------------------------------------- Sunday: state of the belt
+
+def next_game_line(next_game, today):
+    """'Next on the line: Sat Oct 3, at Purdue.' -- or nothing at all when
+    the schedule doesn't know yet (the offseason, or a holder whose next
+    belt game hasn't been fixed)."""
+    if not next_game or not next_game.get("date"):
+        return ""
+    try:
+        when = date.fromisoformat(next_game["date"])
+    except (TypeError, ValueError):
+        return ""
+    if when < today:
+        return ""
+    where = ("vs. " if next_game.get("is_home") else
+             "" if next_game.get("neutral") else "at ")
+    opp = next_game.get("opponent") or ""
+    if not opp:
+        return ""
+    return f"Next on the line: {when:%a %b %-d}, {where}{opp}."
+
+
+def compose_state_tweet(lineage, next_game, today):
+    """Sunday morning: where the belt sits after the weekend.
+
+    The one post that works every week of the season -- if the belt moved
+    that's the news, if it was defended that's the news, and if nobody
+    played for it the streak itself is the news. All three branches are
+    computed off the same reign row, so none of them can drift out of
+    step with the site.
+    """
+    reigns = lineage.get("reigns") or []
+    if not reigns:
+        return ""
+    reign = reigns[-1]
+    holder = reign["team"]
+    days = (today - date.fromisoformat(reign["start_date"])).days
+    reign_no = team_reign_number(lineage, holder)
+    tail = next_game_line(next_game, today)
+    link = tag_link(f"{SITE_URL}/", "state")
+
+    # anything that happened in the seven days ending today
+    recent = [g for g in (lineage.get("belt_games") or [])
+              if 0 <= (today - date.fromisoformat(g["date"])).days <= 6]
+    last = recent[-1] if recent else None
+
+    if last and last["outcome"] in ("changed", "established"):
+        winner = last["new_holder"]
+        loser = last.get("holder") or last["opponent"]
+        ws, ls = team_score(last, winner), team_score(last, loser)
+        head = f"\U0001F3C6 The belt is with {holder}."
+        body = (f"{winner} beat {loser} {ws}-{ls} — the "
+                f"{ordinal(len(reigns))} reign in the belt's history, and "
+                f"{holder}'s {ordinal(reign_no)}.")
+    elif last:
+        defenses = reign.get("defenses") or 0
+        ws, ls = team_score(last, holder), team_score(last, last["opponent"])
+        streak = (f"a {ordinal(defenses)} straight defense" if defenses > 1
+                  else "its first defense of this reign")
+        head = f"\U0001F6E1️ The belt stays with {holder}."
+        body = (f"{holder} turned back {last['opponent']} {ws}-{ls} — {streak}, "
+                f"{days:,} days into its {ordinal(reign_no)} reign.")
+    else:
+        defenses = reign.get("defenses") or 0
+        head = "\U0001F6E1️ Another week, and the belt hasn't moved."
+        body = (f"{holder}: {days:,} days, {defenses} "
+                f"{'defense' if defenses == 1 else 'defenses'}, "
+                f"{ordinal(reign_no)} reign.")
+
+    parts = [head, "", body]
+    if tail:
+        parts += ["", tail]
+    parts += ["", link]
+    text = "\n".join(parts)
+    if tweet_length(text) > TWEET_MAX and tail:
+        # the next-game line is the first thing to go -- the site has it
+        text = "\n".join([head, "", body, "", link])
+    return text
+
+
+def post_state_of_belt(client, lineage, cache, api_v1=None):
+    """Sunday 10 AM ET, every week of the season. Cached by the date, so a
+    rerun of the Sunday job never posts a second one."""
+    ok, today, _tz = slot_gate("state-of-the-belt", "X_POST_STATE",
+                               STATE_POST_TIME_ET, SUNDAY)
+    if not ok:
+        return
+    key = today.isoformat()
+    if cache.get("last_posted_state_key") == key:
+        print("Already posted the state-of-the-belt post today -- skipping.")
+        return
+    try:
+        text = compose_state_tweet(lineage, load_json(NEXT_GAME_PATH), today)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"State-of-the-belt post skipped -- couldn't compose it ({e}).")
+        return
+    if not text:
+        print("No reign on file -- nothing to say about the state of the belt.")
+        return
+    try:
+        response = client.create_tweet(text=text)
+    except Exception as e:
+        print(f"X state-of-the-belt post FAILED (not fatal to the pipeline): {e}")
+        return
+    print(f"Posted state-of-the-belt: {response}")
+    print(text)
+    cache["last_posted_state_key"] = key
+    save_cache(cache)
+
+
+# ------------------------------------------------- Thursday: the challenger
+
+def compose_challenger_tweet(next_game, lineage, today):
+    """The single most surprising computed fact about whoever is coming
+    for the belt this week. Takes challenger.py's rank 0; the Friday
+    preview takes rank 1, so the two posts never lead with the same
+    sentence two days apart."""
+    from challenger import belt_story, short_line
+    holder, opponent = next_game["team"], next_game["opponent"]
+    fact = short_line(belt_story(opponent, holder, lineage, today), limit=200, skip=0)
+    if not fact:
+        return ""
+    when = date.fromisoformat(next_game["date"])
+    return (f"\U0001F3C8 {opponent} gets a shot at the belt on {when:%A}.\n\n"
+            f"{fact}\n\n" + tag_link(f"{SITE_URL}/preview.html", "challenger"))
+
+
+def post_challenger(client, lineage, cache, api_v1=None):
+    """Thursday 7 PM ET, once per upcoming game. Silent in the offseason
+    and on any week the holder isn't playing for it."""
+    ok, today, _tz = slot_gate("challenger", "X_POST_CHALLENGER",
+                               CHALLENGER_POST_TIME_ET, THURSDAY)
+    if not ok:
+        return
+    next_game = load_json(NEXT_GAME_PATH)
+    if not next_game:
+        print("No upcoming game -- no challenger to post about.")
+        return
+    key = preview_cache_key(next_game)
+    if cache.get("last_posted_challenger_key") == key:
+        print("Already posted the challenger post for this game -- skipping.")
+        return
+    try:
+        text = compose_challenger_tweet(next_game, lineage, today)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Challenger post skipped -- couldn't compose it ({e}).")
+        return
+    if not text:
+        print("challenger.py had nothing short enough to say -- skipping.")
+        return
+    try:
+        response = client.create_tweet(text=text)
+    except Exception as e:
+        print(f"X challenger post FAILED (not fatal to the pipeline): {e}")
+        return
+    print(f"Posted challenger: {response}")
+    print(text)
+    cache["last_posted_challenger_key"] = key
     save_cache(cache)
 
 
@@ -850,9 +1184,11 @@ def main():
     cache = load_cache()
 
     post_results(client, lineage, cache)
-    post_preview(client, cache)
+    post_preview(client, cache, api_v1)
     post_poll(client, cache)
-    post_gameday(client, lineage, cache)
+    post_gameday(client, lineage, cache, api_v1)
+    post_state_of_belt(client, lineage, cache, api_v1)
+    post_challenger(client, lineage, cache, api_v1)
     sync_bio(api_v1, lineage, cache)
 
 

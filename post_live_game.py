@@ -191,6 +191,7 @@ def fresh_state(key):
         "kickoff_posted": False,
         "halftime_posted": False,
         "final_posted": False,
+        "final_tweet_id": None,
         "last_holder_score": None,
         "last_opp_score": None,
     }
@@ -391,7 +392,17 @@ def compose_halftime_tweet(next_game, holder, opponent, holder_score, opp_score,
             + tag_link(f"{SITE_URL}/preview.html", "live-half"))
 
 
-def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx):
+def final_link(next_game):
+    """This game's own page when we know its ESPN id (build_site.py names
+    game pages by it), falling back to /preview.html if we somehow don't."""
+    gid = (next_game or {}).get("id")
+    path = f"/games/{gid}.html" if gid else "/preview.html"
+    return tag_link(f"{SITE_URL}{path}", "live-final")
+
+
+def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx,
+                        next_game=None):
+    link = final_link(next_game)
     if holder_score > opp_score:
         reign = lineage["reigns"][-1] if lineage.get("reigns") else None
         defenses = None
@@ -400,26 +411,26 @@ def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx)
         stakes = f"\n\n{ptx.ordinal(defenses)} defense of the reign." if defenses else ""
         return (f"\U0001F6E1️ FINAL — {holder} defends the belt\n\n"
                 f"{holder} {holder_score}, {opponent} {opp_score}.{stakes}\n\n"
-                + tag_link(f"{SITE_URL}/preview.html", "live-final"))
+                + link)
     if opp_score > holder_score:
         reign_number = ptx.team_reign_number(lineage, opponent) + 1
         return (f"\U0001F3C6 THE BELT HAS CHANGED HANDS\n\n"
                 f"{opponent} defeats {holder} {opp_score}-{holder_score}.\n\n"
                 f"{opponent} is the {ptx.ordinal(reign_number)} holder of the "
                 f"College Football Belt.\n\n"
-                + tag_link(f"{SITE_URL}/preview.html", "live-final"))
+                + link)
     # An outright tie in modern FBS/FCS is essentially impossible (every
     # game goes to overtime), but this exists rather than silently
     # skipping the final post on the off chance of one.
     return (f"\U0001F6E1️ FINAL (TIE) — {holder} keeps the belt\n\n"
             f"{holder} {holder_score}, {opponent} {opp_score}. A tie doesn't "
             f"change hands.\n\n"
-            + tag_link(f"{SITE_URL}/preview.html", "live-final"))
+            + link)
 
 
 # ----------------------------------------------------------------- loop
 
-def run_once(client, next_game, lineage, rankings, cache, ptx):
+def run_once(client, next_game, lineage, rankings, cache, ptx, api_v1=None):
     """One ESPN check: fetch, diff against the cache, post whatever's
     new. Returns True once FINAL has been posted -- the loop's signal to
     stop."""
@@ -441,14 +452,20 @@ def run_once(client, next_game, lineage, rankings, cache, ptx):
           f"halftime_posted={cache['halftime_posted']} "
           f"final_posted={cache['final_posted']})")
 
-    def post(text, label):
+    def post(text, label, media_id=None):
+        """The new tweet's id on success (truthy, so every `if post(...)`
+        below reads the same as before), None on failure. Only the final
+        post actually uses the id -- see final_tweet_id in the cache."""
         try:
-            response = client.create_tweet(text=text)
+            response = client.create_tweet(text=text, **ptx.media_kw(media_id))
         except Exception as e:
             print(f"X {label} post FAILED (not fatal): {e}")
-            return False
+            return None
         print(f"Posted {label}: {response}\n{text}\n")
-        return True
+        try:
+            return str((response.data or {}).get("id")) or True
+        except Exception:
+            return True
 
     if state == "in" and not cache["kickoff_posted"]:
         if post(compose_kickoff_tweet(next_game, lineage, rankings, ptx), "kickoff"):
@@ -481,9 +498,18 @@ def run_once(client, next_game, lineage, rankings, cache, ptx):
             commit_cache("Live: halftime posted")
 
     if state == "post" and not cache["final_posted"]:
-        text = compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx)
-        if post(text, "final"):
+        text = compose_final_tweet(lineage, holder, opponent, holder_score, opp_score,
+                                   ptx, next_game)
+        # `lineage` here is still the pre-game archive -- the pipeline won't
+        # ingest this result for another hour -- so final_spec() projects
+        # the counts forward off the score rather than reading them back.
+        media_id = ptx.card_media_id(api_v1, "final", next_game=next_game, lineage=lineage,
+                                     rankings=rankings, holder_score=holder_score,
+                                     opp_score=opp_score)
+        tweet_id = post(text, "final", media_id)
+        if tweet_id:
             cache["final_posted"] = True
+            cache["final_tweet_id"] = tweet_id if isinstance(tweet_id, str) else None
             save_cache(cache)
             commit_cache("Live: final posted")
         return True
@@ -535,6 +561,20 @@ def main():
         access_token_secret=os.environ["X_ACCESS_TOKEN_SECRET"],
     )
 
+    # media_upload() is v1.1-only (tweepy.Client is v2 and doesn't expose
+    # it), and only the final post uses it. Built defensively: if this
+    # raises, every post in the loop below still goes out, just text-only.
+    try:
+        api_v1 = tweepy.API(tweepy.OAuth1UserHandler(
+            os.environ["X_API_KEY"],
+            os.environ["X_API_KEY_SECRET"],
+            os.environ["X_ACCESS_TOKEN"],
+            os.environ["X_ACCESS_TOKEN_SECRET"],
+        ))
+    except Exception as e:
+        print(f"No v1.1 handle ({e}) -- the final post will go out without a card.")
+        api_v1 = None
+
     lineage = load_json(LINEAGE_PATH) or {"reigns": [], "belt_games": []}
     rankings = load_json(RANKINGS_PATH)
 
@@ -546,7 +586,7 @@ def main():
     # second one of these while this loop is still going.
     deadline = now_utc + MAX_SESSION
     while True:
-        finished = run_once(client, next_game, lineage, rankings, cache, ptx)
+        finished = run_once(client, next_game, lineage, rankings, cache, ptx, api_v1)
         if finished:
             print("Final posted -- this game is done.")
             break

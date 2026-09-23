@@ -73,10 +73,27 @@ on:
     - cron: '30 4 * * 0'
     #   - Sun 1:00am ET  -- final overnight catch-all
     - cron: '0 6 * * 0'
-    #   - 2:00pm ET  -- dedicated run for the X preview post below;
-    #     doesn't hurt to also pick up any last-minute data change before
-    #     the weekend's games
-    - cron: '0 18 * * 5'
+    # The week's own posts (2026-09-23). Each slot needs two lines because
+    # a fixed Eastern clock time is two different UTC times across the
+    # year, and post_to_x.py decides which of the pair was actually right
+    # for today's date -- see is_post_time_tick(). All are at :10 rather
+    # than :00 so they can never name the same minute as the game-day
+    # lines further down, which would make github.event.schedule ambiguous.
+    #   - Thu 7:10pm ET -- the challenger post
+    - cron: '10 23 * * 4'
+    - cron: '10 0 * * 5'
+    #   - Fri 6:10pm ET -- the preview post (moved from Fri 2pm; it also
+    #     picks up any last-minute data change before the weekend's games)
+    - cron: '10 22 * * 5'
+    - cron: '10 23 * * 5'
+    #   - Sat 9:10am ET -- the poll, which used to ride the Friday preview
+    #     run and go out in the same minute as the preview itself
+    - cron: '10 13 * * 6'
+    - cron: '10 14 * * 6'
+    # Sunday 10:00am ET -- the state-of-the-belt post -- deliberately has
+    # NO line of its own: the game-day morning lines below already fire at
+    # 10:00 ET every day of the season, and post_to_x.py's weekday check
+    # picks the Sunday out of them.
     # Game-day mode (wishlist #3, 2026-09-16, Bob: "On Saturdays I want the
     # homepage to feel alive... it's just a different cron schedule on the
     # workflow you already have") -- these two lines add an hourly check-in
@@ -224,6 +241,34 @@ on:
         required: false
         type: boolean
         default: false
+      post_preview:
+        description: >-
+          Post the Friday preview now, skipping the 6:10 PM ET Friday
+          slot check. Still won't post twice for the same game.
+        required: false
+        type: boolean
+        default: false
+      post_challenger:
+        description: >-
+          Post the Thursday challenger post now, skipping the 7:10 PM ET
+          Thursday slot check. Still won't post twice for the same game.
+        required: false
+        type: boolean
+        default: false
+      post_poll:
+        description: >-
+          Post the Saturday poll now, skipping the 9:10 AM ET Saturday
+          slot check. Still won't post twice for the same game.
+        required: false
+        type: boolean
+        default: false
+      post_state:
+        description: >-
+          Post the Sunday state-of-the-belt post now, skipping the 10 AM
+          ET Sunday slot check. Still won't post twice in one day.
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -259,13 +304,13 @@ jobs:
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IG_BUSINESS_ACCOUNT_ID: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
-          # True only on the Friday 2pm ET cron line above -- that's the
-          # one and only run meant to post the upcoming-game preview, on
-          # both X and Instagram (post_to_instagram.py reads this same
-          # flag, not a separate one -- see its docstring).
-          # github.event.schedule tells us which cron line fired this run
-          # (unset for workflow_dispatch/push, so those never post one).
-          X_POST_PREVIEW: ${{ github.event.schedule == '0 18 * * 5' }}
+          # post_to_instagram.py reads this as "is this the Friday preview
+          # run" -- both Friday lines set it, and its own cache keeps the
+          # November week (when both fire) to one post. post_to_x.py does
+          # NOT use this any more: it needs to know which of the two lines
+          # is actually 6:10pm Eastern today, which only X_FIRED_CRON can
+          # tell it. X_POST_PREVIEW_MANUAL is its manual override instead.
+          X_POST_PREVIEW: ${{ github.event.schedule == '10 22 * * 5' || github.event.schedule == '10 23 * * 5' }}
           # The cron line that fired this run, verbatim (empty for a push
           # or a manual run) -- post_to_x.py's game-day post fires only
           # from the one line that lands on 10:00 AM America/New_York on
@@ -278,6 +323,13 @@ jobs:
           # now (if today is game day and it hasn't gone out), skipping
           # only the 10 AM tick check above.
           X_POST_GAMEDAY: ${{ github.event.inputs.post_gameday }}
+          # The manual overrides for the other four scheduled posts. Each
+          # skips only its slot check -- the once-per-occurrence cache
+          # still applies, so a manual run can't double-post.
+          X_POST_PREVIEW_MANUAL: ${{ github.event.inputs.post_preview }}
+          X_POST_CHALLENGER: ${{ github.event.inputs.post_challenger }}
+          X_POST_POLL: ${{ github.event.inputs.post_poll }}
+          X_POST_STATE: ${{ github.event.inputs.post_state }}
           # Only set (to the string "true") on a manual "Run workflow" run
           # with the full-refetch checkbox ticked -- see the input above
           # and update_all.py's own docstring/FULL_REFETCH_GAME_DETAILS.

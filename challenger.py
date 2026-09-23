@@ -180,9 +180,17 @@ def belt_story(team, holder, lineage, today=None):
     }
 
 
-def short_line(story, limit=150):
-    """The one fact for a post: the most surprising that fits `limit`."""
-    for line in story.get("ranked") or []:
-        if len(line) <= limit:
-            return line
-    return ""
+def short_line(story, limit=150, skip=0):
+    """The one fact for a post: the most surprising that fits `limit`.
+
+    `skip` passes over that many of the fitting lines first. The Thursday
+    challenger post takes skip=0 and Friday's preview takes skip=1, so the
+    two don't lead with the same fact two days apart -- before that split
+    both called this and both got the headline. A team with only one
+    fact to its name still returns it rather than nothing: repeating
+    beats going silent.
+    """
+    fitting = [line for line in (story.get("ranked") or []) if len(line) <= limit]
+    if not fitting:
+        return ""
+    return fitting[skip] if skip < len(fitting) else fitting[-1]
