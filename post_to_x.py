@@ -184,7 +184,8 @@ def ordinal(n):
 
 def pretty_date(iso_date):
     try:
-        return datetime.strptime(iso_date, "%Y-%m-%d").strftime("%b %-d, %Y")
+        d = datetime.strptime(iso_date, "%Y-%m-%d")
+        return f"{d:%b} {d.day}, {d:%Y}"
     except (ValueError, TypeError):
         return iso_date or ""
 
@@ -425,7 +426,7 @@ def compose_preview_tweet(next_game, ai_preview, belt_risk=None, lineage=None):
     # and only if the post still fits X's 280, so it never costs the
     # matchup, the prediction or the odds their place.
     lines.append("")
-    lines.append(tag_link(f"{SITE_URL}/preview.html", "preview"))
+    lines.append(tag_link(f"{SITE_URL}/preview.html", "preview", bust=next_game.get("id")))
     text = "\n".join(lines)
     if lineage:
         # skip=1: Thursday's challenger post already led with rank 0,
@@ -551,7 +552,7 @@ def compose_poll(next_game):
         matchup = f"{holder} at {opponent}"
     text = (f"\U0001F3C8 Belt on the line: {matchup}, {date}.\n\n"
             f"Your call \u2014 does the belt stay put?\n\n"
-            + tag_link(f"{SITE_URL}/preview.html", "poll"))
+            + tag_link(f"{SITE_URL}/preview.html", "poll", bust=next_game.get("id")))
     minutes = 24 * 60
     raw = next_game.get("raw_date")
     if raw:
@@ -842,7 +843,7 @@ def compose_gameday_tweet(next_game, lineage, ai_preview=None, belt_risk=None,
         venue = ", ".join(x for x in (next_game.get("venue_city"), next_game.get("venue_state")) if x)
 
     header = "\U0001F3C8 GAME DAY \u2014 the belt is on the line"
-    link = tag_link(f"{SITE_URL}/preview.html", "gameday")
+    link = tag_link(f"{SITE_URL}/preview.html", "gameday", bust=next_game.get("id"))
     long_stakes, short_stakes, tiny_stakes = stakes_lines(next_game, lineage, today)
     lean = lean_line(ai_preview, belt_risk, holder, opponent)
     forecast = weather_line(weather)
@@ -970,7 +971,7 @@ def next_game_line(next_game, today):
     opp = next_game.get("opponent") or ""
     if not opp:
         return ""
-    return f"Next on the line: {when:%a %b %-d}, {where}{opp}."
+    return f"Next on the line: {when:%a %b} {when.day}, {where}{opp}."
 
 
 def compose_state_tweet(lineage, next_game, today):
@@ -1077,7 +1078,8 @@ def compose_challenger_tweet(next_game, lineage, today):
         return ""
     when = date.fromisoformat(next_game["date"])
     return (f"\U0001F3C8 {opponent} gets a shot at the belt on {when:%A}.\n\n"
-            f"{fact}\n\n" + tag_link(f"{SITE_URL}/preview.html", "challenger"))
+            f"{fact}\n\n" + tag_link(f"{SITE_URL}/preview.html", "challenger",
+                                      bust=next_game.get("id")))
 
 
 def post_challenger(client, lineage, cache, api_v1=None):

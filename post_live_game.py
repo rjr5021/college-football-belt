@@ -351,7 +351,8 @@ def compose_kickoff_tweet(next_game, lineage, rankings, ptx):
         stakes = f"\n\n{holder}: {nth} defense of a {days}-day reign."
     return (f"\U0001F3C8 KICKOFF — the belt is on the line\n\n"
             f"{matchup} is underway.{stakes}\n\n"
-            + tag_link(f"{SITE_URL}/preview.html", "live-kickoff"))
+            + tag_link(f"{SITE_URL}/preview.html", "live-kickoff",
+                       bust=next_game.get("id")))
 
 
 def compose_score_tweet(next_game, holder, opponent, prev_h, prev_o,
@@ -371,7 +372,7 @@ def compose_score_tweet(next_game, holder, opponent, prev_h, prev_o,
 
     score_line = f"{holder_disp} {holder_score} – {opp_score} {opp_disp}"
     status = belt_status_line(holder_score, opp_score)
-    link = tag_link(f"{SITE_URL}/preview.html", "live-score")
+    link = tag_link(f"{SITE_URL}/preview.html", "live-score", bust=next_game.get("id"))
 
     candidates = []
     if play and play.get("text"):
@@ -389,7 +390,8 @@ def compose_halftime_tweet(next_game, holder, opponent, holder_score, opp_score,
     return (f"\U0001F3DF️ HALFTIME\n\n"
             f"{holder_disp} {holder_score} – {opp_score} {opp_disp}\n\n"
             f"{belt_status_line(holder_score, opp_score)}\n"
-            + tag_link(f"{SITE_URL}/preview.html", "live-half"))
+            + tag_link(f"{SITE_URL}/preview.html", "live-half",
+                       bust=next_game.get("id")))
 
 
 def final_link(next_game):

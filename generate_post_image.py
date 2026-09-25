@@ -316,7 +316,8 @@ def _facts(next_game, lineage, rankings, today=None):
 
     kick = ptx.kickoff_et(next_game, ptx.eastern_tz())
     watch = next_game.get("watch") or next_game.get("tv") or next_game.get("stream")
-    when = f'{game_day:%a %b %-d} · {kick or "Time TBD"} · {next_game["venue_name"]}'
+    when = (f'{game_day:%a %b} {game_day.day} · {kick or "Time TBD"} · '
+            f'{next_game["venue_name"]}')
     if watch:
         when += f" · {watch}"
 
@@ -387,7 +388,7 @@ def final_spec(next_game, lineage, rankings, holder_score, opp_score, today=None
     A tie leaves the belt where it is, same as the site's own rule."""
     f = _facts(next_game, lineage, rankings, today)
     changed = opp_score > holder_score
-    when = (f'{f["game_day"]:%a %b %-d} · {next_game["venue_name"]} · '
+    when = (f'{f["game_day"]:%a %b} {f["game_day"].day} · {next_game["venue_name"]} · '
             + (f'{_ord(f["next_reign_no"])} reign in 157 years' if changed
                else f'{_ord(f["defense_no"])} defense this reign'))
 

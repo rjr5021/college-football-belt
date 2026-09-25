@@ -41,13 +41,25 @@ CAMPAIGNS = {
 }
 
 
-def tag(url, kind, source="x", medium="social"):
+def tag(url, kind, source="x", medium="social", bust=None):
     """Return `url` with the UTM parameters for post type `kind`.
 
     Unknown kinds pass through untagged rather than inventing a campaign
     name -- a typo should cost a measurement, not send traffic to a row
     nobody is watching. Existing query parameters are preserved, and a
     URL that already carries utm_campaign is left exactly as it is.
+
+    `bust` adds &g=<bust>, and exists because of what happened on
+    2026-09-24: the Thursday challenger post linked /preview.html and X
+    unfurled it with LAST week's title, "Notre Dame vs. Michigan State
+    Preview". The page was correct; X was showing a link-preview card it
+    had scraped days earlier and cached. /preview.html is one URL whose
+    contents change every week, so every post that links it and carries
+    no image of its own is at the mercy of that cache. Passing the game
+    id makes each week's link a distinct URL to the scraper and it
+    fetches afresh. The page's rel=canonical still points at the clean
+    path, so Google sees one page and GoatCounter still reports the
+    canonical path with the query string recorded separately.
     """
     campaign = CAMPAIGNS.get(kind)
     if not campaign or not url:
@@ -57,4 +69,6 @@ def tag(url, kind, source="x", medium="social"):
     if "utm_campaign" in params:
         return url
     params.update({"utm_source": source, "utm_medium": medium, "utm_campaign": campaign})
+    if bust:
+        params["g"] = str(bust)
     return urlunparse(parts._replace(query=urlencode(params)))

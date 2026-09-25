@@ -104,6 +104,25 @@ for label, hs, os_ in (("defended", 31, 17), ("changed hands", 21, 24), ("tie", 
     check(f"{label}: fits X's limit", ptx.tweet_length(text) <= ptx.TWEET_MAX,
           str(ptx.tweet_length(text)))
 
+# 6. the link X actually unfurls
+print("6. every /preview.html link is unique to this game")
+import share_links
+NG2 = dict(NEXT, id=401858999)
+seen = {}
+for kind in ("preview", "poll", "gameday", "challenger", "live-kickoff", "live-score", "live-half"):
+    a = share_links.tag(f"{ptx.SITE_URL}/preview.html", kind, bust=NEXT["id"])
+    b = share_links.tag(f"{ptx.SITE_URL}/preview.html", kind, bust=NG2["id"])
+    check(f"{kind}: this week's link differs from next week's", a != b, a)
+    seen[kind] = a
+check("and each post type is still its own campaign", len(set(seen.values())) == len(seen))
+check("the game id rides along", all(f'g={NEXT["id"]}' in u for u in seen.values()))
+# The reason all of this exists: on 2026-09-24 the challenger post linked
+# /preview.html with no image of its own, and X unfurled a card it had
+# scraped the week before -- "Notre Dame vs. Michigan State Preview" under
+# a post about Purdue. One URL, changing contents, cached by the scraper.
+check("a missing game id degrades to the plain link, not a crash",
+      share_links.tag(f"{ptx.SITE_URL}/preview.html", "poll", bust=None).endswith("x-poll"))
+
 print()
 if fails:
     print(f"{len(fails)} FAILURE(S): " + ", ".join(fails))

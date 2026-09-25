@@ -100,9 +100,14 @@ assert "Notre Dame: 3rd defense of a 294-day reign. Michigan State takes the bel
 assert "The Lean: Notre Dame 42-17 · 97% to defend" in t
 # the link carries its campaign tag (share_links.py) so the game-day post's
 # clicks are separable from every other post's in GoatCounter; X wraps it in
-# t.co either way, so the tag is free against the 280 (asserted above)
+# t.co either way, so the tag is free against the 280 (asserted above).
+# &g=<game id> came later (2026-09-25): /preview.html is one URL whose
+# contents change weekly, and X had been unfurling a link-preview card it
+# scraped days earlier -- a post about Purdue showing "Notre Dame vs.
+# Michigan State Preview". The id makes each week's link new to the scraper.
 assert t.endswith("\n\nhttps://collegefootballbelt.com/preview.html"
-                  "?utm_source=x&utm_medium=social&utm_campaign=x-gameday")
+                  "?utm_source=x&utm_medium=social&utm_campaign=x-gameday"
+                  f"&g={NEXT_GAME['id']}"), t[-140:]
 assert "forecast" not in t, "no room for the forecast next to the lean today"
 
 t = compose(rankings=None)

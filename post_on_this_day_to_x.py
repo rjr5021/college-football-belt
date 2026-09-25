@@ -319,7 +319,7 @@ def compose_otd_tweet(game, belt_games, today, extra_count, window_days=1):
     else:
         # the weekly window picked a game from elsewhere in the week, so
         # date it properly rather than claiming it happened today
-        lede_year = f"{game_date:%B %-d}, {year}"
+        lede_year = f"{game_date:%B} {game_date.day}, {year}"
 
     if game["outcome"] == "established":
         verb = _win_verb(abs(int(winner_score) - int(other_score)))
@@ -433,8 +433,8 @@ def main():
 
     matches = find_matches(belt_games, today, WINDOW_DAYS)
     if not matches:
-        span = ("on " + today.strftime("%B %-d") if WINDOW_DAYS <= 1
-                else f"in the week from {today:%B %-d}")
+        span = (f"on {today:%B} {today.day}" if WINDOW_DAYS <= 1
+                else f"in the week from {today:%B} {today.day}")
         print(f"No belt games {span} in any past year -- nothing to post.")
         cache["last_posted_date"] = otd_cache_key(today)
         save_cache(cache)

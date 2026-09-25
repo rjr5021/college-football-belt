@@ -80,27 +80,43 @@ for name, spec in (("preview", gpi.preview_spec(NEXT, LINEAGE, RANKINGS, TODAY))
     check(f"{name}: no 'None' leaked into a string",
           not any("None" in v for v in flat), str([v for v in flat if "None" in v]))
 
-# 5. the rendered file
-print("5. the PNG itself")
-out = os.path.join(gpi.OUT_DIR, "_test.png")
-gpi.generate_post_image(kept, out, COLORS)
-from PIL import Image
-with Image.open(out) as im:
-    check("1200x675, the ratio X shows uncropped", im.size == (1200, 675), str(im.size))
-check("under 1 MB (X re-encodes past 5)", os.path.getsize(out) < 1_000_000,
-      str(os.path.getsize(out)))
-os.remove(out)
-
-# 6. a team the colour file has never heard of must still render
-print("6. an unknown team falls back rather than raising")
-odd = dict(kept)
-odd["left"] = dict(kept["left"], team="Not A Real School")
+# Everything above is arithmetic and wording and runs anywhere. What
+# follows draws actual pixels, so it needs Pillow -- which the pipeline
+# has (it's in requirements.txt, and generate_share_image.py has needed
+# it for as long as the site has had a share image) but a laptop might
+# not. Skip rather than fail: a missing local Pillow says nothing about
+# whether the cards are right, and check 7 below is a better test of that
+# case anyway.
 try:
-    gpi.generate_post_image(odd, out, COLORS)
-    check("renders with fallback colours", os.path.exists(out))
+    from PIL import Image
+    HAVE_PIL = True
+except ImportError:
+    HAVE_PIL = False
+
+out = os.path.join(gpi.OUT_DIR, "_test.png")
+
+if not HAVE_PIL:
+    print("5-6. skipped -- Pillow isn't installed here (pip install Pillow to run them)")
+else:
+    # 5. the rendered file
+    print("5. the PNG itself")
+    gpi.generate_post_image(kept, out, COLORS)
+    with Image.open(out) as im:
+        check("1200x675, the ratio X shows uncropped", im.size == (1200, 675), str(im.size))
+    check("under 1 MB (X re-encodes past 5)", os.path.getsize(out) < 1_000_000,
+          str(os.path.getsize(out)))
     os.remove(out)
-except Exception as e:
-    check("renders with fallback colours", False, repr(e))
+
+    # 6. a team the colour file has never heard of must still render
+    print("6. an unknown team falls back rather than raising")
+    odd = dict(kept)
+    odd["left"] = dict(kept["left"], team="Not A Real School")
+    try:
+        gpi.generate_post_image(odd, out, COLORS)
+        check("renders with fallback colours", os.path.exists(out))
+        os.remove(out)
+    except Exception as e:
+        check("renders with fallback colours", False, repr(e))
 
 # 7. the guarantee the whole design rests on: card() never raises
 print("7. card() swallows everything and returns None")
@@ -111,6 +127,32 @@ check("lineage with no reigns",
 check("final with no scores",
       gpi.card("final", NEXT, LINEAGE, RANKINGS, COLORS, None, None) is None)
 check("garbage in every slot", gpi.card("preview", None, None, None, None) is None)
+if not HAVE_PIL:
+    # The best version of this check there is: a real machine with no
+    # Pillow, proving the post would still go out without its picture.
+    check("a machine with no Pillow at all",
+          gpi.card("preview", NEXT, LINEAGE, RANKINGS, COLORS) is None)
+
+# 8. the one that only fails on someone else's machine
+#
+# The no-pad day directive (percent, hyphen, d) is a glibc extension. It
+# works on the Linux runner and raises ValueError on Windows, so a card or
+# a post that uses it renders perfectly in CI and dies the moment anyone
+# runs the tests on their own laptop -- which is exactly what happened on
+# 2026-09-23. Write f"{d:%b} {d.day}" instead.
+#
+# The pattern is assembled from pieces rather than written out, so this
+# check doesn't flag its own source.
+print("8. no platform-specific strftime directives")
+import glob
+import re
+NO_PAD = re.compile("%" + "-" + "[dImHjMSyY]")
+bad = []
+for path in sorted(glob.glob(os.path.join(HERE, "*.py"))):
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        if NO_PAD.search(line):
+            bad.append(f"{os.path.basename(path)}:{n}")
+check("no no-pad strftime directives anywhere in the project", not bad, str(bad))
 
 print()
 if fails:
