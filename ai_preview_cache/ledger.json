@@ -21,5 +21,22 @@
     "predicted_score": "Notre Dame 52, Purdue 17",
     "generated": "2026-09-20",
     "line": null
+  },
+  {
+    "key": "Notre Dame|North Carolina|2026-10-03",
+    "holder": "Notre Dame",
+    "opponent": "North Carolina",
+    "date": "2026-10-03",
+    "is_home": false,
+    "neutral": false,
+    "predicted_winner": "Notre Dame",
+    "predicted_score": "Notre Dame 38, North Carolina 13",
+    "generated": "2026-09-26",
+    "line": {
+      "provider": "DraftKings",
+      "holder_spread": -20.5,
+      "formatted_spread": "Notre Dame -20.5",
+      "over_under": 49.5
+    }
   }
 ]
