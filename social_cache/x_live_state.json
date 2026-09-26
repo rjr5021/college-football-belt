@@ -1,8 +1,9 @@
 {
-  "game_key": "Notre Dame|Michigan State|2026-09-19",
-  "kickoff_posted": false,
+  "game_key": "Notre Dame|Purdue|2026-09-26",
+  "kickoff_posted": true,
   "halftime_posted": false,
-  "final_posted": true,
-  "last_holder_score": 27,
-  "last_opp_score": 10
+  "final_posted": false,
+  "final_tweet_id": null,
+  "last_holder_score": 0,
+  "last_opp_score": 0
 }
