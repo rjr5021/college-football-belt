@@ -181,13 +181,29 @@ def commit_cache(message):
         print(f"git commit/push for the live-state cache failed (not fatal): {e}")
 
 
+def belt_at_risk(holder_score, opp_score):
+    """Is the belt currently on course to change hands? Exactly the rule
+    belt_status_line() prints: trailing is IN DANGER, leading or tied is
+    safe, because a tie doesn't move the belt. None scores read as 0-0,
+    so a game opens in the safe state."""
+    return (holder_score or 0) < (opp_score or 0)
+
+
 def game_key(next_game):
     return f"{next_game['team']}|{next_game['opponent']}|{next_game['date']}"
 
 
-def fresh_state(key):
+# The fields of next_game.json this script actually needs, copied into the
+# cache so a game can be finished after next_game.json has moved on -- see
+# unfinished_game() for why that matters.
+GAME_FIELDS = ("id", "team", "opponent", "date", "raw_date", "neutral",
+               "is_home", "start_time_tbd", "venue_name")
+
+
+def fresh_state(key, game=None):
     return {
         "game_key": key,
+        "game": {k: (game or {}).get(k) for k in GAME_FIELDS} if game else None,
         "kickoff_posted": False,
         "halftime_posted": False,
         "final_posted": False,
@@ -195,6 +211,38 @@ def fresh_state(key):
         "last_holder_score": None,
         "last_opp_score": None,
     }
+
+
+def unfinished_game(cache, next_game, now_utc):
+    """The game this script should be watching: usually next_game.json's,
+    but the one in the cache when that game is still unfinished.
+
+    2026-09-26 is why this exists. Notre Dame beat Purdue, the last score
+    posted at 21:10 UTC, and the pipeline ingested the result at 21:16 --
+    which rewrote next_game.json to point at Notre Dame's NEXT game. From
+    that moment in_live_window() was comparing the clock against a kickoff
+    weeks away, every five-minute tick exited in fourteen seconds, and the
+    final post for the game that had just ended could never happen:
+    final_posted was false and nothing would ever look at it again. A week
+    earlier the same code worked only because that game ended at 02:44
+    with no pipeline run racing it.
+
+    So: if the cache holds a game whose final hasn't posted and whose own
+    window is still open, that game wins. next_game.json moving on is not
+    permission to abandon it.
+    """
+    cached = (cache or {}).get("game")
+    if not cached or not cached.get("id"):
+        return next_game
+    if cache.get("final_posted") or not cache.get("kickoff_posted"):
+        return next_game
+    if next_game and game_key(next_game) == cache.get("game_key"):
+        return next_game
+    if not in_live_window(cached, now_utc):
+        return next_game
+    print(f"next_game.json has moved on, but {cache['game_key']} never posted "
+          f"its final and its window is still open -- finishing that one first.")
+    return cached
 
 
 def in_live_window(next_game, now_utc):
@@ -461,6 +509,10 @@ def run_once(client, next_game, lineage, rankings, cache, ptx, api_v1=None):
         try:
             response = client.create_tweet(text=text, **ptx.media_kw(media_id))
         except Exception as e:
+            # ::warning:: puts this on the run's summary page. On 2026-09-26
+            # the final post failed and the run stayed green, so nothing
+            # said so for fourteen hours.
+            print(f"::warning::X {label} post FAILED (not fatal): {e}")
             print(f"X {label} post FAILED (not fatal): {e}")
             return None
         print(f"Posted {label}: {response}\n{text}\n")
@@ -484,13 +536,31 @@ def run_once(client, next_game, lineage, rankings, cache, ptx, api_v1=None):
         cache["last_holder_score"], cache["last_opp_score"] = holder_score, opp_score
         save_cache(cache)
     elif (holder_score, opp_score) != (prev_h, prev_o):
-        play = find_scoring_play(summary, holder, opponent)
-        text = compose_score_tweet(next_game, holder, opponent, prev_h, prev_o,
-                                    holder_score, opp_score, rankings, ptx, play)
-        if post(text, "scoring update"):
+        # Only when the belt's fate changes hands -- safe to in danger or
+        # back. Notre Dame 49-10 over Purdue on 2026-09-26 produced NINE
+        # scoring posts, not one of which said anything the previous one
+        # hadn't, and together they used most of a day's posting allowance:
+        # the final post and the pipeline's result post both failed
+        # immediately afterwards. This account exists to say where the belt
+        # is going, so the signal worth a post is precisely the one
+        # belt_status_line() prints, and a score that doesn't move it is
+        # not news. The running score is still tracked and committed every
+        # time, so the next five-minute tick compares against the truth
+        # rather than a stale number.
+        if belt_at_risk(holder_score, opp_score) != belt_at_risk(prev_h, prev_o):
+            play = find_scoring_play(summary, holder, opponent)
+            text = compose_score_tweet(next_game, holder, opponent, prev_h, prev_o,
+                                        holder_score, opp_score, rankings, ptx, play)
+            if post(text, "belt status change"):
+                cache["last_holder_score"], cache["last_opp_score"] = holder_score, opp_score
+                save_cache(cache)
+                commit_cache("Live: belt status change posted")
+        else:
+            print(f"[poll] {holder} {holder_score}-{opp_score} {opponent} -- score moved, "
+                  f"the belt's position didn't; noting it without posting.")
             cache["last_holder_score"], cache["last_opp_score"] = holder_score, opp_score
             save_cache(cache)
-            commit_cache("Live: scoring update posted")
+            commit_cache("Live: score noted")
 
     if is_half and not cache["halftime_posted"]:
         text = compose_halftime_tweet(next_game, holder, opponent, holder_score, opp_score, rankings, ptx)
@@ -525,12 +595,14 @@ def main():
         print(f"Skipping live X posts -- missing env var(s): {', '.join(missing)} (optional).")
         return
 
-    next_game = load_json(NEXT_GAME_PATH)
+    scheduled = load_json(NEXT_GAME_PATH)
+    now_utc = datetime.now(timezone.utc)
+    cache = load_cache()
+    next_game = unfinished_game(cache, scheduled, now_utc)
     if not next_game:
         print("No upcoming game -- nothing live to check.")
         return
 
-    now_utc = datetime.now(timezone.utc)
     if not in_live_window(next_game, now_utc):
         print("Not near the next belt game's kickoff -- skipping (no ESPN call).")
         return
@@ -540,9 +612,8 @@ def main():
         return
 
     key = game_key(next_game)
-    cache = load_cache()
     if cache.get("game_key") != key:
-        cache = fresh_state(key)
+        cache = fresh_state(key, next_game)
         save_cache(cache)
 
     if cache.get("final_posted"):

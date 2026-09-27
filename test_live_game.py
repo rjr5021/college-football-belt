@@ -207,7 +207,7 @@ def test_run_once_end_to_end(monkeypatch=None):
             p.CACHE_PATH = os.path.join(tmp, "x_live_state.json")
 
             client = FakeClient()
-            cache = p.fresh_state(p.game_key(NEXT_GAME))
+            cache = p.fresh_state(p.game_key(NEXT_GAME), NEXT_GAME)
             rankings = None
 
             finished = p.run_once(client, NEXT_GAME, LINEAGE, rankings, cache, ptx)
@@ -217,25 +217,28 @@ def test_run_once_end_to_end(monkeypatch=None):
             check("kickoff posts exactly once", len(client.posts) == 1 and "KICKOFF" in client.posts[0])
 
             p.run_once(client, NEXT_GAME, LINEAGE, rankings, cache, ptx)
-            check("a score posts the play and stays SAFE",
-                  len(client.posts) == 2 and "CJ Carr 3 Yd Run" in client.posts[1]
-                  and "SAFE" in client.posts[1])
+            check("the holder going 7-0 up leaves the belt exactly as safe as "
+                  "it was, so nothing is posted",
+                  len(client.posts) == 1)
 
             p.run_once(client, NEXT_GAME, LINEAGE, rankings, cache, ptx)
             check("halftime posts once, no duplicate scoring post for an unchanged score",
-                  len(client.posts) == 3 and "HALFTIME" in client.posts[2])
+                  len(client.posts) == 2 and "HALFTIME" in client.posts[1])
 
+            # 7-0 to 27-20: the holder led before and leads after. Since
+            # 2026-09-26 that is noted in the cache and NOT posted -- nine
+            # such posts in one game are what pushed the final and the
+            # result post over X's daily allowance.
             finished = p.run_once(client, NEXT_GAME, LINEAGE, rankings, cache, ptx)
-            check("final posts and reports the game as finished",
-                  len(client.posts) == 5 and finished)
-            check("final is a belt change (MSU 27, wait -- ND 27 beat MSU 20: a defense)",
-                  "defends the belt" in client.posts[4])
-            check("the trailing MSU score change before final still posted its own scoring update",
-                  "IN DANGER" in client.posts[3] or "SAFE" in client.posts[3])
+            check("a score that doesn't change the belt's position posts nothing",
+                  len(client.posts) == 3 and finished)
+            check("but the final still goes out", "defends the belt" in client.posts[2])
+            check("and the cache kept the real score anyway",
+                  (cache["last_holder_score"], cache["last_opp_score"]) == (27, 20))
 
             p.run_once(client, NEXT_GAME, LINEAGE, rankings, cache, ptx)
             check("a rerun after final is idempotent -- exits immediately with no new posts",
-                  len(client.posts) == 5)
+                  len(client.posts) == 3)
     finally:
         p.fetch_espn_summary = original_fetch
         p.commit_cache = original_commit
@@ -253,3 +256,87 @@ if __name__ == "__main__":
         print(f"{len(FAILURES)} CHECK(S) FAILED: {FAILURES}")
         sys.exit(1)
     print("ALL CHECKS PASSED")
+
+
+# ---------------------------------------------------------------------------
+# What Saturday 2026-09-26 taught us. Notre Dame beat Purdue 49-10: nine
+# scoring posts went out, then the final post and the pipeline's result post
+# both failed, and because next_game.json had already advanced the final
+# could never be retried. These pin down both halves of the fix.
+# ---------------------------------------------------------------------------
+
+import post_live_game as _plg
+from datetime import datetime as _dt, timezone as _tz
+
+_fails = []
+
+
+def _check(label, cond, detail=""):
+    print(("[PASS] " if cond else "[FAIL] ") + label + ("" if cond else f"  {detail}"))
+    if not cond:
+        _fails.append(label)
+
+
+print("\nbelt_at_risk: the same rule the post text prints")
+_check("holder ahead -- safe", _plg.belt_at_risk(49, 10) is False)
+_check("holder trailing -- at risk", _plg.belt_at_risk(10, 49) is True)
+_check("tied is safe, because a tie doesn't move the belt",
+       _plg.belt_at_risk(14, 14) is False)
+_check("a fresh game opens safe", _plg.belt_at_risk(None, None) is False)
+_check("it agrees with belt_status_line, which is the point",
+       ("IN DANGER" in _plg.belt_status_line(10, 49)) is _plg.belt_at_risk(10, 49)
+       and ("IN DANGER" in _plg.belt_status_line(14, 14)) is _plg.belt_at_risk(14, 14))
+
+print("\nthe Purdue game, scoring drive by scoring drive")
+# the real shape of a 49-10 win: the holder scores first and never trails
+DRIVES = [(7, 0), (7, 3), (14, 3), (21, 3), (28, 3), (28, 10), (35, 10), (42, 10), (49, 10)]
+posts, prev = 0, (None, None)
+for now in DRIVES:
+    if _plg.belt_at_risk(*now) != _plg.belt_at_risk(*prev):
+        posts += 1
+    prev = now
+_check(f"nine scoring plays in a blowout now produce {posts} posts, not 9",
+       posts == 0, str(posts))
+print("       (kickoff, halftime and the final still go out -- three posts, not twelve)")
+
+print("\na game that actually swings still gets covered")
+SWING = [(0, 7), (7, 7), (7, 14), (14, 14), (21, 14), (21, 21), (21, 24)]
+posts, prev = 0, (None, None)
+for now in SWING:
+    if _plg.belt_at_risk(*now) != _plg.belt_at_risk(*prev):
+        posts += 1
+    prev = now
+_check(f"a see-saw game still posts every time the belt flips ({posts})",
+       posts == 5, str(posts))
+
+print("\nthe final can still be posted after next_game.json moves on")
+PLAYED = {"id": 401858467, "team": "Notre Dame", "opponent": "Purdue",
+          "date": "2026-09-26", "raw_date": "2026-09-26T18:00:00.000Z"}
+MOVED_ON = {"id": 401858999, "team": "Notre Dame", "opponent": "Boise State",
+            "date": "2026-10-03", "raw_date": "2026-10-03T18:00:00.000Z"}
+DURING = _dt(2026, 9, 26, 21, 20, tzinfo=_tz.utc)   # ten minutes after the last score
+
+stranded = _plg.fresh_state(_plg.game_key(PLAYED), PLAYED)
+stranded.update(kickoff_posted=True, final_posted=False)
+_check("the unfinished game wins over the one the pipeline moved to",
+       _plg.unfinished_game(stranded, MOVED_ON, DURING)["id"] == PLAYED["id"])
+
+done = dict(stranded, final_posted=True)
+_check("once its final is posted, the next game takes over",
+       _plg.unfinished_game(done, MOVED_ON, DURING)["id"] == MOVED_ON["id"])
+
+never_started = _plg.fresh_state(_plg.game_key(PLAYED), PLAYED)
+_check("a game that never kicked off doesn't hold things up",
+       _plg.unfinished_game(never_started, MOVED_ON, DURING)["id"] == MOVED_ON["id"])
+
+LATE = _dt(2026, 9, 27, 12, 0, tzinfo=_tz.utc)      # long past its window
+_check("and it is abandoned once its own window closes",
+       _plg.unfinished_game(stranded, MOVED_ON, LATE)["id"] == MOVED_ON["id"])
+
+_check("the cache carries what finishing the game needs",
+       all(stranded["game"].get(k) for k in ("id", "team", "opponent", "raw_date")))
+
+if _fails:
+    print(f"\n{len(_fails)} FAILURE(S): " + ", ".join(_fails))
+    raise SystemExit(1)
+print("\nAll 2026-09-26 regression checks passed.")

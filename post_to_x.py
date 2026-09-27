@@ -375,6 +375,10 @@ def post_results(client, lineage, cache):
             response = client.create_tweet(
                 text=text, **({"in_reply_to_tweet_id": reply_to} if reply_to else {}))
         except Exception as e:
+            # ::warning:: surfaces this on the run summary. Without it, the
+            # 2026-09-26 result post failed silently on every hourly run
+            # from 21:16 onward and the workflow stayed green throughout.
+            print(f"::warning::X result post FAILED for game {game['game_id']}: {e}")
             print(f"X post FAILED for game {game['game_id']} (not fatal to "
                   f"the pipeline): {e}")
             print("Stopping result-posting here; already-posted games stay "
