@@ -5,8 +5,8 @@
   "is_home": false,
   "neutral": false,
   "date": "2026-10-03",
-  "raw_date": "2026-10-03T04:00:00.000Z",
-  "start_time_tbd": true,
+  "raw_date": "2026-10-03T16:00:00.000Z",
+  "start_time_tbd": false,
   "season": 2026,
   "week": 5,
   "season_type": "regular",
@@ -15,7 +15,7 @@
   "venue_state": "NC",
   "venue_lat": 35.9069294,
   "venue_lon": -79.0478889,
-  "tv": null,
+  "tv": "ESPN",
   "stream": null,
-  "watch": null
+  "watch": "ESPN"
 }
