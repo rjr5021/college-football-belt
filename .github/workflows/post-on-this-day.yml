@@ -19,8 +19,8 @@ name: Post On This Day to X
 #
 # social_cache/x_otd_last_posted.json (which calendar date's post already
 # went out) is a plain file in the repo -- this workflow commits it back
-# the same way update-and-deploy.yml/follow-accounts.yml commit their own
-# social_cache/ files, so a same-day retry doesn't double-post.
+# the same way update-and-deploy.yml commits its own social_cache/ files,
+# so a same-day retry doesn't double-post.
 
 on:
   schedule:
@@ -98,4 +98,4 @@ jobs:
           else
             git commit -m "Advance On This Day post marker [skip ci]"
             git push
-          fi
+          fi

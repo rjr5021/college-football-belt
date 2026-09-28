@@ -90,12 +90,33 @@ SLEEP_BETWEEN = 3  # seconds between consecutive follow attempts, politeness
 # Substrings that mean "the credentials themselves were rejected", not
 # "this particular account is bad". Kept as a list (rather than one big
 # check) so it's easy to extend if X's error wording ever changes.
-AUTH_ERROR_MARKERS = ["401", "Unauthorized", "Could not authenticate"]
+# Errors that are about the ACCOUNT WE ARE USING, not about the account we
+# happen to be looking at. On any of these the run stops and nobody gets
+# marked failed, because retrying them later is exactly right.
+#
+# 402 is here because of 2026-09-26: X returned "402 Payment Required" once
+# the API credits ran out, and without it in this list a 402 fell through to
+# the generic handler below and wrote the handle into cache["failed"]
+# permanently. At four accounts a run, twelve runs a day, an empty wallet
+# would have quietly burned through the whole 240-name target list and none
+# of them would ever have been tried again.
+STOP_RUN_MARKERS = [
+    "401", "Unauthorized", "Could not authenticate",   # credentials
+    "402", "Payment Required",                          # out of API credits
+    "403", "Forbidden",                                 # plan doesn't allow it
+    "429", "Too Many Requests", "rate limit",           # slow down
+]
 
 
-def _is_auth_error(exc):
-    msg = str(exc)
-    return any(marker in msg for marker in AUTH_ERROR_MARKERS)
+def _should_stop_run(exc):
+    """True when the error is about our credentials, our billing or our rate
+    limit -- none of which is the target account's fault."""
+    msg = str(exc).lower()
+    return any(marker.lower() in msg for marker in STOP_RUN_MARKERS)
+
+
+# kept for anything still importing the old name
+_is_auth_error = _should_stop_run
 
 
 def load_targets():
@@ -167,12 +188,13 @@ def main():
         try:
             user = client.get_user(username=handle)
         except Exception as e:
-            if _is_auth_error(e):
+            if _should_stop_run(e):
                 print(f"  {handle} ({label}): couldn't look up user -- {e}")
-                print("  X API credentials are being rejected -- this isn't about "
-                      "this account. Stopping this run early without marking anyone "
-                      "permanently failed; the whole batch will retry once the "
-                      "credentials work again.")
+                print("::warning::X API is refusing our requests (credentials, "
+                      f"credits or rate limit): {e}")
+                print("  Not this account's fault. Stopping this run early without "
+                      "marking anyone permanently failed; the whole batch retries "
+                      "once the API works again.")
                 break
             print(f"  {handle} ({label}): couldn't look up user -- {e}")
             cache["failed"][handle] = f"lookup failed: {e}"
@@ -190,17 +212,13 @@ def main():
         try:
             client.follow_user(user.data.id)
         except Exception as e:
-            msg = str(e)
-            if "429" in msg or "Too Many Requests" in msg or "rate limit" in msg.lower():
-                print(f"  {handle} ({label}): rate limited -- stopping this "
-                      f"run early, will resume next scheduled run. {e}")
-                break
-            if _is_auth_error(e):
+            if _should_stop_run(e):
                 print(f"  {handle} ({label}): couldn't follow -- {e}")
-                print("  X API credentials are being rejected -- this isn't about "
-                      "this account. Stopping this run early without marking anyone "
-                      "permanently failed; the whole batch will retry once the "
-                      "credentials work again.")
+                print("::warning::X API is refusing our requests (credentials, "
+                      f"credits or rate limit): {e}")
+                print("  Not this account's fault. Stopping this run early without "
+                      "marking anyone permanently failed; the whole batch retries "
+                      "once the API works again.")
                 break
             print(f"  {handle} ({label}): follow failed -- {e}")
             cache["failed"][handle] = f"follow failed: {e}"

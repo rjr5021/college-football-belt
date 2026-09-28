@@ -171,10 +171,20 @@ this is safe to point at an existing belt_data/ folder:
                                  two-step image-post flow instead of a
                                  plain create_tweet() call.
 
-follow_batch.py is deliberately NOT a stage here -- it runs on its own much
-more frequent schedule (every ~2 hours, see follow-accounts.yml) to slowly
-build up who @CollegeFBBelt follows, independent of the game-driven cadence
-above. See follow_batch.py's own docstring.
+follow_batch.py is deliberately NOT a stage here, and as of 2026-09-28 it
+has no schedule of its own either: the follow-accounts.yml workflow was
+deleted. It ran every two hours from mid-September and followed nobody --
+POST /2/users/:id/following isn't available on this API plan, so every
+firing spent a call on a request that could not succeed. Once X moved to
+pay-per-use credits that became a standing charge, and on 2026-09-26 it
+drained the balance to nothing, which is why the Purdue game's final post
+and result post never went out. The six accounts @CollegeFBBelt follows
+were followed by hand in a browser.
+
+The script and follow_targets.json are kept because the target list is
+worth having -- 240 curated accounts, 232 of them never approached -- and
+because the script still runs on demand if the endpoint ever becomes
+available. Nothing calls it automatically.
 
 CFBD's free tier is capped at 1,000 calls/MONTH (not a short burst limit).
 Steps 1, 3 and 5 default to the cheap incremental fetch above; step 4's
