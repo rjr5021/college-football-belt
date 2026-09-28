@@ -518,6 +518,34 @@ def site_header(rel="", active=None, crumb=""):
 </header>'''
 
 
+def _network_links():
+    """The sister belts (beltholders.com for the NFL/NBA/NHL/MLB and
+    collegebasketballbelt.com), labelled with their current holders when
+    those sites' api/current.json answer at build time; plain labels if not."""
+    import urllib.request
+
+    def fetch(url):
+        try:
+            with urllib.request.urlopen(url, timeout=8) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception:
+            return {}
+
+    leagues = fetch("https://beltholders.com/api/current.json").get("leagues", {})
+    links = []
+    for key, name in (("nfl", "NFL"), ("nba", "NBA"), ("nhl", "NHL"), ("mlb", "MLB")):
+        short = (leagues.get(key) or {}).get("short")
+        label = f"{name} belt" + (f" &middot; {html.escape(short)}" if short else "")
+        links.append((f"https://beltholders.com/{key}/", label))
+    cbb = fetch("https://collegebasketballbelt.com/api/current.json").get("holder")
+    links.append(("https://collegebasketballbelt.com/",
+                  "College hoops" + (f" &middot; {html.escape(cbb)}" if cbb else " belt")))
+    links.append(("https://beltholders.com/", "All belts: Belt Holders"))
+    return links
+
+
+NETWORK_LINKS = _network_links()
+
 FOOTER_COLUMNS = [
     ("Lineage", [("lineage.html", "Full history"), ("all-games.html", "All games"), ("seasons.html", "Seasons"),
                  ("timeline.html", "Timeline"), ("rivalries/index.html", "Rivalries"), ("conferences/index.html", "Conference belts"),
@@ -532,6 +560,7 @@ FOOTER_COLUMNS = [
     ("About", [("about.html", "About"), ("ruleset.html", "Ruleset"), ("stories.html", "Stories"), ("records.html", "Records"),
                ("losers-belt.html", "Losers Belt"), ("shop.html", "Shop"), ("mailto:hello@collegefootballbelt.com", "Contact"), ("privacy.html", "Privacy"),
                ("https://x.com/CollegeFBBelt", "X · @CollegeFBBelt"), ("https://www.instagram.com/collegefbbelt/", "Instagram")]),
+    ("Belt network", NETWORK_LINKS),
 ]
 
 
@@ -1495,7 +1524,7 @@ details.moreStats .statCategory{ margin-top:18px; }
 
 /* ---------- site footer ---------- */
 .siteFoot{ margin-top:72px; border-top:1px solid var(--hairline); font-size:14px; color:var(--ink-soft); }
-.footGrid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; padding-block:44px 32px; }
+.footGrid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:32px; padding-block:44px 32px; }
 @media (max-width:820px){ .footGrid{ grid-template-columns:1fr 1fr; } .footBrand{ grid-column:1 / -1; } }
 @media (max-width:420px){ .footGrid{ grid-template-columns:1fr; gap:24px; } }
 .footBrand{ display:flex; flex-direction:column; gap:12px; }
