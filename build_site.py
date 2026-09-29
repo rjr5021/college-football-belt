@@ -444,6 +444,10 @@ NAV_MORE = [
         ("leaders", "leaders.html", "Belt-game leaders"),
         ("heartbreak", "heartbreak.html", "Heartbreak list"),
         ("polls", "polls.html", "Belt vs. the polls"),
+        ("champions", "champions.html", "Belt vs. the champion"),
+        ("standings", "standings.html", "Belt vs. the standings"),
+        ("postseason", "postseason.html", "Belt in the postseason"),
+        ("splits", "splits.html", "Home, road &amp; neutral"),
         ("lean", "lean.html", "The lean&rsquo;s ledger"),
         ("sotb", "state-of-the-belt.html", "State of the Belt"),
         ("what-if", "what-if.html", "What if?"),
@@ -16832,6 +16836,10 @@ def main():
     ):
         with open(os.path.join(OUT_DIR, fname), "w", encoding="utf-8") as f:
             f.write(html_out)
+    # CFB-4: the sister sites' champions / standings / postseason / splits pages
+    import parity_pages
+    parity_made = parity_pages.build(sys.modules[__name__], lineage, belt_games, OUT_DIR, {g["season"] for g in belt_games})
+    PAGES_ABSENT.update(p for p in parity_pages.PAGES if p not in parity_made)
     print(f"Wrote {reigns_written} reign pages, {len(rivalries_written)} rivalry pages, {len(state_codes)} state pages, "
           f"{len(decade_slugs)} decade pages, and outlook/timeline/leaders/heartbreak/lean/daily/about/state-of-the-belt to {OUT_DIR}/")
 
@@ -16993,6 +17001,7 @@ def main():
                                                   "lean.html", "daily.html", "about.html", "rivalries/index.html",
                                                   "states/index.html", "decades/index.html", "web.html", "data.html",
                                                   "state-of-the-belt.html")]
+    sitemap_urls += [f"{SITE_URL}/{p}" for p in parity_made if p != "search.html"]   # search results: noindex
     if "what-if.html" not in PAGES_ABSENT:
         sitemap_urls.append(f"{SITE_URL}/what-if.html")
     sitemap_urls += [f"{SITE_URL}/{p}" for p in ("belt-on.html", "degrees.html", "journey.html", "belt-tree.html") if p not in PAGES_ABSENT]
