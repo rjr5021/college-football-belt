@@ -97,6 +97,7 @@ GOOGLE_SITE_VERIFICATION = ""
 # 3. Ad placement itself (which pages, how many, where on the page) is
 #    configured from the AdSense dashboard under Auto ads -- not here --
 #    once the script above is live on the site.
+OWNER = "R&O Holdings LLC"      # the company that owns and operates the site (formed 2026-09-29)
 ADSENSE_PUBLISHER_ID = "pub-3317069252410560"
 
 # Merch shop (Fourthwall) -- a real store, live 2026-09. shop.html is built
@@ -644,7 +645,7 @@ def site_footer(rel="", note=""):
     <div class="footBrand"><a class="brand" href="{rel}index.html">{BELT_MARK_SVG}<span class="brandName">The College Football Belt</span></a>{note_html}</div>
     {cols}
   </div>
-  <div class="wrap footBase"><span>Every belt game sourced from the College Football Data API. Colors on the site are the current holder&rsquo;s &mdash; it recolors itself with every change of hands.</span><span>&copy; {date.today().year} collegefootballbelt.com</span></div>
+  <div class="wrap footBase"><span>Every belt game sourced from the College Football Data API. Colors on the site are the current holder&rsquo;s &mdash; it recolors itself with every change of hands.</span><span>&copy; {date.today().year} R&amp;O Holdings LLC. All rights reserved.</span></div>
 </footer>
 <script src="{rel}network-bar.js" defer></script>
 <script>{DAYS_UNTIL_JS}</script>'''
@@ -8282,7 +8283,8 @@ def generate_privacy_page():
       <h2>Contact</h2>
     </div>
     <div class="proseBlock">
-      <p>Questions about this policy or how the site works can go to
+      <p>collegefootballbelt.com is operated by R&amp;O Holdings LLC. Questions about this policy
+        or how the site works can go to
         <a href="mailto:hello@collegefootballbelt.com">hello@collegefootballbelt.com</a>.</p>
     </div>
   </section>
@@ -10462,7 +10464,7 @@ def generate_about_page(lineage, belt_games):
 
   <article class="storyChapter">
     <h2>Who runs it</h2>
-    <p>collegefootballbelt.com is an independent fan project. It first went online in 2018 and was rebuilt from the ground up in 2026 as the automated site you&rsquo;re reading now. It has no affiliation with any school, conference, the NCAA or the College Football Data project. The site carries a small number of ads to cover hosting and data costs; the data itself is free &mdash; see the <a href="api.html">API</a> if you want to build on it, and the <a href="embed.html">badge</a> if you want the current holder on your own page.</p>
+    <p>collegefootballbelt.com is operated by R&amp;O Holdings LLC. It is an independent fan project that first went online in 2018 and was rebuilt from the ground up in 2026 as the automated site you&rsquo;re reading now. It has no affiliation with any school, conference, the NCAA or the College Football Data project. The site carries a small number of ads to cover hosting and data costs; the data itself is free &mdash; see the <a href="api.html">API</a> if you want to build on it, and the <a href="embed.html">badge</a> if you want the current holder on your own page.</p>
     <p>Follow along at <a href="https://x.com/CollegeFBBelt" target="_blank" rel="noopener">@CollegeFBBelt on X</a> and <a href="https://www.instagram.com/collegefbbelt/" target="_blank" rel="noopener">Instagram</a>, or get an email only when the belt changes hands via the <a href="feed.xml">feed</a>. Privacy details are <a href="privacy.html">here</a>.</p>
   </article>
 </main>
@@ -15745,7 +15747,7 @@ def generate_data_page(lineage, belt_games, files):
         "sameAs": f"{SITE_URL}/api.html",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": True,
-        "creator": {"@type": "Organization", "name": "The College Football Belt", "url": f"{SITE_URL}/"},
+        "creator": {"@type": "Organization", "name": OWNER, "url": f"{SITE_URL}/"},
         "keywords": ["college football", "lineal championship", "college football belt", "football history",
                      "sports data", "NCAA football"],
         "temporalCoverage": f"{belt_games[0]['date']}/{belt_games[-1]['date']}",
