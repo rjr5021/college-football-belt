@@ -540,8 +540,54 @@ def _network_links():
     cbb = fetch("https://collegebasketballbelt.com/api/current.json").get("holder")
     links.append(("https://collegebasketballbelt.com/",
                   "College hoops" + (f" &middot; {html.escape(cbb)}" if cbb else " belt")))
-    links.append(("https://beltholders.com/", "All belts: Belt Holders"))
+    wcbb = fetch("https://collegebasketballbelt.com/women/api/current.json").get("holder")
+    links.append(("https://collegebasketballbelt.com/women/",
+                  "Women's hoops" + (f" &middot; {html.escape(wcbb)}" if wcbb else " belt")))
+    links.append(("https://beltholders.com/all/", "Every belt right now"))
     return links
+
+
+def _school_map():
+    """CFB-2 / audit 5.3: the same school on the basketball belts, from
+    collegebasketballbelt.com/network/schools.json (built there every few hours).
+    {normalized school name: {"cbb": url, "wcbb": url}}; empty if the fetch fails."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen("https://collegebasketballbelt.com/network/schools.json", timeout=8) as r:
+            doc = json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return {}, {}
+    norm = lambda n: re.sub(r"[^a-z0-9]+", "-", n.lower()).strip("-")
+    out = {}
+    for s in doc.get("schools", []):
+        out[norm(s.get("name", ""))] = s
+        if s.get("cfb"):
+            out[norm(s["cfb"].rsplit("/", 1)[-1][:-5])] = s      # also by the football page's own slug
+    return out, doc.get("holders", {})
+
+
+SCHOOL_MAP, SCHOOL_HOLDERS = _school_map()
+
+
+def school_box(team):
+    """ "Same school, other belts" on a team page: the program's men's and women's
+    basketball belt pages, flagged when it holds that belt right now."""
+    norm = lambda n: re.sub(r"[^a-z0-9]+", "-", n.lower()).strip("-")
+    s = SCHOOL_MAP.get(norm(team)) or SCHOOL_MAP.get(team_slug(team))
+    if not s:
+        return ""
+    items = ""
+    for k, label in (("cbb", "Men&rsquo;s basketball belt"), ("wcbb", "Women&rsquo;s basketball belt")):
+        if s.get(k):
+            now = ' <span class="otdTag changed">Holds it now</span>' if SCHOOL_HOLDERS.get(k) == s.get("name") else ""
+            items += f'<a class="otdRow" href="{s[k]}"><span class="otdMatchup">{label} &rarr;</span>{now}</a>'
+    if not items:
+        return ""
+    return f'''
+  <section class="schoolBelts">
+    <div class="sectionHead"><span class="tag">The belt network</span><h2>Same school, other belts</h2></div>
+    <div class="otdList">{items}</div>
+  </section>'''
 
 
 NETWORK_LINKS = _network_links()
@@ -564,6 +610,15 @@ FOOTER_COLUMNS = [
 ]
 
 
+# CFB-3: "Today" / "Tomorrow" / "In N days" chips worked out in the visitor's browser (US
+# Eastern), so a build that ran yesterday never shows yesterday's countdown.
+DAYS_UNTIL_JS = ('(function(){try{var t=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York"}).format(new Date());'
+                 'document.querySelectorAll("[data-days-until]").forEach(function(el){'
+                 'var n=Math.round((Date.parse(el.getAttribute("data-days-until"))-Date.parse(t))/864e5);'
+                 'var s=n===0?"Today":n===1?"Tomorrow":(n>1&&el.hasAttribute("data-long"))?"In "+n+" days":"";'
+                 'el.textContent=s;el.hidden=!s;});}catch(e){}})();')
+
+
 def site_footer(rel="", note=""):
     """The shared page footer: brand + a one-line data note (per page),
     three link columns, and the base line."""
@@ -577,7 +632,8 @@ def site_footer(rel="", note=""):
             url = href if ext else f"{rel}{href}"
             target = ' target="_blank" rel="noopener"' if href.startswith("http") else ""
             anchors += f'<a href="{url}"{target}>{label}</a>'
-        cols += f'<nav class="footCol" aria-label="{title} links"><span class="footKicker">{title}</span>{anchors}</nav>'
+        net = ' data-belt-network data-site="cfb" data-kicker-class="footKicker"' if title == "Belt network" else ""
+        cols += f'<nav class="footCol"{net} aria-label="{title} links"><span class="footKicker">{title}</span>{anchors}</nav>'
     note_html = f'<p class="footNote">{note}</p>' if note else ""
     return f'''<footer class="siteFoot">
   <div class="wrap footGrid">
@@ -585,7 +641,9 @@ def site_footer(rel="", note=""):
     {cols}
   </div>
   <div class="wrap footBase"><span>Every belt game sourced from the College Football Data API. Colors on the site are the current holder&rsquo;s &mdash; it recolors itself with every change of hands.</span><span>&copy; {date.today().year} collegefootballbelt.com</span></div>
-</footer>'''
+</footer>
+<script src="{rel}network-bar.js" defer></script>
+<script>{DAYS_UNTIL_JS}</script>'''
 
 
 # ---------------------------------------------------------------- color math
@@ -1532,6 +1590,9 @@ details.moreStats .statCategory{ margin-top:18px; }
 .footNote{ margin:0; max-width:40ch; line-height:1.55; text-wrap:pretty; }
 .footCol{ display:flex; flex-direction:column; gap:9px; }
 .footCol a{ text-decoration:none; color:var(--ink); width:fit-content; padding:3px 0; }
+.footCol[data-belt-network] a i{ display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+.footCol[data-belt-network] a b{ font-weight:600; margin-right:4px; }
+.schoolBelts{ margin-top:36px; }
 @media (max-width:1000px){ .footCol{ gap:4px; } .footCol a{ padding:8px 0; } }
 .footCol a:hover{ color:var(--brass-text); }
 .footKicker{ font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass-text); margin-bottom:4px; }
@@ -3277,7 +3338,7 @@ def render_on_this_day(belt_games, today):
         body = (f'<p class="lede" style="margin-top:10px">The belt has never once been on the line on '
                 f'{esc(fmt_month_day(today))}. Every other date is a click away.</p>')
     return f'''
-  <section id="onthisday">
+  <section id="onthisday" data-k="{today:%m-%d}">
     <div class="sectionHead">
       <span class="tag">{esc(fmt_month_day(today))}</span>
       <h2>On this day</h2>
@@ -3286,6 +3347,83 @@ def render_on_this_day(belt_games, today):
     {body}
     <p class="moreLink"><a href="on-this-day.html">Browse another date &rarr;</a></p>
   </section>'''
+
+
+OTD_SWAP_JS = ('<script>(function(){var s=document.getElementById("onthisday");if(!s||!window.fetch)return;try{'
+               'var p=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"2-digit",day:"2-digit"}).formatToParts(new Date()),o={};'
+               'p.forEach(function(x){o[x.type]=x.value;});var k=o.month+"-"+o.day;if(k===s.getAttribute("data-k"))return;'
+               'fetch("on-this-day/"+k+".json").then(function(r){return r.json();}).then(function(j){s.outerHTML=j.html;}).catch(function(){});}catch(e){}})();</script>')
+
+
+def write_on_this_day_days(belt_games, out_dir):
+    """CFB-3: the homepage "On this day" block for every calendar date, as
+    on-this-day/<mm-dd>.json, so the homepage can show the visitor's date (US
+    Eastern) instead of the build's. 1864 is a leap year with no belt games."""
+    d = os.path.join(out_dir, "on-this-day")
+    os.makedirs(d, exist_ok=True)
+    day = date(1864, 1, 1)
+    while day.year == 1864:
+        with open(os.path.join(d, f"{day:%m-%d}.json"), "w", encoding="utf-8") as f:
+            json.dump({"html": render_on_this_day(belt_games, day).replace(f'data-k="{day:%m-%d}"', 'data-k="swapped"')}, f)
+        day += timedelta(days=1)
+
+
+OTD_DATE_INDEX_MIN = 2      # a date page with fewer belt games is noindex (thin)
+
+
+def write_on_this_day_date_pages(belt_games, out_dir):
+    """Audit 7.7 / CFB-3: one static page per calendar date, on-this-day/<mm-dd>.html
+    (366 pages), listing every belt game ever played on that date. Long-tail pages
+    ("September 29 college football history"); on-this-day.html stays the picker.
+    Returns the dates worth indexing (OTD_DATE_INDEX_MIN or more games)."""
+    d_out = os.path.join(out_dir, "on-this-day")
+    os.makedirs(d_out, exist_ok=True)
+    by = {}
+    for g in belt_games:
+        by.setdefault(g["date"][5:10], []).append(g)
+    indexable = []
+    day = date(1864, 1, 1)                       # a leap year with no belt games
+    while day.year == 1864:
+        k = f"{day:%m-%d}"
+        games = sorted(by.get(k, []), key=lambda g: g["date"], reverse=True)
+        label = fmt_month_day(day)
+        rows = ""
+        for g in games:
+            h, a = (int(x) for x in g["score"].split("-"))
+            tag = ('<span class="otdTag changed">Changed hands</span>' if g["outcome"] in ("changed", "established")
+                   else '<span class="otdTag">Tie, holder kept it</span>' if h == a else '<span class="otdTag">Defended</span>')
+            loc_word = "vs." if g["neutral"] else "at"
+            winner = g["new_holder"] if h != a else None
+            away_html = f"<strong>{esc(g['away'])}</strong>" if winner == g["away"] else esc(g["away"])
+            home_html = f"<strong>{esc(g['home'])}</strong>" if winner == g["home"] else esc(g["home"])
+            rows += (f'\n      <a class="otdRow" href="../games/{g["game_id"]}.html"><span class="otdYear tabular">{g["date"][:4]}</span>'
+                     f'<span class="otdMatchup">{away_html} {loc_word} {home_html} <span class="tabular">{a}&ndash;{h}</span></span>{tag}</a>')
+        changes = sum(1 for g in games if g["outcome"] in ("changed", "established"))
+        prev_d, next_d = day - timedelta(days=1), day + timedelta(days=1)
+        if prev_d.year != 1864:
+            prev_d = date(1864, 12, 31)
+        if next_d.year != 1864:
+            next_d = date(1864, 1, 1)
+        n = len(games)
+        lede = (f"{n} belt game{'s' if n != 1 else ''} on {label} since 1869, {changes} of them title change{'s' if changes != 1 else ''}."
+                if n else f"The belt has never been on the line on {label}.")
+        robots = "" if n >= OTD_DATE_INDEX_MIN else '<meta name="robots" content="noindex,follow">\n'
+        page = f'''{page_head(f"On this day, {label}: college football belt history", f"Every lineal college football championship belt game played on {label}, from 1869 to today: who defended the belt and who took it.", "../", robots)}
+{site_header('../', 'on-this-day')}
+<main class="wrap">
+  {page_intro("On this day", f"{label} in belt history", esc(lede))}
+  <div class="otdList">{rows}
+  </div>
+  <p class="moreLink"><a href="{prev_d:%m-%d}.html">&larr; {fmt_month_day(prev_d)}</a> &middot; <a href="../on-this-day.html">Pick any date</a> &middot; <a href="{next_d:%m-%d}.html">{fmt_month_day(next_d)} &rarr;</a></p>
+</main>
+{site_footer('../', 'Every belt game computed from the College Football Data API.')}
+'''
+        with open(os.path.join(d_out, f"{k}.html"), "w", encoding="utf-8") as f:
+            f.write(page)
+        if n >= OTD_DATE_INDEX_MIN:
+            indexable.append(k)
+        day += timedelta(days=1)
+    return indexable
 
 
 def generate_on_this_day_page(belt_games, reigns):
@@ -3988,7 +4126,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
                       if story.get("ranked") else "")
         up_next_html = f'''
       <aside class="upNext" aria-label="Next belt game">
-        <div class="upNextHead"><span class="kicker">Belt on the line</span>{f'<span class="soonChip">{soon}</span>' if soon else ''}</div>
+        <div class="upNextHead"><span class="kicker">Belt on the line</span><span class="soonChip" data-days-until="{next_game['date']}" data-long{'' if soon else ' hidden'}>{soon}</span></div>
         <div class="upNextMatch">
           {holder_chip}
           <span class="vs">{vs_word}</span>
@@ -4142,7 +4280,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
   </section>
 
   <div class="wrap twoUp">
-{render_on_this_day(belt_games, today)}
+{render_on_this_day(belt_games, today)}{OTD_SWAP_JS}
     <section id="ruleset">
       <div class="sectionHead">
         <span class="tag">The ruleset</span>
@@ -7086,6 +7224,7 @@ def generate_challenger_pages(lineage, colors, belt_games, teams_dir, team_paths
   <div class="miniList">{rows}</div>
   <p class="noteBox">A program gets a shot at the belt only by being scheduled against whoever holds it, so a short list here says as much
     about the schedule as the program. Win one, and this page turns into a <a href="../lineage.html">reign</a>.</p>
+{school_box(team)}
 </main>
 
 {site_footer('../', 'Every belt game computed from the College Football Data API.')}
@@ -7386,6 +7525,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir, team_paths=None,
   <div class="teamReignList">{rows_html}
   </div>
 {extras_log}
+{school_box(team)}
 </main>
 
 {site_footer('../', 'Every reign computed from the College Football Data API.')}
@@ -9604,6 +9744,22 @@ def generate_trivia_page(pool):
 API_DIR = "api"
 
 
+def _network_next(ng):
+    """The next belt game in the network's shape (see beltholders.com/api/network.json)."""
+    if not ng or not ng.get("date"):
+        return None
+    t = None
+    if ng.get("raw_date") and not ng.get("start_time_tbd"):
+        try:
+            from zoneinfo import ZoneInfo
+            t = datetime.fromisoformat(ng["raw_date"].replace("Z", "+00:00")).astimezone(ZoneInfo("America/New_York")).strftime("%H:%M")
+        except (ValueError, ImportError):
+            t = None
+    return {"date": ng["date"], "time_et": t, "opponent": ng.get("opponent"), "opponent_short": ng.get("opponent"),
+            "home": bool(ng.get("is_home")), "neutral": bool(ng.get("neutral")), "venue": ng.get("venue_name"),
+            "tv": ng.get("tv"), "win_prob": None, "url": f"{SITE_URL}/preview.html"}
+
+
 def generate_api_files(lineage, belt_games, next_game):
     """Three plain JSON files -- current.json (live snapshot), reigns.json,
     and games.json -- straight dumps of data build_site.py already has in
@@ -9622,6 +9778,11 @@ def generate_api_files(lineage, belt_games, next_game):
         "next_game": next_game,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "site": SITE_URL,
+        # the belt network's field names (beltholders.com/api/network.json), alongside the originals
+        "holder_short": current["team"],
+        "reign_no": team_reign_num,
+        "state": "in_season_next_game" if next_game else "offseason_schedule_pending",
+        "next": _network_next(next_game),
     }
     return {
         "current.json": current_payload,
@@ -9922,7 +10083,8 @@ def generate_schedule_page(belt_risk, lineage, colors, next_game=None):
                 soon = ' <span class="soonChip">Today</span>'
             elif days_until == 1:
                 soon = ' <span class="soonChip">Tomorrow</span>'
-            rows += f'<li class="schedDay"><span class="schedDate">{gd:%A}, {fmt_month_day(gd)}{soon}</span></li>'
+            chip = soon.replace(' <span class="soonChip">', f' <span class="soonChip" data-days-until="{day}">') if soon else f' <span class="soonChip" data-days-until="{day}" hidden></span>'
+            rows += f'<li class="schedDay"><span class="schedDate">{gd:%A}, {fmt_month_day(gd)}{chip}</span></li>'
             for g in games:
                 pct = g["p_belt_game"] * 100
                 pct_txt = "100%" if pct >= 99.5 else (f"{pct:.0f}%" if pct >= 1 else f"{pct:.1f}%")
@@ -16861,6 +17023,8 @@ def main():
     sitemap_urls += [f"{SITE_URL}/teams/{slug}.html" for slug in team_slugs + challenger_slugs]
     sitemap_urls += [f"{SITE_URL}/players/{slug}.html" for slug in player_slugs]
     sitemap_urls += [f"{SITE_URL}/games/{g['game_id']}.html" for g in belt_games]
+    otd_dates = write_on_this_day_date_pages(belt_games, OUT_DIR)        # audit 7.7: per-date pages
+    sitemap_urls += [f"{SITE_URL}/on-this-day/{k}.html" for k in otd_dates]
 
     with open(os.path.join(OUT_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(generate_sitemap(sitemap_urls))
@@ -16884,6 +17048,12 @@ def main():
 
     with open(os.path.join(OUT_DIR, "offline.html"), "w", encoding="utf-8") as f:
         f.write(generate_offline_page())
+
+    # the belt network bar (footer "Belt network" column, hydrated from beltholders.com/api/network.json)
+    net_js = os.path.join(os.path.dirname(os.path.abspath(__file__)), "network-bar.js")
+    if os.path.exists(net_js):
+        shutil.copyfile(net_js, os.path.join(OUT_DIR, "network-bar.js"))
+    write_on_this_day_days(belt_games, OUT_DIR)          # CFB-3: homepage "On this day" for the visitor's date
 
     print(f"Wrote {written} game pages to {games_dir}/")
     saved_pct = round(100 * (1 - len(minified_css) / len(STYLES_CSS)), 1) if STYLES_CSS else 0

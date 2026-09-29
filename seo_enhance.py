@@ -65,6 +65,8 @@ SOCIAL_PROFILES = [
     "https://x.com/CollegeFBBelt",
     "https://www.instagram.com/collegefbbelt/",
 ]
+# NET-4: the Organization's sameAs also names the sister sites, so search engines connect the network
+NETWORK_SITES = ["https://beltholders.com/", "https://collegebasketballbelt.com/"]
 MARKER = "<!-- seo_enhance -->"
 
 LEGACY_REDIRECTS = {
@@ -448,7 +450,7 @@ def process_pages(lineage):
                          "name": SITE_NAME, "url": f"{SITE_URL}/",
                          "logo": f"{SITE_URL}/icon-512.png",
                          "email": "hello@collegefootballbelt.com",
-                         "sameAs": SOCIAL_PROFILES},
+                         "sameAs": SOCIAL_PROFILES + NETWORK_SITES},
                     ],
                 }))
 
