@@ -99,6 +99,13 @@ GOOGLE_SITE_VERIFICATION = ""
 #    once the script above is live on the site.
 OWNER = "R&O Holdings LLC"      # the company that owns and operates the site (formed 2026-09-29)
 ADSENSE_PUBLISHER_ID = "pub-3317069252410560"
+# One fixed (manual) AdSense display unit, on the full-history pages between
+# the record cards and the reigns table. Auto ads kept placing nothing on the
+# history page right after approval (2026-10-01), so this spot shows an ad
+# every time. The slot ID comes from AdSense > Ads > By ad unit
+# ("CFB full history - between records and table", responsive). Empty string
+# turns the unit off; it is also skipped when ADSENSE_PUBLISHER_ID is empty.
+ADSENSE_HISTORY_SLOT = "7526799432"
 
 # Merch shop (Fourthwall) -- a real store, live 2026-09. shop.html is built
 # from the store's own catalog rather than from a table kept here:
@@ -2197,6 +2204,8 @@ table.reignsTable td.num a:hover{ color:var(--brass-text); border-bottom-color:v
 .record-card .v{ font-family:"Big Shoulders Display",sans-serif; font-weight:800; font-size:19px; }
 .record-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
 
+.adSlot{ margin:0 0 30px; min-height:120px; }
+.adSlot .adLabel{ display:block; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px; }
 .tableScroll{ overflow-x:auto; }
 table.reignsTable{ width:100%; border-collapse:collapse; font-size:14.5px; min-width:560px; }
 table.reignsTable th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:9px 10px; border-bottom:1px solid var(--brass-line); position:sticky; top:0; background:var(--paper); }
@@ -4474,6 +4483,20 @@ def _championship_switcher_html(filenames, scope, available_scopes):
     <div class="scopeSwitch" role="group" aria-label="Which programs count" style="margin-top:10px">{"".join(pills)}</div>'''
 
 
+def adsense_unit_html(slot):
+    """A responsive AdSense display unit. The loader script is already in
+    every page's <head> (head_extras), so this is only the <ins> slot plus
+    the push() call. Returns "" when ads are off, so callers can drop it in
+    unconditionally."""
+    if not (ADSENSE_PUBLISHER_ID and slot):
+        return ""
+    return (f'<aside class="adSlot" aria-label="Advertisement">'
+            f'<span class="adLabel">Advertisement</span>'
+            f'<ins class="adsbygoogle" style="display:block" data-ad-client="ca-{esc(ADSENSE_PUBLISHER_ID)}" '
+            f'data-ad-slot="{esc(slot)}" data-ad-format="auto" data-full-width-responsive="true"></ins>'
+            f'<script>(adsbygoogle = window.adsbygoogle || []).push({{}});</script></aside>')
+
+
 def generate_lineage_page(lineage, colors, belt_games, scope="combined", available_scopes=("combined",)):
     """`scope` is one of build_lineage.py's SCOPES ("combined"/"fbs"/"fcs").
     Only "combined" has real games/<id>.html detail pages to link to (those
@@ -4642,6 +4665,8 @@ def generate_lineage_page(lineage, colors, belt_games, scope="combined", availab
 
   <div class="records">{records_html}
   </div>
+
+  {adsense_unit_html(ADSENSE_HISTORY_SLOT)}
 
   <div class="tableScroll">
     <table class="reignsTable">
