@@ -63,7 +63,6 @@ AI_PREVIEW_PATH = os.path.join(HERE, "belt_data", "ai_preview.json")
 BELT_RISK_PATH = os.path.join(HERE, "belt_data", "belt_risk.json")
 
 ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/college-football"
-UA = {"User-Agent": "Mozilla/5.0 (compatible; collegefootballbelt.com social cards)"}
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 CAPTION_MODELS = ["claude-sonnet-4-5", "claude-haiku-4-5-20251001"]
@@ -82,10 +81,13 @@ def load_json(path, default=None):
 
 
 def get_json(url, tries=3):
+    # No custom headers on purpose: ESPN's edge answers 403 to a custom or a
+    # fake-browser User-Agent from GitHub's runners but 200 to plain urllib --
+    # the same lesson as post_live_game.py's fetch_espn_summary (2026-09-19).
     last = None
     for i in range(tries):
         try:
-            req = urllib.request.Request(url, headers=UA)
+            req = urllib.request.Request(url)
             with urllib.request.urlopen(req, timeout=25) as r:
                 return json.loads(r.read().decode("utf-8"))
         except Exception as e:  # noqa: BLE001
@@ -650,7 +652,7 @@ def fetch_logo(team_id, workdir):
     url = f"https://a.espncdn.com/i/teamlogos/ncaa/500/{team_id}.png"
     path = os.path.join(workdir, f"logo-{team_id}.png")
     try:
-        req = urllib.request.Request(url, headers=UA)
+        req = urllib.request.Request(url)
         with urllib.request.urlopen(req, timeout=25) as r, open(path, "wb") as f:
             f.write(r.read())
         return path
