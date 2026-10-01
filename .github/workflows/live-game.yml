@@ -42,7 +42,12 @@ on:
     # any given tick, so the +/-1 hour DST wobble here doesn't matter.
     - cron: '*/5 16-23 * * *'
     - cron: '*/5 0-5 * * *'
-  workflow_dispatch: {}   # lets you start a session by hand from the Actions tab
+  workflow_dispatch:   # lets you start a session by hand from the Actions tab
+    inputs:
+      instagram:
+        description: "Instagram: leave blank, or 'check' (test the token + make sample cards, posts nothing), or 'preview-now' (post this week's Belt on the Line now)"
+        required: false
+        default: ""
 
 permissions:
   contents: write   # needed to commit social_cache/x_live_state.json as it posts
@@ -75,3 +80,17 @@ jobs:
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
         run: python3 post_live_game.py
+
+      # Bob (2026-10-01): the Instagram "Belt Defended" / "New Champion" post,
+      # a few minutes after the final -- see post_to_instagram.py. Runs after
+      # the X step on every tick but makes no network call unless a belt game
+      # kicked off 2.4-10 hours ago and hasn't been posted yet. `always()` so a
+      # hiccup in the X step can't cost the Instagram post.
+      - name: Instagram result post
+        if: always()
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_BUSINESS_ACCOUNT_ID: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
+        run: python3 post_to_instagram.py ${{ github.event.inputs.instagram == 'check' && '--check' || github.event.inputs.instagram == 'preview-now' && '--preview-now' || '--after-live' }}

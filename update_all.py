@@ -162,14 +162,14 @@ this is safe to point at an existing belt_data/ folder:
                                  the current holder, whenever it changes.
  15. post_to_instagram.py   -- OPTIONAL, same idea again: skips itself
                                  cleanly unless IG_ACCESS_TOKEN and
-                                 IG_BUSINESS_ACCOUNT_ID are BOTH set. Mirrors
-                                 post_to_x.py's result/preview posts and
-                                 wording (reuses its helper functions
-                                 directly), tracked separately in
-                                 social_cache/ig_last_posted.json since
-                                 Instagram's Graph API needs its own
-                                 two-step image-post flow instead of a
-                                 plain create_tweet() call.
+                                 IG_BUSINESS_ACCOUNT_ID are BOTH set. Posts
+                                 @CollegeFBBelt's "Belt on the Line" card on
+                                 the Friday preview run, and is the backstop
+                                 for the "Belt Defended" / "New Champion"
+                                 card (live-game.yml normally posts that one
+                                 minutes after the final). Cards, captions,
+                                 location and tags are built by ig_cards.py;
+                                 tracked in social_cache/ig_last_posted.json.
 
 follow_batch.py is deliberately NOT a stage here, and as of 2026-09-28 it
 has no schedule of its own either: the follow-accounts.yml workflow was

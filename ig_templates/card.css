@@ -1,0 +1,94 @@
+/* Instagram cards for @CollegeFBBelt -- "Belt on the Line" (preview) and
+   "Belt Defended" / "New Champion" (result). Same design as the hand-made
+   posts of Sept 18-19, 2026 (redesign-files/ig-*-template.html in the
+   project notes); team colors come in as CSS variables from
+   post_to_instagram.py. Fonts are the site's own, committed under fonts/
+   (SIL Open Font License, see fonts/OFL.txt). */
+@font-face { font-family: "Big Shoulders Display"; font-weight: 900; src: url("fonts/big-shoulders-display-latin-900-normal.woff2") format("woff2"); }
+@font-face { font-family: "Big Shoulders Display"; font-weight: 800; src: url("fonts/big-shoulders-display-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "Big Shoulders Display"; font-weight: 700; src: url("fonts/big-shoulders-display-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Spectral"; font-weight: 400; font-style: italic; src: url("fonts/spectral-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Spectral"; font-weight: 400; src: url("fonts/spectral-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Spectral"; font-weight: 500; src: url("fonts/spectral-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; src: url("fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; src: url("fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
+
+:root {
+  --paper: #e7e2d5; --paper2: #dcd5c3; --ink: #211a12; --muted: #5b5140;
+  --brass: #a97f38; --brass-text: #725626; --brass-bright: #c9a04a;
+  --hair: rgba(33,26,18,.16);
+  /* overridden per card: left panel (holder / winner), right panel */
+  --l1: #0c2340; --l2: #071527; --lacc: #c99700;
+  --r1: #18453b; --r2: #0d2a24;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1350px; background: var(--paper); color: var(--ink); font-family: Spectral, Georgia, serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+.disp { font-family: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif; }
+.mono { font-family: "IBM Plex Mono", "Courier New", monospace; }
+
+.canvas { position: relative; width: 1080px; height: 1350px; overflow: hidden; background: var(--paper); }
+.grain { position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.13  0 0 0 0 0.10  0 0 0 0 0.07  0 0 0 .07 0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>"); }
+
+/* header */
+.hdr { position: absolute; left: 56px; right: 56px; top: 52px; height: 40px; display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand .wm { font-size: 30px; font-weight: 800; letter-spacing: .01em; }
+.est { font-size: 20px; letter-spacing: .2em; text-transform: uppercase; color: var(--brass-text); }
+.rule { position: absolute; left: 56px; right: 56px; top: 116px; border-top: 1.5px solid var(--hair); }
+
+/* headline block */
+.kicker { position: absolute; left: 56px; right: 56px; top: 148px; display: flex; align-items: center; gap: 14px; font-size: 22px; letter-spacing: .22em; text-transform: uppercase; color: var(--brass-text); white-space: nowrap; }
+.kicker .dot { flex: none; width: 10px; height: 10px; border-radius: 5px; background: #3f6b3f; box-shadow: 0 0 0 4px rgba(63,107,63,.18); }
+.result .kicker .dot { background: #a97f38; box-shadow: 0 0 0 4px rgba(169,127,56,.22); }
+.h1 { position: absolute; left: 50px; right: 40px; top: 178px; font-size: 156px; line-height: .86; font-weight: 900; letter-spacing: -.005em; text-transform: uppercase; color: var(--ink); white-space: nowrap; overflow: hidden; }
+.h1 .thin { color: var(--brass-text); }
+.when { position: absolute; left: 56px; right: 56px; top: 330px; font-size: 24px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); white-space: nowrap; overflow: hidden; }
+.when b { font-weight: 500; }
+.when .sep { color: var(--brass); margin: 0 10px; }
+
+/* matchup card */
+.card { position: absolute; left: 56px; top: 392px; width: 968px; height: 600px; display: flex; box-shadow: 0 30px 60px -30px rgba(33,26,18,.55); }
+.panel { position: relative; flex: 1; min-width: 0; padding: 36px 32px 30px; color: #fff; overflow: hidden; }
+.panel::after { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 16px); pointer-events: none; }
+.panel.l { background: linear-gradient(170deg, var(--l1) 0%, var(--l2) 100%); }
+.panel.r { background: linear-gradient(190deg, var(--r1) 0%, var(--r2) 100%); text-align: right; }
+.panel > * { position: relative; z-index: 1; }
+.chip { width: 220px; height: 220px; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.7), inset 0 0 0 6px rgba(33,26,18,.06); }
+.panel.r .chip { margin-left: auto; }
+.chip img { width: 170px; height: 170px; object-fit: contain; }
+.chip .abbr { font-size: 92px; font-weight: 900; color: var(--ink); }
+.role { margin-top: 26px; font-size: 20px; letter-spacing: .15em; white-space: nowrap; overflow: hidden; text-transform: uppercase; }
+.panel.l .role { color: var(--lacc); }
+.panel.r .role { color: rgba(255,255,255,.72); }
+.team { margin-top: 10px; font-size: 112px; line-height: .86; font-weight: 900; text-transform: uppercase; letter-spacing: -.005em; white-space: nowrap; overflow: hidden; }
+.stat { margin-top: 16px; font-size: 21px; letter-spacing: .08em; white-space: nowrap; overflow: hidden; text-transform: uppercase; color: rgba(255,255,255,.78); }
+.stat b { font-weight: 500; color: #fff; }
+.panel.l .stat b { color: var(--lacc); }
+.seam { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: var(--brass); z-index: 2; }
+.belt { position: absolute; left: 50%; top: 146px; width: 260px; height: 150px; margin: -75px 0 0 -130px; z-index: 3; }
+
+/* footer */
+.tiles { position: absolute; left: 56px; right: 56px; top: 1030px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1.5px solid var(--hair); border-bottom: 1.5px solid var(--hair); }
+.tile { min-width: 0; padding: 22px 0 22px; border-left: 1.5px solid var(--hair); padding-left: 24px; }
+.tile:first-child { border-left: 0; padding-left: 0; }
+.tile .v { font-size: 84px; line-height: .9; font-weight: 800; color: var(--brass-text); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; }
+.tile .v small { font-size: 40px; font-weight: 700; letter-spacing: 0; margin-left: 4px; }
+.tile .l { margin-top: 10px; font-size: 19px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-transform: uppercase; color: var(--muted); }
+.note { position: absolute; left: 56px; right: 56px; top: 1214px; height: 72px; overflow: hidden; font-size: 26px; font-style: italic; line-height: 1.35; color: var(--muted); text-wrap: pretty; }
+.note b { font-style: normal; font-weight: 500; color: var(--ink); }
+.foot { position: absolute; left: 56px; right: 56px; top: 1292px; display: flex; justify-content: space-between; font-size: 22px; letter-spacing: .12em; text-transform: uppercase; color: var(--brass-text); }
+.foot .url { color: var(--ink); }
+
+/* ---- result layout ---- */
+.result .chip { width: 200px; height: 200px; }
+.result .chip img { width: 154px; height: 154px; }
+.result .role { margin-top: 22px; }
+.result .score { margin-top: 6px; font-size: 168px; line-height: .84; font-weight: 900; letter-spacing: -.01em; }
+.result .panel.l .score { color: var(--lacc); }
+.result .panel.r .score { color: rgba(255,255,255,.55); }
+.result .team { margin-top: 8px; font-size: 54px; line-height: .92; font-weight: 800; letter-spacing: .005em; }
+.result .panel.r .team { color: rgba(255,255,255,.82); }
+.result .stat { margin-top: 14px; font-size: 20px; }
+.result .tile .l { font-size: 18px; letter-spacing: .12em; }
+.result .belt { top: 136px; }
+.beltcap { position: absolute; left: 50%; top: 222px; width: 440px; margin-left: -220px; text-align: center; font-size: 19px; letter-spacing: .18em; text-transform: uppercase; color: var(--paper); z-index: 3; opacity: .9; white-space: nowrap; overflow: hidden; }
