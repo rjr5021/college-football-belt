@@ -518,6 +518,7 @@ NAV_MORE = [
         ("venues", "venues/index.html", "Venues"),
         ("on-this-day", "on-this-day.html", "On this day"),
         ("belt-on", "belt-on.html", "Belt on any date"),
+        ("news", "news/index.html", "Belt news"),
     ]),
     ("Play", [
         ("my-team", "my-team.html", "My Team"),
@@ -533,6 +534,7 @@ NAV_MORE = [
         ("preview", "preview.html", "Next belt game"),
         ("leaders", "leaders.html", "Belt-game leaders"),
         ("heartbreak", "heartbreak.html", "Heartbreak list"),
+        ("droughts", "droughts.html", "Drought clocks"),
         ("polls", "polls.html", "Belt vs. the polls"),
         ("champions", "champions.html", "Belt vs. the champion"),
         ("standings", "standings.html", "Belt vs. the standings"),
@@ -1679,7 +1681,11 @@ details.moreStats .statCategory{ margin-top:18px; }
 
 /* ---------- site footer ---------- */
 .siteFoot{ margin-top:72px; border-top:1px solid var(--hairline); font-size:14px; color:var(--ink-soft); }
-.footGrid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:32px; padding-block:44px 32px; }
+.footGrid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1.7fr; gap:32px; padding-block:44px 32px; }
+/* B-10 (audit #2): the network column lists 19 belts once network-bar.js fills it; two columns instead of one tall one */
+.footCol[data-belt-network].live{ display:grid; grid-template-columns:1fr 1fr; gap:2px 14px; align-content:start; }
+.footCol[data-belt-network].live .footKicker,.footCol[data-belt-network].live .all{ grid-column:1 / -1; }
+.footCol[data-belt-network].live a{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
 @media (max-width:820px){ .footGrid{ grid-template-columns:1fr 1fr; } .footBrand{ grid-column:1 / -1; } }
 @media (max-width:420px){ .footGrid{ grid-template-columns:1fr; gap:24px; } }
 .footBrand{ display:flex; flex-direction:column; gap:12px; }
@@ -2292,6 +2298,13 @@ table.reignsTable td.num a:hover{ color:var(--brass-text); border-bottom-color:v
 .adSlot{ margin:0 0 30px; min-height:120px; }
 .adSlot .adLabel{ display:block; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px; }
 .tableScroll{ overflow-x:auto; }
+.watchBlock{ margin-top:28px; }
+.watchTable{ min-width:0; }
+.watchTable th{ position:static; width:130px; text-align:left; vertical-align:top; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); padding:10px; border-bottom:1px solid var(--hairline); }
+.watchTable td{ font-size:15px; }
+.rulesets td,.rulesets th{ vertical-align:top; font-size:14px; line-height:1.45; }
+.rulesets td.on,.rulesets th.on{ background:var(--card,rgba(0,0,0,.03)); }
+.rulesets th.rowHead{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); position:static; white-space:nowrap; }
 table.reignsTable{ width:100%; border-collapse:collapse; font-size:14.5px; min-width:560px; }
 table.reignsTable th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; padding:9px 10px; border-bottom:1px solid var(--brass-line); position:sticky; top:0; background:var(--paper); }
 table.reignsTable td{ padding:10px; border-bottom:1px solid var(--hairline); vertical-align:middle; }
@@ -5998,6 +6011,53 @@ def team_belt_summary(reigns, team, today):
     return len(mine), days, last_year
 
 
+def how_to_watch_html(next_game, holder, opponent, side_word, venue_txt):
+    """Feature 7.1 (audit #2): a "How to watch" block on the preview -- date, kickoff in ET and the
+    visitor's zone, TV, streaming, venue -- the facts behind the game-week query these pages are
+    built for. Prints only what build_lineage.py's media listing and kickoff actually carry."""
+    rows = []
+    when = fmt_date(next_game["date"])
+    et = kickoff_et(next_game)
+    if et:
+        when += f' &middot; <span class="kickAt" data-utc="{esc(next_game.get("raw_date") or "")}">{esc(et)}</span>'
+    elif next_game.get("start_time_tbd"):
+        when += " &middot; kickoff time to be announced"
+    rows.append(("When", when))
+    if next_game.get("tv"):
+        rows.append(("TV", esc(next_game["tv"])))
+    if next_game.get("stream"):
+        rows.append(("Streaming", esc(next_game["stream"])))
+    if not next_game.get("tv") and not next_game.get("stream"):
+        rows.append(("TV", "not listed yet; this page updates when the broadcast is announced"))
+    if venue_txt:
+        rows.append(("Where", venue_txt))
+    rows.append(("Why it matters", f"{esc(holder)} puts the lineal College Football Belt on the line; beat the holder and {esc(opponent)} takes it."))
+    trs = "".join(f'<tr><th>{k}</th><td>{v}</td></tr>' for k, v in rows)
+    return f'''
+  <section class="watchBlock" id="how-to-watch">
+    <div class="sectionHead"><span class="tag">Game day</span><span class="rule"></span><h2>How to watch {esc(holder)} {side_word} {esc(opponent)}</h2></div>
+    <div class="tableScroll"><table class="reignsTable watchTable"><tbody>{trs}</tbody></table></div>
+    <p class="moreLink"><a href="#calendar">Add it to your calendar &darr;</a></p>
+  </section>'''
+
+
+def preview_json_ld(next_game, holder, opponent, venue_bits):
+    """SportsEvent for the upcoming belt game, with a BroadcastEvent per network (feature 7.1)."""
+    home, away = (holder, opponent) if next_game.get("is_home") or next_game.get("neutral") else (opponent, holder)
+    data = {"@context": "https://schema.org", "@type": "SportsEvent", "name": f"{away} at {home}" if not next_game.get("neutral") else f"{holder} vs. {opponent}",
+            "startDate": next_game.get("raw_date") or next_game["date"], "sport": "American Football",
+            "eventStatus": "https://schema.org/EventScheduled",
+            "homeTeam": {"@type": "SportsTeam", "name": home}, "awayTeam": {"@type": "SportsTeam", "name": away},
+            "description": f"{holder} defends the lineal College Football Belt against {opponent}.", "url": f"{SITE_URL}/preview.html"}
+    if venue_bits:
+        data["location"] = {"@type": "Place", "name": venue_bits[0], "address": ", ".join(venue_bits[1:3])}
+    nets = [x.strip() for src in (next_game.get("tv"), next_game.get("stream")) if src for x in str(src).split("/") if x.strip()]
+    if nets:
+        data["subjectOf"] = [{"@type": "BroadcastEvent", "name": f"{data['name']} on {net}", "isLiveBroadcast": True,
+                              "startDate": data["startDate"], "publishedOn": {"@type": "BroadcastService", "name": net}} for net in nets[:6]]
+    return json_ld(data)
+
+
 def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_risk=None,
                           lineage=None, belt_games=None, current_poll=None, gameday=None):
     """The next-belt-game preview (2026-09-16 redesign): a split header in
@@ -6243,6 +6303,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
     live_html = live_scoreboard_html(next_game, holder, defenses, gameday, rel="", link=False)
     venue_bits = [b for b in (next_game.get("venue_name"), next_game.get("venue_city"), next_game.get("venue_state")) if b]
     venue_txt = esc(", ".join(venue_bits[:2])) if venue_bits else ("Neutral site" if next_game.get("neutral") else "")
+    watch_block = how_to_watch_html(next_game, holder, opponent, side_word, venue_txt)
 
     return f'''<!doctype html>
 <html lang="en">
@@ -6250,6 +6311,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 <title>{title} Preview — The College Football Belt</title>
 <link rel="stylesheet" href="styles.css?v={STYLES_VERSION}">
 {head_extras()}
+{preview_json_ld(next_game, holder, opponent, venue_bits)}
 <style>
   :root{{
     --home:{h_primary}; --home-ink:{h_ink}; --home-accent:{h_accent};
@@ -6289,6 +6351,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
     <div class="stakeCell"><span class="kicker">Head to head, belt games</span><span class="stakeVal">{h2h_belt}</span></div>{weather_cell}
   </div>
   {odds_html}
+  {watch_block}
   {pick_widget}
   <script>
   (function(){{
@@ -6380,6 +6443,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
 
 {footer}
 {LIVE_SCOREBOARD_JS if live_html else ''}
+{KICKOFF_LOCAL_JS}
 '''
 
 
@@ -6464,6 +6528,52 @@ def render_ruleset_body(text_type, content):
     return ""
 
 
+# Audit #2, 6.8: the three rulesets side by side. The same table (same rows, same wording) is rendered by
+# site_extras.rulesets_html() on beltholders.com and collegebasketballbelt.com; keep the two in step.
+RULESET_SITES = [("cfb", "College Football Belt", "https://collegefootballbelt.com/ruleset.html"),
+                 ("cbb", "College Basketball Belt", "https://collegebasketballbelt.com/rules/"),
+                 ("pro", "Belt Holders (pro leagues)", "https://beltholders.com/rules/")]
+RULESET_ROWS = [
+    ("Where it starts",
+     "College football's first game: Rutgers over Princeton, 6–4, on November 6, 1869.",
+     "The reigning national champion when the game-by-game record begins: Kentucky for 1949–50; Texas for the women's belt in 1986–87.",
+     "Each league's first game on record, from the NHL's first night in 1917 to the Premier League's 1888 start."),
+    ("Which games count",
+     "Every game, bowls and the playoff included. From 1978 on, only games between two Division I teams.",
+     "Every Division I game: regular season, conference tournaments, the NCAA tournament and the other postseason events. A loss to a non-Division I team doesn't move it.",
+     "Regular season and playoffs. Preseason, exhibitions and cup competitions don't count."),
+    ("Ties and draws",
+     "A tie kept the belt with the holder (there hasn't been one since overtime arrived in 1996).",
+     "No ties: basketball plays overtime until someone wins.",
+     "A tie or a draw is a successful defense. Overtime and shootout wins are wins; a penalty shootout decides a knockout game."),
+    ("When the holder doesn't play",
+     "The belt waits: a bye, an opted-out bowl or a canceled season leaves it where it is, offseason included.",
+     "The belt waits through the offseason with the holder.",
+     "The belt is frozen until the holder plays again, even when it missed the playoffs."),
+    ("When the holder stops playing",
+     "If a holder drops football or leaves Division I, the belt goes back to the most recent earlier holder still playing.",
+     "If a holder leaves Division I, the belt goes back to the most recent earlier holder still playing.",
+     "A folded franchise, or a club relegated out of the league, vacates the belt to the most recent earlier holder still in the league."),
+    ("Moves and renames",
+     "Programs don't move; a rename is the same program.",
+     "Same: a rename is the same program.",
+     "The belt follows the franchise through relocations and renames (the Rams from Cleveland to St. Louis to Los Angeles)."),
+]
+
+
+def rulesets_compare_html(this="cfb"):
+    head = "".join(f'<th{" class=on" if k == this else ""}>{("<b>" + esc(name) + "</b> · this site") if k == this else f"<a href={url}>{esc(name)}</a>"}</th>'
+                   for k, name, url in RULESET_SITES)
+    rows = "".join(f'<tr><th class="rowHead">{esc(label)}</th>' + "".join(f'<td{" class=on" if k == this else ""}>{esc(txt)}</td>'
+                   for (k, _, _), txt in zip(RULESET_SITES, cells)) + "</tr>" for label, *cells in RULESET_ROWS)
+    return f"""
+  <section>
+    <div class="sectionHead"><span class="tag">Network</span><span class="rule"></span><h2>The three rulesets, side by side</h2></div>
+    <div class="proseBlock"><p>The College Football Belt, the College Basketball Belt and the pro-league belts on Belt Holders run on the same idea and differ only where the sports do: ties, draws and shootouts, who counts as a league member, and what happens when a holder stops playing.</p></div>
+    <div class="tableScroll"><table class="reignsTable rulesets"><thead><tr><th></th>{head}</tr></thead><tbody>{rows}</tbody></table></div>
+  </section>"""
+
+
 def generate_ruleset_page(md_text):
     sections = parse_ruleset_md(md_text)
 
@@ -6509,6 +6619,7 @@ def generate_ruleset_page(md_text):
   <h1 class="pageTitle">The Ruleset</h1>
   <div class="proseBlock">{intro_html}</div>
 {sections_html}
+{rulesets_compare_html("cfb")}
 </main>
 
 {site_footer('', 'Every belt game sourced from the College Football Data API and computed against the rules on this page &mdash; no editorial judgment per game.')}
@@ -10804,6 +10915,84 @@ def generate_leaders_page(belt_games, details, colors):
 
 
 # ------------------------------------------------------------- heartbreak
+
+def generate_droughts_page(lineage, colors, belt_games):
+    """droughts.html (feature 7.6, audit #2): every program that has held the belt, by how long it
+    has been without it -- a counter the page keeps ticking from the reign's end date -- with each
+    one's longest wait ever and who ended it. Programs with no belt game in the last five seasons
+    are listed separately, since most of the early holders stopped playing major football."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    by_team = {}
+    for r in reigns:
+        by_team.setdefault(r["team"], []).append(r)
+    latest_season = max(g["season"] for g in belt_games)
+    recent = {t for g in belt_games if g["season"] >= latest_season - 4 for t in (g["holder"], g["opponent"]) if t}
+    rows = []
+    for team, rs in by_team.items():
+        last = rs[-1]
+        holding = not last.get("end_date")
+        since = None if holding else last["end_date"]
+        days = 0 if holding else (today - date.fromisoformat(since)).days
+        longest, ender, ended_on = 0, None, None
+        for a, b in zip(rs, rs[1:]):
+            if a.get("end_date"):
+                gap = (date.fromisoformat(b["start_date"]) - date.fromisoformat(a["end_date"])).days
+                if gap > longest:
+                    longest, ender, ended_on = gap, b.get("won_from"), b["start_date"]
+        rows.append({"team": team, "holding": holding, "since": since, "days": days, "longest": longest, "ender": ender,
+                     "ended_on": ended_on, "reigns": len(rs), "active": team in recent or holding})
+    rows.sort(key=lambda r: (-r["days"], r["team"]))
+    holders = set(by_team)
+
+    def row(i, r):
+        clock = ('<span class="recordValue tabular">holding</span>' if r["holding"] else
+                 f'<span class="recordValue tabular clock" data-since="{r["since"]}">{r["days"]:,}</span>')
+        sub = (f'last held it {fmt_date(r["since"])}' if r["since"] else "the current holder")
+        if r["longest"]:
+            sub += f' &middot; longest wait ever {r["longest"]:,} days' + (f', ended by {esc(r["ender"])} in {r["ended_on"][:4]}' if r["ender"] else "")
+        if r["days"] > r["longest"] and r["reigns"] > 1 and r["days"]:
+            sub += " &middot; <strong>longest wait yet</strong>"
+        sub += f' &middot; {r["reigns"]} reign{"s" if r["reigns"] != 1 else ""}'
+        return f'<div class="recordRow"><span class="recordRank">{i}</span><span class="recordMain"><span class="swatch" style="background:{team_color(colors, r["team"])[0]}"></span>{team_link(r["team"], "", holders)}</span>{clock}<span class="recordSub">{sub}</span></div>'
+
+    active = [r for r in rows if r["active"]]
+    dormant = [r for r in rows if not r["active"]]
+    active_rows = "".join(row(i, r) for i, r in enumerate(active, 1))
+    dormant_rows = "".join(row(i, r) for i, r in enumerate(dormant, 1))
+    longest_wait = max(active, key=lambda r: r["days"]) if active else None
+    lede = (f"{esc(longest_wait['team'])} has waited longest among today&rsquo;s programs: {longest_wait['days']:,} days since {fmt_date(longest_wait['since'])}. " if longest_wait and longest_wait["days"] else "")
+    lede += "Every program that has held the belt, by how long it has been without it. The clocks keep counting on this page; the belt only moves when someone beats the holder."
+    return f'''{page_head("Belt Drought Clocks — Days Since Every Program Last Held the Belt",
+                     "How long every program has gone without the lineal College Football Belt, live, with each one's longest wait ever and who ended it.", "",
+                     share_meta("droughts", "Days since the belt", "Drought clocks", f"{len(active)} programs still waiting"))}
+
+{site_header('', 'droughts')}
+
+<main class="wrap">
+  {page_intro("Drought clocks", "Days since the belt", lede)}
+  <div class="recordsGrid">
+    <section class="recordCard">
+      <h2>Programs playing today</h2>
+      <p class="recordCardSub">Belt holders with a belt game in the last five seasons, by days without it</p>
+      <div class="recordList">{active_rows}</div>
+    </section>
+    <section class="recordCard">
+      <h2>Holders from another era</h2>
+      <p class="recordCardSub">Programs with no belt game in the last five seasons &mdash; many stopped playing major football</p>
+      <div class="recordList">{dormant_rows}</div>
+    </section>
+  </div>
+  <p class="moreLink"><a href="heartbreak.html">Programs that never held it &rarr;</a> &middot; <a href="records.html">Records &rarr;</a></p>
+</main>
+
+{site_footer('', 'Computed from the lineage; the day counts update in your browser from each reign&rsquo;s end date.')}
+<script>
+(function(){{var t=new Date(),et=new Date(t.toLocaleString('en-US',{{timeZone:'America/New_York'}}));et.setHours(0,0,0,0);
+document.querySelectorAll('.clock[data-since]').forEach(function(el){{var d=new Date(el.dataset.since+'T00:00:00');if(isNaN(d))return;var n=Math.round((et-d)/864e5);if(n>=0)el.textContent=n.toLocaleString();}});}})();
+</script>
+'''
+
 
 def generate_heartbreak_page(lineage, colors, belt_games):
     """heartbreak.html -- the programs that have played for the belt the
@@ -16529,6 +16718,150 @@ def generate_offline_page():
 '''
 
 
+# ---------------------------------------------------------------- belt news
+# Feature 7.2 (audit #2): one dated article per title change -- headline, dek, what the change
+# means (the reign that ended, the new holder's history, what's next), the AI recap's opening,
+# NewsArticle structured data and a share card -- at news/<date>-<slug>-takes-the-belt.html.
+# The game page keeps the box score and full recap; feed.xml's items link here.
+
+NEWS_ARTICLES = 40
+NEWS_PAGES = {}        # game_id -> relative article path, for feed.xml and the game pages
+
+
+def news_slug(g):
+    return f"{g['date']}-{team_slug(g['new_holder'])}-takes-the-belt"
+
+
+def generate_news_pages(lineage, belt_games, recaps, colors, next_game):
+    """Writes news/index.html and the articles; returns [(path, title, date)] newest first."""
+    reigns = lineage["reigns"]
+    today = date.today()
+    by_start = {}
+    for i, r in enumerate(reigns):
+        by_start[(r["team"], r["start_date"])] = i
+    changes = [g for g in belt_games if g.get("outcome") == "changed"]
+    changes.sort(key=lambda g: g["date"], reverse=True)
+    changes = changes[:NEWS_ARTICLES]
+    holders = set(r["team"] for r in reigns)
+    rel = "../"
+    written = []
+    for k, g in enumerate(changes):
+        w, l = g["new_holder"], g["holder"]
+        i = by_start.get((w, g["date"]))
+        r = reigns[i] if i is not None else None
+        prev_r = reigns[i - 1] if i else None
+        nxt_r = reigns[i + 1] if i is not None and i + 1 < len(reigns) else None
+        home_score, away_score = (int(x) for x in g["score"].split("-"))
+        ws, ls = ((home_score, away_score) if w == g["home"] else (away_score, home_score))
+        score = f"{ws}\u2013{ls}"
+        where = "at home" if g["home"] == w else ("at a neutral site" if g.get("neutral") else "on the road")
+        is_cur = r is not None and not r.get("end_date")
+        own = [x for x in reigns[:i] if x["team"] == w] if i is not None else []
+        last_own = own[-1] if own else None
+        reign_no = len(own) + 1
+        slug = news_slug(g)
+        path = f"news/{slug}.html"
+        headline = f"{w} beats {l} {score} and takes the College Football Belt"
+        prev_days = reign_duration_days(prev_r, today) if prev_r else None
+        dek = f"The {ordinal(reign_no)} reign for the program" + (f"; it ends {possessive(l)} {prev_days:,}-day reign" + (f" of {prev_r['defenses']} defense{'s' if prev_r['defenses'] != 1 else ''}" if prev_r and prev_r.get("defenses") else "") + "." if prev_r else ".")
+        paras = [f"{esc(w)} took the lineal College Football Belt on {fmt_date(g['date'])}, beating {esc(l)} {score} {where}"
+                 + (" in the postseason" if g.get("season_type") not in (None, "regular") else f" in week {g['week']}" if g.get("week") else "")
+                 + f". It is reign {(i + 1):,} in the belt&rsquo;s history, which starts with Rutgers over Princeton in 1869, and the {ordinal(reign_no)} for {esc(w)}."]
+        if prev_r:
+            paras.append(f"{esc(l)} had held it since {fmt_date(prev_r['start_date'])}: {prev_days:,} days and {prev_r.get('defenses', 0)} defense{'s' if prev_r.get('defenses', 0) != 1 else ''}.")
+        if last_own:
+            end = last_own.get("end_date")
+            gap = (date.fromisoformat(g["date"]) - date.fromisoformat(end)).days if end else None
+            paras.append(f"{esc(w)} last held the belt in {end[:4] if end else last_own['start_date'][:4]}" + (f", {gap:,} days before this one" if gap else "")
+                         + f"; that reign lasted {reign_duration_days(last_own, today):,} days with {last_own.get('defenses', 0)} defense{'s' if last_own.get('defenses', 0) != 1 else ''}.")
+        else:
+            paras.append(f"It is the first belt reign in {possessive(w)} history.")
+        if is_cur:
+            if next_game and next_game.get("team") == w:
+                when = fmt_date(next_game["date"])
+                et = kickoff_et(next_game)
+                nd = r.get("defenses", 0) if r else 0
+                paras.append((f"{nd} defense{'s' if nd != 1 else ''} so far. The next defense: " if nd else "The first defense: ")
+                             + f"{'vs.' if next_game.get('is_home') or next_game.get('neutral') else 'at'} {esc(next_game['opponent'])} on {when}"
+                             + (f" at {esc(et)}" if et else "") + (f" ({esc(next_game['watch'])})" if next_game.get("watch") else "") + ".")
+            else:
+                paras.append(f"{esc(w)} holds the belt now; the next defense isn&rsquo;t on the schedule yet.")
+        elif r:
+            paras.append(f"The reign lasted {reign_duration_days(r, today):,} days and {r.get('defenses', 0)} defense{'s' if r.get('defenses', 0) != 1 else ''}"
+                         + (f", ending {fmt_date(r['end_date'])} against {esc(nxt_r['team'])}." if nxt_r and r.get("end_date") else "."))
+        recap = recaps.get(str(g["game_id"])) or {}
+        recap_html = ""
+        if recap.get("recap"):
+            first = recap["recap"].split("\n")[0]
+            if len(first) > 420:
+                first = first[:400].rsplit(" ", 1)[0] + "\u2026"
+            recap_html = f'<div class="sectionHead"><span class="tag">AI-Written</span><span class="rule"></span><h2>The game</h2></div><div class="proseBlock"><p>{esc(first)}</p><p class="moreLink"><a href="{rel}games/{g["game_id"]}.html">Full recap, box score and the belt game &rarr;</a></p></div>'
+        else:
+            recap_html = f'<p class="moreLink"><a href="{rel}games/{g["game_id"]}.html">The game page: box score and the belt game &rarr;</a></p>'
+        primary, alt = team_color(colors, w)
+        share = share_meta(f"news-{slug}", f"{w} takes the belt", eyebrow="NEW HOLDER \u00b7 COLLEGE FOOTBALL BELT",
+                           stat=score, sub=f"beat {l} \u00b7 {fmt_date(g['date'])}", primary=primary, alt=alt)
+        older = changes[k + 1] if k + 1 < len(changes) else None
+        newer = changes[k - 1] if k else None
+        nav = ('<nav class="pager mono" style="display:flex;justify-content:space-between;gap:16px;margin-top:28px">'
+               + (f'<a href="{news_slug(older)}.html">&larr; Older: {esc(older["new_holder"])} takes it</a>' if older else "<span></span>")
+               + '<a href="index.html">All belt news</a>'
+               + (f'<a href="{news_slug(newer)}.html">Newer: {esc(newer["new_holder"])} takes it &rarr;</a>' if newer else "<span></span>") + "</nav>")
+        pub = f"{g['date']}T23:00:00-04:00"
+        ld = {"@context": "https://schema.org", "@type": "NewsArticle", "headline": headline[:110], "description": re.sub(r"&[a-z]+;", "'", dek),
+              "datePublished": pub, "dateModified": pub if not is_cur else today.isoformat(),
+              "author": {"@type": "Organization", "name": "The College Football Belt", "url": SITE_URL + "/"},
+              "publisher": {"@type": "Organization", "name": "R&O Holdings LLC", "logo": {"@type": "ImageObject", "url": SITE_URL + "/icon-512.png"}},
+              "image": [f"{SITE_URL}/share/news-{slug}.png"], "mainEntityOfPage": f"{SITE_URL}/{path}",
+              "about": {"@type": "SportsEvent", "name": f"{w} vs. {l}", "startDate": g["date"]},
+              "articleBody": re.sub(r"<[^>]+>|&[a-z]+;", " ", " ".join(paras))}
+        title = f"{w} takes the belt: {fmt_date(g['date'])}"
+        html_out = f'''{page_head(f"{title} — The College Football Belt", re.sub(r"&[a-z]+;", "'", f"{headline}. {dek}")[:300], rel, share + "\n" + json_ld(ld))}
+<meta property="og:title" content="{esc(headline)}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{SITE_URL}/{path}">
+<meta property="article:published_time" content="{pub}">
+<link rel="canonical" href="{SITE_URL}/{path}">
+
+{site_header(rel, 'news')}
+
+<main class="wrap">
+  <div class="crumbRow" style="padding-inline:0"><a href="{rel}index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Belt news</a> <span class="sep">/</span> {fmt_date(g["date"])}</div>
+  {page_intro(f"Belt news &middot; {fmt_date(g['date'])}", esc(headline), dek)}
+  <div class="proseBlock">{"".join(f"<p>{x}</p>" for x in paras)}</div>
+  {recap_html}
+  <p class="moreLink"><a href="{rel}teams/{team_slug(w)}.html">{esc(w)} and the belt &rarr;</a> &middot; <a href="{rel}lineage.html">Full history &rarr;</a> &middot; <a href="{rel}feed.xml">RSS</a></p>
+  {nav}
+</main>
+
+{site_footer(rel, 'Every belt game sourced from the College Football Data API; the article is written from the lineage itself.')}
+'''
+        os.makedirs(os.path.join(OUT_DIR, "news"), exist_ok=True)
+        with open(os.path.join(OUT_DIR, path), "w", encoding="utf-8") as f:
+            f.write(html_out)
+        NEWS_PAGES[str(g["game_id"])] = path
+        written.append((path, headline, g["date"], w, l, score, primary))
+    # ---- index
+    rows = "".join(f'<a class="otdRow" href="{p.split("/", 1)[1]}"><span class="otdYear tabular">{fmt_date(d_)}</span>'
+                   f'<span class="otdMain"><span class="swatch" style="background:{c}"></span>{esc(t)}</span></a>'
+                   for p, t, d_, w, l, sc, c in written)
+    html_out = f'''{page_head("Belt news: every title change — The College Football Belt", "Dated articles on every change of hands of the lineal College Football Belt: who took it, whose reign ended and what comes next.", rel)}
+<link rel="canonical" href="{SITE_URL}/news/index.html">
+
+{site_header(rel, 'news')}
+
+<main class="wrap">
+  {page_intro("Belt news", "Every title change, dated", f"The newest {len(written)} changes of hands, newest first. <a href='{rel}feed.xml'>RSS feed</a> &middot; <a href='{rel}lineage.html'>The full history &rarr;</a>")}
+  <div class="otdList">{rows}</div>
+</main>
+
+{site_footer(rel, 'Every belt game sourced from the College Football Data API.')}
+'''
+    with open(os.path.join(OUT_DIR, "news", "index.html"), "w", encoding="utf-8") as f:
+        f.write(html_out)
+    return written
+
+
 def generate_feed(belt_games, recaps):
     """RSS 2.0 feed of belt CHANGES only (not every defense) -- newest
     first, so an RSS reader or RSS-to-email service can notify someone the
@@ -16554,10 +16887,11 @@ def generate_feed(belt_games, recaps):
                                       else (away_score, home_score))
         desc = recap.get("recap") or f'{g["new_holder"]} def. {g["holder"]} {winner_score}–{loser_score}.'
         link = f'{SITE_URL}/games/{g["game_id"]}.html'
+        art = NEWS_PAGES.get(str(g["game_id"]))          # 7.2: the dated article, when there is one
         items.append(f'''
     <item>
       <title>{esc(g["new_holder"])} takes the belt from {esc(g["holder"])}</title>
-      <link>{link}</link>
+      <link>{(SITE_URL + "/" + art) if art else link}</link>
       <guid isPermaLink="true">{link}</guid>
       <pubDate>{format_datetime(dt)}</pubDate>
       <description>{esc(desc)}</description>
@@ -16952,6 +17286,7 @@ def main():
         ("timeline.html", generate_timeline_page(lineage, colors, belt_games)),
         ("leaders.html", generate_leaders_page(belt_games, details, colors)),
         ("heartbreak.html", generate_heartbreak_page(lineage, colors, belt_games)),
+        ("droughts.html", generate_droughts_page(lineage, colors, belt_games)),       # 7.6 (audit #2)
         ("lean.html", generate_lean_page(lineage, belt_games, colors)),
         ("daily.html", generate_daily_page(lineage, colors, belt_games)),
         ("about.html", generate_about_page(lineage, belt_games)),
@@ -17092,6 +17427,14 @@ def main():
                      if href not in STORIES_SKIPPED and "{" not in title]
     with open(os.path.join(OUT_DIR, "search-index.json"), "w", encoding="utf-8") as f:
         json.dump(search_index, f, ensure_ascii=False, separators=(",", ":"))
+    try:                                   # 7.2 (audit #2): before the share manifest; never fatal to the build
+        news_written = generate_news_pages(lineage, belt_games, recaps, colors, next_game)
+    except Exception as ex:                # noqa: BLE001
+        print(f"belt news skipped: {ex!r}")
+        news_written = []
+    search_index += [{"n": t, "u": p_, "t": "Belt news", "k": f"{w} {l}"} for p_, t, _, w, l, _, _ in news_written]
+    with open(os.path.join(OUT_DIR, "search-index.json"), "w", encoding="utf-8") as f:
+        json.dump(search_index, f, ensure_ascii=False, separators=(",", ":"))
     # share cards for generate_share_image.py to paint (see share_meta)
     with open(os.path.join(OUT_DIR, "share-manifest.json"), "w", encoding="utf-8") as f:
         json.dump(SHARE_MANIFEST, f, ensure_ascii=False, separators=(",", ":"))
@@ -17120,7 +17463,7 @@ def main():
         sitemap_urls.append(f"{SITE_URL}/venues/index.html")
     if "by-conference.html" not in PAGES_ABSENT:
         sitemap_urls.append(f"{SITE_URL}/by-conference.html")
-    sitemap_urls += [f"{SITE_URL}/{p}" for p in ("outlook.html", "schedule.html", "timeline.html", "leaders.html", "heartbreak.html",
+    sitemap_urls += [f"{SITE_URL}/{p}" for p in ("outlook.html", "schedule.html", "timeline.html", "leaders.html", "heartbreak.html", "droughts.html",
                                                   "lean.html", "daily.html", "about.html", "rivalries/index.html",
                                                   "states/index.html", "decades/index.html", "web.html", "data.html",
                                                   "state-of-the-belt.html")]
@@ -17158,6 +17501,9 @@ def main():
     otd_dates = write_on_this_day_date_pages(belt_games, OUT_DIR)        # audit 7.7: per-date pages
     sitemap_urls += [f"{SITE_URL}/on-this-day/{k}.html" for k in otd_dates]
 
+    if news_written:
+        sitemap_urls.append(f"{SITE_URL}/news/index.html")
+        sitemap_urls += [f"{SITE_URL}/{p}" for p, *_ in news_written]
     with open(os.path.join(OUT_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(generate_sitemap(sitemap_urls))
 
