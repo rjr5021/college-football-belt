@@ -62,9 +62,65 @@ def get_json(url, api_key, retries=5):
             raise
 
 
-def recent_form(games_raw, team, count=RECENT_FORM_COUNT):
+def _venue_timezones():
+    """venue id -> IANA zone, from the venues build_lineage.py cached this run (audit #2, F-3)."""
+    path = os.path.join(OUT_DIR, "venues_raw.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path) as f:
+            raw = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    tf = None
+    try:
+        from timezonefinder import TimezoneFinder
+        tf = TimezoneFinder()
+    except ImportError:
+        pass
+    out = {}
+    for v in raw:
+        vid = pick(v, "id")
+        if vid is None:
+            continue
+        tz = pick(v, "timezone", "time_zone")
+        if not tz and tf is not None:
+            lat, lng = pick(v, "latitude", "lat"), pick(v, "longitude", "lng", "lon")
+            try:
+                tz = tf.timezone_at(lat=float(lat), lng=float(lng)) if lat is not None and lng is not None else None
+            except Exception:
+                tz = None
+        if tz:
+            out[vid] = tz
+    return out
+
+
+def local_game_date(iso_utc, tz_name):
+    """The calendar date of a kickoff where it was played (the lineage's convention), not the UTC
+    date: a 7:30 PM ET kickoff on Saturday is Sunday in UTC, and the preview page used to list
+    "at Stanford, November 30" for the game the homepage dates November 29 (audit #2, F-3).
+    Falls back to Eastern time when the venue's zone is unknown."""
+    if not iso_utc:
+        return ""
+    try:
+        from datetime import datetime, timezone
+        from zoneinfo import ZoneInfo
+        dt = datetime.fromisoformat(str(iso_utc).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        try:
+            zone = ZoneInfo(tz_name) if tz_name else ZoneInfo("America/New_York")
+        except Exception:
+            zone = ZoneInfo("America/New_York")
+        return dt.astimezone(zone).date().isoformat()
+    except (ValueError, ImportError):
+        return str(iso_utc)[:10]
+
+
+def recent_form(games_raw, team, count=RECENT_FORM_COUNT, venue_tz=None):
     """This team's last `count` COMPLETED games, most recent first."""
     played = []
+    venue_tz = venue_tz if venue_tz is not None else _venue_timezones()
     for g in games_raw:
         home = pick(g, "home_team", "homeTeam")
         away = pick(g, "away_team", "awayTeam")
@@ -74,13 +130,15 @@ def recent_form(games_raw, team, count=RECENT_FORM_COUNT):
         ap = pick(g, "away_points", "awayPoints")
         if hp is None or ap is None:
             continue  # not played yet
-        date = pick(g, "start_date", "startDate", default="")
+        raw_date = pick(g, "start_date", "startDate", default="")
+        date = local_game_date(raw_date, venue_tz.get(pick(g, "venue_id", "venueId")))
         is_home = home == team
         score_for = hp if is_home else ap
         score_against = ap if is_home else hp
         opponent = away if is_home else home
         played.append({
             "date": date,
+            "raw_date": raw_date,
             "opponent": opponent,
             "home": is_home,
             "score_for": score_for,
@@ -88,7 +146,7 @@ def recent_form(games_raw, team, count=RECENT_FORM_COUNT):
             "won": score_for > score_against,
             "tied": score_for == score_against,
         })
-    played.sort(key=lambda g: g["date"], reverse=True)
+    played.sort(key=lambda g: g["raw_date"] or g["date"], reverse=True)
     return played[:count]
 
 

@@ -549,6 +549,24 @@ def _page_file(loc):
     return os.path.join(OUT_DIR, *rel.split("/"))
 
 
+# Audit #2 (F-1): parts of every page that change without the page's content changing. The
+# footer's build-time "Belt network" fallback names the current holder of all 19 belts, so one
+# NHL result used to re-date all 5,710 pages and push the whole site to IndexNow every build.
+_VOLATILE = [
+    re.compile(rb'<nav class="footCol" data-belt-network[^>]*>.*?</nav>', re.S),   # network fallback
+    re.compile(rb'\?v=[0-9a-f]+'),                                                 # styles.css cache-buster
+    re.compile(rb'<script[^>]*(?:adsbygoogle|gc\.zgo\.at|goatcounter)[^>]*>.*?</script>', re.S),
+    re.compile(rb'<meta name="google-adsense-account"[^>]*>'),
+]
+
+
+def content_fingerprint(raw):
+    """The bytes of a built page with its volatile, non-content parts removed, for hashing."""
+    for rx in _VOLATILE:
+        raw = rx.sub(b"", raw)
+    return raw
+
+
 def track_page_changes(sitemap_urls):
     """Which pages really changed this build, and when each last did.
     historical_data/page_hashes.json (committed back by the workflow with the
@@ -571,7 +589,7 @@ def track_page_changes(sitemap_urls):
         if not path or not os.path.exists(path):
             continue
         with open(path, "rb") as f:
-            digest = hashlib.sha1(f.read()).hexdigest()[:16]
+            digest = hashlib.sha1(content_fingerprint(f.read())).hexdigest()[:16]
         old = store.get(loc)
         if old and old[0] == digest:
             dates[loc] = old[1]

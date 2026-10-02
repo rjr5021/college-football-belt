@@ -30,6 +30,7 @@ rest of the site works fine without it.
 
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -155,14 +156,16 @@ def build_prompt(next_game, matchup, weather=None):
     else:
         h2h_line = f"{holder} and {opponent} have no recorded meetings in CFBD's data."
 
-    w_line = weather_line(weather)
-    weather_block = f"\n{w_line}" if w_line else ""
+    # Audit #2 (N-3): the forecast is no longer in the prompt. The page shows the live forecast in its own
+    # box and refreshes it every run, while this text is cached for the whole week -- it was quoting
+    # "partly cloudy, 77°F" under a box that said "79°F, overcast".
+    weather_block = ""
 
     return f'''You are writing a short preview for "The College Football Belt," a site that tracks a lineal championship belt that has passed hand to hand on the field since 1869 -- whoever last beat the holder holds the belt, no committee or poll involved. The belt itself is on the line in this game.
 
 Upcoming game: {holder} (current belt holder) {side} {opponent}, on {next_game['date']}.
 
-Stats:
+Stats (this is everything you know -- do NOT invent player names, injuries, coaches or any fact not listed here. Every number you write must appear verbatim in these lines: do not add up points across games, do not count streaks or margins yourself, and never mention betting lines, odds or the weather -- those are shown separately on the page):
 {holder_form}
 {opp_form}
 {h2h_line}{weather_block}
@@ -173,7 +176,7 @@ Write a JSON object with exactly these keys and nothing else:
   "betting_angles": 2-3 sentences discussing betting-relevant trends (e.g. what recent form or the head-to-head history suggests). Frame this as analysis of the numbers, not a recommendation -- do not tell the reader what to bet or claim a pick is likely to hit.
   "predicted_winner": the team name you'd pick to win -- exactly "{holder}" or "{opponent}", nothing else.
   "predicted_score": your predicted final score as "{holder} X, {opponent} Y" (numbers you actually believe, not a hedge like "close game").
-  "prediction_writeup": 3-5 sentences explaining the pick -- ground it in the recent form, head-to-head history, and (when given above) the weather at kickoff if it plausibly affects the game (e.g. heavy wind/rain favoring a run-heavy or lower-scoring game). Plain prose, no markdown. This is an editorial call for fun, not betting advice -- don't phrase it as a recommendation to wager.
+  "prediction_writeup": 3-5 sentences explaining the pick -- ground it in the recent form and the head-to-head history above. Plain prose, no markdown. This is an editorial call for fun, not betting advice -- don't phrase it as a recommendation to wager.
 
 Output ONLY the JSON object, no other text, no markdown code fence.'''
 
@@ -233,6 +236,69 @@ def parse_preview(text):
                 "predicted_winner": "", "predicted_score": "", "prediction_writeup": ""}
 
 
+# ------------------------------------------------------- fact check (N-3) --
+# The model only knows the stats in the prompt, but it still invented totals, streak lengths and
+# margins ("three blowouts by 40+"), and it used to quote odds and forecasts that the page refreshes
+# every run while the cached text didn't. Now: every number in the output must appear verbatim in
+# the prompt (plus 0-10 and the two-digit forms of years, for "2025-26"); a first miss gets one
+# rewrite with the offending numbers named; a second miss drops the sentences that carry them.
+
+_NUM_RX = re.compile(r"(?<![\w.])\d+(?:,\d{3})*(?:\.\d+)?(?![\w.])")
+
+
+def _nums(text):
+    return {m.group(0).replace(",", "") for m in _NUM_RX.finditer(text or "")}
+
+
+def allowed_numbers(prompt):
+    nums = _nums(prompt)
+    out = set(nums) | {str(i) for i in range(0, 11)}
+    for n in nums:
+        if re.fullmatch(r"(19|20)\d\d", n):
+            out.add(n[2:])
+    return out
+
+
+_AI_TEXT_KEYS = ("overview", "betting_angles", "prediction_writeup")
+
+
+def unknown_numbers(ai, allowed):
+    found = set()
+    for k in _AI_TEXT_KEYS:
+        found |= _nums(ai.get(k)) - allowed
+    for item in ai.get("key_matchups") or []:
+        found |= _nums(item) - allowed
+    return found
+
+
+def scrub_numbers(ai, allowed):
+    """Drop every sentence or bullet that still quotes a number the stats don't contain."""
+    dropped = set()
+
+    def keep_sentences(text):
+        kept = []
+        for sent in re.split(r"(?<=[.!?])\s+", (text or "").strip()):
+            unk = _nums(sent) - allowed
+            if unk:
+                dropped.update(unk)
+            elif sent:
+                kept.append(sent)
+        return " ".join(kept)
+
+    out = dict(ai)
+    for k in _AI_TEXT_KEYS:
+        out[k] = keep_sentences(ai.get(k))
+    out["key_matchups"] = [x for x in (ai.get("key_matchups") or []) if not (_nums(x) - allowed)]
+    return out, dropped
+
+
+def retry_prompt(prompt, unknown):
+    return (prompt + "\n\nYour previous draft cited numbers that do not appear in the stats above: "
+            + ", ".join(sorted(unknown, key=lambda x: (len(x), x)))
+            + ". Rewrite it using only numbers that appear verbatim in the stats. Do not add up points or goals across games, "
+              "do not count streaks or margins yourself, and do not quote odds, lines or forecasts.")
+
+
 def main():
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -284,6 +350,23 @@ def main():
         return
 
     preview = parse_preview(raw_text)
+    allowed = allowed_numbers(prompt)
+    attempts, dropped = 1, set()
+    unk = unknown_numbers(preview, allowed)
+    if unk:
+        print(f"  fact check: {sorted(unk)} are not in the stats -- asking for one rewrite.")
+        try:
+            again = parse_preview(call_claude(retry_prompt(prompt, unk), api_key))
+            attempts = 2
+            if again.get("overview"):
+                preview = again
+        except Exception as e:  # noqa: BLE001
+            print(f"  rewrite failed ({e}); scrubbing instead.", file=sys.stderr)
+        unk = unknown_numbers(preview, allowed)
+        if unk:
+            preview, dropped = scrub_numbers(preview, allowed)
+            print(f"  fact check: dropped sentences citing {sorted(dropped)}.")
+    preview["factcheck"] = {"attempts": attempts, "dropped": sorted(dropped)}
 
     os.makedirs(CACHE_DIR, exist_ok=True)
     with open(CACHE_PATH, "w") as f:

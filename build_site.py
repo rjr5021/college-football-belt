@@ -192,9 +192,12 @@ def head_extras(rel=""):
         # render-blocking round trip (HTML -> styles.css -> fonts.googleapis
         # -> font files); this way the font CSS downloads in parallel with
         # styles.css.
-        '<link rel="preconnect" href="https://fonts.googleapis.com">',
-        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
-        f'<link rel="stylesheet" href="{FONTS_URL}">',
+        '<link rel="preconnect" href="https://cdn.collegefootballdata.com">',
+        *([f'<link rel="preload" href="/fonts/{fn}" as="font" type="font/woff2" crossorigin>' for fn in FONT_PRELOAD]
+          if FONTS_SELF_HOSTED[0] else
+          ['<link rel="preconnect" href="https://fonts.googleapis.com">',
+           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+           f'<link rel="stylesheet" href="{FONTS_URL}">']),
         f'<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">',
         f'<link rel="icon" type="image/png" href="{rel}favicon.png">',
         f'<link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">',
@@ -395,6 +398,85 @@ def head_extras(rel=""):
 FONTS_URL = ("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800;900"
              "&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500"
              "&family=IBM+Plex+Mono:wght@400;500;600&display=swap")
+
+# Audit #2 (N-6): the site serves its own fonts. Every face the stylesheet uses, with the file
+# name it's stored under in ig_templates/fonts/ (the Instagram cards already ship most of them,
+# OFL licensed). ensure_fonts() copies them into site/fonts/ and downloads any that are missing
+# from Google Fonts at build time (the CI runner can; the sandbox can't), and the page falls back
+# to the Google Fonts <link> only when a face is still missing after that.
+FONT_FACES = [
+    ("Big Shoulders Display", "normal", 500, "big-shoulders-display-latin-500-normal.woff2"),
+    ("Big Shoulders Display", "normal", 700, "big-shoulders-display-latin-700-normal.woff2"),
+    ("Big Shoulders Display", "normal", 800, "big-shoulders-display-latin-800-normal.woff2"),
+    ("Big Shoulders Display", "normal", 900, "big-shoulders-display-latin-900-normal.woff2"),
+    ("Spectral", "normal", 400, "spectral-latin-400-normal.woff2"),
+    ("Spectral", "italic", 400, "spectral-latin-400-italic.woff2"),
+    ("Spectral", "normal", 500, "spectral-latin-500-normal.woff2"),
+    ("Spectral", "italic", 500, "spectral-latin-500-italic.woff2"),
+    ("Spectral", "normal", 600, "spectral-latin-600-normal.woff2"),
+    ("IBM Plex Mono", "normal", 400, "ibm-plex-mono-latin-400-normal.woff2"),
+    ("IBM Plex Mono", "normal", 500, "ibm-plex-mono-latin-500-normal.woff2"),
+    ("IBM Plex Mono", "normal", 600, "ibm-plex-mono-latin-600-normal.woff2"),
+]
+FONTS_SRC = os.path.join("ig_templates", "fonts")
+FONT_PRELOAD = ("big-shoulders-display-latin-800-normal.woff2", "spectral-latin-400-normal.woff2", "ibm-plex-mono-latin-400-normal.woff2")
+FONTS_SELF_HOSTED = [False]     # set by ensure_fonts() before any page is rendered
+
+
+def _google_font_file(family, style, weight):
+    """The latin woff2 behind one Google Fonts face, via the css2 endpoint (needs a browser UA)."""
+    import urllib.request
+    fam = family.replace(" ", "+")
+    spec = f"{fam}:ital,wght@{1 if style == 'italic' else 0},{weight}"
+    url = f"https://fonts.googleapis.com/css2?family={spec}&display=swap"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        css = r.read().decode()
+    for block in css.split("@font-face")[1:]:
+        if "U+0000-00FF" in block:
+            m = re.search(r"url\(([^)]+\.woff2)\)", block)
+            if m:
+                with urllib.request.urlopen(m.group(1), timeout=20) as r:
+                    return r.read()
+    return None
+
+
+def ensure_fonts():
+    """Copy the committed font files into site/fonts/, fetch any face that isn't committed, and
+    decide whether the pages can drop the Google Fonts stylesheet."""
+    out = os.path.join(OUT_DIR, "fonts")
+    os.makedirs(out, exist_ok=True)
+    missing = []
+    for family, style, weight, fname in FONT_FACES:
+        src = os.path.join(FONTS_SRC, fname)
+        if not os.path.exists(src):
+            try:
+                data = _google_font_file(family, style, weight)
+                if data and data[:4] == b"wOF2":
+                    os.makedirs(FONTS_SRC, exist_ok=True)
+                    with open(src, "wb") as f:
+                        f.write(data)
+                    print(f"  fonts: fetched {fname}")
+            except Exception as e:  # noqa: BLE001
+                print(f"  fonts: could not fetch {fname} ({e})")
+        if os.path.exists(src):
+            shutil.copy(src, os.path.join(out, fname))
+        else:
+            missing.append(fname)
+    lic = os.path.join(FONTS_SRC, "OFL.txt")
+    if os.path.exists(lic):
+        shutil.copy(lic, os.path.join(out, "OFL.txt"))
+    FONTS_SELF_HOSTED[0] = not missing
+    print("  fonts: self-hosted" if not missing else f"  fonts: {len(missing)} face(s) missing ({', '.join(missing)}); keeping the Google Fonts link")
+
+
+def font_face_css():
+    if not FONTS_SELF_HOSTED[0]:
+        return ""
+    rng = ("U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,"
+           "U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD")
+    return "".join(f'@font-face{{font-family:"{fam}";font-style:{style};font-weight:{w};font-display:swap;'
+                   f'src:url(/fonts/{fn}) format("woff2");unicode-range:{rng}}}\n' for fam, style, w, fn in FONT_FACES)
 
 # The belt mark used in the header/footer -- an octagon medallion between two
 # side plates on a strap, the same silhouette generate_share_image.py draws
@@ -828,15 +910,18 @@ def team_logo(colors, name):
     return entry.get("logo") or None
 
 
-def logo_img(colors, name, css_class="teamLogo", size=40):
+def logo_img(colors, name, css_class="teamLogo", size=40, eager=False):
     """A ready-to-embed <img>, or "" when this team has no logo on file --
     always check truthiness before using this in a layout that assumes an
-    image is present."""
+    image is present. `eager` is for the two hero marks above the fold
+    (audit #2, N-5): lazy-loading those painted the plate with empty white
+    discs for a second or two on every page."""
     url = team_logo(colors, name)
     if not url:
         return ""
+    load = 'loading="eager" fetchpriority="high" decoding="async"' if eager else 'loading="lazy"'
     return (f'<img class="{css_class}" src="{esc(url)}" alt="" width="{size}" height="{size}" '
-            f'loading="lazy" onerror="this.remove()">')
+            f'{load} onerror="this.remove()">')
 
 
 def logo_chip(colors, name, size=30):
@@ -855,7 +940,7 @@ def team_dot(colors, name, size=40, css_class="tlDot"):
     """Initials-under-logo team mark (see logo_chip). `size` is the logo's
     box; the circle itself is sized by the CSS class."""
     primary, _ = team_color(colors, name)
-    img = logo_img(colors, name, "teamLogo", size)
+    img = logo_img(colors, name, "teamLogo", size, eager=(css_class == "logoChip" and size >= 40))
     init = esc(team_chip(name))
     style = f' style="width:{size + 6}px;height:{size + 6}px"' if css_class == "logoChip" else ""
     return (f'<span class="{css_class}"{style}><span class="dotInit" aria-hidden="true" '
@@ -4139,7 +4224,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
         story_html = (f'<p class="upNextStory">{esc(story["ranked"][0])}</p>'
                       if story.get("ranked") else "")
         up_next_html = f'''
-      <aside class="upNext" aria-label="Next belt game">
+      <section class="upNext" aria-label="Next belt game">
         <div class="upNextHead"><span class="kicker">Belt on the line</span><span class="soonChip" data-days-until="{next_game['date']}" data-long{'' if soon else ' hidden'}>{soon}</span></div>
         <div class="upNextMatch">
           {holder_chip}
@@ -4154,14 +4239,14 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
           <a class="btn ghost" href="preview.html#calendar">+ Calendar</a>
         </div>
         {watch_html}
-      </aside>'''
+      </section>'''
     else:
         up_next_html = '''
-      <aside class="upNext" aria-label="Next belt game">
+      <section class="upNext" aria-label="Next belt game">
         <div class="upNextHead"><span class="kicker">Belt on the line</span></div>
         <p class="lede" style="margin:0">The holder&rsquo;s next game isn&rsquo;t on the schedule yet. The belt waits.</p>
         <div class="btnRow"><a class="btn ghost" href="seasons.html">Season by season</a><a class="btn ghost" href="my-team.html">My team&rsquo;s path</a></div>
-      </aside>'''
+      </section>'''
 
     # ---- the other belts, and what's next for each ----
     # The companion belts have their own holders and their own next games;
@@ -7630,7 +7715,7 @@ def collect_players(belt_games, details):
 # linked from the game pages, still served) so ~6,000 one-line pages stop
 # crowding the crawl (Search Console, 2026-09-16: two-thirds of the sitemap
 # was player pages, and Google was declining to index them).
-PLAYER_INDEX_MIN_GAMES = 2
+PLAYER_INDEX_MIN_GAMES = 4   # audit #2 (F-5): 2 put 2,346 ~100-word pages in the sitemap
 
 
 def generate_player_pages(belt_games, details, players_dir):
@@ -9775,10 +9860,16 @@ def generate_trivia_page(pool):
 API_DIR = "api"
 
 
-def _network_next(ng):
-    """The next belt game in the network's shape (see beltholders.com/api/network.json)."""
+def _network_next(ng, belt_risk=None):
+    """The next belt game in the network's shape (see beltholders.com/api/network.json).
+    Audit #2 (F-4): carries the defend probability from belt_risk.json (it used to be null, so
+    beltholders.com/today/ had no odds for the football game) and the streaming service."""
     if not ng or not ng.get("date"):
         return None
+    win_prob = None
+    risk_next = (belt_risk or {}).get("next_game") or {}
+    if risk_next.get("opponent") == ng.get("opponent") and risk_next.get("defend_prob") is not None:
+        win_prob = round(float(risk_next["defend_prob"]), 3)
     t = None
     if ng.get("raw_date") and not ng.get("start_time_tbd"):
         try:
@@ -9788,10 +9879,10 @@ def _network_next(ng):
             t = None
     return {"date": ng["date"], "time_et": t, "opponent": ng.get("opponent"), "opponent_short": ng.get("opponent"),
             "home": bool(ng.get("is_home")), "neutral": bool(ng.get("neutral")), "venue": ng.get("venue_name"),
-            "tv": ng.get("tv"), "win_prob": None, "url": f"{SITE_URL}/preview.html"}
+            "tv": ng.get("tv"), "stream": ng.get("stream"), "win_prob": win_prob, "url": f"{SITE_URL}/preview.html"}
 
 
-def generate_api_files(lineage, belt_games, next_game):
+def generate_api_files(lineage, belt_games, next_game, belt_risk=None):
     """Three plain JSON files -- current.json (live snapshot), reigns.json,
     and games.json -- straight dumps of data build_site.py already has in
     memory, no extra computation. For developers/fans who want to build
@@ -9813,7 +9904,8 @@ def generate_api_files(lineage, belt_games, next_game):
         "holder_short": current["team"],
         "reign_no": team_reign_num,
         "state": "in_season_next_game" if next_game else "offseason_schedule_pending",
-        "next": _network_next(next_game),
+        "next": _network_next(next_game, belt_risk),
+        "data_ok": True,
     }
     return {
         "current.json": current_payload,
@@ -16489,6 +16581,10 @@ def main():
      losers_lineages, championship_lineages, conference_lineages,
      team_paths, belt_risk, gameday, coaches) = load_data()
     belt_games = lineage["belt_games"]
+    os.makedirs(OUT_DIR, exist_ok=True)
+    ensure_fonts()                                            # audit #2 (N-6): before any page renders
+    global STYLES_VERSION                                     # the served CSS now starts with @font-face rules
+    STYLES_VERSION = hashlib.sha256((font_face_css() + STYLES_CSS).encode("utf-8")).hexdigest()[:10]
     compute_sequence(belt_games)
     HOLDER_PROGRAMS.update(r["team"] for r in lineage["reigns"])
     CHALLENGER_PAGES.update(challenger_stats(belt_games, HOLDER_PROGRAMS))   # so team_link() links them everywhere
@@ -16540,7 +16636,7 @@ def main():
     # points at the file that will actually be written
     PLAYER_SLUG_BY_ID.update({pid: player_slug(pid, p["name"]) for pid, p in collect_players(belt_games, details).items()})
 
-    minified_css = minify_css(STYLES_CSS)
+    minified_css = font_face_css() + minify_css(STYLES_CSS)
     with open(os.path.join(OUT_DIR, "styles.css"), "w", encoding="utf-8") as f:
         f.write(minified_css)
 
@@ -16976,7 +17072,7 @@ def main():
 
     api_dir = os.path.join(OUT_DIR, API_DIR)
     os.makedirs(api_dir, exist_ok=True)
-    for name, payload in generate_api_files(lineage, belt_games, next_game).items():
+    for name, payload in generate_api_files(lineage, belt_games, next_game, load_optional_json("belt_risk.json")).items():
         with open(os.path.join(api_dir, name), "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False)
 
