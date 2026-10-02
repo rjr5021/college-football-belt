@@ -535,6 +535,7 @@ NAV_MORE = [
         ("leaders", "leaders.html", "Belt-game leaders"),
         ("heartbreak", "heartbreak.html", "Heartbreak list"),
         ("droughts", "droughts.html", "Drought clocks"),
+        ("rankings", "rankings/index.html", "Power rankings, weekly"),
         ("polls", "polls.html", "Belt vs. the polls"),
         ("champions", "champions.html", "Belt vs. the champion"),
         ("standings", "standings.html", "Belt vs. the standings"),
@@ -10189,6 +10190,129 @@ def reign_games(belt_games):
 
 # ---------------------------------------------------------- season outlook
 
+# ------------------------------------------------------- weekly rankings (7.7)
+# Feature 7.7 (audit #2): the outlook's end-of-season odds, kept as one snapshot per ISO week in
+# historical_data/rankings_weekly/ (the workflow commits historical_data/), so every week of the
+# season leaves a dated page: rankings/<week>.html, with an index at rankings/index.html.
+
+RANKINGS_DIR = os.path.join(HISTORICAL_DIR, "rankings_weekly")
+
+
+def snapshot_weekly_rankings(belt_risk, lineage, next_game):
+    """Write this week's snapshot if it isn't there yet; return every snapshot, oldest first."""
+    season = (belt_risk or {}).get("season") or {}
+    eos = [r for r in (season.get("end_of_season") or []) if r.get("team") and r.get("prob")]
+    if eos:
+        iso = date.today().isocalendar()
+        key = f"{iso[0]}-W{iso[1]:02d}"
+        path = os.path.join(RANKINGS_DIR, f"{key}.json")
+        if not os.path.exists(path):
+            os.makedirs(RANKINGS_DIR, exist_ok=True)
+            reigns = lineage["reigns"]
+            cur = reigns[-1]
+            snap = {"week": key, "date": date.today().isoformat(), "season": (next_game or {}).get("season") or date.today().year,
+                    "holder": cur["team"], "holder_since": cur["start_date"], "defenses": cur.get("defenses", 0),
+                    "odds": [[r["team"], r["prob"]] for r in sorted(eos, key=lambda r: (-r["prob"], r["team"]))[:40]],
+                    "next": [next_game["date"], next_game["opponent"]] if next_game else None,
+                    "trials": season.get("trials"), "games_modeled": season.get("season_games_modeled")}
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(snap, f, separators=(",", ":"))
+    snaps = []
+    if os.path.isdir(RANKINGS_DIR):
+        for fn in sorted(os.listdir(RANKINGS_DIR)):
+            if fn.endswith(".json"):
+                try:
+                    with open(os.path.join(RANKINGS_DIR, fn), encoding="utf-8") as f:
+                        snaps.append(json.load(f))
+                except ValueError:
+                    continue
+    snaps.sort(key=lambda x: x["week"])
+    return snaps
+
+
+def generate_rankings_pages(snaps, lineage, colors):
+    """rankings/index.html + rankings/<week>.html. Returns the relative paths written."""
+    if not snaps:
+        return []
+    holders = {r["team"] for r in lineage["reigns"]}
+    rel = "../"
+    written = []
+    prev = None
+    index_rows = ""
+    os.makedirs(os.path.join(OUT_DIR, "rankings"), exist_ok=True)
+    for i, sp in enumerate(snaps):
+        odds = sp["odds"]
+        rank_prev = {t: k + 1 for k, (t, _) in enumerate(prev["odds"])} if prev else {}
+        items = ""
+        top = odds[0][1]
+        for k, (team, prob) in enumerate(odds[:30], 1):
+            pct = prob * 100
+            pct_txt = f"{pct:.0f}%" if pct >= 1 else f"{pct:.1f}%"
+            move = ""
+            if rank_prev:
+                if team not in rank_prev:
+                    move = '<span class="soonChip">new</span>'
+                else:
+                    dlt = rank_prev[team] - k
+                    move = (f'<span class="soonChip" style="color:#1b7f3b">&#9650;{dlt}</span>' if dlt > 0 else
+                            f'<span class="soonChip" style="color:#b3261e">&#9660;{-dlt}</span>' if dlt < 0 else "")
+            note = '<span class="soonChip">Holds it</span>' if team == sp["holder"] else ""
+            items += f'''
+      <li class="outlookRow{' isHolder' if team == sp["holder"] else ''}">
+        <span class="outlookRank tabular">{k}</span>
+        {team_dot(colors, team, 28, "tlDot outlookDot")}
+        <span class="outlookTeam">{team_link(team, rel, holders)} {note} {move}</span>
+        <span class="outlookBar"><span class="outlookFill" style="width:{max(1.5, prob / top * 100):.1f}%"></span></span>
+        <span class="outlookPct tabular">{pct_txt}</span>
+      </li>'''
+        older = snaps[i - 1] if i else None
+        newer = snaps[i + 1] if i + 1 < len(snaps) else None
+        nav = ('<nav class="pager mono" style="display:flex;justify-content:space-between;gap:16px;margin-top:28px">'
+               + (f'<a href="{older["week"]}.html">&larr; {esc(older["week"])}</a>' if older else "<span></span>")
+               + '<a href="index.html">Every week</a>' + (f'<a href="{newer["week"]}.html">{esc(newer["week"])} &rarr;</a>' if newer else "<span></span>") + "</nav>")
+        nxt = sp.get("next")
+        lede = (f"Every program&rsquo;s chance of holding the belt when the {sp.get('season', '')} season&rsquo;s games run out, as it stood on {fmt_date(sp['date'])}"
+                + (f", from {sp['trials']:,} simulated seasons" if sp.get("trials") else "") + f". {esc(sp['holder'])} held the belt"
+                + (f" ({sp['defenses']} defense{'s' if sp['defenses'] != 1 else ''})" if sp.get("defenses") else "")
+                + (f", with {esc(nxt[1])} up next on {fmt_date(nxt[0])}" if nxt else "") + f". {esc(odds[0][0])} led the board at {odds[0][1] * 100:.0f}%.")
+        html_out = f'''{page_head(f"Belt Power Rankings, week {sp['week']} — The College Football Belt", re.sub(r"&[a-z]+;", "'", lede)[:300], rel)}
+<link rel="canonical" href="{SITE_URL}/rankings/{sp['week']}.html">
+
+{site_header(rel, 'rankings')}
+
+<main class="wrap">
+  <div class="crumbRow" style="padding-inline:0"><a href="{rel}index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Power rankings</a> <span class="sep">/</span> {esc(sp['week'])}</div>
+  {page_intro(f"Belt power rankings &middot; week {esc(sp['week'])}", "Who ends up with the belt?", lede)}
+  <ol class="outlookList">{items}</ol>
+  <p class="noteBox">Moves are against the previous weekly snapshot. The live version of this list is <a href="{rel}outlook.html">the season outlook</a>.</p>
+  {nav}
+</main>
+
+{site_footer(rel, 'Odds from the season walk in fetch_belt_odds.py, snapshotted once a week.')}
+'''
+        path = f"rankings/{sp['week']}.html"
+        with open(os.path.join(OUT_DIR, path), "w", encoding="utf-8") as f:
+            f.write(html_out)
+        written.append(path)
+        index_rows = (f'<a class="otdRow" href="{sp["week"]}.html"><span class="otdYear tabular">{esc(sp["week"])}</span><span class="otdMain">{fmt_date(sp["date"])} &middot; holder {esc(sp["holder"])} &middot; favorite {esc(odds[0][0])} ({odds[0][1] * 100:.0f}%)</span></a>') + index_rows
+        prev = sp
+    html_out = f'''{page_head("Belt Power Rankings, week by week — The College Football Belt", "Weekly College Football Belt power rankings: each week's odds of holding the belt at season's end, archived as they stood.", rel)}
+<link rel="canonical" href="{SITE_URL}/rankings/index.html">
+
+{site_header(rel, 'rankings')}
+
+<main class="wrap">
+  {page_intro("Belt power rankings", "Week by week", f"{len(snaps)} weekly snapshots of who is most likely to hold the belt when the season runs out, kept as they stood. <a href='{rel}outlook.html'>The live outlook &rarr;</a>")}
+  <div class="otdList">{index_rows}</div>
+</main>
+
+{site_footer(rel, 'Odds from the season walk in fetch_belt_odds.py, snapshotted once a week.')}
+'''
+    with open(os.path.join(OUT_DIR, "rankings", "index.html"), "w", encoding="utf-8") as f:
+        f.write(html_out)
+    return ["rankings/index.html"] + written
+
+
 def generate_outlook_page(belt_risk, lineage, colors, next_game=None):
     """outlook.html -- who's most likely to hold the belt when the season's
     games run out, from fetch_belt_odds.py's full-season walk."""
@@ -16923,6 +17047,13 @@ def main():
     HOLDER_PROGRAMS.update(r["team"] for r in lineage["reigns"])
     CHALLENGER_PAGES.update(challenger_stats(belt_games, HOLDER_PROGRAMS))   # so team_link() links them everywhere
     compute_game_context(belt_games, lineage["reigns"], date.today())         # the "Belt context" block on game pages
+    try:                                   # 7.7 (audit #2): this week's power-ranking snapshot, before any nav renders
+        rankings_snaps = snapshot_weekly_rankings(belt_risk, lineage, next_game)
+    except Exception as ex:                # noqa: BLE001
+        print(f"weekly rankings snapshot skipped: {ex!r}")
+        rankings_snaps = []
+    if not rankings_snaps:
+        PAGES_ABSENT.add("rankings/index.html")
     rankings = load_optional_json("rankings.json")          # fetch_rankings.py (optional)
     poll_model = compute_poll_model(rankings, lineage, belt_games) if rankings else None
     if poll_model is None:
@@ -17432,6 +17563,11 @@ def main():
     except Exception as ex:                # noqa: BLE001
         print(f"belt news skipped: {ex!r}")
         news_written = []
+    try:                                   # 7.7 (audit #2): weekly power-ranking pages
+        rankings_written = generate_rankings_pages(rankings_snaps, lineage, colors)
+    except Exception as ex:                # noqa: BLE001
+        print(f"weekly rankings skipped: {ex!r}")
+        rankings_written = []
     search_index += [{"n": t, "u": p_, "t": "Belt news", "k": f"{w} {l}"} for p_, t, _, w, l, _, _ in news_written]
     with open(os.path.join(OUT_DIR, "search-index.json"), "w", encoding="utf-8") as f:
         json.dump(search_index, f, ensure_ascii=False, separators=(",", ":"))
@@ -17504,6 +17640,7 @@ def main():
     if news_written:
         sitemap_urls.append(f"{SITE_URL}/news/index.html")
         sitemap_urls += [f"{SITE_URL}/{p}" for p, *_ in news_written]
+    sitemap_urls += [f"{SITE_URL}/{p}" for p in rankings_written]
     with open(os.path.join(OUT_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(generate_sitemap(sitemap_urls))
 
