@@ -94,9 +94,9 @@ GOOGLE_SITE_VERIFICATION = ""
 #    <head> AND writes site/ads.txt (required by Google to confirm this site
 #    is authorized to show ads for that publisher; without it, ads silently
 #    stay disabled even with a valid ID and script).
-# 3. Ad placement itself (which pages, how many, where on the page) is
-#    configured from the AdSense dashboard under Auto ads -- not here --
-#    once the script above is live on the site.
+# 3. Ad placement is fixed in the templates (ADSENSE_*_SLOT below); Auto ads
+#    is switched off in the AdSense dashboard since 2026-10-02, so the
+#    dashboard no longer decides which pages get ads or how many.
 OWNER = "R&O Holdings LLC"      # the company that owns and operates the site (formed 2026-09-29)
 ADSENSE_PUBLISHER_ID = "pub-3317069252410560"
 # One fixed (manual) AdSense display unit, on the full-history pages between
@@ -106,6 +106,14 @@ ADSENSE_PUBLISHER_ID = "pub-3317069252410560"
 # ("CFB full history - between records and table", responsive). Empty string
 # turns the unit off; it is also skipped when ADSENSE_PUBLISHER_ID is empty.
 ADSENSE_HISTORY_SLOT = "7526799432"
+# 2026-10-02: Auto ads is OFF for the site (its lowest setting still put six
+# in-page ads on every page, 90-250px apart). Ads are these fixed units only:
+# one "in content" unit after the first block of the main templates, and one
+# above the footer on every page -- at most two ads per page on any device.
+# Slot IDs from AdSense > Ads > By ad unit ("CFB Belt - in content",
+# "CFB Belt - above footer"); empty strings turn each one off.
+ADSENSE_CONTENT_SLOT = "1922053300"
+ADSENSE_FOOTER_SLOT = "3335382332"
 
 # Merch shop (Fourthwall) -- a real store, live 2026-09. shop.html is built
 # from the store's own catalog rather than from a table kept here:
@@ -732,7 +740,9 @@ def site_footer(rel="", note=""):
         net = ' data-belt-network data-site="cfb" data-kicker-class="footKicker"' if title == "Belt network" else ""
         cols += f'<nav class="footCol"{net} aria-label="{title} links"><span class="footKicker">{title}</span>{anchors}</nav>'
     note_html = f'<p class="footNote">{note}</p>' if note else ""
-    return f'''<footer class="siteFoot">
+    ad = adsense_unit_html(ADSENSE_FOOTER_SLOT)
+    ad_html = f'<div class="wrap adAboveFoot">{ad}</div>\n' if ad else ""
+    return f'''{ad_html}<footer class="siteFoot">
   <div class="wrap footGrid">
     <div class="footBrand"><a class="brand" href="{rel}index.html">{BELT_MARK_SVG}<span class="brandName">The College Football Belt</span></a>{note_html}</div>
     {cols}
@@ -2297,6 +2307,8 @@ table.reignsTable td.num a:hover{ color:var(--brass-text); border-bottom-color:v
 .record-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
 
 .adSlot{ margin:0 0 30px; min-height:120px; }
+.adInContent{ margin:28px 0 8px; }
+.adAboveFoot{ margin-top:40px; } .adAboveFoot .adSlot{ margin-bottom:0; }
 .adSlot .adLabel{ display:block; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px; }
 .tableScroll{ overflow-x:auto; }
 .watchBlock{ margin-top:28px; }
@@ -3152,6 +3164,7 @@ def render_page(g, colors, prev_game=None, next_game=None, total_games=None):
 {poll_note}
 {render_game_context(g, HOLDER_PROGRAMS)}
 {render_recap(g)}
+<div class="adInContent">{adsense_unit_html(ADSENSE_CONTENT_SLOT)}</div>
 {gear_html}
 {render_line_score(g)}
 {render_team_stats(g)}
@@ -4378,6 +4391,7 @@ def generate_homepage(lineage, colors, belt_games, next_game=None, upcoming_game
       <a class="sectionLink" href="ruleset.html">How the belt works &rarr;</a>
     </div>
   </div>
+  <div class="wrap adInContent">{adsense_unit_html(ADSENSE_CONTENT_SLOT)}</div>
 
   <section class="wrap" id="lineage">
     <div class="sectionHead">
@@ -6353,6 +6367,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
   </div>
   {odds_html}
   {watch_block}
+  <div class="adInContent">{adsense_unit_html(ADSENSE_CONTENT_SLOT)}</div>
   {pick_widget}
   <script>
   (function(){{
@@ -7743,6 +7758,7 @@ def generate_team_pages(lineage, colors, belt_games, teams_dir, team_paths=None,
     <a class="posterLink" href="../posters/{team_slug(team)}.png">Download a poster of this history &darr;</a>
     <a class="posterLink" href="../embed.html#{team_slug(team)}">Embed the {esc(team)} belt badge &rarr;</a>{shop_link(team)}</p>
 {extras_top}
+  <div class="adInContent">{adsense_unit_html(ADSENSE_CONTENT_SLOT)}</div>
 
   <div class="sectionHead">
     <span class="tag">Every reign</span>
@@ -16953,6 +16969,7 @@ def generate_news_pages(lineage, belt_games, recaps, colors, next_game):
   <div class="crumbRow" style="padding-inline:0"><a href="{rel}index.html">Belt</a> <span class="sep">/</span> <a href="index.html">Belt news</a> <span class="sep">/</span> {fmt_date(g["date"])}</div>
   {page_intro(f"Belt news &middot; {fmt_date(g['date'])}", esc(headline), dek)}
   <div class="proseBlock">{"".join(f"<p>{x}</p>" for x in paras)}</div>
+  <div class="adInContent">{adsense_unit_html(ADSENSE_CONTENT_SLOT)}</div>
   {recap_html}
   <p class="moreLink"><a href="{rel}teams/{team_slug(w)}.html">{esc(w)} and the belt &rarr;</a> &middot; <a href="{rel}lineage.html">Full history &rarr;</a> &middot; <a href="{rel}feed.xml">RSS</a></p>
   {nav}
