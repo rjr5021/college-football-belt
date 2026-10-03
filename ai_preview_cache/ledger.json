@@ -38,5 +38,17 @@
       "formatted_spread": "Notre Dame -20.5",
       "over_under": 49.5
     }
+  },
+  {
+    "key": "Notre Dame|Stanford|2026-10-10",
+    "holder": "Notre Dame",
+    "opponent": "Stanford",
+    "date": "2026-10-10",
+    "is_home": true,
+    "neutral": false,
+    "predicted_winner": "Notre Dame",
+    "predicted_score": "Notre Dame 48, Stanford 14",
+    "generated": "2026-10-03",
+    "line": null
   }
 ]

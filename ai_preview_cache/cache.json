@@ -1,16 +1,19 @@
 {
-  "key": "Notre Dame|North Carolina|2026-10-03",
-  "generated": "2026-09-26",
+  "key": "Notre Dame|Stanford|2026-10-10",
+  "generated": "2026-10-03",
   "preview": {
-    "overview": "Notre Dame brings the lineal championship belt to Kenan Stadium looking to extend its dominance over North Carolina. The Tar Heels will need to break a brutal all-time curse against the Irish while the belt remains on the line in this ACC matchup.",
+    "overview": "Notre Dame hosts Stanford with the College Football Belt on the line. The Irish are heavy favorites in this matchup, bringing dominant recent form and a commanding head-to-head advantage into their home stadium.",
     "key_matchups": [
-      "Notre Dame's explosive offensive weapons vs. North Carolina's inconsistent defensive performance (allowing 42 to NC State, 32 to Duke)",
-      "North Carolina's ability to pressure Notre Dame's passing game after recording only 3 sacks in last 5 games",
-      "Weather conditions (partly cloudy, 77\u00b0F, low wind) favoring high-tempo offenses like Notre Dame's recent output"
+      "Notre Dame's offense vs Stanford's defense: The Irish have scored 49, 52, 41, 37, and 27 points in their last five games, while Stanford has allowed 57, 45, 35, and 7 points in recent contests.",
+      "Stanford's ability to stay competitive: The Cardinal have won only one of their last five games (37-27 vs Hawai'i) and face an Irish team that has not lost since claiming the belt."
     ],
-    "betting_angles": "Notre Dame has won 21 of 23 all-time meetings and is on a dominant 5-game tear with an average margin of victory exceeding 30 points. North Carolina's recent form shows three losses in its last four games, with wins only coming against inferior competition, suggesting the Irish's superior talent and consistency should prevail in favorable conditions.",
+    "betting_angles": "Notre Dame owns a 25-14 series advantage and has dominated recent meetings decisively, winning 56-23, 49-7, and 49-20 in their last three matchups. Stanford's sole recent win in the series came in 2022 by 16-14, but the Irish have won every contest since, suggesting a clear power gap has emerged. Stanford's recent form is concerning\u2014the Cardinal are 1-4 in their last five games with losses of 57-3, 45-6, and 35-7.",
     "predicted_winner": "Notre Dame",
-    "predicted_score": "Notre Dame 42, North Carolina 17",
-    "prediction_writeup": "Notre Dame's recent dominance is undeniable\u2014five straight wins with three of them being blowouts by 40+ points\u2014while North Carolina has looked vulnerable to quality opponents, losing decisively to Clemson, NC State, and Duke. The head-to-head series tells an even starker story, with Notre Dame winning 21 of 23 matchups and consistently putting up 40+ points in their last three meetings. North Carolina's defense has shown it cannot match Notre Dame's offensive firepower, and the Tar Heels' own offense has failed to generate consistent scoring against ranked competition. The pleasant weather conditions at Kenan Stadium should only amplify Notre Dame's advantage, favoring the kind of wide-open, high-tempo game the Irish have mastered."
+    "predicted_score": "Notre Dame 48, Stanford 14",
+    "prediction_writeup": "Notre Dame is the clear choice to retain the belt. The Irish have won three straight against Stanford by an average margin of more than 20 points, and their recent five-game run shows consistent dominance: wins of 52-0, 49-10, 41-13, 37-26, and 27-10. Stanford's form has deteriorated sharply, with four losses in their last five games including a 57-3 defeat to Wake Forest and a 45-6 loss to Miami. The Cardinal's lone bright spot came against Hawai'i with a 37-27 victory, but that is insufficient evidence they can compete with an Irish team riding this kind of momentum. Notre Dame should control this game from start to finish and extend their dominance in the series.",
+    "factcheck": {
+      "attempts": 2,
+      "dropped": []
+    }
   }
 }
