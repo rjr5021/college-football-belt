@@ -114,6 +114,14 @@ ADSENSE_HISTORY_SLOT = "7526799432"
 # "CFB Belt - above footer"); empty strings turn each one off.
 ADSENSE_CONTENT_SLOT = "1922053300"
 ADSENSE_FOOTER_SLOT = "3335382332"
+# 7.15 / 7.14: the belt network's belt-picks Cloudflare Worker (global "Beat the lean" leaderboard, web push).
+# "PLACEHOLDER" or empty = off: picks stay in the browser and leaderboard.html is not built.
+PICKS_API = os.environ.get("PICKS_API", "https://belt-picks.rjr5021.workers.dev")
+PUSH_PUBLIC_KEY = "BEwm5LoAu5EOVoMq8prjAcv1D1PIShNARTz3d7R5Z7mH9OEpKaqq97pQWqlpAnXe7vWsNoJ7lM42-1y_vdgepow"
+
+
+def picks_api():
+    return "" if (not PICKS_API or "PLACEHOLDER" in PICKS_API) else PICKS_API.rstrip("/")
 
 # Merch shop (Fourthwall) -- a real store, live 2026-09. shop.html is built
 # from the store's own catalog rather than from a table kept here:
@@ -550,6 +558,7 @@ NAV_MORE = [
         ("postseason", "postseason.html", "Belt in the postseason"),
         ("splits", "splits.html", "Home, road &amp; neutral"),
         ("lean", "lean.html", "The lean&rsquo;s ledger"),
+        ("leaderboard", "leaderboard.html", "Beat the lean: leaderboard"),
         ("sotb", "state-of-the-belt.html", "State of the Belt"),
         ("what-if", "what-if.html", "What if?"),
         ("belt-tree", "belt-tree.html", "The belt tree"),
@@ -6229,6 +6238,7 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
       <button type="button" class="btn ghost" data-pick="{esc(opponent)}">{esc(opponent)} takes it</button>
     </div>
     <p class="pickNote" id="pickNote">Make your call before kickoff. It stays in this browser and gets graded against the result on <a href="lean.html">the ledger</a>, next to the lean&rsquo;s own pick.</p>
+    {f'<p class="pickNote lbline"><label>Name on the leaderboard <input id="pickName" maxlength="24" placeholder="optional"></label> <span id="lbNote"></span> <a href="leaderboard.html">Leaderboard &rarr;</a></p>' if picks_api() else ''}
   </div>'''
 
     # ---- AI-written preview (generate_ai_preview.py) ----
@@ -6387,13 +6397,26 @@ def generate_preview_page(next_game, matchup, ai_preview, weather, colors, belt_
       if (locked) note.textContent = mine ? 'Locked at kickoff. Your pick: ' + mine.pick + '. The result lands on the ledger.' : 'Kickoff has passed -- picks are locked for this one.';
       else if (mine) note.innerHTML = 'Your pick: <strong>' + mine.pick.replace(/</g, '&lt;') + '</strong>. You can change it until kickoff; the ledger grades it after the game.';
     }}
+    var API = {json.dumps(picks_api())}, lbn = document.getElementById('lbNote'), nm = document.getElementById('pickName');
+    function uid(){{ var u = ''; try {{ u = localStorage.getItem('belt-uid') || ''; if (!u) {{ u = Array.from(crypto.getRandomValues(new Uint8Array(8))).map(function(x){{ return x.toString(16).padStart(2, '0'); }}).join(''); localStorage.setItem('belt-uid', u); }} }} catch (e) {{}} return u; }}
+    function send(){{
+      var mine = picks[key];
+      if (!API || !mine || !lbn) return;
+      lbn.textContent = 'Saving\u2026';
+      fetch(API + '/pick', {{ method: 'POST', headers: {{ 'content-type': 'application/json' }}, body: JSON.stringify({{ site: 'cfb', league: 'cfb', key: key, pick: mine.pick, uid: uid(), name: (nm && nm.value) || '' }}) }})
+        .then(function(r){{ return r.json(); }})
+        .then(function(j){{ lbn.textContent = j.ok ? 'On the leaderboard.' : (j.error === 'locked at kickoff' ? 'Locked: kickoff has passed.' : 'Not saved to the leaderboard (' + (j.error || 'error') + ').'); }})
+        .catch(function(){{ lbn.textContent = 'Saved here; the leaderboard is unreachable right now.'; }});
+    }}
     w.addEventListener('click', function(e){{
       var b = e.target.closest('[data-pick]');
       if (!b || locked) return;
       picks[key] = {{ pick: b.getAttribute('data-pick'), at: new Date().toISOString() }};
       try {{ localStorage.setItem('cfbBelt:picks', JSON.stringify(picks)); }} catch (err) {{}}
       paint();
+      send();
     }});
+    if (nm) {{ try {{ nm.value = localStorage.getItem('belt-name') || ''; }} catch (e) {{}} nm.onchange = function(){{ try {{ localStorage.setItem('belt-name', nm.value.trim()); }} catch (e) {{}} send(); }}; }}
     paint();
   }})();
   (function(){{
@@ -13013,6 +13036,61 @@ def ledger_api_rows(rows):
     return out
 
 
+def write_picks_api(next_game, belt_games):
+    """api/picks.json (7.15): the open game and recent results, the shape the belt-picks Worker validates
+    picks against and grades with (same keys as the preview's pick widget: holder|opponent|date)."""
+    open_ = None
+    if next_game and next_game.get("opponent") and next_game.get("date") and next_game.get("team"):
+        holder = next_game.get("team") or ""        # the preview's pick key uses next_game["team"] (the holder)
+        key = f"{holder}|{next_game['opponent']}|{next_game['date']}"
+        raw = next_game.get("raw_date")
+        kick = None
+        if raw:
+            try:
+                kick = datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(timezone.utc).isoformat()
+            except ValueError:
+                kick = None
+        open_ = {"key": key, "holder": holder, "challenger": next_game["opponent"], "date": next_game["date"],
+                 "kickoff_utc": kick, "names": {holder: holder, next_game["opponent"]: next_game["opponent"]}}
+    results = {f"{g['holder']}|{g['opponent']}|{g['date']}": g.get("new_holder") for g in belt_games[-300:] if g.get("holder")}
+    os.makedirs(os.path.join(OUT_DIR, API_DIR), exist_ok=True)
+    with open(os.path.join(OUT_DIR, API_DIR, "picks.json"), "w", encoding="utf-8") as f:
+        json.dump({"site": "cfb", "league": "cfb", "open": open_, "results": results, "generated": date.today().isoformat()}, f, separators=(",", ":"))
+
+
+def generate_leaderboard_page():
+    """leaderboard.html (7.15): everyone's calls on belt games, from the Worker. Built only when PICKS_API is set."""
+    api = picks_api()
+    extra = '<meta name="robots" content="noindex,follow">'
+    return f'''{page_head("Beat the Lean Leaderboard — Everyone's Calls on Belt Games", "Everyone's calls on College Football Belt games, graded against the results. Make yours on the next belt game and climb the table.", "", extra)}
+{site_header('', 'lean')}
+
+<main class="wrap">
+  {page_intro("Beat the lean", "The leaderboard",
+              "Everyone&rsquo;s calls on belt games, graded against the results: a win is calling the holder&rsquo;s defense, or the challenger&rsquo;s upset, right. Make yours on <a href='preview.html'>the next belt game</a>; the name you enter there is the one shown here.")}
+  <p class="lede" id="lbyou"></p>
+  <p class="pollNote mono" id="lbmeta"></p>
+  <div class="tableScroll"><table class="reignsTable"><thead><tr><th>#</th><th>Name</th><th class="num">W</th><th class="num">L</th><th class="num">Open</th></tr></thead><tbody id="lbrows"><tr><td colspan="5">Loading the standings&hellip;</td></tr></tbody></table></div>
+  <p class="pollNote"><a href="preview.html">Make your call &rarr;</a> &middot; <a href="lean.html">The lean&rsquo;s ledger &rarr;</a> &middot; <a href="https://beltholders.com/leaderboard/">Every belt in the network, one table &rarr;</a></p>
+  <p class="noteBox">One call per belt game, locked at kickoff, graded as soon as the result is in. Standings count wins first, then fewer losses; &ldquo;open&rdquo; is a call on a game not yet played. Nothing identifies you but the name you choose; the ranking refreshes every ten minutes.</p>
+</main>
+<script>
+(function(){{
+  var API = {json.dumps(api)}, u = '';
+  try {{ u = localStorage.getItem('belt-uid') || ''; }} catch (e) {{}}
+  function esc(s){{ return String(s).replace(/[&<>]/g, function(c){{ return {{'&':'&amp;','<':'&lt;','>':'&gt;'}}[c]; }}); }}
+  fetch(API + '/standings?site=cfb&league=cfb' + (u ? '&uid=' + u : '')).then(function(r){{ return r.json(); }}).then(function(j){{
+    document.getElementById('lbmeta').textContent = (j.players || 0) + ' player' + (j.players === 1 ? '' : 's');
+    var rows = (j.top || []).map(function(p){{ return '<tr><td>' + p.rank + '</td><td>' + esc(p.name) + '</td><td class="num">' + p.w + '</td><td class="num">' + p.l + '</td><td class="num">' + p.pending + '</td></tr>'; }}).join('');
+    document.getElementById('lbrows').innerHTML = rows || '<tr><td colspan="5">No calls yet. Be the first.</td></tr>';
+    if (j.you) document.getElementById('lbyou').innerHTML = 'You: <strong>' + esc(j.you.name) + '</strong>, ' + j.you.w + '\u2013' + j.you.l + (j.you.pending ? ' with ' + j.you.pending + ' open' : '') + ', ranked ' + j.you.rank + ' of ' + j.players + '.';
+  }}).catch(function(){{ document.getElementById('lbrows').innerHTML = '<tr><td colspan="5">The leaderboard did not load; try again in a minute.</td></tr>'; }});
+}})();
+</script>
+{site_footer('', 'Calls are stored by the belt network&rsquo;s picks service; results from the College Football Data API.')}
+'''
+
+
 def generate_lean_page(lineage, belt_games, colors):
     ledger = load_ledger()
     today = date.today()
@@ -16824,6 +16902,19 @@ self.addEventListener("fetch", (event) => {{
       )
   );
 }});
+/* 7.14: web push (subscriptions live in the belt network's belt-picks Worker; one notification per title change) */
+self.addEventListener("push", (event) => {{
+  var d = {{}};
+  try {{ d = event.data ? event.data.json() : {{}}; }} catch (x) {{}}
+  event.waitUntil(self.registration.showNotification(d.title || "The belt changed hands", {{
+    body: d.body || "", icon: "/icon-512.png", badge: "/favicon.png", tag: d.tag || "belt", data: {{ url: d.url || "/" }}
+  }}));
+}});
+self.addEventListener("notificationclick", (event) => {{
+  event.notification.close();
+  var u = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(self.clients.openWindow(u));
+}});
 '''
 
 
@@ -17317,6 +17408,10 @@ def main():
                                          lineage=lineage, belt_games=belt_games, gameday=gameday)
     with open(os.path.join(OUT_DIR, "preview.html"), "w", encoding="utf-8") as f:
         f.write(preview_html)
+    try:
+        write_picks_api(next_game, belt_games)          # 7.15: api/picks.json for the belt-picks Worker
+    except Exception as ex:  # noqa: BLE001
+        print(f"picks.json skipped: {ex}")
 
     records_html = generate_records_page(lineage, colors, belt_games, coaches)
     with open(os.path.join(OUT_DIR, "records.html"), "w", encoding="utf-8") as f:
@@ -17436,6 +17531,7 @@ def main():
         ("heartbreak.html", generate_heartbreak_page(lineage, colors, belt_games)),
         ("droughts.html", generate_droughts_page(lineage, colors, belt_games)),       # 7.6 (audit #2)
         ("lean.html", generate_lean_page(lineage, belt_games, colors)),
+        *(((("leaderboard.html", generate_leaderboard_page()),) if picks_api() else ())),
         ("daily.html", generate_daily_page(lineage, colors, belt_games)),
         ("about.html", generate_about_page(lineage, belt_games)),
         ("state-of-the-belt.html", generate_state_of_the_belt_page(lineage, belt_games, colors, coaches)),
