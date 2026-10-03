@@ -1,9 +1,20 @@
 {
-  "game_key": "Notre Dame|Purdue|2026-09-26",
+  "game_key": "Notre Dame|North Carolina|2026-10-03",
+  "game": {
+    "id": 401858250,
+    "team": "Notre Dame",
+    "opponent": "North Carolina",
+    "date": "2026-10-03",
+    "raw_date": "2026-10-03T16:00:00.000Z",
+    "neutral": false,
+    "is_home": false,
+    "start_time_tbd": false,
+    "venue_name": "Kenan Stadium"
+  },
   "kickoff_posted": true,
-  "halftime_posted": true,
+  "halftime_posted": false,
   "final_posted": false,
   "final_tweet_id": null,
-  "last_holder_score": 49,
-  "last_opp_score": 10
+  "last_holder_score": 0,
+  "last_opp_score": 0
 }
