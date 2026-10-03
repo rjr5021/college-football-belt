@@ -2316,7 +2316,7 @@ table.reignsTable td.num a:hover{ color:var(--brass-text); border-bottom-color:v
 .record-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
 
 .adSlot{ margin:0 0 30px; min-height:120px; }
-.adInContent{ margin:28px 0 8px; }
+.adInContent{ margin:28px auto 8px; }   /* auto: the homepage unit is a .wrap of its own, and "0" un-centered it */
 .adAboveFoot{ margin-top:40px; } .adAboveFoot .adSlot{ margin-bottom:0; }
 .adSlot .adLabel{ display:block; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px; }
 .tableScroll{ overflow-x:auto; }
