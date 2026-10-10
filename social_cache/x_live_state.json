@@ -1,20 +1,20 @@
 {
-  "game_key": "Notre Dame|North Carolina|2026-10-03",
+  "game_key": "Notre Dame|Stanford|2026-10-10",
   "game": {
-    "id": 401858250,
+    "id": 401858257,
     "team": "Notre Dame",
-    "opponent": "North Carolina",
-    "date": "2026-10-03",
-    "raw_date": "2026-10-03T16:00:00.000Z",
+    "opponent": "Stanford",
+    "date": "2026-10-10",
+    "raw_date": "2026-10-10T19:30:00.000Z",
     "neutral": false,
-    "is_home": false,
+    "is_home": true,
     "start_time_tbd": false,
-    "venue_name": "Kenan Stadium"
+    "venue_name": "Notre Dame Stadium"
   },
   "kickoff_posted": true,
-  "halftime_posted": true,
-  "final_posted": true,
-  "final_tweet_id": "2106464057523929598",
-  "last_holder_score": 37,
-  "last_opp_score": 26
+  "halftime_posted": false,
+  "final_posted": false,
+  "final_tweet_id": null,
+  "last_holder_score": 0,
+  "last_opp_score": 0
 }
