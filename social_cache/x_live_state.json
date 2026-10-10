@@ -12,7 +12,7 @@
     "venue_name": "Notre Dame Stadium"
   },
   "kickoff_posted": true,
-  "halftime_posted": false,
+  "halftime_posted": true,
   "final_posted": false,
   "final_tweet_id": null,
   "last_holder_score": 37,
