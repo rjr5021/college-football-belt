@@ -50,5 +50,22 @@
     "predicted_score": "Notre Dame 48, Stanford 14",
     "generated": "2026-10-03",
     "line": null
+  },
+  {
+    "key": "Notre Dame|BYU|2026-10-17",
+    "holder": "Notre Dame",
+    "opponent": "BYU",
+    "date": "2026-10-17",
+    "is_home": false,
+    "neutral": false,
+    "predicted_winner": "Notre Dame",
+    "predicted_score": "Notre Dame 38, BYU 17",
+    "generated": "2026-10-10",
+    "line": {
+      "provider": "DraftKings",
+      "holder_spread": -12.5,
+      "formatted_spread": "Notre Dame -12.5",
+      "over_under": 48.5
+    }
   }
 ]
