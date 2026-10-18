@@ -13,8 +13,8 @@
   },
   "kickoff_posted": true,
   "halftime_posted": true,
-  "final_posted": false,
-  "final_tweet_id": null,
+  "final_posted": true,
+  "final_tweet_id": "2111658478422876510",
   "last_holder_score": 24,
   "last_opp_score": 28
 }
