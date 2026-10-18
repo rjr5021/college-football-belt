@@ -6,12 +6,12 @@
     "date": "1869-11-06",
     "note": "Rutgers def. Princeton 6-4, first game ever played"
   },
-  "current_holder": "Notre Dame",
-  "current_reign_since": "2025-11-29",
-  "current_defenses": 6,
+  "current_holder": "BYU",
+  "current_reign_since": "2026-10-17",
+  "current_defenses": 0,
   "totals": {
-    "belt_games": 1641,
-    "reigns": 332,
+    "belt_games": 1642,
+    "reigns": 333,
     "distinct_teams": 105
   },
   "reigns": [
@@ -3000,6 +3000,15 @@
       "won_from": "Stanford",
       "won_score": "20-49",
       "defenses": 6,
+      "end_date": "2026-10-17",
+      "lost_to": "BYU"
+    },
+    {
+      "team": "BYU",
+      "start_date": "2026-10-17",
+      "won_from": "Notre Dame",
+      "won_score": "28-24",
+      "defenses": 0,
       "end_date": null,
       "lost_to": null
     }
@@ -27619,6 +27628,21 @@
       "outcome": "retained",
       "new_holder": "Notre Dame",
       "game_id": 401858257
+    },
+    {
+      "date": "2026-10-17",
+      "season": 2026,
+      "week": 7,
+      "season_type": "regular",
+      "holder": "Notre Dame",
+      "opponent": "BYU",
+      "home": "BYU",
+      "away": "Notre Dame",
+      "score": "28-24",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "BYU",
+      "game_id": 401856809
     }
   ]
 }

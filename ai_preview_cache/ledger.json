@@ -67,5 +67,22 @@
       "formatted_spread": "Notre Dame -12.5",
       "over_under": 48.5
     }
+  },
+  {
+    "key": "BYU|UCF|2026-10-24",
+    "holder": "BYU",
+    "opponent": "UCF",
+    "date": "2026-10-24",
+    "is_home": false,
+    "neutral": false,
+    "predicted_winner": "BYU",
+    "predicted_score": "BYU 31, UCF 20",
+    "generated": "2026-10-18",
+    "line": {
+      "provider": "DraftKings",
+      "holder_spread": -7.5,
+      "formatted_spread": "BYU -7.5",
+      "over_under": 45.5
+    }
   }
 ]
