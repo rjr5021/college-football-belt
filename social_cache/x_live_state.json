@@ -1,20 +1,20 @@
 {
-  "game_key": "Notre Dame|Stanford|2026-10-10",
+  "game_key": "Notre Dame|BYU|2026-10-17",
   "game": {
-    "id": 401858257,
+    "id": 401856809,
     "team": "Notre Dame",
-    "opponent": "Stanford",
-    "date": "2026-10-10",
-    "raw_date": "2026-10-10T19:30:00.000Z",
+    "opponent": "BYU",
+    "date": "2026-10-17",
+    "raw_date": "2026-10-17T23:30:00.000Z",
     "neutral": false,
-    "is_home": true,
+    "is_home": false,
     "start_time_tbd": false,
-    "venue_name": "Notre Dame Stadium"
+    "venue_name": "LaVell Edwards Stadium"
   },
   "kickoff_posted": true,
-  "halftime_posted": true,
-  "final_posted": true,
-  "final_tweet_id": "2109053120294597090",
-  "last_holder_score": 58,
+  "halftime_posted": false,
+  "final_posted": false,
+  "final_tweet_id": null,
+  "last_holder_score": 3,
   "last_opp_score": 7
 }
