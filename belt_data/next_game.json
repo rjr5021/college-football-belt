@@ -5,8 +5,8 @@
   "is_home": false,
   "neutral": false,
   "date": "2026-10-24",
-  "raw_date": "2026-10-24T04:00:00.000Z",
-  "start_time_tbd": true,
+  "raw_date": "2026-10-24T19:30:00.000Z",
+  "start_time_tbd": false,
   "season": 2026,
   "week": 8,
   "season_type": "regular",
@@ -15,7 +15,7 @@
   "venue_state": "FL",
   "venue_lat": 28.6079765,
   "venue_lon": -81.1927233,
-  "tv": null,
+  "tv": "Fox",
   "stream": null,
-  "watch": null
+  "watch": "Fox"
 }
