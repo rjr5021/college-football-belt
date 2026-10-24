@@ -4030,8 +4030,9 @@ LIVE_SCOREBOARD_JS = '''<script>
     if (state === 'post') {
       done = true;
       if (!have) { paint('gamedayFinal', 'Final', holder + ' vs. ' + opp, detail, ''); return; }
+      // Level scores can't be a final (overtime since 1996) -- the feed is behind.
       var what = hs > os ? holder + ' defends the belt \\u2014 ' + ordinal(defenses + 1) + ' defense of the reign'
-               : os > hs ? opp + ' takes the belt' : 'A tie \\u2014 the belt stays with ' + holder;
+               : os > hs ? opp + ' takes the belt' : 'Final result coming in';
       paint((hs >= os ? 'gamedaySafe' : 'gamedayDanger') + ' gamedayFinal', 'Final', scoreLine(hs, os), what, 'Site updates within a few hours');
       return;
     }

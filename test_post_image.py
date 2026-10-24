@@ -61,11 +61,7 @@ check("no emphasis flip", "emphasis" not in kept)
 check("the buckle stays with the holder", kept["buckle"] == gpi.team_chip(HOLDER))
 check("headline is 'defended'", kept["headline"][1] == "defended", str(kept["headline"]))
 
-print("3. a tie leaves the belt where it is")
-tied = gpi.final_spec(NEXT, LINEAGE, RANKINGS, 24, 24, TODAY)
-check("not treated as a change", tied["buckle"] == gpi.team_chip(HOLDER))
-check("headline is 'retained', not 'defended'", tied["headline"][1] == "retained",
-      str(tied["headline"]))
+print("3. (no tie case: a game can't end tied, and the live poster never asks for one)")
 
 # 4. no card is allowed to reach for a number it doesn't have
 print("4. every spec is fully populated")

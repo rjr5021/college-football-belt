@@ -16,9 +16,10 @@ because CFBD (the site's usual data source) isn't real-time:
      so this uses the official play text verbatim rather than risking an
      AI getting a yardage or a name wrong on a live score. Framed as
      SAFE / IN DANGER for the belt -- Bob (2026-09-19): "I only want it
-     to say belt in danger if the holder is losing", so a tie reads as
-     safe too (a tie doesn't change hands, same rule as the site's own
-     outcome logic -- see belt_status_line()).
+     to say belt in danger if the holder is losing", so a mid-game tie
+     isn't IN DANGER either. Bob (2026-10-24): a game can't END tied
+     (overtime since 1996), so no post may say a tie keeps the belt --
+     a tied score reads "whoever wins leaves with the belt".
   3. HALFTIME -- ESPN's status reaches halftime.
   4. FINAL -- ESPN's status reaches final. This is a fast, live-sourced
      announcement; it runs ALONGSIDE (not instead of) post_to_x.py's own
@@ -182,10 +183,11 @@ def commit_cache(message):
 
 
 def belt_at_risk(holder_score, opp_score):
-    """Is the belt currently on course to change hands? Exactly the rule
-    belt_status_line() prints: trailing is IN DANGER, leading or tied is
-    safe, because a tie doesn't move the belt. None scores read as 0-0,
-    so a game opens in the safe state."""
+    """Is the holder currently trailing? Exactly the rule
+    belt_status_line() prints as IN DANGER. Tied is not trailing (but a
+    game can't end tied -- overtime decides it -- so the post for a tied
+    score never says the belt stays put). None scores read as 0-0, so a
+    game opens in the not-at-risk state."""
     return (holder_score or 0) < (opp_score or 0)
 
 
@@ -365,13 +367,14 @@ def find_scoring_play(summary, holder, opponent):
 
 def belt_status_line(holder_score, opp_score):
     """Bob (2026-09-19): 'I only want it to say belt in danger if the
-    holder is losing' -- a tie doesn't change hands (same rule as the
-    site's own outcome logic: 'retained (tie)'), so only trailing counts
-    as IN DANGER; leading OR tied both read as safe."""
+    holder is losing' -- so only trailing counts as IN DANGER.
+    Bob (2026-10-24): 'The game cannot end in a tie' -- overtime has
+    decided every game since 1996, so a tied score must never suggest the
+    belt stays put on a tie. It's simply up for grabs."""
     if holder_score > opp_score:
         return "Belt SAFE, for now."
     if holder_score == opp_score:
-        return "Tied — belt stays put unless that changes."
+        return "All tied up — whoever wins leaves with the belt."
     return "Belt IN DANGER."
 
 
@@ -469,13 +472,10 @@ def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx,
                 f"{opponent} is the {ptx.ordinal(reign_number)} holder of the "
                 f"College Football Belt.\n\n"
                 + link)
-    # An outright tie in modern FBS/FCS is essentially impossible (every
-    # game goes to overtime), but this exists rather than silently
-    # skipping the final post on the off chance of one.
-    return (f"\U0001F6E1️ FINAL (TIE) — {holder} keeps the belt\n\n"
-            f"{holder} {holder_score}, {opponent} {opp_score}. A tie doesn't "
-            f"change hands.\n\n"
-            + link)
+    # Level scores can't be a final (overtime has decided every game since
+    # 1996), so they mean ESPN's feed hasn't caught up. No post -- run_once
+    # waits for the next poll instead (Bob 2026-10-24: no tie wording).
+    return None
 
 
 # ----------------------------------------------------------------- loop
@@ -568,6 +568,11 @@ def run_once(client, next_game, lineage, rankings, cache, ptx, api_v1=None):
             cache["halftime_posted"] = True
             save_cache(cache)
             commit_cache("Live: halftime posted")
+
+    if state == "post" and not cache["final_posted"] and holder_score == opp_score:
+        print(f"[poll] ESPN says final at {holder_score}-{opp_score} -- a game can't end "
+              f"tied, so the feed is behind. Waiting for the next poll.")
+        return False
 
     if state == "post" and not cache["final_posted"]:
         text = compose_final_tweet(lineage, holder, opponent, holder_score, opp_score,

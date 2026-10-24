@@ -385,7 +385,8 @@ def final_spec(next_game, lineage, rankings, holder_score, opp_score, today=None
     long before the pipeline ingests the result -- so every count below is
     deliberately projected forward from it rather than read out of it.
 
-    A tie leaves the belt where it is, same as the site's own rule."""
+    Never called with level scores: a game can't end tied (overtime since
+    1996), and post_live_game.run_once waits rather than post one."""
     f = _facts(next_game, lineage, rankings, today)
     changed = opp_score > holder_score
     when = (f'{f["game_day"]:%a %b} {f["game_day"].day} · {next_game["venue_name"]} · '
@@ -409,17 +410,16 @@ def final_spec(next_game, lineage, rankings, holder_score, opp_score, today=None
             "note": f'{f["opp"]} has now taken the belt off {f["holder"]} {takes}.',
         }
 
-    tie = holder_score == opp_score
     return {
         "kind": "result",
         "kicker": f'Belt game No. {f["game_no"]:,} · Final',
-        "headline": ("Belt", "retained" if tie else "defended"), "when": when,
+        "headline": ("Belt", "defended"), "when": when,
         "left": {"team": f["holder"], "role": "Holder · retains", "score": holder_score,
                  "stat": f'{f["days"]} days and counting · {f["defense_no"]} defenses'},
         "right": {"team": f["opp"], "role": f'Challenger · {f["opp_last"]}',
                   "score": opp_score, "stat": f["opp_stat"]},
         "buckle": team_chip(f["holder"]),
-        "caption": "A tie leaves it put" if tie else f'Stays with {f["holder"]}',
+        "caption": f'Stays with {f["holder"]}',
         "note": (f'{f["holder"]} has now held the belt {f["holder_all_days"]:,} days in all, '
                  f'across {f["holder_reign_no"]} reigns.'),
     }

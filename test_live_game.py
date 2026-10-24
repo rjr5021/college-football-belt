@@ -2,7 +2,7 @@
 
 1. in_live_window: TBD kickoff never opens the window; well before/after
    kickoff is closed; the pregame-to-postgame span is open.
-2. belt_status_line: leading and tied both read SAFE; only trailing
+2. belt_status_line: only trailing is IN DANGER; tied never says the belt stays (no ties since 1996); only trailing
    reads IN DANGER (Bob: "I only want it to say belt in danger if the
    holder is losing").
 3. parse_competition / find_scoring_play against a synthetic ESPN
@@ -106,6 +106,12 @@ def test_in_live_window():
 def test_belt_status_line():
     check("leading is SAFE", p.belt_status_line(14, 7) == "Belt SAFE, for now.")
     check("tied is NOT in danger", "IN DANGER" not in p.belt_status_line(7, 7))
+    tied = p.belt_status_line(24, 24).lower()
+    check("tied never implies a tie keeps the belt",
+          "stays" not in tied and "keeps" not in tied and "put" not in tied)
+    check("tied says the winner leaves with it", "whoever wins" in tied)
+    check("no final post for level scores",
+          p.compose_final_tweet(LINEAGE, "Notre Dame", "Michigan State", 24, 24, ptx) is None)
     check("trailing IS in danger", p.belt_status_line(7, 14) == "Belt IN DANGER.")
 
 
@@ -280,7 +286,7 @@ def _check(label, cond, detail=""):
 print("\nbelt_at_risk: the same rule the post text prints")
 _check("holder ahead -- safe", _plg.belt_at_risk(49, 10) is False)
 _check("holder trailing -- at risk", _plg.belt_at_risk(10, 49) is True)
-_check("tied is safe, because a tie doesn't move the belt",
+_check("tied isn't trailing, so not at risk",
        _plg.belt_at_risk(14, 14) is False)
 _check("a fresh game opens safe", _plg.belt_at_risk(None, None) is False)
 _check("it agrees with belt_status_line, which is the point",
