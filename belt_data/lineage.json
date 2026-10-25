@@ -1,18 +1,18 @@
 {
-  "generated": "2026-10-24",
+  "generated": "2026-10-25",
   "tie_rule": "holder",
   "scope": "combined",
   "origin": {
     "date": "1869-11-06",
     "note": "Rutgers def. Princeton 6-4, first game ever played"
   },
-  "current_holder": "BYU",
-  "current_reign_since": "2026-10-17",
+  "current_holder": "UCF",
+  "current_reign_since": "2026-10-24",
   "current_defenses": 0,
   "totals": {
-    "belt_games": 1642,
-    "reigns": 333,
-    "distinct_teams": 105
+    "belt_games": 1643,
+    "reigns": 334,
+    "distinct_teams": 106
   },
   "reigns": [
     {
@@ -3008,6 +3008,15 @@
       "start_date": "2026-10-17",
       "won_from": "Notre Dame",
       "won_score": "28-24",
+      "defenses": 0,
+      "end_date": "2026-10-24",
+      "lost_to": "UCF"
+    },
+    {
+      "team": "UCF",
+      "start_date": "2026-10-24",
+      "won_from": "BYU",
+      "won_score": "39-31",
       "defenses": 0,
       "end_date": null,
       "lost_to": null
@@ -27643,6 +27652,21 @@
       "outcome": "changed",
       "new_holder": "BYU",
       "game_id": 401856809
+    },
+    {
+      "date": "2026-10-24",
+      "season": 2026,
+      "week": 8,
+      "season_type": "regular",
+      "holder": "BYU",
+      "opponent": "UCF",
+      "home": "UCF",
+      "away": "BYU",
+      "score": "39-31",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "UCF",
+      "game_id": 401856835
     }
   ]
 }

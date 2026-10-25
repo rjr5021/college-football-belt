@@ -84,5 +84,17 @@
       "formatted_spread": "BYU -7.5",
       "over_under": 45.5
     }
+  },
+  {
+    "key": "UCF|Baylor|2026-10-30",
+    "holder": "UCF",
+    "opponent": "Baylor",
+    "date": "2026-10-30",
+    "is_home": true,
+    "neutral": false,
+    "predicted_winner": "Baylor",
+    "predicted_score": "Baylor 28, UCF 24",
+    "generated": "2026-10-25",
+    "line": null
   }
 ]
