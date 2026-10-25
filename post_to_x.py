@@ -242,7 +242,23 @@ def compute_defense_numbers(belt_games):
 
 # ------------------------------------------------------------ result post
 
-def compose_result_tweet(game, reign_number, defense_number):
+def new_holder_line(team, team_reign_no, overall_reign_no=None):
+    """'It's UCF's first time ever holding the College Football Belt.' /
+    'Notre Dame now holds the College Football Belt for the 10th time.'
+    team_reign_no counts the reign that just started. Replaces "X is the
+    Nth holder of the College Football Belt", which used the overall reign
+    count (or, in the live post, the team's own) and read as nonsense:
+    "UCF is the 1st holder" (Bob, 2026-10-24)."""
+    if team_reign_no == 1:
+        line = f"It's {team}'s first time ever holding the College Football Belt."
+    else:
+        line = f"{team} now holds the College Football Belt for the {ordinal(team_reign_no)} time."
+    if overall_reign_no:
+        line += f" Reign No. {overall_reign_no:,} since 1869."
+    return line
+
+
+def compose_result_tweet(game, reign_number, defense_number, team_reign_no=None):
     holder, opponent = game.get("holder"), game.get("opponent")
     new_holder = game["new_holder"]
     date = pretty_date(game["date"])
@@ -265,9 +281,10 @@ def compose_result_tweet(game, reign_number, defense_number):
             f"\U0001F3C6 THE BELT HAS CHANGED HANDS \U0001F3C6\n\n"
             f"{new_holder} defeated {holder} {winner_score}-{loser_score} "
             f"on {date}.\n\n"
-            f"{new_holder} is the {ordinal(reign_number)} holder of the "
-            f"College Football Belt.\n\n"
-            f"{game_url}"
+            + (f"{new_holder_line(new_holder, team_reign_no, reign_number)}\n\n"
+               if team_reign_no else
+               f"Reign No. {reign_number:,} in College Football Belt history.\n\n")
+            + f"{game_url}"
         )
 
     holder_score = team_score(game, holder)
@@ -361,11 +378,15 @@ def post_results(client, lineage, cache):
     reign_starts = sorted(r["start_date"] for r in lineage["reigns"])
 
     for game in new_games:
-        reign_number = None
+        reign_number = team_reign_no = None
         if game["outcome"] in ("changed", "established"):
             reign_number = sum(1 for d in reign_starts if d <= game["date"])
+            team_reign_no = sum(1 for r in lineage["reigns"]
+                                if r.get("team") == game["new_holder"]
+                                and r["start_date"] <= game["date"])
 
-        text = compose_result_tweet(game, reign_number, defense_numbers.get(game["game_id"]))
+        text = compose_result_tweet(game, reign_number, defense_numbers.get(game["game_id"]),
+                                    team_reign_no)
         reply_to = live_final_tweet_id(game)
         if reply_to:
             print(f"Replying to the live final post ({reply_to}) rather than "

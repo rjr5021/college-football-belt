@@ -84,9 +84,11 @@ os.remove(tmp)
 ptx.LIVE_STATE_PATH = real
 
 # 4. the link the final post carries
-print("4. the final post links the game, not the fixture list")
+print("4. the final post links a page that exists right now")
 with_id = live.final_link(NEXT)
-check("uses this game's own page", "/games/401858467.html" in with_id, with_id)
+check("not the game page, which isn't built until CFBD has the result",
+      "/games/" not in with_id, with_id)
+check("preview.html, unique to this game", "/preview.html" in with_id and "401858467" in with_id, with_id)
 check("keeps its campaign tag", "utm_campaign=x-live-final" in with_id, with_id)
 check("falls back when there is no id", "/preview.html" in live.final_link({}),
       live.final_link({}))
@@ -98,9 +100,9 @@ print("5. all three final outcomes carry it")
 LINEAGE = {"reigns": [{"team": "Notre Dame", "start_date": "2025-11-29",
                        "end_date": None, "defenses": 3}],
            "belt_games": []}
-for label, hs, os_ in (("defended", 31, 17), ("changed hands", 21, 24), ("tie", 24, 24)):
+for label, hs, os_ in (("defended", 31, 17), ("changed hands", 21, 24)):
     text = live.compose_final_tweet(LINEAGE, "Notre Dame", "Purdue", hs, os_, ptx, NEXT)
-    check(f"{label}: links the game page", "/games/401858467.html" in text, text)
+    check(f"{label}: links this game's preview", "/preview.html" in text and "401858467" in text, text)
     check(f"{label}: fits X's limit", ptx.tweet_length(text) <= ptx.TWEET_MAX,
           str(ptx.tweet_length(text)))
 

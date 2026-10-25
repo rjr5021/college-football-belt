@@ -446,11 +446,16 @@ def compose_halftime_tweet(next_game, holder, opponent, holder_score, opp_score,
 
 
 def final_link(next_game):
-    """This game's own page when we know its ESPN id (build_site.py names
-    game pages by it), falling back to /preview.html if we somehow don't."""
+    """/preview.html, made unique to this game like every other live link.
+
+    NOT /games/<id>.html: that page is only built once the pipeline has
+    ingested the result from CFBD, usually hours after this post goes out,
+    so linking it here sent people to a 404 (Bob, 2026-10-24, on the
+    UCF-BYU final). preview.html exists now and its live bar holds the
+    final score for a day; the pipeline's own result post, which replies
+    to this one, carries the permanent game-page link once it exists."""
     gid = (next_game or {}).get("id")
-    path = f"/games/{gid}.html" if gid else "/preview.html"
-    return tag_link(f"{SITE_URL}{path}", "live-final")
+    return tag_link(f"{SITE_URL}/preview.html", "live-final", bust=gid)
 
 
 def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx,
@@ -466,11 +471,12 @@ def compose_final_tweet(lineage, holder, opponent, holder_score, opp_score, ptx,
                 f"{holder} {holder_score}, {opponent} {opp_score}.{stakes}\n\n"
                 + link)
     if opp_score > holder_score:
-        reign_number = ptx.team_reign_number(lineage, opponent) + 1
+        # The new holder's own count (its 1st, 4th... time holding it), not
+        # an overall "Nth holder" -- "UCF is the 1st holder of the College
+        # Football Belt" read as nonsense (Bob, 2026-10-24).
         return (f"\U0001F3C6 THE BELT HAS CHANGED HANDS\n\n"
                 f"{opponent} defeats {holder} {opp_score}-{holder_score}.\n\n"
-                f"{opponent} is the {ptx.ordinal(reign_number)} holder of the "
-                f"College Football Belt.\n\n"
+                f"{ptx.new_holder_line(opponent, ptx.team_reign_number(lineage, opponent) + 1)}\n\n"
                 + link)
     # Level scores can't be a final (overtime has decided every game since
     # 1996), so they mean ESPN's feed hasn't caught up. No post -- run_once
