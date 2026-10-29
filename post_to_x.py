@@ -598,11 +598,21 @@ def post_poll(client, cache):
     back to back and gave the poll the worse half of the attention. One
     per upcoming game (cache key), so a rerun never posts a second poll
     for the same game. Not fatal to the pipeline if X refuses it."""
-    ok, _today, _tz = slot_gate("poll", "X_POST_POLL", POLL_POST_TIME_ET, SATURDAY)
+    ok, today, _tz = slot_gate("poll", "X_POST_POLL", POLL_POST_TIME_ET, SATURDAY)
     if not ok:
         return
     next_game = load_json(NEXT_GAME_PATH)
     if not next_game:
+        return
+    # The Saturday slot is for a Saturday game only. When the belt game was
+    # on a weekday (Thursday/Friday night), next_game.json has already moved
+    # on to the following week's game by Saturday morning, and posting here
+    # would put that poll up a week early. A weekday game's poll goes out by
+    # hand on its own game day (Run workflow -> post_poll), which skips this.
+    manual = os.environ.get("X_POST_POLL", "").lower() in ("1", "true", "yes")
+    if not manual and next_game.get("date") != today.isoformat():
+        print(f"Next belt game is {next_game.get('date')}, not today ({today}) -- "
+              f"no poll from the Saturday slot.")
         return
     key = preview_cache_key(next_game)
     if cache.get("last_posted_poll_key") == key:
