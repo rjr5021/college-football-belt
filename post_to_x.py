@@ -415,6 +415,17 @@ def post_results(client, lineage, cache):
 
 # ----------------------------------------------------------- preview post
 
+def odds_sentence(holder, defend_prob):
+    """'UCF is a 62% favorite to keep the belt' / 'UCF has a 40% chance to
+    keep the belt'. Only above 50% is the holder a favorite: the old
+    'UCF is a 40% favorite to defend it' sat under a Baylor prediction
+    and read as nonsense (Bob, 2026-10-29)."""
+    pct = round(defend_prob * 100)
+    if pct > 50:
+        return f"{holder} is a {pct}% favorite to keep the belt"
+    return f"{holder} has a {pct}% chance to keep the belt"
+
+
 def compose_preview_tweet(next_game, ai_preview, belt_risk=None, lineage=None):
     holder, opponent = next_game["team"], next_game["opponent"]
     date = pretty_date(next_game["date"])
@@ -433,8 +444,10 @@ def compose_preview_tweet(next_game, ai_preview, belt_risk=None, lineage=None):
 
     if ai_preview and ai_preview.get("predicted_winner") and ai_preview.get("predicted_score"):
         lines.append("")
-        lines.append(f"Prediction: {ai_preview['predicted_winner']} "
-                      f"({ai_preview['predicted_score']})")
+        winner, score = ai_preview["predicted_winner"], ai_preview["predicted_score"]
+        # "Baylor 28, UCF 24" already names the winner; don't say it twice.
+        lines.append(f"Prediction: {score}" if score.startswith(winner)
+                     else f"Prediction: {winner} ({score})")
 
     # Belt-at-risk odds (wishlist #2, 2026-09-16, Bob: "it also feeds the
     # weekly X/IG post automatically") -- only when fetch_belt_odds.py's
@@ -444,7 +457,7 @@ def compose_preview_tweet(next_game, ai_preview, belt_risk=None, lineage=None):
         defend_prob = belt_risk["next_game"].get("defend_prob")
         if defend_prob is not None:
             lines.append("")
-            lines.append(f"{holder} is a {round(defend_prob * 100)}% favorite to defend it")
+            lines.append(odds_sentence(holder, defend_prob))
 
     # One computed fact about the challenger (challenger.py) -- the reason
     # to care about a game between two teams you don't follow. Added last
@@ -786,7 +799,7 @@ def lean_line(ai_preview, belt_risk, holder, opponent):
     if pick:
         return f"The Lean: {pick}"
     if pct is not None:
-        return f"{holder} is a {pct}% favorite to defend the belt"
+        return odds_sentence(holder, pct / 100)
     return None
 
 

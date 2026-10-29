@@ -492,6 +492,11 @@ def after_live(lineage, cache, token, ig_user, dry, workdir):
         idx = cards.game_index(lineage, gid)
         if idx is not None:          # pipeline already has it: use its row
             row = result_row_from_lineage(lineage["belt_games"][idx])
+        elif str(row["holder_score"]) == str(row["opp_score"]):
+            # No ties in college football: a level "final" from ESPN is a score that
+            # hasn't caught up with the overtime yet (see post_live_game.py). Next tick.
+            print(f"{g['team']} vs {g['opponent']}: final but still level -- waiting for ESPN's deciding score.")
+            continue
         try:
             built = cards.build_result(lineage, row, workdir, data)
             post("result", built, token, ig_user, dry)

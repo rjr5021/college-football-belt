@@ -25,6 +25,7 @@ import json
 import os
 import re
 import tempfile
+from datetime import date
 
 from generate_share_image import (
     _font, _draw_belt_mark, blend, contrast_ratio, draw_tracked_text,
@@ -348,7 +349,7 @@ def preview_spec(next_game, lineage, rankings, today=None):
     f = _facts(next_game, lineage, rankings, today)
     return {
         "kind": "preview",
-        "kicker": "Next belt game · Saturday",
+        "kicker": f"Next belt game · {date.fromisoformat(next_game['date']):%A}",
         "headline": ("Belt", "on the line"),
         "when": f["when"],
         "left": {"team": f["holder"], "role": f'Holder · {_ord(f["holder_reign_no"])} reign',
