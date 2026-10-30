@@ -1,20 +1,20 @@
 {
-  "game_key": "BYU|UCF|2026-10-24",
+  "game_key": "UCF|Baylor|2026-10-30",
   "game": {
-    "id": 401856835,
-    "team": "BYU",
-    "opponent": "UCF",
-    "date": "2026-10-24",
-    "raw_date": "2026-10-24T19:30:00.000Z",
+    "id": 401856844,
+    "team": "UCF",
+    "opponent": "Baylor",
+    "date": "2026-10-30",
+    "raw_date": "2026-10-30T23:30:00.000Z",
     "neutral": false,
-    "is_home": false,
+    "is_home": true,
     "start_time_tbd": false,
     "venue_name": "FBC Mortgage Stadium"
   },
   "kickoff_posted": true,
-  "halftime_posted": true,
-  "final_posted": true,
-  "final_tweet_id": "2114148491870224563",
-  "last_holder_score": 31,
-  "last_opp_score": 39
+  "halftime_posted": false,
+  "final_posted": false,
+  "final_tweet_id": null,
+  "last_holder_score": 0,
+  "last_opp_score": 0
 }
