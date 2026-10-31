@@ -6,12 +6,12 @@
     "date": "1869-11-06",
     "note": "Rutgers def. Princeton 6-4, first game ever played"
   },
-  "current_holder": "UCF",
-  "current_reign_since": "2026-10-24",
+  "current_holder": "Baylor",
+  "current_reign_since": "2026-10-30",
   "current_defenses": 0,
   "totals": {
-    "belt_games": 1643,
-    "reigns": 334,
+    "belt_games": 1644,
+    "reigns": 335,
     "distinct_teams": 106
   },
   "reigns": [
@@ -3017,6 +3017,15 @@
       "start_date": "2026-10-24",
       "won_from": "BYU",
       "won_score": "39-31",
+      "defenses": 0,
+      "end_date": "2026-10-30",
+      "lost_to": "Baylor"
+    },
+    {
+      "team": "Baylor",
+      "start_date": "2026-10-30",
+      "won_from": "UCF",
+      "won_score": "9-41",
       "defenses": 0,
       "end_date": null,
       "lost_to": null
@@ -27667,6 +27676,21 @@
       "outcome": "changed",
       "new_holder": "UCF",
       "game_id": 401856835
+    },
+    {
+      "date": "2026-10-30",
+      "season": 2026,
+      "week": 9,
+      "season_type": "regular",
+      "holder": "UCF",
+      "opponent": "Baylor",
+      "home": "UCF",
+      "away": "Baylor",
+      "score": "9-41",
+      "neutral": false,
+      "outcome": "changed",
+      "new_holder": "Baylor",
+      "game_id": 401856844
     }
   ]
 }

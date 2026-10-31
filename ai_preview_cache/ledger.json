@@ -96,5 +96,17 @@
     "predicted_score": "Baylor 28, UCF 24",
     "generated": "2026-10-25",
     "line": null
+  },
+  {
+    "key": "Baylor|Iowa State|2026-11-06",
+    "holder": "Baylor",
+    "opponent": "Iowa State",
+    "date": "2026-11-06",
+    "is_home": true,
+    "neutral": false,
+    "predicted_winner": "Iowa State",
+    "predicted_score": "Iowa State 31, Baylor 24",
+    "generated": "2026-10-31",
+    "line": null
   }
 ]
