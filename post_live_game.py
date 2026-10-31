@@ -151,6 +151,32 @@ def save_cache(data):
         f.write("\n")
 
 
+def sync_cache_from_main():
+    """Start from main's x_live_state.json, not this checkout's.
+    actions/checkout hands a run the commit from when it was QUEUED; GitHub
+    has been queueing live-game.yml ticks for 20+ minutes behind a running
+    session (concurrency group), so a tick can start after the final went
+    out and read a state that says it didn't (2026-10-30: the queued run's X
+    final was only stopped by X's duplicate filter, and its Instagram result
+    did go out twice). Every state change is pushed immediately, so main's
+    copy is never older than the checkout's. Not fatal: on any failure the
+    local copy is used, which is the old behaviour."""
+    try:
+        subprocess.run(["git", "fetch", "-q", "origin", "main"], cwd=HERE,
+                       capture_output=True, text=True, timeout=60)
+        rel = os.path.relpath(CACHE_PATH, HERE).replace(os.sep, "/")
+        out = subprocess.run(["git", "show", f"origin/main:{rel}"], cwd=HERE,
+                             capture_output=True, text=True, timeout=30)
+        if out.returncode != 0 or not out.stdout.strip():
+            return
+        remote = json.loads(out.stdout)
+        if remote != load_cache():
+            save_cache(remote)
+            print("Loaded social_cache/x_live_state.json from main (this run's checkout was behind).")
+    except Exception as e:
+        print(f"Couldn't sync the live-state cache from main (not fatal): {e}")
+
+
 def commit_cache(message):
     """Commit + push social_cache/x_live_state.json right now (see the
     module docstring for why this can't wait until the job ends). Not
@@ -608,6 +634,7 @@ def main():
 
     scheduled = load_json(NEXT_GAME_PATH)
     now_utc = datetime.now(timezone.utc)
+    sync_cache_from_main()
     cache = load_cache()
     next_game = unfinished_game(cache, scheduled, now_utc)
     if not next_game:

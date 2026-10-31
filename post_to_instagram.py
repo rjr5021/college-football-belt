@@ -121,6 +121,73 @@ def save_cache(c, message):
         print(f"  (couldn't push the IG cache right away: {e} -- the workflow's own commit will carry it)")
 
 
+# ------------------------------------------------ duplicate-post guard
+# 2026-10-30: Baylor 41, UCF 9 went out on Instagram twice. GitHub queued a
+# scheduled live-game.yml run at 02:46Z and started it after the manual run
+# finished; actions/checkout gave it the commit from when it was QUEUED, so
+# its ig_last_posted.json predated the "result posted" commit and it posted
+# again a minute later. update-and-deploy.yml's IG step can also run alongside
+# live-game.yml. So the checkout's copy of the cache is never trusted on its
+# own: it's merged with main's copy when the script starts, and again right
+# before every post.
+
+def remote_cache():
+    """main's current ig_last_posted.json via the API, or None (dry run,
+    no token, or the read failed -- callers then fall back to the local
+    copy, exactly the old behaviour)."""
+    if os.environ.get("IG_DRY_RUN") == "1":
+        return None
+    try:
+        branch = os.environ.get("GITHUB_REF_NAME") or "main"
+        cur = gh_api("GET", f"/repos/{gh_repo()}/contents/{urllib.parse.quote(CACHE_REL)}?ref={branch}")
+        if not cur or not cur.get("content"):
+            return None
+        return json.loads(base64.b64decode(cur["content"]).decode())
+    except Exception as e:  # noqa: BLE001
+        print(f"  (couldn't read main's IG cache: {e} -- using the local copy)")
+        return None
+
+
+def merge_remote(cache, lineage=None):
+    """Fold main's record of what has been posted into `cache`. Lists are
+    unioned; the result marker moves forward only (never back)."""
+    rc = remote_cache()
+    if not rc:
+        return cache
+    for k in ("posted_results", "posted_previews"):
+        have = [str(x) for x in cache.get(k, [])]
+        for x in rc.get(k, []) or []:
+            if str(x) not in have:
+                have.append(str(x))
+        cache[k] = have
+    if rc.get("last_posted_preview_key") and not cache.get("last_posted_preview_key"):
+        cache["last_posted_preview_key"] = rc["last_posted_preview_key"]
+    r_last, l_last = rc.get("last_posted_game_id"), cache.get("last_posted_game_id")
+    if r_last is not None and str(r_last) != str(l_last):
+        if l_last is None:
+            cache["last_posted_game_id"] = r_last
+        elif lineage:
+            ri, li = cards.game_index(lineage, str(r_last)), cards.game_index(lineage, str(l_last))
+            if ri is not None and (li is None or ri > li):
+                cache["last_posted_game_id"] = r_last
+    for k in ("token_refreshed", "token_expires"):
+        if rc.get(k) and not cache.get(k):
+            cache[k] = rc[k]
+    return cache
+
+
+def posted_elsewhere(cache, kind, key, lineage=None):
+    """Last check before posting: True (and recorded locally) if main says
+    this result/preview already went out from another run."""
+    merge_remote(cache, lineage)
+    lst = "posted_results" if kind == "result" else "posted_previews"
+    if str(key) in [str(x) for x in cache.get(lst, [])] or (
+            kind == "preview" and cache.get("last_posted_preview_key") == key):
+        print(f"Instagram {kind} {key} was already posted by another run -- not posting it again.")
+        return True
+    return False
+
+
 # --------------------------------------------------------- GitHub storage
 
 def gh_repo():
@@ -406,6 +473,10 @@ def pipeline_results(lineage, cache, token, ig_user, dry, workdir):
             cache["posted_results"].append(gid)
             changed = True
             continue
+        if not dry and posted_elsewhere(cache, "result", gid, lineage):
+            cache["last_posted_game_id"] = g["game_id"]
+            changed = True
+            continue
         try:
             built = cards.build_result(lineage, result_row_from_lineage(g), workdir)
             post("result", built, token, ig_user, dry)
@@ -440,6 +511,8 @@ def preview(lineage, cache, token, ig_user, dry, workdir, force=False):
     today = datetime.now(cards.ET).date()
     if (cards.d(nxt["date"]) - today).days > 6 or cards.d(nxt["date"]) < today:
         print(f"Next belt game {key} isn't this week -- no preview yet.")
+        return
+    if not dry and not force and posted_elsewhere(cache, "preview", key, lineage):
         return
     try:
         built = cards.build_preview(lineage, nxt, workdir)
@@ -496,6 +569,8 @@ def after_live(lineage, cache, token, ig_user, dry, workdir):
             # No ties in college football: a level "final" from ESPN is a score that
             # hasn't caught up with the overtime yet (see post_live_game.py). Next tick.
             print(f"{g['team']} vs {g['opponent']}: final but still level -- waiting for ESPN's deciding score.")
+            continue
+        if not dry and posted_elsewhere(cache, "result", gid, lineage):
             continue
         try:
             built = cards.build_result(lineage, row, workdir, data)
@@ -590,6 +665,8 @@ def main():
     token = (os.environ.get("IG_ACCESS_TOKEN") or "").strip()
     ig_user = (os.environ.get("IG_BUSINESS_ACCOUNT_ID") or "").strip()
     cache = load_cache()
+    if not dry:
+        merge_remote(cache, lineage)   # this checkout's copy may predate the last post
     workdir = tempfile.mkdtemp(prefix="igcards-")
 
     if "--check" in args:
