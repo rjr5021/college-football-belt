@@ -108,5 +108,22 @@
     "predicted_score": "Iowa State 31, Baylor 24",
     "generated": "2026-10-31",
     "line": null
+  },
+  {
+    "key": "Baylor|Iowa State|2026-11-07",
+    "holder": "Baylor",
+    "opponent": "Iowa State",
+    "date": "2026-11-07",
+    "is_home": true,
+    "neutral": false,
+    "predicted_winner": "Baylor",
+    "predicted_score": "Baylor 28, Iowa State 24",
+    "generated": "2026-11-02",
+    "line": {
+      "provider": "DraftKings",
+      "holder_spread": -10.0,
+      "formatted_spread": "Baylor -10",
+      "over_under": 50.5
+    }
   }
 ]
