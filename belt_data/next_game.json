@@ -15,7 +15,7 @@
   "venue_state": "TX",
   "venue_lat": 31.5582015,
   "venue_lon": -97.1156702,
-  "tv": null,
+  "tv": "FS1",
   "stream": null,
-  "watch": null
+  "watch": "FS1"
 }
