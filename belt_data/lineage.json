@@ -8,9 +8,9 @@
   },
   "current_holder": "Baylor",
   "current_reign_since": "2026-10-30",
-  "current_defenses": 0,
+  "current_defenses": 1,
   "totals": {
-    "belt_games": 1644,
+    "belt_games": 1645,
     "reigns": 335,
     "distinct_teams": 106
   },
@@ -3026,7 +3026,7 @@
       "start_date": "2026-10-30",
       "won_from": "UCF",
       "won_score": "9-41",
-      "defenses": 0,
+      "defenses": 1,
       "end_date": null,
       "lost_to": null
     }
@@ -27691,6 +27691,21 @@
       "outcome": "changed",
       "new_holder": "Baylor",
       "game_id": 401856844
+    },
+    {
+      "date": "2026-11-07",
+      "season": 2026,
+      "week": 10,
+      "season_type": "regular",
+      "holder": "Baylor",
+      "opponent": "Iowa State",
+      "home": "Baylor",
+      "away": "Iowa State",
+      "score": "42-31",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "Baylor",
+      "game_id": 401856853
     }
   ]
 }
