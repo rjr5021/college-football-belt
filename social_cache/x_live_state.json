@@ -1,20 +1,20 @@
 {
-  "game_key": "UCF|Baylor|2026-10-30",
+  "game_key": "Baylor|Iowa State|2026-11-07",
   "game": {
-    "id": 401856844,
-    "team": "UCF",
-    "opponent": "Baylor",
-    "date": "2026-10-30",
-    "raw_date": "2026-10-30T23:30:00.000Z",
+    "id": 401856853,
+    "team": "Baylor",
+    "opponent": "Iowa State",
+    "date": "2026-11-07",
+    "raw_date": "2026-11-07T17:00:00.000Z",
     "neutral": false,
     "is_home": true,
     "start_time_tbd": false,
-    "venue_name": "FBC Mortgage Stadium"
+    "venue_name": "McLane Stadium"
   },
   "kickoff_posted": true,
-  "halftime_posted": true,
-  "final_posted": true,
-  "final_tweet_id": "2116365773996208359",
-  "last_holder_score": 9,
-  "last_opp_score": 41
+  "halftime_posted": false,
+  "final_posted": false,
+  "final_tweet_id": null,
+  "last_holder_score": 14,
+  "last_opp_score": 17
 }
