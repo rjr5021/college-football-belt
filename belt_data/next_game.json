@@ -4,9 +4,9 @@
   "opponent": "BYU",
   "is_home": false,
   "neutral": false,
-  "date": "2026-11-13",
-  "raw_date": "2026-11-14T05:00:00.000Z",
-  "start_time_tbd": true,
+  "date": "2026-11-14",
+  "raw_date": "2026-11-14T20:30:00.000Z",
+  "start_time_tbd": false,
   "season": 2026,
   "week": 11,
   "season_type": "regular",
@@ -15,7 +15,7 @@
   "venue_state": "UT",
   "venue_lat": 40.2575347,
   "venue_lon": -111.6545247,
-  "tv": null,
+  "tv": "Fox",
   "stream": null,
-  "watch": null
+  "watch": "Fox"
 }

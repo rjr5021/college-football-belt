@@ -1,20 +1,22 @@
 {
-  "key": "Baylor|BYU|2026-11-13",
-  "generated": "2026-11-07",
+  "key": "Baylor|BYU|2026-11-14",
+  "generated": "2026-11-09",
   "preview": {
-    "overview": "Baylor travels to Provo to face BYU with the College Football Belt on the line in a matchup between two teams with very different trajectories this season. The Cougars hold a 3-2 edge in the all-time series and beat Baylor 34-28 just last year, making this a chance for BYU to reassert dominance in a rivalry that has seen recent momentum shift.",
+    "overview": "The Cougars have the edge in the all-time series at 3-2, including a 34-28 victory the last time these teams met in 2024, making this a chance for BYU to reclaim the belt on their home field.",
     "key_matchups": [
-      "Baylor's offensive firepower versus BYU's recent defensive performance\u2014the Bears scored 42, 41, and 55 points in three of their last five games, while BYU has surrendered 28, 39, and 39 points in losses this season",
-      "BYU's ability to execute in close games, having won 28-24 vs Notre Dame and 27-20 vs Arizona State, against a Baylor team that just lost 24-25 at Kansas",
-      "Baylor's turnover risk on the road after consecutive losses to Kansas and TCU (17 and 25 points allowed) versus BYU's home-field advantage at a venue where the Cougars won their last two games"
+      "Baylor's offensive consistency against BYU's recent defensive improvements; the Bears scored 42, 41, and 55 points in three of their last five games while BYU held Iowa State to 10 points",
+      "BYU's home-field advantage and recent form against ranked competition, having beaten Notre Dame 28-24 and Arizona State 27-20",
+      "The Cougars' ability to execute in close games, as evidenced by their 28-24 win over Notre Dame and 24-10 victory over Iowa State"
     ],
-    "betting_angles": "BYU won the most recent meeting 34-28 and hold a 3-2 series advantage, suggesting historical comfort in this matchup. However, Baylor showed dominant scoring ability in its last three wins (42, 41, and 55 points) before consecutive losses, while BYU has been vulnerable to offensive pressure, conceding 39 points at UCF and 28 points to Utah. The recency of form points in different directions: Baylor's last two outings were close losses, while BYU just beat Iowa State 24-10 after winning 28-24 over Notre Dame.",
+    "betting_angles": "BYU has won the head-to-head matchup in the most recent meeting (34-28 in 2024) and holds a 3-2 series advantage all-time. Baylor has shown defensive vulnerabilities, allowing 31 to Iowa State and 25 to Kansas in recent outings, while BYU has demonstrated the ability to win close contests and hold opponents to low scores. The Cougars' home-field performance and recent victories over quality opponents suggest they match up favorably with the belt-holding Bears.",
     "predicted_winner": "BYU",
-    "predicted_score": "Baylor 31, BYU 38",
-    "prediction_writeup": "BYU's edge in the head-to-head series (3-2) and their 34-28 victory last year give the Cougars familiarity with Baylor's attack. While Baylor has shown explosive offensive capability with wins of 42-31, 41-9, and 55-19, the Bears' recent form is concerning\u2014consecutive defeats to Kansas (24-25) and TCU (6-17) suggest vulnerability that BYU can exploit at home. The Cougars have proven they can win close games this season, defeating Notre Dame 28-24 and Arizona State 27-20, and holding Baylor to 28 points last year on the road suggests the defense knows how to contain this offense. Baylor's road struggles and BYU's home record make this a favorable spot for the belt to change hands in Provo.",
+    "predicted_score": "Baylor 24, BYU 28",
+    "prediction_writeup": "BYU enters this matchup with momentum and the all-time series advantage at 3-2, including last year's 34-28 win that showed the Cougars can execute down the stretch. Baylor's recent form includes two losses (24-25 at Kansas and 6-17 vs TCU) that expose defensive inconsistency, while BYU has strung together convincing wins over Notre Dame and Arizona State. The Cougars' ability to win close games and their home-field advantage in Provo make them slight favorites to capture the belt. Expect another tight contest given the teams' recent history, but BYU's recent confidence and experience in this rivalry give them the edge to reclaim the championship.",
     "factcheck": {
       "attempts": 2,
-      "dropped": []
+      "dropped": [
+        "14"
+      ]
     }
   }
 }
