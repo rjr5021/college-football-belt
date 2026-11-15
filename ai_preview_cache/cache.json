@@ -1,22 +1,20 @@
 {
-  "key": "Baylor|BYU|2026-11-14",
-  "generated": "2026-11-09",
+  "key": "BYU|Kansas|2026-11-20",
+  "generated": "2026-11-15",
   "preview": {
-    "overview": "The Cougars have the edge in the all-time series at 3-2, including a 34-28 victory the last time these teams met in 2024, making this a chance for BYU to reclaim the belt on their home field.",
+    "overview": "BYU brings the lineal championship belt to Lawrence as the current holder, looking to extend their reign against a Kansas team hungry to reclaim it. The Jayhawks have owned this matchup historically, winning three straight meetings including a 17-13 victory in 2024, but BYU arrives as the belt-holder with momentum from a 28-24 win over Notre Dame.",
     "key_matchups": [
-      "Baylor's offensive consistency against BYU's recent defensive improvements; the Bears scored 42, 41, and 55 points in three of their last five games while BYU held Iowa State to 10 points",
-      "BYU's home-field advantage and recent form against ranked competition, having beaten Notre Dame 28-24 and Arizona State 27-20",
-      "The Cougars' ability to execute in close games, as evidenced by their 28-24 win over Notre Dame and 24-10 victory over Iowa State"
+      "BYU's inconsistency on the road versus Kansas's home field advantage and recent upset potential",
+      "Kansas's defensive performance against BYU's balanced attack, given the Jayhawks held them to just 13 points last November",
+      "Turnover margin in a matchup where both teams have shown vulnerability to close losses"
     ],
-    "betting_angles": "BYU has won the head-to-head matchup in the most recent meeting (34-28 in 2024) and holds a 3-2 series advantage all-time. Baylor has shown defensive vulnerabilities, allowing 31 to Iowa State and 25 to Kansas in recent outings, while BYU has demonstrated the ability to win close contests and hold opponents to low scores. The Cougars' home-field performance and recent victories over quality opponents suggest they match up favorably with the belt-holding Bears.",
-    "predicted_winner": "BYU",
-    "predicted_score": "Baylor 24, BYU 28",
-    "prediction_writeup": "BYU enters this matchup with momentum and the all-time series advantage at 3-2, including last year's 34-28 win that showed the Cougars can execute down the stretch. Baylor's recent form includes two losses (24-25 at Kansas and 6-17 vs TCU) that expose defensive inconsistency, while BYU has strung together convincing wins over Notre Dame and Arizona State. The Cougars' ability to win close games and their home-field advantage in Provo make them slight favorites to capture the belt. Expect another tight contest given the teams' recent history, but BYU's recent confidence and experience in this rivalry give them the edge to reclaim the championship.",
+    "betting_angles": "Kansas's recent form is decidedly mixed\u2014they've lost three of their last five, though they did upset Baylor 25-24 at home and demolished West Virginia 37-14. BYU has been equally inconsistent on the road, losing at Utah 20-28 and at UCF 31-39, but they've now won two straight including a signature victory over Notre Dame. The series history strongly favors Kansas, who won all three previous matchups and most recently held BYU to 13 points in 2024, suggesting defensive execution could prove decisive.",
+    "predicted_winner": "Kansas",
+    "predicted_score": "BYU 20, Kansas 24",
+    "prediction_writeup": "Kansas's historical dominance in this series is too significant to ignore, especially with the Jayhawks playing at home where they've shown they can execute defensively\u2014their 13-point effort against BYU last year proves they know how to contain this offense. BYU's road struggles are a real concern; losses at Utah and UCF this season suggest they don't travel well, and Kansas's ability to win tight games at home (25-24 over Baylor) gives them an edge in a close contest. While BYU's recent win over Notre Dame is impressive, the weight of Kansas's three-game series advantage, the home field, and BYU's documented road fragility point to a Jayhawks upset that would return the belt to Lawrence.",
     "factcheck": {
-      "attempts": 2,
-      "dropped": [
-        "14"
-      ]
+      "attempts": 1,
+      "dropped": []
     }
   }
 }
