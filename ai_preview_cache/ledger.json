@@ -171,5 +171,22 @@
     "predicted_score": "BYU 20, Kansas 24",
     "generated": "2026-11-15",
     "line": null
+  },
+  {
+    "key": "BYU|Kansas|2026-11-21",
+    "holder": "BYU",
+    "opponent": "Kansas",
+    "date": "2026-11-21",
+    "is_home": false,
+    "neutral": false,
+    "predicted_winner": "BYU",
+    "predicted_score": "BYU 24, Kansas 20",
+    "generated": "2026-11-16",
+    "line": {
+      "provider": "DraftKings",
+      "holder_spread": -5.5,
+      "formatted_spread": "BYU -5.5",
+      "over_under": 47.5
+    }
   }
 ]

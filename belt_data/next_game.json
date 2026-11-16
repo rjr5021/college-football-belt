@@ -4,9 +4,9 @@
   "opponent": "Kansas",
   "is_home": false,
   "neutral": false,
-  "date": "2026-11-20",
-  "raw_date": "2026-11-21T05:00:00.000Z",
-  "start_time_tbd": true,
+  "date": "2026-11-21",
+  "raw_date": "2026-11-21T17:00:00.000Z",
+  "start_time_tbd": false,
   "season": 2026,
   "week": 12,
   "season_type": "regular",
@@ -15,7 +15,7 @@
   "venue_state": "KS",
   "venue_lat": 38.9629418,
   "venue_lon": -95.2463686,
-  "tv": null,
+  "tv": "ABC",
   "stream": null,
-  "watch": null
+  "watch": "ABC"
 }
