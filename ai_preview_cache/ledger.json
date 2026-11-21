@@ -188,5 +188,17 @@
       "formatted_spread": "BYU -5.5",
       "over_under": 47.5
     }
+  },
+  {
+    "key": "BYU|Cincinnati|2026-11-28",
+    "holder": "BYU",
+    "opponent": "Cincinnati",
+    "date": "2026-11-28",
+    "is_home": true,
+    "neutral": false,
+    "predicted_winner": "BYU",
+    "predicted_score": "BYU 28, Cincinnati 17",
+    "generated": "2026-11-21",
+    "line": null
   }
 ]

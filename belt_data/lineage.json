@@ -8,9 +8,9 @@
   },
   "current_holder": "BYU",
   "current_reign_since": "2026-11-14",
-  "current_defenses": 0,
+  "current_defenses": 1,
   "totals": {
-    "belt_games": 1646,
+    "belt_games": 1647,
     "reigns": 336,
     "distinct_teams": 106
   },
@@ -3035,7 +3035,7 @@
       "start_date": "2026-11-14",
       "won_from": "Baylor",
       "won_score": "28-7",
-      "defenses": 0,
+      "defenses": 1,
       "end_date": null,
       "lost_to": null
     }
@@ -27730,6 +27730,21 @@
       "outcome": "changed",
       "new_holder": "BYU",
       "game_id": 401856858
+    },
+    {
+      "date": "2026-11-21",
+      "season": 2026,
+      "week": 12,
+      "season_type": "regular",
+      "holder": "BYU",
+      "opponent": "Kansas",
+      "home": "Kansas",
+      "away": "BYU",
+      "score": "29-31",
+      "neutral": false,
+      "outcome": "retained",
+      "new_holder": "BYU",
+      "game_id": 401856866
     }
   ]
 }
